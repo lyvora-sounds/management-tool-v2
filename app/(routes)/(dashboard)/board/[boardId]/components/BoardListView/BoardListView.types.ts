@@ -9,6 +9,7 @@ export interface BoardListViewProps {
   boardId: string;
   isOwner: boolean;
   boardUsers: BoardUser[];
+  memberCanAssign: boolean;
 }
 
 export interface TaskRowProps {
@@ -18,4 +19,5 @@ export interface TaskRowProps {
   boardId: string;
   isOwner: boolean;
   boardUsers: BoardUser[];
+  memberCanAssign: boolean;
 }

@@ -53,6 +53,7 @@ function TaskRow({
   boardId,
   isOwner,
   boardUsers,
+  memberCanAssign,
 }: TaskRowProps) {
   const updateTask = useBoardStore((s) => s.updateTask);
   const [completed, setCompleted] = useState(task.completed);
@@ -180,6 +181,7 @@ function TaskRow({
         onClose={() => setModalOpen(false)}
         isOwner={isOwner}
         boardUsers={boardUsers}
+        memberCanAssign={memberCanAssign}
       />
     </>
   );
@@ -190,11 +192,13 @@ function ListGroup({
   boardId,
   isOwner,
   boardUsers,
+  memberCanAssign,
 }: {
   list: ListWithTasks;
   boardId: string;
   isOwner: boolean;
   boardUsers: BoardUser[];
+  memberCanAssign: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -232,6 +236,7 @@ function ListGroup({
                 boardId={boardId}
                 isOwner={isOwner}
                 boardUsers={boardUsers}
+                memberCanAssign={memberCanAssign}
               />
             ))
           )}
@@ -246,6 +251,7 @@ export function BoardListView({
   boardId,
   isOwner,
   boardUsers,
+  memberCanAssign,
 }: BoardListViewProps) {
   return (
     <div className="flex flex-col gap-3 overflow-y-auto">
@@ -256,6 +262,7 @@ export function BoardListView({
           boardId={boardId}
           isOwner={isOwner}
           boardUsers={boardUsers}
+          memberCanAssign={memberCanAssign}
         />
       ))}
     </div>

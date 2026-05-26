@@ -266,6 +266,7 @@ export function BoardContent({
           boardId={boardId}
           isOwner={isOwner}
           boardUsers={boardUsers}
+          memberCanAssign={memberCanAssign}
         />
       )}
 
