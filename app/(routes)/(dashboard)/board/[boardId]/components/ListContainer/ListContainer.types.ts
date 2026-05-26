@@ -5,4 +5,5 @@ export type ListContainerProps = {
   boardId: string;
   isOwner: boolean;
   boardUsers: BoardUser[];
+  memberCanAssign: boolean;
 }

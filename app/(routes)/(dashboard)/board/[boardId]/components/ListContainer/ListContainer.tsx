@@ -7,6 +7,7 @@ export function ListContainer({
   boardId,
   isOwner,
   boardUsers,
+  memberCanAssign,
 }: ListContainerProps) {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 items-start">
@@ -17,6 +18,7 @@ export function ListContainer({
           boardId={boardId}
           isOwner={isOwner}
           boardUsers={boardUsers}
+          memberCanAssign={memberCanAssign}
         />
       ))}
       <CreateListForm boardId={boardId} />
