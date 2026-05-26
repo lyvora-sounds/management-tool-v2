@@ -54,6 +54,8 @@ model Board {
   color       String?
   links       Json?
 
+  memberCanAssign Boolean @default(false)
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 

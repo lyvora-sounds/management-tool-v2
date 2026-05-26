@@ -5,4 +5,5 @@ export type BoardHeaderProps = {
   title: string;
   isOwner: boolean;
   initialLinks: BoardLink[];
+  memberCanAssign: boolean;
 };

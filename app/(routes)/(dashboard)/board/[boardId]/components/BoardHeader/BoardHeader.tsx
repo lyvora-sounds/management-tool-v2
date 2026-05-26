@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Activity, MoreHorizontal, Trash2, Pencil, Users } from "lucide-react";
+import { Activity, MoreHorizontal, Trash2, Pencil, Users, ShieldCheck } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,9 +17,10 @@ import { BoardHeaderProps } from "./BoardHeader.types";
 import { BoardMembers } from "../BoardMembers/BoardMembers";
 import { BoardActivity } from "../BoardActivity/BoardActivity";
 import { BoardLinks } from "../BoardLinks/BoardLinks";
+import { BoardPermissions } from "../BoardPermissions/BoardPermissions";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 
-export function BoardHeader({ boardId, title, isOwner, initialLinks }: BoardHeaderProps) {
+export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAssign }: BoardHeaderProps) {
   const router = useRouter();
   const renameBoard = useBoardsStore((s) => s.renameBoard);
   const removeBoard = useBoardsStore((s) => s.removeBoard);
@@ -30,6 +31,7 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks }: BoardHead
   const [loading, setLoading] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -101,6 +103,14 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks }: BoardHead
         open={activityOpen}
         onClose={() => setActivityOpen(false)}
       />
+      {isOwner && (
+        <BoardPermissions
+          boardId={boardId}
+          open={permissionsOpen}
+          onClose={() => setPermissionsOpen(false)}
+          initialMemberCanAssign={memberCanAssign}
+        />
+      )}
 
       <div className="flex items-center justify-between gap-2 min-w-0">
         {isEditing ? (
@@ -159,6 +169,12 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks }: BoardHead
                 <Pencil size={14} />
                 Renombrar board
               </DropdownMenuItem>
+              {isOwner && (
+                <DropdownMenuItem onClick={() => setPermissionsOpen(true)} className="cursor-pointer">
+                  <ShieldCheck size={14} />
+                  Permisos
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 variant="destructive"
                 onClick={() => setConfirmDelete(true)}
