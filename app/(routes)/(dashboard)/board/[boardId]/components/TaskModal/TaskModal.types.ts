@@ -10,6 +10,7 @@ export type TaskModalProps = {
   onClose: () => void;
   isOwner: boolean;
   boardUsers: BoardUser[];
+  memberCanAssign: boolean;
 };
 
 export type LabelWithActive = LabelModel & { active: boolean };

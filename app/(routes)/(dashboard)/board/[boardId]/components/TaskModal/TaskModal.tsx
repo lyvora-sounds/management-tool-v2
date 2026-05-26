@@ -44,6 +44,7 @@ export function TaskModal({
   onClose,
   isOwner,
   boardUsers,
+  memberCanAssign,
 }: TaskModalProps) {
   const lists = useBoardStore((s) => s.lists);
   const updateTask = useBoardStore((s) => s.updateTask);
@@ -361,6 +362,7 @@ export function TaskModal({
                   boardUsers={boardUsers}
                   activeAssignees={activeAssignees}
                   isOwner={isOwner}
+                  memberCanAssign={memberCanAssign}
                   onAssigneesChange={setActiveAssignees}
                 />
               </div>

@@ -8,7 +8,7 @@ import { CreateTaskForm } from "../CreateTaskForm/CreateTaskForm";
 import { ListHeader } from "../ListHeader/ListHeader";
 import { ArrowDownToLine } from "lucide-react";
 
-export function ListItem({ list, boardId, isOwner, boardUsers }: ListItemProps) {
+export function ListItem({ list, boardId, isOwner, boardUsers, memberCanAssign }: ListItemProps) {
   const {
     attributes,
     listeners,
@@ -52,7 +52,7 @@ export function ListItem({ list, boardId, isOwner, boardUsers }: ListItemProps) 
             </div>
           ) : (
             list.tasks.map((task) => (
-              <TaskCard key={task.id} task={task} listId={list.id} listTitle={list.title} boardId={boardId} isOwner={isOwner} boardUsers={boardUsers} />
+              <TaskCard key={task.id} task={task} listId={list.id} listTitle={list.title} boardId={boardId} isOwner={isOwner} boardUsers={boardUsers} memberCanAssign={memberCanAssign} />
             ))
           )}
         </div>

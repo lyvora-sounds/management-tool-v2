@@ -25,6 +25,7 @@ export function TaskCard({
   boardId,
   isOwner,
   boardUsers,
+  memberCanAssign,
 }: TaskCardProps) {
   const updateTask = useBoardStore((s) => s.updateTask);
   const [modalOpen, setModalOpen] = useState(false);
@@ -185,6 +186,7 @@ export function TaskCard({
         onClose={() => setModalOpen(false)}
         isOwner={isOwner}
         boardUsers={boardUsers}
+        memberCanAssign={memberCanAssign}
       />
     </div>
   );

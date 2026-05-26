@@ -5,4 +5,5 @@ export type BoardContentProps = {
   boardId: string;
   isOwner: boolean;
   boardUsers: BoardUser[];
+  memberCanAssign: boolean;
 }

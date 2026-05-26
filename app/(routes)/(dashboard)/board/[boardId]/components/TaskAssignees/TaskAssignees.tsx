@@ -18,7 +18,7 @@ function getInitials(name: string | null, email: string) {
   return email[0].toUpperCase();
 }
 
-export function TaskAssignees({ taskId, boardUsers, activeAssignees, isOwner, onAssigneesChange }: Props) {
+export function TaskAssignees({ taskId, boardUsers, activeAssignees, isOwner, memberCanAssign, onAssigneesChange }: Props) {
   const [open, setOpen] = useState(false);
   const [activeIds, setActiveIds] = useState<Set<string>>(
     new Set(activeAssignees.map((a) => a.user.id))
@@ -43,7 +43,7 @@ export function TaskAssignees({ taskId, boardUsers, activeAssignees, isOwner, on
 
   const assigned = boardUsers.filter((u) => activeIds.has(u.id));
 
-  if (!isOwner) {
+  if (!isOwner && !memberCanAssign) {
     if (assigned.length === 0) return null;
     return (
       <div className="flex items-center gap-2">

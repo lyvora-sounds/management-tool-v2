@@ -78,6 +78,7 @@ export function BoardContent({
   boardId,
   isOwner,
   boardUsers,
+  memberCanAssign,
 }: BoardContentProps) {
   useBoardPolling();
 
@@ -298,6 +299,7 @@ export function BoardContent({
                   boardId={boardId}
                   isOwner={isOwner}
                   boardUsers={boardUsers}
+                  memberCanAssign={memberCanAssign}
                 />
               ))}
               <CreateListForm boardId={boardId} />

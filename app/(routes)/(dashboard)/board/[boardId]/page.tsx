@@ -77,6 +77,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
         boardId={board.id}
         isOwner={isOwner}
         boardUsers={boardUsers}
+        memberCanAssign={board.memberCanAssign}
       />
     </div>
   );

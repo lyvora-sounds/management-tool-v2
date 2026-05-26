@@ -5,5 +5,6 @@ export type Props = {
   boardUsers: BoardUser[];
   activeAssignees: TaskAssignee[];
   isOwner: boolean;
+  memberCanAssign: boolean;
   onAssigneesChange: (assignees: TaskAssignee[]) => void;
 };
