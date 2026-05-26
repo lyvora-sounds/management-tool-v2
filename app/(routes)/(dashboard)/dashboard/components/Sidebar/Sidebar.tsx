@@ -11,7 +11,12 @@ import { SidebarUserFooter } from "../SidebarUserFooter/SidebarUserFooter";
 import { SidebarLogo } from "../SidebarLogo/SidebarLogo";
 
 export async function AppSidebar() {
-  const user = await currentUser();
+  let user: Awaited<ReturnType<typeof currentUser>> = null;
+  try {
+    user = await currentUser();
+  } catch {
+    // Clerk error — render sidebar without user info
+  }
 
   return (
     <Sidebar>

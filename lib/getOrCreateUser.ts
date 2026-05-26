@@ -5,7 +5,12 @@ export async function getOrCreateUser(clerkId: string) {
   const byClerkId = await db.user.findUnique({ where: { clerkId } });
   if (byClerkId) return byClerkId;
 
-  const clerkUser = await currentUser();
+  let clerkUser: Awaited<ReturnType<typeof currentUser>>;
+  try {
+    clerkUser = await currentUser();
+  } catch {
+    return null;
+  }
   if (!clerkUser) return null;
 
   const email = clerkUser.emailAddresses[0].emailAddress;

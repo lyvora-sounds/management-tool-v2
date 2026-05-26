@@ -18,7 +18,18 @@ export default async function DashboardPage() {
   if (!userId) redirect("/sign-in");
 
   const user = await getOrCreateUser(userId);
-  if (!user) redirect("/sign-in");
+  if (!user) {
+    // Clerk API failed but user IS authenticated — avoid redirect loop, show retry
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-3">
+        <p className="text-sm font-medium">Servicio temporalmente no disponible</p>
+        <p className="text-xs text-muted-foreground">Recarga la página en unos segundos.</p>
+        <a href="/dashboard" className="text-xs underline text-muted-foreground hover:text-foreground">
+          Reintentar
+        </a>
+      </div>
+    );
+  }
 
   const rawBoards = await db.board.findMany({
     where: {
