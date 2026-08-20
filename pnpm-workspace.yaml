@@ -1,3 +1,15 @@
-ignoredBuiltDependencies:
+allowBuilds:
+  "@clerk/shared": true
+  "@prisma/engines": true
+  "msw": true
+  "prisma": true
+  "sharp": true
+  "unrs-resolver": true
+
+onlyBuiltDependencies:
+  - "@clerk/shared"
+  - "@prisma/engines"
+  - msw
+  - prisma
   - sharp
   - unrs-resolver

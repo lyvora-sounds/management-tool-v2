@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles, Loader2, Check, X, ArrowRight, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -141,12 +141,16 @@ export function TaskAiImprove({
           <p className="text-muted-foreground">
             Para usar las funciones de IA, debes registrar tu propia clave de API (OpenAI, Claude, Gemini, DeepSeek, Grok, Kimi) en los ajustes de tu cuenta.
           </p>
-          <Button asChild size="sm" className="gap-1.5 mt-2 h-7 text-xs">
-            <Link href="/dashboard/settings">
-              <span>Ir a Ajustes</span>
-              <ArrowRight size={13} />
-            </Link>
-          </Button>
+          <Link
+            href="/dashboard/settings"
+            className={buttonVariants({
+              size: "sm",
+              className: "gap-1.5 mt-2 h-7 text-xs",
+            })}
+          >
+            <span>Ir a Ajustes</span>
+            <ArrowRight size={13} />
+          </Link>
         </div>
       ) : result ? (
         <div className="space-y-4">

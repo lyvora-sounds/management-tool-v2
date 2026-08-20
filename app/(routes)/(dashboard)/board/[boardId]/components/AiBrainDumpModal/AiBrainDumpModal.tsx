@@ -16,8 +16,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
@@ -236,12 +235,16 @@ export function AiBrainDumpModal({
               <p className="text-muted-foreground">
                 Para usar Brain Dump, por favor agrega tu API key personal (OpenAI, Claude, Gemini, DeepSeek, Grok o Kimi) en Ajustes.
               </p>
-              <Button asChild size="sm" className="gap-1.5 mt-2 h-7 text-xs">
-                <Link href="/dashboard/settings">
-                  <span>Ir a Ajustes</span>
-                  <ArrowRight size={13} />
-                </Link>
-              </Button>
+              <Link
+                href="/dashboard/settings"
+                className={buttonVariants({
+                  size: "sm",
+                  className: "gap-1.5 mt-2 h-7 text-xs",
+                })}
+              >
+                <span>Ir a Ajustes</span>
+                <ArrowRight size={13} />
+              </Link>
             </div>
           )}
 
