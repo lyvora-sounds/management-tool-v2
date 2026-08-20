@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { hasBoardAccess } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
+import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
 
 export async function PATCH(
   req: Request,
@@ -13,8 +14,17 @@ export async function PATCH(
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { title, description, completed, startDate, dueDate, priority } =
-    await req.json();
+  const {
+    title,
+    description,
+    completed,
+    startDate,
+    dueDate,
+    priority,
+    epicId,
+    quarter,
+    archived,
+  } = await req.json();
 
   if (title !== undefined && (typeof title !== "string" || !title.trim())) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -53,6 +63,16 @@ export async function PATCH(
         dueDate: dueDate ? new Date(dueDate) : null,
       }),
       ...(priority !== undefined && { priority: priority ?? null }),
+      ...(epicId !== undefined && { epicId: epicId || null }),
+      ...(quarter !== undefined && { quarter: quarter?.trim() || null }),
+      ...(archived !== undefined && {
+        archived,
+        archivedAt: archived ? new Date() : null,
+      }),
+    },
+    include: {
+      epic: true,
+      labels: { include: { label: true } },
     },
   });
 
@@ -66,6 +86,18 @@ export async function PATCH(
       boardId: task.list.board.id,
       userId: user.id,
     });
+
+    if (completed) {
+      // Trigger Slack / Discord webhook
+      sendBoardWebhookNotification({
+        boardId: task.list.board.id,
+        eventType: "task_completed",
+        taskTitle: updated.title,
+        listTitle: task.list.title,
+        userName: actor,
+        priority: updated.priority,
+      });
+    }
   } else if (title !== undefined) {
     await createActivity({
       type: "task_renamed",

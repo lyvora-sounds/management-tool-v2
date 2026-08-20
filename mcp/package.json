@@ -1,0 +1,16 @@
+{
+  "name": "kikiboard-mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) server for Kikiboard",
+  "main": "server.ts",
+  "scripts": {
+    "start": "npx tsx server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.0.0"
+  }
+}

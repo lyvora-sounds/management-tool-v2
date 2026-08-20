@@ -128,6 +128,25 @@ export function TaskCard({
         </div>
       </div>
 
+      {/* Epic and Quarter Row if available */}
+      {((task as any).epic || (task as any).quarter) && (
+        <div className="flex items-center gap-1.5 pl-6 flex-wrap">
+          {(task as any).epic && (
+            <span
+              className="text-[10px] font-semibold px-1.5 py-0.2 rounded text-white"
+              style={{ backgroundColor: (task as any).epic.color }}
+            >
+              {(task as any).epic.title}
+            </span>
+          )}
+          {(task as any).quarter && (
+            <span className="text-[10px] text-muted-foreground font-medium px-1 py-0.2 rounded bg-muted">
+              {(task as any).quarter}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Footer row: indicators */}
       {hasFooter && (
         <div className="flex items-center gap-2.5 pl-6 text-muted-foreground">

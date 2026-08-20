@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, Layers, Calendar, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -11,12 +11,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BoardFiltersProps, FilterDueDate, FilterStatus } from "./BoardFilters.types";
+import {
+  BoardFiltersProps,
+  FilterArchive,
+  FilterDueDate,
+  FilterStatus,
+} from "./BoardFilters.types";
 
 const STATUS_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: "all", label: "Todas" },
   { value: "pending", label: "Pendientes" },
   { value: "completed", label: "Completadas" },
+];
+
+const ARCHIVE_OPTIONS: { value: FilterArchive; label: string }[] = [
+  { value: "active", label: "Activas" },
+  { value: "archived", label: "Archivadas" },
+  { value: "all", label: "Todas (+ Archivo)" },
 ];
 
 const DUE_OPTIONS: { value: FilterDueDate; label: string }[] = [
@@ -27,11 +38,20 @@ const DUE_OPTIONS: { value: FilterDueDate; label: string }[] = [
   { value: "none", label: "Sin fecha" },
 ];
 
-export function BoardFilters({ filters, onChange, availableLabels }: BoardFiltersProps) {
+export function BoardFilters({
+  filters,
+  onChange,
+  availableLabels,
+  availableEpics = [],
+  availableQuarters = [],
+}: BoardFiltersProps) {
   const hasActiveFilters =
     filters.status !== "all" ||
     filters.dueDate !== "all" ||
-    filters.labelIds.length > 0;
+    filters.labelIds.length > 0 ||
+    filters.archiveStatus !== "active" ||
+    filters.quarter !== "all" ||
+    filters.epicId !== "all";
 
   const toggleLabel = (id: string) => {
     const next = filters.labelIds.includes(id)
@@ -40,18 +60,47 @@ export function BoardFilters({ filters, onChange, availableLabels }: BoardFilter
     onChange({ ...filters, labelIds: next });
   };
 
-  const reset = () => onChange({ status: "all", dueDate: "all", labelIds: [] });
+  const reset = () =>
+    onChange({
+      status: "all",
+      dueDate: "all",
+      labelIds: [],
+      archiveStatus: "active",
+      quarter: "all",
+      epicId: "all",
+    });
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {/* Status */}
+      {/* Active vs Archived Toggle */}
+      <ToggleGroup
+        value={[filters.archiveStatus]}
+        onValueChange={(val: string[]) => {
+          const next = val.find((v) => v !== filters.archiveStatus) ?? filters.archiveStatus;
+          onChange({ ...filters, archiveStatus: next as FilterArchive });
+        }}
+        className="border rounded-full bg-background"
+      >
+        {ARCHIVE_OPTIONS.map((opt) => (
+          <ToggleGroupItem
+            key={opt.value}
+            value={opt.value}
+            className="text-xs h-8 px-2.5 gap-1"
+          >
+            {opt.value === "archived" && <Archive size={11} />}
+            <span>{opt.label}</span>
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+
+      {/* Status (Pending / Completed) */}
       <ToggleGroup
         value={[filters.status]}
         onValueChange={(val: string[]) => {
           const next = val.find((v) => v !== filters.status) ?? filters.status;
           onChange({ ...filters, status: next as FilterStatus });
         }}
-        className="border rounded-full"
+        className="border rounded-full bg-background"
       >
         {STATUS_OPTIONS.map((opt) => (
           <ToggleGroupItem key={opt.value} value={opt.value} className="text-xs h-8 px-3">
@@ -65,7 +114,7 @@ export function BoardFilters({ filters, onChange, availableLabels }: BoardFilter
         value={filters.dueDate}
         onValueChange={(val) => onChange({ ...filters, dueDate: val as FilterDueDate })}
       >
-        <SelectTrigger className="h-8 text-xs w-auto min-w-36">
+        <SelectTrigger className="h-8 text-xs w-auto min-w-32 bg-background">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -76,6 +125,58 @@ export function BoardFilters({ filters, onChange, availableLabels }: BoardFilter
           ))}
         </SelectContent>
       </Select>
+
+      {/* Quarter filter */}
+      {availableQuarters.length > 0 && (
+        <Select
+          value={filters.quarter}
+          onValueChange={(val) => onChange({ ...filters, quarter: val })}
+        >
+          <SelectTrigger className="h-8 text-xs w-auto min-w-28 gap-1 bg-background">
+            <Calendar size={12} className="text-muted-foreground" />
+            <SelectValue placeholder="Quarter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="text-xs">
+              Todos los trimestres
+            </SelectItem>
+            {availableQuarters.map((q) => (
+              <SelectItem key={q} value={q} className="text-xs">
+                {q}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {/* Epic filter */}
+      {availableEpics.length > 0 && (
+        <Select
+          value={filters.epicId}
+          onValueChange={(val) => onChange({ ...filters, epicId: val })}
+        >
+          <SelectTrigger className="h-8 text-xs w-auto min-w-28 gap-1 bg-background">
+            <Layers size={12} className="text-muted-foreground" />
+            <SelectValue placeholder="Epic" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="text-xs">
+              Todos los Epics
+            </SelectItem>
+            {availableEpics.map((ep) => (
+              <SelectItem key={ep.id} value={ep.id} className="text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: ep.color }}
+                  />
+                  <span>{ep.title}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {/* Labels */}
       {availableLabels.length > 0 && (
@@ -108,3 +209,4 @@ export function BoardFilters({ filters, onChange, availableLabels }: BoardFilter
     </div>
   );
 }
+
