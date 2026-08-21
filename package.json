@@ -16,6 +16,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hugeicons/core-free-icons": "^4.0.0",
     "@hugeicons/react": "^1.1.6",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "@prisma/client-runtime-utils": "^7.5.0",

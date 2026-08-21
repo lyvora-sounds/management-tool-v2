@@ -36,9 +36,24 @@ function taskMatchesFilters(
   task: TaskWithLabels,
   filters: BoardFiltersState,
 ): boolean {
+  // Archive Status
+  const isArchived = Boolean((task as any).archived);
+  if (filters.archiveStatus === "active" && isArchived) return false;
+  if (filters.archiveStatus === "archived" && !isArchived) return false;
+
   // Status
   if (filters.status === "completed" && !task.completed) return false;
   if (filters.status === "pending" && task.completed) return false;
+
+  // Quarter
+  if (filters.quarter !== "all") {
+    if ((task as any).quarter !== filters.quarter) return false;
+  }
+
+  // Epic
+  if (filters.epicId !== "all") {
+    if ((task as any).epicId !== filters.epicId) return false;
+  }
 
   // Labels — task must have ALL selected labels
   if (filters.labelIds.length > 0) {
@@ -88,10 +103,18 @@ export function BoardContent({
   const [dragOriginListId, setDragOriginListId] = useState<string | null>(null);
   const [filters, setFilters] = useState<BoardFiltersState>(DEFAULT_FILTERS);
   const [view, setView] = useState<"kanban" | "list">("kanban");
+  const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
 
   useEffect(() => {
     setLists(initialLists);
   }, [initialLists, setLists]);
+
+  useEffect(() => {
+    fetch(`/api/boards/${boardId}/epics`)
+      .then((res) => res.json())
+      .then((data) => setEpics(data.epics || []))
+      .catch(() => {});
+  }, [boardId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -116,15 +139,20 @@ export function BoardContent({
     return Array.from(map.values());
   }, [lists]);
 
+  // Collect all unique quarters from all tasks
+  const availableQuarters = useMemo(() => {
+    const set = new Set<string>();
+    lists.forEach((list) => {
+      list.tasks.forEach((task) => {
+        const q = (task as any).quarter;
+        if (q) set.add(q);
+      });
+    });
+    return Array.from(set).sort();
+  }, [lists]);
+
   // Apply filters to lists (keep list structure, just filter tasks)
   const filteredLists = useMemo(() => {
-    const isFiltering =
-      filters.status !== "all" ||
-      filters.dueDate !== "all" ||
-      filters.labelIds.length > 0;
-
-    if (!isFiltering) return lists;
-
     return lists.map((list) => ({
       ...list,
       tasks: list.tasks.filter((task) => taskMatchesFilters(task, filters)),
@@ -229,6 +257,8 @@ export function BoardContent({
           filters={filters}
           onChange={setFilters}
           availableLabels={availableLabels}
+          availableEpics={epics}
+          availableQuarters={availableQuarters}
         />
         <div className="flex items-center gap-1 ml-auto shrink-0">
           <Button

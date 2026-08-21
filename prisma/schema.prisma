@@ -24,6 +24,36 @@ model User {
   notifications   Notification[]
   activityLogs    ActivityLog[]
   completedTasks  Task[]        @relation("CompletedTasks")
+  settings        UserSettings?
+  calendarSync    UserCalendarSync?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserSettings {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiProvider    String  @default("openai") // "openai" | "claude" | "gemini" | "grok" | "deepseek" | "kimi" | "custom"
+  aiApiKey      String? // AES-256-GCM encrypted
+  aiModel       String?
+  aiBaseUrl     String?
+  voiceLanguage String  @default("es-ES") // "es-ES" | "en-US"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserCalendarSync {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken  String    // encrypted
+  refreshToken String?   // encrypted
+  expiryDate   DateTime?
+  calendarId   String?
+  enabled      Boolean   @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,11 +86,19 @@ model Board {
 
   memberCanAssign Boolean @default(false)
 
+  // Webhooks & Integrations
+  slackWebhookUrl       String?
+  discordWebhookUrl     String?
+  notifyOnTaskCreated   Boolean @default(true)
+  notifyOnTaskCompleted Boolean @default(true)
+  notifyOnTaskMoved     Boolean @default(false)
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   list         List[]
   labels       Label[]
+  epics        Epic[]
   members      BoardMember[]
   invitations  Invitation[]
   activityLogs ActivityLog[]
@@ -103,6 +141,26 @@ model Invitation {
   @@index([token])
 }
 
+model Epic {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  color       String   @default("#3b82f6")
+  quarter     String?  // e.g. "2026-Q1", "2026-Q2"
+  status      String   @default("open") // "open" | "completed"
+  order       Int      @default(0)
+
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  tasks Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([boardId])
+}
+
 model List {
   id    String @id @default(cuid())
   title String
@@ -131,6 +189,18 @@ model Task {
   startDate   DateTime?
   dueDate     DateTime?
 
+  // Archive & Quarter & Epics
+  archived    Boolean   @default(false)
+  archivedAt  DateTime?
+  quarter     String?   // e.g. "2026-Q1", "2026-Q2"
+  
+  epicId      String?
+  epic        Epic?     @relation(fields: [epicId], references: [id], onDelete: SetNull)
+
+  // Public Share Link & Calendar Sync
+  shareToken     String? @unique
+  googleEventId  String?
+
   order Int
 
   listId String
@@ -146,6 +216,9 @@ model Task {
   updatedAt DateTime @updatedAt
 
   @@index([listId])
+  @@index([epicId])
+  @@index([shareToken])
+  @@index([archived])
 }
 
 model TaskAssignee {

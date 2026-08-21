@@ -11,6 +11,7 @@ import { AssignedToMe } from "./components/AssignedToMe/AssignedToMe";
 import { RecentBoards } from "./components/RecentBoards/RecentBoards";
 import { GlobalProgress } from "./components/GlobalProgress/GlobalProgress";
 import { WeeklyActivity } from "./components/WeeklyActivity/WeeklyActivity";
+import { PriorityBreakdownChart } from "./components/PriorityBreakdownChart/PriorityBreakdownChart";
 import { Greeting } from "./components/Greeting/Greeting";
 
 export default async function DashboardPage() {
@@ -80,19 +81,31 @@ export default async function DashboardPage() {
   last7Days.setDate(now.getDate() - 6);
   last7Days.setHours(0, 0, 0, 0);
 
-  const [totalTasks, totalPending, overdue, completedThisWeek, upcomingTasks, recentActivity, assignedTasks, completedLast7] = await Promise.all([
+  const [
+    totalTasks,
+    totalPending,
+    overdue,
+    completedThisWeek,
+    upcomingTasks,
+    recentActivity,
+    assignedTasks,
+    completedLast7,
+    allPendingTasks,
+  ] = await Promise.all([
     db.task.count({
-      where: { list: { boardId: { in: boardIds } } },
+      where: { list: { boardId: { in: boardIds } }, archived: false },
     }),
     db.task.count({
       where: {
         completed: false,
+        archived: false,
         list: { boardId: { in: boardIds } },
       },
     }),
     db.task.count({
       where: {
         completed: false,
+        archived: false,
         dueDate: { lt: now },
         list: { boardId: { in: boardIds } },
       },
@@ -107,6 +120,7 @@ export default async function DashboardPage() {
     db.task.findMany({
       where: {
         completed: false,
+        archived: false,
         dueDate: { gte: now, lte: in7Days },
         list: { boardId: { in: boardIds } },
       },
@@ -141,6 +155,7 @@ export default async function DashboardPage() {
     db.task.findMany({
       where: {
         assignees: { some: { userId: user.id } },
+        archived: false,
         list: { boardId: { in: boardIds } },
       },
       orderBy: [{ completed: "asc" }, { dueDate: "asc" }],
@@ -166,7 +181,27 @@ export default async function DashboardPage() {
       },
       select: { completedAt: true },
     }),
+    db.task.findMany({
+      where: {
+        completed: false,
+        archived: false,
+        list: { boardId: { in: boardIds } },
+      },
+      select: { priority: true },
+    }),
   ]);
+
+  const priorityCounts = allPendingTasks.reduce(
+    (acc, t) => {
+      if (t.priority === "urgent") acc.urgent++;
+      else if (t.priority === "high") acc.high++;
+      else if (t.priority === "medium") acc.medium++;
+      else if (t.priority === "low") acc.low++;
+      else acc.none++;
+      return acc;
+    },
+    { urgent: 0, high: 0, medium: 0, low: 0, none: 0 },
+  );
 
   // Formatear fecha en zona local (YYYY-MM-DD) sin conversión UTC
   const toLocalKey = (d: Date) =>
@@ -198,11 +233,14 @@ export default async function DashboardPage() {
         completedThisWeek={completedThisWeek}
       />
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <PriorityBreakdownChart counts={priorityCounts} />
+        <WeeklyActivity days={weeklyDays} />
+      </div>
+
       <UpcomingTasks tasks={upcomingTasks} />
 
       <RecentActivity logs={recentActivity} />
-
-      <WeeklyActivity days={weeklyDays} />
 
       <AssignedToMe tasks={assignedTasks} />
 
@@ -212,9 +250,6 @@ export default async function DashboardPage() {
           <CreateBoardModal />
         </div>
         <RecentBoards boards={boards} />
-        {/* <div className="mt-4">
-          <BoardList boards={boards} />
-        </div> */}
       </div>
     </div>
   );
