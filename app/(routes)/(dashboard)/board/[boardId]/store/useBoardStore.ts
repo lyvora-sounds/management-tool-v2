@@ -11,6 +11,7 @@ interface BoardState {
   // Crear
   addList: (list: ListWithTasks) => void;
   addTask: (listId: string, task: TaskWithLabels) => void;
+  addSubtask: (listId: string, taskId: string, subtask: { completed: boolean }) => void;
 
   // Editar
   renameList: (listId: string, title: string) => void;
@@ -43,6 +44,22 @@ export const useBoardStore = create<BoardState>((set) => ({
       lists: state.lists.map((list) =>
         list.id === listId
           ? { ...list, tasks: [...list.tasks, task] }
+          : list
+      ),
+    })),
+
+  addSubtask: (listId, taskId, subtask) =>
+    set((state) => ({
+      lists: state.lists.map((list) =>
+        list.id === listId
+          ? {
+              ...list,
+              tasks: list.tasks.map((t) =>
+                t.id === taskId
+                  ? { ...t, subtasks: [...(t.subtasks ?? []), subtask] }
+                  : t
+              ),
+            }
           : list
       ),
     })),

@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -142,17 +142,19 @@ export function TaskShareModal({
                     <Copy size={14} />
                   )}
                 </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  asChild
-                  className="shrink-0 h-9 w-9"
+                <a
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   title="Abrir en pestaña nueva"
+                  className={buttonVariants({
+                    size: "icon",
+                    variant: "ghost",
+                    className: "shrink-0 h-9 w-9",
+                  })}
                 >
-                  <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink size={14} />
-                  </a>
-                </Button>
+                  <ExternalLink size={14} />
+                </a>
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t text-xs">

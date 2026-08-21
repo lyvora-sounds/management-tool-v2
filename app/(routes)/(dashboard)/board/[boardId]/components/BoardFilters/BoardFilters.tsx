@@ -130,7 +130,7 @@ export function BoardFilters({
       {availableQuarters.length > 0 && (
         <Select
           value={filters.quarter}
-          onValueChange={(val) => onChange({ ...filters, quarter: val })}
+          onValueChange={(val) => onChange({ ...filters, quarter: val ?? "all" })}
         >
           <SelectTrigger className="h-8 text-xs w-auto min-w-28 gap-1 bg-background">
             <Calendar size={12} className="text-muted-foreground" />
@@ -153,7 +153,7 @@ export function BoardFilters({
       {availableEpics.length > 0 && (
         <Select
           value={filters.epicId}
-          onValueChange={(val) => onChange({ ...filters, epicId: val })}
+          onValueChange={(val) => onChange({ ...filters, epicId: val ?? "all" })}
         >
           <SelectTrigger className="h-8 text-xs w-auto min-w-28 gap-1 bg-background">
             <Layers size={12} className="text-muted-foreground" />

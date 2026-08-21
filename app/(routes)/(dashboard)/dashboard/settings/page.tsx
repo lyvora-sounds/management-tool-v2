@@ -324,7 +324,7 @@ export default function SettingsPage() {
             <Label className="text-sm font-medium">Idioma de voz por defecto</Label>
             <Select
               value={voiceLanguage}
-              onValueChange={(v) => setVoiceLanguage(v)}
+              onValueChange={(v) => setVoiceLanguage(v ?? "es-ES")}
             >
               <SelectTrigger>
                 <SelectValue />

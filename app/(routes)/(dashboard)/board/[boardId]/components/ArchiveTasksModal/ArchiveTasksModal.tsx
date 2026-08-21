@@ -232,7 +232,7 @@ export function ArchiveTasksModal({
                     </label>
                     <Select
                       value={quarterFilter}
-                      onValueChange={setQuarterFilter}
+                      onValueChange={(v) => setQuarterFilter(v ?? "all")}
                     >
                       <SelectTrigger className="h-8 text-xs">
                         <SelectValue />
