@@ -1,3 +1,9 @@
+export type BoardOwner = {
+  id: string;
+  name: string | null;
+  email: string;
+};
+
 export type Member = {
   id: string;
   role: string;

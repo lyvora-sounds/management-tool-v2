@@ -1,11 +1,16 @@
 import { SidebarItemsProps } from "./SidebarItem/SidebarItem.types"
-import { CalendarDays, Home, Settings } from "lucide-react"
+import { CalendarDays, CheckSquare, Home, Settings } from "lucide-react"
 
 export const sidebarRoutes: SidebarItemsProps[] = [
     {
         label: "Dashboard",
         href: "/dashboard",
         icon: <Home size={18} />
+    },
+    {
+        label: "Mis tasks",
+        href: "/dashboard/tasks",
+        icon: <CheckSquare size={18} />
     },
     {
         label: "Calendario",

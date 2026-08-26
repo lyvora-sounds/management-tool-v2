@@ -84,6 +84,24 @@ function taskMatchesFilters(
       if (due < today || due >= weekEnd) return false;
     }
   }
+  // Member filter
+  if (filters.memberId && filters.memberId !== "all") {
+    if (filters.memberId === "unassigned") {
+      const hasAssignee = Boolean(task.assigneeId || task.assignee);
+      const hasCollabs = Boolean(task.collaborators && task.collaborators.length > 0);
+      const hasQa = Boolean(task.qaId || task.qa);
+      if (hasAssignee || hasCollabs || hasQa) return false;
+    } else {
+      const matchesAssignee =
+        task.assigneeId === filters.memberId || task.assignee?.id === filters.memberId;
+      const matchesCollab = task.collaborators?.some(
+        (c) => c.user.id === filters.memberId,
+      );
+      const matchesQa =
+        task.qaId === filters.memberId || task.qa?.id === filters.memberId;
+      if (!matchesAssignee && !matchesCollab && !matchesQa) return false;
+    }
+  }
 
   return true;
 }
@@ -116,107 +134,127 @@ export function BoardContent({
       .catch(() => {});
   }, [boardId]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  );
-
-  // Collect all unique labels from all tasks
   const availableLabels = useMemo(() => {
     const map = new Map<string, { id: string; title: string; color: string }>();
-    lists.forEach((list) => {
-      list.tasks.forEach((task) => {
-        task.labels.forEach(({ label }) => {
-          if (!map.has(label.id)) {
-            map.set(label.id, {
-              id: label.id,
-              title: label.title,
-              color: label.color,
-            });
-          }
-        });
-      });
-    });
+    for (const list of lists) {
+      for (const task of list.tasks) {
+        for (const { label } of task.labels) {
+          if (!map.has(label.id)) map.set(label.id, label);
+        }
+      }
+    }
     return Array.from(map.values());
   }, [lists]);
 
-  // Collect all unique quarters from all tasks
   const availableQuarters = useMemo(() => {
     const set = new Set<string>();
-    lists.forEach((list) => {
-      list.tasks.forEach((task) => {
-        const q = (task as any).quarter;
-        if (q) set.add(q);
-      });
-    });
+    for (const list of lists) {
+      for (const task of list.tasks) {
+        if ((task as any).quarter) set.add((task as any).quarter);
+      }
+    }
     return Array.from(set).sort();
   }, [lists]);
 
-  // Apply filters to lists (keep list structure, just filter tasks)
-  const filteredLists = useMemo(() => {
-    return lists.map((list) => ({
-      ...list,
-      tasks: list.tasks.filter((task) => taskMatchesFilters(task, filters)),
-    }));
-  }, [lists, filters]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+  );
 
-  const onDragStart = ({ active }: DragStartEvent) => {
-    if (active.data.current?.type === "task") {
-      setActiveTask(active.data.current.task);
-      setDragOriginListId(active.data.current.listId as string);
-    }
-    if (active.data.current?.type === "list")
-      setActiveList(active.data.current.list);
-  };
+  const listIds = useMemo(() => lists.map((l) => l.id), [lists]);
 
-  const onDragOver = ({ active, over }: DragOverEvent) => {
-    if (!over || active.id === over.id) return;
-    if (active.data.current?.type !== "task") return;
-
-    const activeListId = active.data.current?.listId as string;
-    const isOverTask = over.data.current?.type === "task";
-    const isOverList = over.data.current?.type === "list";
-
-    if (isOverTask) {
-      const overListId = over.data.current?.listId as string;
-      const targetList = lists.find((l) => l.id === overListId);
-      const overIndex =
-        targetList?.tasks.findIndex((t) => t.id === over.id) ?? 0;
-      moveTask(active.id as string, activeListId, overListId, overIndex);
-    }
-
-    if (isOverList) {
-      const overListId = over.id as string;
-      if (activeListId === overListId) return;
-      const targetList = lists.find((l) => l.id === overListId);
-      const overIndex = targetList?.tasks.length ?? 0;
-      moveTask(active.id as string, activeListId, overListId, overIndex);
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const type = active.data.current?.type;
+    if (type === "list") {
+      const list = lists.find((l) => l.id === active.id);
+      setActiveList(list ?? null);
+    } else if (type === "task") {
+      const task = active.data.current?.task as TaskWithLabels;
+      const listId = active.data.current?.listId as string;
+      setActiveTask(task ?? null);
+      setDragOriginListId(listId);
     }
   };
 
-  const onDragEnd = ({ active, over }: DragEndEvent) => {
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    const activeType = active.data.current?.type;
+    const overType = over.data.current?.type;
+    if (activeType !== "task") return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    const sourceListId = active.data.current?.listId as string;
+    let targetListId: string;
+
+    if (overType === "list") {
+      targetListId = overId;
+    } else if (overType === "task") {
+      targetListId = over.data.current?.listId as string;
+    } else {
+      return;
+    }
+
+    if (sourceListId === targetListId) return;
+
+    // Moving across lists
+    const sourceList = lists.find((l) => l.id === sourceListId);
+    const targetList = lists.find((l) => l.id === targetListId);
+    if (!sourceList || !targetList) return;
+
+    const taskIndex = sourceList.tasks.findIndex((t) => t.id === activeId);
+    if (taskIndex === -1) return;
+
+    const task = sourceList.tasks[taskIndex];
+    let newIndex = targetList.tasks.length;
+    if (overType === "task") {
+      const overIndex = targetList.tasks.findIndex((t) => t.id === overId);
+      newIndex = overIndex >= 0 ? overIndex : targetList.tasks.length;
+    }
+
+    // Mutate state optimistically
+    moveTask(sourceListId, targetListId, activeId, newIndex);
+    active.data.current = { ...active.data.current, listId: targetListId };
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
     const fromListId = dragOriginListId;
     setActiveTask(null);
     setActiveList(null);
     setDragOriginListId(null);
     if (!over) return;
 
-    if (active.data.current?.type === "list" && active.id !== over.id) {
+    const activeType = active.data.current?.type;
+
+    if (activeType === "list" && active.id !== over.id) {
       const oldIndex = lists.findIndex((l) => l.id === active.id);
       const newIndex = lists.findIndex((l) => l.id === over.id);
-      const reordered = arrayMove(lists, oldIndex, newIndex);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const newLists = arrayMove(lists, oldIndex, newIndex);
       reorderLists(oldIndex, newIndex);
 
-      fetch("/api/lists/updateOrder", {
+      await fetch("/api/lists/updateOrder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           boardId,
-          lists: reordered.map((l, i) => ({ id: l.id, order: i })),
+          lists: newLists.map((l, index) => ({ id: l.id, order: index })),
         }),
       });
     }
 
-    if (active.data.current?.type === "task") {
+    if (activeType === "task") {
+      const activeId = active.id as string;
+      const currentListId = active.data.current?.listId as string;
+      const targetList = lists.find((l) => l.id === currentListId);
+      if (!targetList) return;
+
       const taskUpdates = lists.flatMap((list) =>
         list.tasks.map((task, i) => ({
           id: task.id,
@@ -225,22 +263,25 @@ export function BoardContent({
         })),
       );
 
-      // Find the list where the task ended up  
-      const toListId =
-        lists.find((l) => l.tasks.some((t) => t.id === active.id))?.id ?? null;
-
-      fetch("/api/tasks/updateOrder", {
+      await fetch("/api/tasks/updateOrder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: taskUpdates,
-          movedTaskId: active.id,
+          movedTaskId: activeId,
           fromListId,
-          toListId,
+          toListId: currentListId,
         }),
       });
     }
   };
+
+  const filteredLists = useMemo(() => {
+    return lists.map((list) => ({
+      ...list,
+      tasks: list.tasks.filter((task) => taskMatchesFilters(task, filters)),
+    }));
+  }, [lists, filters]);
 
   const totalTasks = lists.reduce((acc, l) => acc + l.tasks.length, 0);
   const doneTasks = lists.reduce(
@@ -259,6 +300,7 @@ export function BoardContent({
           availableLabels={availableLabels}
           availableEpics={epics}
           availableQuarters={availableQuarters}
+          availableMembers={boardUsers}
         />
         <div className="flex items-center gap-1 ml-auto shrink-0">
           <Button
@@ -304,9 +346,9 @@ export function BoardContent({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
-          onDragStart={onDragStart}
-          onDragOver={onDragOver}
-          onDragEnd={onDragEnd}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
         >
           <SortableContext
             items={lists.map((l) => l.id)}

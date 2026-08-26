@@ -20,8 +20,12 @@ export async function GET(
   const allowed = await hasBoardAccess(user.id, boardId);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const board = await db.board.findUnique({ where: { id: boardId } });
-  const isOwner = board?.userId === user.id;
+  const board = await db.board.findUnique({
+    where: { id: boardId },
+    include: { user: { select: { id: true, name: true, email: true } } },
+  });
+  if (!board) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const isOwner = board.userId === user.id;
 
   const [members, invitations] = await Promise.all([
     db.boardMember.findMany({
@@ -37,7 +41,12 @@ export async function GET(
       : Promise.resolve([]),
   ]);
 
-  return NextResponse.json({ members, invitations, isOwner });
+  return NextResponse.json({
+    owner: board.user,
+    members,
+    invitations,
+    isOwner,
+  });
 }
 
 export async function POST(

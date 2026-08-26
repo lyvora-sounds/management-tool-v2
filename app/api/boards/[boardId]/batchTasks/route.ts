@@ -77,7 +77,13 @@ export async function POST(
       include: {
         labels: { include: { label: true } },
         subtasks: true,
-        assignees: { include: { user: true } },
+        assignee: { select: { id: true, name: true, email: true } },
+        qa: { select: { id: true, name: true, email: true } },
+        collaborators: {
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+          },
+        },
         epic: true,
       },
     });

@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Layers, Calendar, Archive } from "lucide-react";
+import { X, Layers, Calendar, Archive, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -38,12 +38,24 @@ const DUE_OPTIONS: { value: FilterDueDate; label: string }[] = [
   { value: "none", label: "Sin fecha" },
 ];
 
+function getInitials(name: string | null | undefined, email: string) {
+  if (name)
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  return email[0].toUpperCase();
+}
+
 export function BoardFilters({
   filters,
   onChange,
   availableLabels,
   availableEpics = [],
   availableQuarters = [],
+  availableMembers = [],
 }: BoardFiltersProps) {
   const hasActiveFilters =
     filters.status !== "all" ||
@@ -51,7 +63,8 @@ export function BoardFilters({
     filters.labelIds.length > 0 ||
     filters.archiveStatus !== "active" ||
     filters.quarter !== "all" ||
-    filters.epicId !== "all";
+    filters.epicId !== "all" ||
+    filters.memberId !== "all";
 
   const toggleLabel = (id: string) => {
     const next = filters.labelIds.includes(id)
@@ -68,6 +81,7 @@ export function BoardFilters({
       archiveStatus: "active",
       quarter: "all",
       epicId: "all",
+      memberId: "all",
     });
 
   return (
@@ -108,6 +122,37 @@ export function BoardFilters({
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
+
+      {/* Member Filter (including Admin and members) */}
+      {availableMembers.length > 0 && (
+        <Select
+          value={filters.memberId}
+          onValueChange={(val) => onChange({ ...filters, memberId: val ?? "all" })}
+        >
+          <SelectTrigger className="h-8 text-xs w-auto min-w-32 gap-1.5 bg-background">
+            <User size={12} className="text-muted-foreground" />
+            <SelectValue placeholder="Miembro" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="text-xs">
+              Todos los miembros
+            </SelectItem>
+            <SelectItem value="unassigned" className="text-xs text-muted-foreground">
+              Sin asignar
+            </SelectItem>
+            {availableMembers.map((member) => (
+              <SelectItem key={member.id} value={member.id} className="text-xs">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[9px] font-semibold flex items-center justify-center">
+                    {getInitials(member.name, member.email)}
+                  </div>
+                  <span>{member.name ?? member.email}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {/* Due date */}
       <Select
@@ -209,4 +254,5 @@ export function BoardFilters({
     </div>
   );
 }
+
 

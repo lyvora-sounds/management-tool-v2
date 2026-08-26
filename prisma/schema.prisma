@@ -20,7 +20,9 @@ model User {
   boards        Board[]
   comments      Comment[]
   boardMembers  BoardMember[]
-  taskAssignees TaskAssignee[]
+  assignedTasks Task[]        @relation("TaskAssignee")
+  qaTasks       Task[]        @relation("TaskQA")
+  taskCollaborators TaskCollaborator[]
   notifications   Notification[]
   activityLogs    ActivityLog[]
   completedTasks  Task[]        @relation("CompletedTasks")
@@ -206,11 +208,17 @@ model Task {
   listId String
   list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
 
-  labels      TaskLabel[]
-  comments    Comment[]
-  attachments Attachment[]
-  assignees   TaskAssignee[]
-  subtasks    Subtask[]
+  assigneeId String?
+  assignee   User?   @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  qaId String?
+  qa   User?   @relation("TaskQA", fields: [qaId], references: [id], onDelete: SetNull)
+
+  labels        TaskLabel[]
+  comments      Comment[]
+  attachments   Attachment[]
+  collaborators TaskCollaborator[]
+  subtasks      Subtask[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -219,9 +227,11 @@ model Task {
   @@index([epicId])
   @@index([shareToken])
   @@index([archived])
+  @@index([assigneeId])
+  @@index([qaId])
 }
 
-model TaskAssignee {
+model TaskCollaborator {
   taskId String
   userId String
 

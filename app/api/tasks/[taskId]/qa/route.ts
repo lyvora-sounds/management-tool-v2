@@ -28,52 +28,57 @@ export async function POST(
   if (!hasAccess) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   if (!isOwner && !task.list.board.memberCanAssign) {
-    return NextResponse.json({ error: "Sin permiso para asignar tareas" }, { status: 403 });
+    return NextResponse.json({ error: "Sin permiso para asignar QA" }, { status: 403 });
   }
 
-  const { assigneeId } = await req.json();
+  const body = await req.json();
+  const qaId = body.qaId ? String(body.qaId) : null;
 
-  const targetAssigneeId = task.assigneeId === assigneeId ? null : assigneeId;
+  // Toggle if clicked same QA, otherwise set new or null
+  const targetQaId = task.qaId === qaId ? null : qaId;
+
   const updated = await db.task.update({
     where: { id: taskId },
-    data: { assigneeId: targetAssigneeId },
+    data: { qaId: targetQaId },
     include: {
-      assignee: { select: { id: true, name: true, email: true } },
+      qa: { select: { id: true, name: true, email: true } },
     },
   });
 
   const actorName = user.name ?? user.email;
 
-  if (targetAssigneeId) {
-    if (targetAssigneeId !== user.id) {
+  if (targetQaId) {
+    if (targetQaId !== user.id) {
       await db.notification.create({
         data: {
-          type: "assigned",
-          message: `${actorName} te asignó la tarea "${task.title}"`,
-          userId: targetAssigneeId,
+          type: "qa_assigned",
+          message: `${actorName} te asignó como QA en la tarea "${task.title}"`,
+          userId: targetQaId,
           boardId: task.list.board.id,
           taskId,
         },
       });
     }
 
-    const assigneeName = updated.assignee?.name ?? updated.assignee?.email ?? targetAssigneeId;
+    const qaName = updated.qa?.name ?? updated.qa?.email ?? targetQaId;
     await createActivity({
-      type: "task_assigned",
-      message: `${actorName} asignó "${task.title}" a ${assigneeName}`,
+      type: "task_qa_assigned",
+      message: `${actorName} asignó a ${qaName} como QA de "${task.title}"`,
       boardId: task.list.board.id,
       userId: user.id,
     });
-
-    return NextResponse.json({ active: true, assigneeId: targetAssigneeId });
   } else {
     await createActivity({
-      type: "task_unassigned",
-      message: `${actorName} desasignó la tarea "${task.title}"`,
+      type: "task_qa_unassigned",
+      message: `${actorName} removió al QA de la tarea "${task.title}"`,
       boardId: task.list.board.id,
       userId: user.id,
     });
-
-    return NextResponse.json({ active: false, assigneeId: null });
   }
+
+  return NextResponse.json({
+    success: true,
+    qaId: updated.qaId,
+    qa: updated.qa,
+  });
 }

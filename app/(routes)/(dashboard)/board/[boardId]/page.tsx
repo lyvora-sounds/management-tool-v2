@@ -35,7 +35,9 @@ export default async function BoardPage({ params }: BoardPageProps) {
             orderBy: { order: "asc" },
             include: {
               labels: { include: { label: true } },
-              assignees: {
+              assignee: { select: { id: true, name: true, email: true } },
+              qa: { select: { id: true, name: true, email: true } },
+              collaborators: {
                 include: {
                   user: { select: { id: true, name: true, email: true } },
                 },

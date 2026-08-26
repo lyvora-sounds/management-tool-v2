@@ -1,18 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Trash2, Mail, UserCheck, Clock } from "lucide-react";
+import { Users, Trash2, Mail, UserCheck, Clock, Crown, Shield } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Member, Invitation, Props } from "./BoardMembers.types";
+import { Member, Invitation, BoardOwner, Props } from "./BoardMembers.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 
 export function BoardMembers({ boardId, open, onClose }: Props) {
+  const [owner, setOwner] = useState<BoardOwner | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isOwner, setIsOwner] = useState(false);
@@ -27,6 +29,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
     fetch(`/api/boards/${boardId}/invitations`)
       .then((r) => r.json())
       .then((data) => {
+        setOwner(data.owner ?? null);
         setMembers(data.members ?? []);
         setInvitations(data.invitations ?? []);
         setIsOwner(data.isOwner ?? false);
@@ -108,12 +111,30 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
             {success && <p className="text-xs text-green-600">Invitación enviada</p>}
           </div>}
 
-          {/* Members */}
-          {members.length > 0 && (
+          {/* Members (Including Admin/Owner) */}
+          {(owner || members.length > 0) && (
             <div className="flex flex-col gap-1">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Miembros
+                Miembros ({ (owner ? 1 : 0) + members.length })
               </p>
+
+              {/* Admin / Owner */}
+              {owner && (
+                <div className="flex items-center gap-2 rounded-md px-2 py-1.5 bg-muted/40 border border-border/50">
+                  <Crown size={15} className="text-amber-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{owner.name ?? owner.email}</p>
+                    {owner.name && (
+                      <p className="text-xs text-muted-foreground truncate">{owner.email}</p>
+                    )}
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-semibold shrink-0">
+                    Admin
+                  </Badge>
+                </div>
+              )}
+
+              {/* Other Members */}
               {members.map((member) => (
                 <div key={member.id} className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition-colors">
                   <UserCheck size={15} className="text-green-600 shrink-0" />
@@ -123,10 +144,13 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                       <p className="text-xs text-muted-foreground truncate">{member.user.email}</p>
                     )}
                   </div>
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
+                    Miembro
+                  </Badge>
                   {isOwner && (
                     <button
                       onClick={() => setConfirmMember(member)}
-                      className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                      className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all cursor-pointer p-1"
                     >
                       <Trash2 size={13} />
                     </button>
