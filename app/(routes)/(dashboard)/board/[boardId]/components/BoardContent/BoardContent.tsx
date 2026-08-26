@@ -199,9 +199,12 @@ export function BoardContent({
       return;
     }
 
-    if (sourceListId === targetListId) return;
+    if (activeId === overId) return;
 
-    // Moving across lists
+    // Dentro de la misma lista solo hay destino si se está sobre otra tarea;
+    // sobre el contenedor de la propia lista no hay nada que reordenar.
+    if (sourceListId === targetListId && overType !== "task") return;
+
     const sourceList = lists.find((l) => l.id === sourceListId);
     const targetList = lists.find((l) => l.id === targetListId);
     if (!sourceList || !targetList) return;
@@ -209,15 +212,15 @@ export function BoardContent({
     const taskIndex = sourceList.tasks.findIndex((t) => t.id === activeId);
     if (taskIndex === -1) return;
 
-    const task = sourceList.tasks[taskIndex];
     let newIndex = targetList.tasks.length;
     if (overType === "task") {
       const overIndex = targetList.tasks.findIndex((t) => t.id === overId);
       newIndex = overIndex >= 0 ? overIndex : targetList.tasks.length;
     }
 
-    // Mutate state optimistically
-    moveTask(sourceListId, targetListId, activeId, newIndex);
+    // Mutate state optimistically.
+    // El orden de los argumentos importa: (tarea, lista origen, lista destino, índice).
+    moveTask(activeId, sourceListId, targetListId, newIndex);
     active.data.current = { ...active.data.current, listId: targetListId };
   };
 
