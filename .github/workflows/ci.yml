@@ -44,6 +44,9 @@ jobs:
       CLERK_SECRET_KEY: sk_test_ci_dummy_value_for_build_only
       ENCRYPTION_SECRET: ci-dummy-encryption-secret-not-a-real-key
       NEXT_PUBLIC_APP_URL: http://localhost:3000
+      # Resend construye su cliente a nivel de módulo en la ruta de
+      # invitaciones, así que el build falla si esta variable no existe.
+      RESEND_API_KEY: re_ci_dummy_value_for_build_only
 
     steps:
       - uses: actions/checkout@v4
