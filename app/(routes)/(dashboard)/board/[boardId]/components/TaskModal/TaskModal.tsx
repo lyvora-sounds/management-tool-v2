@@ -37,14 +37,16 @@ import {
   type TaskAttachmentsHandle,
 } from "../TaskAttachments/TaskAttachments";
 import { TaskDescriptionEditor } from "../TaskDescriptionEditor/TaskDescriptionEditor";
-import { TaskAssignees } from "../TaskAssignees/TaskAssignees";
+import { TaskAssignee } from "../TaskAssignee/TaskAssignee";
+import { TaskCollaborators } from "../TaskCollaborators/TaskCollaborators";
+import { TaskQa } from "../TaskQa/TaskQa";
 import { TaskSubtasks } from "../TaskSubtasks/TaskSubtasks";
 import { TaskPriority } from "../TaskPriority/TaskPriority";
 import { TaskAiImprove } from "../TaskAiImprove/TaskAiImprove";
 import { TaskShareModal } from "../TaskShareModal/TaskShareModal";
 import type { Priority } from "../TaskPriority/TaskPriority.constants";
 import type { LabelModel } from "@/lib/generated/prisma/models/Label";
-import type { TaskAssignee } from "../TaskCard/TaskCard.types";
+import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { TaskModalProps } from "./TaskModal.types";
 import { toast } from "sonner";
 
@@ -94,8 +96,14 @@ export function TaskModal({
   const [activeLabels, setActiveLabels] = useState<{ label: LabelModel }[]>(
     currentTask.labels,
   );
-  const [activeAssignees, setActiveAssignees] = useState<TaskAssignee[]>(
-    currentTask.assignees,
+  const [assignee, setAssignee] = useState<BoardUser | null | undefined>(
+    currentTask.assignee,
+  );
+  const [qa, setQa] = useState<BoardUser | null | undefined>(
+    currentTask.qa,
+  );
+  const [collaborators, setCollaborators] = useState<TaskCollaborator[]>(
+    currentTask.collaborators ?? [],
   );
   const [priority, setPriority] = useState<Priority | null>(
     (currentTask.priority as Priority) ?? null,
@@ -134,7 +142,9 @@ export function TaskModal({
       setCurrentStartDate(currentTask.startDate ?? null);
       setCurrentDueDate(currentTask.dueDate ?? null);
       setActiveLabels(currentTask.labels);
-      setActiveAssignees(currentTask.assignees);
+      setAssignee(currentTask.assignee);
+      setQa(currentTask.qa);
+      setCollaborators(currentTask.collaborators ?? []);
       setPriority((currentTask.priority as Priority) ?? null);
       setCurrentEpicId((currentTask as any).epicId ?? null);
       setCurrentQuarter((currentTask as any).quarter ?? "");
@@ -551,13 +561,46 @@ export function TaskModal({
                     <Paperclip size={15} />
                     <span>Adjuntar</span>
                   </Button>
-                  <TaskAssignees
+                  <TaskAssignee
                     taskId={currentTask.id}
                     boardUsers={boardUsers}
-                    activeAssignees={activeAssignees}
+                    assignee={assignee}
                     isOwner={isOwner}
                     memberCanAssign={memberCanAssign}
-                    onAssigneesChange={setActiveAssignees}
+                    onAssigneeChange={(nextAssignee) => {
+                      setAssignee(nextAssignee);
+                      updateTask(currentListId, currentTask.id, {
+                        assignee: nextAssignee,
+                        assigneeId: nextAssignee ? nextAssignee.id : null,
+                      });
+                    }}
+                  />
+                  <TaskCollaborators
+                    taskId={currentTask.id}
+                    boardUsers={boardUsers}
+                    collaborators={collaborators}
+                    isOwner={isOwner}
+                    memberCanAssign={memberCanAssign}
+                    onCollaboratorsChange={(nextCollabs) => {
+                      setCollaborators(nextCollabs);
+                      updateTask(currentListId, currentTask.id, {
+                        collaborators: nextCollabs,
+                      });
+                    }}
+                  />
+                  <TaskQa
+                    taskId={currentTask.id}
+                    boardUsers={boardUsers}
+                    qa={qa}
+                    isOwner={isOwner}
+                    memberCanAssign={memberCanAssign}
+                    onQaChange={(nextQa) => {
+                      setQa(nextQa);
+                      updateTask(currentListId, currentTask.id, {
+                        qa: nextQa,
+                        qaId: nextQa ? nextQa.id : null,
+                      });
+                    }}
                   />
                 </div>
 

@@ -55,24 +55,41 @@ export async function POST(
   const allowed = await hasBoardAccess(user.id, task.list.board.id);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const assignees = await db.taskAssignee.findMany({
-    where: { taskId, userId: { not: user.id } },
-    select: { userId: true },
+  const taskWithMembers = await db.task.findUnique({
+    where: { id: taskId },
+    select: {
+      assigneeId: true,
+      qaId: true,
+      collaborators: { select: { userId: true } },
+    },
+  });
+
+  const notifyUserIds = new Set<string>();
+  if (taskWithMembers?.assigneeId && taskWithMembers.assigneeId !== user.id) {
+    notifyUserIds.add(taskWithMembers.assigneeId);
+  }
+  if (taskWithMembers?.qaId && taskWithMembers.qaId !== user.id) {
+    notifyUserIds.add(taskWithMembers.qaId);
+  }
+  taskWithMembers?.collaborators.forEach((c) => {
+    if (c.userId !== user.id) notifyUserIds.add(c.userId);
   });
 
   const actorName = user.name ?? user.email;
+  const notifyList = Array.from(notifyUserIds);
+
   const [comment] = await db.$transaction([
     db.comment.create({
       data: { content: content.trim(), taskId, userId: user.id },
       include: { user: { select: { name: true, email: true } } },
     }),
-    ...(assignees.length > 0
+    ...(notifyList.length > 0
       ? [
           db.notification.createMany({
-            data: assignees.map((a) => ({
+            data: notifyList.map((notifyUserId) => ({
               type: "comment",
               message: `${actorName} comentó en la tarea "${task.title}"`,
-              userId: a.userId,
+              userId: notifyUserId,
               boardId: task.list.board.id,
               taskId,
             })),

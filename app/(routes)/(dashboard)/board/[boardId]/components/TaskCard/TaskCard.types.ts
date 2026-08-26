@@ -3,12 +3,16 @@ import type { TaskModel } from "@/lib/generated/prisma/models/Task";
 import type { LabelModel } from "@/lib/generated/prisma/models/Label";
 import type { UserModel } from "@/lib/generated/prisma/models/User";
 
-export type TaskAssignee = { user: Pick<UserModel, "id" | "name" | "email"> };
 export type BoardUser = Pick<UserModel, "id" | "name" | "email">;
+export type TaskCollaborator = { user: BoardUser };
+export type TaskAssignee = { user: BoardUser };
 
 export type TaskWithLabels = TaskModel & {
   labels: { label: LabelModel }[];
-  assignees: TaskAssignee[];
+  assignee?: BoardUser | null;
+  qa?: BoardUser | null;
+  collaborators: TaskCollaborator[];
+  assignees?: TaskAssignee[];
   priority?: string | null;
   _count?: {
     comments: number;

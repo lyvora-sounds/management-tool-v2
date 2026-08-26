@@ -38,7 +38,7 @@ export function CreateTaskForm({ listId }: CreateTaskFormProps) {
 
       if (res.ok) {
         const task = await res.json();
-        addTask(listId, { ...task, labels: [], assignees: [] });
+        addTask(listId, { ...task, labels: [], collaborators: [], assignee: null, qa: null });
         handleClose();
       } else {
         toast.error("Error al crear la tarea");

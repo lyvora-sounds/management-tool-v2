@@ -154,7 +154,11 @@ export default async function DashboardPage() {
     }),
     db.task.findMany({
       where: {
-        assignees: { some: { userId: user.id } },
+        OR: [
+          { assigneeId: user.id },
+          { collaborators: { some: { userId: user.id } } },
+          { qaId: user.id },
+        ],
         archived: false,
         list: { boardId: { in: boardIds } },
       },
