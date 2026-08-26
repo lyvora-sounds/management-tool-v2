@@ -11,7 +11,9 @@ import {
   Loader2,
   Server,
   ShieldCheck,
+  UserCog,
 } from "lucide-react";
+import { UserProfile } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,7 +89,10 @@ const PROVIDERS: {
   },
 ];
 
+type SettingsTab = "account" | "ai";
+
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>("account");
   const [provider, setProvider] = useState<AiProvider>("openai");
   const [apiKey, setApiKey] = useState("");
   const [maskedApiKey, setMaskedApiKey] = useState("");
@@ -163,27 +168,56 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-muted-foreground" size={28} />
-      </div>
-    );
-  }
-
   const selectedProviderMeta = PROVIDERS.find((p) => p.id === provider);
 
+  const TABS: { id: SettingsTab; label: string; icon: typeof UserCog }[] = [
+    { id: "account", label: "Cuenta", icon: UserCog },
+    { id: "ai", label: "Inteligencia artificial", icon: Sparkles },
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8">
+    <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Ajustes de la cuenta
-        </h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Ajustes</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Configura tus claves personales de Inteligencia Artificial y preferencias de voz.
+          Gestiona tu perfil, tus claves personales de IA y las preferencias de voz.
         </p>
       </div>
 
+      <div className="flex border-b">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setActiveTab(id)}
+            className={`flex items-center gap-1.5 py-3 px-4 text-sm font-semibold border-b-2 transition-colors ${
+              activeTab === id
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Icon size={15} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Cuenta: perfil, email, contraseña y sesiones, gestionado por Clerk */}
+      {activeTab === "account" && (
+        <div className="flex justify-center [&_.cl-rootBox]:w-full [&_.cl-cardBox]:w-full [&_.cl-cardBox]:max-w-none [&_.cl-cardBox]:shadow-none">
+          <UserProfile routing="hash" />
+        </div>
+      )}
+
+      {/* La configuración de IA se carga por fetch; la pestaña de cuenta no la
+          necesita, así que el spinner se queda acotado aquí. */}
+      {activeTab === "ai" && loading && (
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <Loader2 className="animate-spin text-muted-foreground" size={28} />
+        </div>
+      )}
+
+      {activeTab === "ai" && !loading && (
       <form onSubmit={handleSave} className="space-y-6">
         {/* AI Configuration Card */}
         <div className="rounded-xl border bg-card p-6 space-y-6 shadow-sm">
@@ -348,6 +382,7 @@ export default function SettingsPage() {
           </Button>
         </div>
       </form>
+      )}
     </div>
   );
 }
