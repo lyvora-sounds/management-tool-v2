@@ -24,6 +24,8 @@ export async function PATCH(
     epicId,
     quarter,
     archived,
+    assigneeId,
+    qaId,
   } = await req.json();
 
   if (title !== undefined && (typeof title !== "string" || !title.trim())) {
@@ -69,10 +71,19 @@ export async function PATCH(
         archived,
         archivedAt: archived ? new Date() : null,
       }),
+      ...(assigneeId !== undefined && { assigneeId: assigneeId || null }),
+      ...(qaId !== undefined && { qaId: qaId || null }),
     },
     include: {
       epic: true,
       labels: { include: { label: true } },
+      assignee: { select: { id: true, name: true, email: true } },
+      qa: { select: { id: true, name: true, email: true } },
+      collaborators: {
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+        },
+      },
     },
   });
 

@@ -142,20 +142,38 @@ function TaskRow({
           </span>
         )}
 
-        {/* Assignees */}
-        {task.assignees.length > 0 && (
-          <div className="flex -space-x-1.5 shrink-0">
-            {task.assignees.slice(0, 3).map(({ user }) => (
-              <div
-                key={user.id}
-                title={user.name ?? user.email}
-                className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[9px] font-medium flex items-center justify-center ring-1 ring-background"
-              >
-                {getInitials(user.name, user.email)}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Assignee & QA & Collaborators */}
+        <div className="flex items-center gap-1 shrink-0">
+          {task.qa && (
+            <div
+              title={`QA: ${task.qa.name ?? task.qa.email}`}
+              className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center ring-1 ring-background shrink-0"
+            >
+              {getInitials(task.qa.name, task.qa.email)}
+            </div>
+          )}
+          {task.assignee && (
+            <div
+              title={`Asignado: ${task.assignee.name ?? task.assignee.email}`}
+              className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center ring-1 ring-background shrink-0"
+            >
+              {getInitials(task.assignee.name, task.assignee.email)}
+            </div>
+          )}
+          {task.collaborators && task.collaborators.length > 0 && (
+            <div className="flex -space-x-1.5 shrink-0">
+              {task.collaborators.slice(0, 2).map(({ user }) => (
+                <div
+                  key={user.id}
+                  title={`Colaborador: ${user.name ?? user.email}`}
+                  className="w-5 h-5 rounded-full bg-blue-600 text-white text-[9px] font-medium flex items-center justify-center ring-1 ring-background"
+                >
+                  {getInitials(user.name, user.email)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Labels */}
         {task.labels.length > 0 && (

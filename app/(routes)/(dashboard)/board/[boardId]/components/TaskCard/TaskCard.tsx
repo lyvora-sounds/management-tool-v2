@@ -18,6 +18,18 @@ import { TaskModal } from "../TaskModal/TaskModal";
 import { useBoardStore } from "../../store/useBoardStore";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
 
+function getInitials(name: string | null | undefined, email: string | undefined) {
+  if (name)
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  if (email) return email[0].toUpperCase();
+  return "?";
+}
+
 export function TaskCard({
   task,
   listId,
@@ -78,7 +90,12 @@ export function TaskCard({
     due.getTime() - today.getTime() <= 3 * 24 * 60 * 60 * 1000;
 
   const hasFooter =
-    subtaskTotal > 0 || commentCount > 0 || attachmentCount > 0 || due;
+    subtaskTotal > 0 ||
+    commentCount > 0 ||
+    attachmentCount > 0 ||
+    Boolean(due) ||
+    Boolean(task.assignee) ||
+    Boolean(task.qa);
 
   return (
     <div
@@ -147,52 +164,74 @@ export function TaskCard({
         </div>
       )}
 
-      {/* Footer row: indicators */}
+      {/* Footer row: indicators & assignee */}
       {hasFooter && (
-        <div className="flex items-center gap-2.5 pl-6 text-muted-foreground">
-          {due && (
-            <span
-              className={cn(
-                "flex items-center gap-1 text-[11px]",
-                isOverdue
-                  ? "text-red-500 font-medium"
-                  : isDueSoon
-                    ? "text-orange-500"
+        <div className="flex items-center justify-between gap-2 pl-6 text-muted-foreground pt-0.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {due && (
+              <span
+                className={cn(
+                  "flex items-center gap-1 text-[11px]",
+                  isOverdue
+                    ? "text-red-500 font-medium"
+                    : isDueSoon
+                      ? "text-orange-500"
+                      : "text-muted-foreground",
+                )}
+              >
+                <Calendar size={11} />
+                {due.toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "short",
+                })}
+              </span>
+            )}
+            {subtaskTotal > 0 && (
+              <span
+                className={cn(
+                  "flex items-center gap-1 text-[11px]",
+                  subtaskDone === subtaskTotal
+                    ? "text-primary"
                     : "text-muted-foreground",
-              )}
-            >
-              <Calendar size={11} />
-              {due.toLocaleDateString("es-ES", {
-                day: "2-digit",
-                month: "short",
-              })}
-            </span>
-          )}
-          {subtaskTotal > 0 && (
-            <span
-              className={cn(
-                "flex items-center gap-1 text-[11px]",
-                subtaskDone === subtaskTotal
-                  ? "text-primary"
-                  : "text-muted-foreground",
-              )}
-            >
-              <CheckSquare2 size={11} />
-              {subtaskDone}/{subtaskTotal}
-            </span>
-          )}
-          {commentCount > 0 && (
-            <span className="flex items-center gap-1 text-[11px]">
-              <MessageSquare size={11} />
-              {commentCount}
-            </span>
-          )}
-          {attachmentCount > 0 && (
-            <span className="flex items-center gap-1 text-[11px]">
-              <Paperclip size={11} />
-              {attachmentCount}
-            </span>
-          )}
+                )}
+              >
+                <CheckSquare2 size={11} />
+                {subtaskDone}/{subtaskTotal}
+              </span>
+            )}
+            {commentCount > 0 && (
+              <span className="flex items-center gap-1 text-[11px]">
+                <MessageSquare size={11} />
+                {commentCount}
+              </span>
+            )}
+            {attachmentCount > 0 && (
+              <span className="flex items-center gap-1 text-[11px]">
+                <Paperclip size={11} />
+                {attachmentCount}
+              </span>
+            )}
+          </div>
+
+          {/* Assignee & QA Avatars visible on card */}
+          <div className="flex items-center gap-1 shrink-0 ml-auto">
+            {task.qa && (
+              <div
+                title={`QA: ${task.qa.name ?? task.qa.email}`}
+                className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center ring-1 ring-background shadow-xs"
+              >
+                {getInitials(task.qa.name, task.qa.email)}
+              </div>
+            )}
+            {task.assignee && (
+              <div
+                title={`Asignado: ${task.assignee.name ?? task.assignee.email}`}
+                className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center ring-1 ring-background shadow-xs"
+              >
+                {getInitials(task.assignee.name, task.assignee.email)}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

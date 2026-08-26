@@ -31,9 +31,12 @@ export async function POST(
     return NextResponse.json({ error: "Sin permiso para asignar tareas" }, { status: 403 });
   }
 
-  const { assigneeId } = await req.json();
+  const body = await req.json();
+  const assigneeId = body.assigneeId ? String(body.assigneeId) : null;
 
+  // Toggle if clicked same assignee, otherwise set new or null
   const targetAssigneeId = task.assigneeId === assigneeId ? null : assigneeId;
+
   const updated = await db.task.update({
     where: { id: taskId },
     data: { assigneeId: targetAssigneeId },
@@ -45,6 +48,7 @@ export async function POST(
   const actorName = user.name ?? user.email;
 
   if (targetAssigneeId) {
+    // Notify the assignee (skip if assigning themselves)
     if (targetAssigneeId !== user.id) {
       await db.notification.create({
         data: {
@@ -57,6 +61,7 @@ export async function POST(
       });
     }
 
+    // Log activity
     const assigneeName = updated.assignee?.name ?? updated.assignee?.email ?? targetAssigneeId;
     await createActivity({
       type: "task_assigned",
@@ -64,8 +69,6 @@ export async function POST(
       boardId: task.list.board.id,
       userId: user.id,
     });
-
-    return NextResponse.json({ active: true, assigneeId: targetAssigneeId });
   } else {
     await createActivity({
       type: "task_unassigned",
@@ -73,7 +76,11 @@ export async function POST(
       boardId: task.list.board.id,
       userId: user.id,
     });
-
-    return NextResponse.json({ active: false, assigneeId: null });
   }
+
+  return NextResponse.json({
+    success: true,
+    assigneeId: updated.assigneeId,
+    assignee: updated.assignee,
+  });
 }

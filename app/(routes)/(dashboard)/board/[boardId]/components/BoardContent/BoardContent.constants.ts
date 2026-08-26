@@ -7,5 +7,6 @@ export const DEFAULT_FILTERS: BoardFiltersState = {
   archiveStatus: "active",
   quarter: "all",
   epicId: "all",
+  memberId: "all",
 };
 
