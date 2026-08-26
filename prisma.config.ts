@@ -9,6 +9,11 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Este `url` es el que usa la CLI de Prisma para las migraciones, y las
+    // migraciones necesitan conexión DIRECTA: a través del pooler de Neon
+    // el advisory lock de `migrate deploy` se queda colgado y falla con P1002.
+    // La app sí usa el pooler (DATABASE_URL en lib/db.ts), que es lo correcto
+    // en serverless. `directUrl` se eliminó en Prisma 7; el reemplazo es esto.
+    url: process.env["DATABASE_URL_UNPOOLED"] ?? process.env["DATABASE_URL"],
   },
 });
