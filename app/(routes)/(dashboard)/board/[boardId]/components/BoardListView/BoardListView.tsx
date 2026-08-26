@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useBoardStore } from "../../store/useBoardStore";
 import { TaskModal } from "../TaskModal/TaskModal";
+import { TaskActions } from "../TaskActions/TaskActions";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
 import { BoardListViewProps, TaskRowProps } from "./BoardListView.types";
 import type { ListWithTasks, BoardUser } from "../TaskCard/TaskCard.types";
@@ -188,6 +189,16 @@ function TaskRow({
             ))}
           </div>
         )}
+
+        {/* Acciones: mover a otra lista o eliminar. Detiene la propagación
+            para que abrir el menú no abra además el modal de la tarea. */}
+        <div
+          className="shrink-0"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <TaskActions taskId={task.id} listId={listId} />
+        </div>
       </div>
 
       <TaskModal
