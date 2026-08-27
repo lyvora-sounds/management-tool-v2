@@ -276,7 +276,7 @@ export default function CalendarPage() {
                         size="icon"
                         className="shrink-0 h-6 w-6"
                         onClick={() =>
-                          router.push(`/board/${task.list.board.id}`)
+                          router.push(`/board/${task.list.board.id}?taskId=${task.id}`)
                         }
                       >
                         <ExternalLink size={12} />

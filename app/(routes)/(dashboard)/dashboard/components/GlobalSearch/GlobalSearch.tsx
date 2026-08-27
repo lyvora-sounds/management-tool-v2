@@ -82,7 +82,7 @@ export function GlobalSearch() {
     if (entry.type === "board") {
       router.push(`/board/${entry.item.id}`);
     } else {
-      router.push(`/board/${entry.item.list.boardId}`);
+      router.push(`/board/${entry.item.list.boardId}?taskId=${entry.item.id}`);
     }
   };
 

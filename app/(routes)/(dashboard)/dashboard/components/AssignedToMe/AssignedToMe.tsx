@@ -76,8 +76,8 @@ export function AssignedToMe({ tasks }: AssignedToMeProps) {
                 return (
                   <Link
                     key={task.id}
-                    href={`/board/${task.list.board.id}`}
-                    className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 hover:bg-muted/50 transition-colors group"
+                    href={`/board/${task.list.board.id}?taskId=${task.id}`}
+                    className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 hover:bg-muted/50 hover:border-primary/40 transition-colors group cursor-pointer"
                   >
                     <span className="shrink-0 text-muted-foreground">
                       {task.completed ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useBoardPolling } from "@/hooks/use-board-polling";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -24,6 +25,7 @@ import type { ListWithTasks, TaskWithLabels } from "../TaskCard/TaskCard.types";
 import { useBoardStore } from "../../store/useBoardStore";
 import { ListItem } from "../ListItem/ListItem";
 import { CreateListForm } from "../CreateListForm/CreateListForm";
+import { TaskModal } from "../TaskModal/TaskModal";
 import { BoardContentProps } from "./BoardContent.types";
 import { BoardFilters } from "../BoardFilters/BoardFilters";
 import { BoardFiltersState } from "../BoardFilters/BoardFilters.types";
@@ -115,6 +117,10 @@ export function BoardContent({
 }: BoardContentProps) {
   useBoardPolling();
 
+  const searchParams = useSearchParams();
+  const taskIdParam = searchParams.get("taskId");
+  const [closedTaskId, setClosedTaskId] = useState<string | null>(null);
+
   const { lists, setLists, reorderLists, moveTask } = useBoardStore();
   const [activeTask, setActiveTask] = useState<TaskModel | null>(null);
   const [activeList, setActiveList] = useState<ListWithTasks | null>(null);
@@ -122,6 +128,26 @@ export function BoardContent({
   const [filters, setFilters] = useState<BoardFiltersState>(DEFAULT_FILTERS);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
+
+  const urlTaskEntry = useMemo(() => {
+    if (!taskIdParam || taskIdParam === closedTaskId) return null;
+    for (const list of lists) {
+      const task = list.tasks.find((t) => t.id === taskIdParam);
+      if (task) {
+        return { task, listId: list.id, listTitle: list.title };
+      }
+    }
+    return null;
+  }, [lists, taskIdParam, closedTaskId]);
+
+  const handleCloseUrlModal = () => {
+    if (taskIdParam) {
+      setClosedTaskId(taskIdParam);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("taskId");
+      window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+    }
+  };
 
   useEffect(() => {
     setLists(initialLists);
@@ -395,6 +421,20 @@ export function BoardContent({
             )}
           </DragOverlay>
         </DndContext>
+      )}
+
+      {urlTaskEntry && (
+        <TaskModal
+          task={urlTaskEntry.task}
+          listId={urlTaskEntry.listId}
+          listTitle={urlTaskEntry.listTitle}
+          boardId={boardId}
+          open={Boolean(urlTaskEntry)}
+          onClose={handleCloseUrlModal}
+          isOwner={isOwner}
+          boardUsers={boardUsers}
+          memberCanAssign={memberCanAssign}
+        />
       )}
     </div>
   );
