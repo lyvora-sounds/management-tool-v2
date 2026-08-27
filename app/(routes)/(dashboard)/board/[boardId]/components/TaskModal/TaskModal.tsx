@@ -7,6 +7,8 @@ import {
   Circle,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Check,
   Paperclip,
   Share2,
   Layers,
@@ -18,6 +20,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +59,8 @@ import type { LabelModel } from "@/lib/generated/prisma/models/Label";
 import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { TaskModalProps } from "./TaskModal.types";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { getStatusTheme } from "@/lib/statusTheme";
 
 export function TaskModal({
   task,
@@ -64,17 +76,29 @@ export function TaskModal({
   const lists = useBoardStore((s) => s.lists);
   const updateTask = useBoardStore((s) => s.updateTask);
   const addSubtask = useBoardStore((s) => s.addSubtask);
+  const moveTask = useBoardStore((s) => s.moveTask);
   const attachmentsRef = useRef<TaskAttachmentsHandle>(null);
 
   // Flat list of all tasks across all lists for navigation
-  const allTasks = lists.flatMap((l) =>
-    l.tasks.map((t) => ({ task: t, listId: l.id, listTitle: l.title })),
-  );
+  const allTasks =
+    lists.length > 0
+      ? lists.flatMap((l) =>
+          l.tasks.map((t) => ({ task: t, listId: l.id, listTitle: l.title })),
+        )
+      : [{ task, listId, listTitle }];
 
   // Current navigation state — starts at the task that opened the modal
   const [currentTask, setCurrentTask] = useState(task);
   const [currentListId, setCurrentListId] = useState(listId);
   const [currentListTitle, setCurrentListTitle] = useState(listTitle);
+
+  useEffect(() => {
+    if (task) {
+      setCurrentTask(task);
+      setCurrentListId(listId);
+      setCurrentListTitle(listTitle);
+    }
+  }, [task, listId, listTitle]);
 
   const currentIndex = allTasks.findIndex((e) => e.task.id === currentTask.id);
   const hasPrev = currentIndex > 0;
@@ -196,20 +220,87 @@ export function TaskModal({
     allTasks,
   ]);
 
+  const handleMoveToList = async (targetListId: string) => {
+    if (targetListId === currentListId) return;
+    const targetList = lists.find((l) => l.id === targetListId);
+    if (!targetList) return;
+
+    const isDone = /hecho|done|completad|finaliz/i.test(targetList.title);
+    moveTask(
+      currentTask.id,
+      currentListId,
+      targetListId,
+      targetList.tasks.length,
+    );
+    setCurrentListId(targetListId);
+    setCurrentListTitle(targetList.title);
+    if (isDone !== completed) {
+      setCompleted(isDone);
+      updateTask(targetListId, currentTask.id, { completed: isDone });
+    }
+
+    try {
+      const res = await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listId: targetListId }),
+      });
+      if (res.ok) {
+        toast.success(`Movido a "${targetList.title}"`);
+      } else {
+        toast.error("Error al mover la tarea");
+      }
+    } catch {
+      toast.error("Error al mover la tarea");
+    }
+  };
+
   const toggleCompleted = async () => {
     const next = !completed;
-    setCompleted(next);
-    const res = await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completed: next }),
-    });
-    if (res.ok) {
-      updateTask(currentListId, currentTask.id, { completed: next });
-      toast.success(next ? "Tarea completada" : "Tarea reactivada");
+    const doneList = lists.find((l) =>
+      /hecho|done|completad|finaliz/i.test(l.title),
+    );
+    const todoList =
+      lists.find((l) => /hacer|todo|to do|pendient|backlog/i.test(l.title)) ||
+      lists[0];
+
+    const targetList = next ? doneList : todoList;
+
+    if (targetList && targetList.id !== currentListId) {
+      moveTask(
+        currentTask.id,
+        currentListId,
+        targetList.id,
+        targetList.tasks.length,
+      );
+      setCurrentListId(targetList.id);
+      setCurrentListTitle(targetList.title);
+      setCompleted(next);
+      updateTask(targetList.id, currentTask.id, { completed: next });
+
+      const res = await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listId: targetList.id, completed: next }),
+      });
+      if (res.ok) {
+        toast.success(
+          next
+            ? `Completada y movida a "${targetList.title}"`
+            : `Reactivada y movida a "${targetList.title}"`,
+        );
+      }
     } else {
-      setCompleted(!next);
-      toast.error("Error al actualizar la tarea");
+      setCompleted(next);
+      updateTask(currentListId, currentTask.id, { completed: next });
+      const res = await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: next }),
+      });
+      if (res.ok) {
+        toast.success(next ? "Tarea completada" : "Tarea reactivada");
+      }
     }
   };
 
@@ -338,7 +429,31 @@ export function TaskModal({
         <DialogContent className="sm:max-w-4xl p-0 overflow-hidden">
           <DialogHeader className="flex flex-row items-center gap-2 px-4 py-3 border-b bg-muted/50">
             <DialogTitle className="text-sm font-medium text-muted-foreground flex-1 truncate flex items-center gap-2">
-              <span>{currentListTitle}</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-background hover:bg-muted border transition-all cursor-pointer select-none">
+                  <span>{currentListTitle}</span>
+                  <ChevronDown size={11} className="opacity-60" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44">
+                  <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    Estado / Columna
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {lists.map((l) => (
+                    <DropdownMenuItem
+                      key={l.id}
+                      onClick={() => handleMoveToList(l.id)}
+                      className="flex items-center justify-between text-xs cursor-pointer py-1.5"
+                    >
+                      <span>{l.title}</span>
+                      {l.id === currentListId && (
+                        <Check size={13} className="text-primary" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {selectedEpicMeta && (
                 <Badge
                   className="text-[10px] font-semibold text-white gap-1"
@@ -485,6 +600,43 @@ export function TaskModal({
               {/* Labels + Dates + Priority + Epic + Quarter + Attachments row */}
               <div className="flex flex-col gap-2">
                 <div className="flex gap-2 flex-wrap items-center">
+                  {/* Selector de Estado / Lista */}
+                  <Select
+                    value={currentListId}
+                    onValueChange={(targetListId) => {
+                      if (targetListId) handleMoveToList(targetListId);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 text-xs w-auto min-w-32 gap-1.5 font-medium bg-background border shadow-2xs">
+                      <span
+                        className={cn(
+                          "w-2 h-2 rounded-full shrink-0",
+                          getStatusTheme(currentListTitle || "").dot,
+                        )}
+                      />
+                      <span className="truncate">{currentListTitle}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {lists.map((l) => {
+                        const theme = getStatusTheme(l.title);
+                        return (
+                          <SelectItem
+                            key={l.id}
+                            value={l.id}
+                            className="text-xs cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={cn("w-2 h-2 rounded-full", theme.dot)}
+                              />
+                              <span>{l.title}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+
                   <TaskLabels
                     taskId={currentTask.id}
                     boardId={boardId}

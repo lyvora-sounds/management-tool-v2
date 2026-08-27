@@ -64,13 +64,43 @@ export function TaskCard({
 
   const toggleCompleted = async () => {
     const next = !completed;
-    setCompleted(next);
-    await fetch(`/api/tasks/updateTask/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completed: next }),
-    });
-    updateTask(listId, task.id, { completed: next });
+    const boardLists = useBoardStore.getState().lists;
+    const doneList = boardLists.find((l) =>
+      /hecho|done|completad|finaliz/i.test(l.title),
+    );
+    const todoList =
+      boardLists.find((l) =>
+        /hacer|todo|to do|pendient|backlog/i.test(l.title),
+      ) || boardLists[0];
+
+    const targetList = next ? doneList : todoList;
+
+    if (targetList && targetList.id !== listId) {
+      useBoardStore
+        .getState()
+        .moveTask(task.id, listId, targetList.id, targetList.tasks.length);
+      useBoardStore
+        .getState()
+        .updateTask(targetList.id, task.id, { completed: next });
+      setCompleted(next);
+
+      await fetch(`/api/tasks/updateTask/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listId: targetList.id,
+          completed: next,
+        }),
+      });
+    } else {
+      setCompleted(next);
+      updateTask(listId, task.id, { completed: next });
+      await fetch(`/api/tasks/updateTask/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: next }),
+      });
+    }
   };
 
   const priority = getPriority(task.priority);

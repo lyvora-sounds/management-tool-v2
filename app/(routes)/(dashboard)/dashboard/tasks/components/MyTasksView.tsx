@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
   AlertCircle,
@@ -96,88 +96,7 @@ type GroupByOption = "events" | "board" | "role" | "priority";
 type RoleFilter = "all" | "assignee" | "collaborator" | "qa";
 type StatusFilter = "all" | "pending" | "completed";
 
-export const PREDEFINED_STATUSES = [
-  "Por hacer",
-  "En progreso",
-  "Revisión",
-  "Hecho",
-] as const;
-
-export function getStatusTheme(title: string, completed?: boolean) {
-  const s = (title ?? "").toLowerCase().trim();
-  if (
-    completed ||
-    s.includes("hecho") ||
-    s.includes("done") ||
-    s.includes("completad") ||
-    s.includes("finaliz")
-  ) {
-    return {
-      bg: "bg-emerald-500/10 dark:bg-emerald-950/30",
-      text: "text-emerald-700 dark:text-emerald-300",
-      border: "border-emerald-500/30 dark:border-emerald-700/40",
-      dot: "bg-emerald-500",
-      isDone: true,
-      label: title,
-    };
-  }
-  if (
-    s.includes("progres") ||
-    s.includes("curso") ||
-    s.includes("doing") ||
-    s.includes("desarrollo") ||
-    s.includes("progress")
-  ) {
-    return {
-      bg: "bg-blue-500/10 dark:bg-blue-950/30",
-      text: "text-blue-700 dark:text-blue-300",
-      border: "border-blue-500/30 dark:border-blue-700/40",
-      dot: "bg-blue-500",
-      isDone: false,
-      label: title,
-    };
-  }
-  if (
-    s.includes("revis") ||
-    s.includes("review") ||
-    s.includes("qa") ||
-    s.includes("test") ||
-    s.includes("evalua")
-  ) {
-    return {
-      bg: "bg-purple-500/10 dark:bg-purple-950/30",
-      text: "text-purple-700 dark:text-purple-300",
-      border: "border-purple-500/30 dark:border-purple-700/40",
-      dot: "bg-purple-500",
-      isDone: false,
-      label: title,
-    };
-  }
-  if (
-    s.includes("hacer") ||
-    s.includes("todo") ||
-    s.includes("to do") ||
-    s.includes("pendient") ||
-    s.includes("backlog")
-  ) {
-    return {
-      bg: "bg-slate-500/10 dark:bg-slate-800/40",
-      text: "text-slate-700 dark:text-slate-300",
-      border: "border-slate-500/25 dark:border-slate-700/40",
-      dot: "bg-slate-400 dark:bg-slate-500",
-      isDone: false,
-      label: title,
-    };
-  }
-  return {
-    bg: "bg-zinc-500/10 dark:bg-zinc-800/30",
-    text: "text-zinc-700 dark:text-zinc-300",
-    border: "border-zinc-500/20 dark:border-zinc-700/30",
-    dot: "bg-zinc-400 dark:bg-zinc-500",
-    isDone: false,
-    label: title,
-  };
-}
+import { PREDEFINED_STATUSES, getStatusTheme } from "@/lib/statusTheme";
 
 const PRIORITY_CONFIG: Record<
   string,
@@ -258,6 +177,7 @@ function formatDueDate(dueDateStr: string): { label: string; isOverdue: boolean;
 }
 
 export function MyTasksView({ initialTasks, userId, boards }: Props) {
+  const router = useRouter();
   const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
   const [search, setSearch] = useState("");
   const [boardFilter, setBoardFilter] = useState("all");
@@ -862,11 +782,15 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                   const isUpdating = updatingTaskId === task.id;
 
                   return (
-                    <Link
+                    <div
                       key={task.id}
-                      href={`/board/${task.list.board.id}?taskId=${task.id}`}
+                      onClick={() =>
+                        router.push(
+                          `/board/${task.list.board.id}?taskId=${task.id}`,
+                        )
+                      }
                       className={cn(
-                        "group relative flex items-center justify-between gap-4 px-4 py-3 rounded-xl border bg-card hover:bg-muted/40 hover:border-primary/40 transition-all shadow-xs cursor-pointer no-underline text-foreground w-full",
+                        "group relative flex items-center justify-between gap-4 px-4 py-3 rounded-xl border bg-card hover:bg-muted/40 hover:border-primary/40 transition-all shadow-xs cursor-pointer select-none text-foreground w-full",
                         task.completed && "opacity-60 bg-muted/20",
                       )}
                     >
@@ -875,7 +799,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
                             className={cn(
-                              "text-sm font-medium leading-snug break-words group-hover:text-primary transition-colors",
+                              "text-sm font-medium leading-snug break-words group-hover:text-primary transition-colors cursor-pointer",
                               task.completed &&
                                 "line-through text-muted-foreground",
                             )}
@@ -911,9 +835,8 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
                           <span
                             onClick={(e) => {
-                              e.preventDefault();
                               e.stopPropagation();
-                              window.location.href = `/board/${task.list.board.id}`;
+                              router.push(`/board/${task.list.board.id}`);
                             }}
                             className="font-medium hover:text-primary transition-colors underline-offset-2 hover:underline cursor-pointer"
                           >
@@ -1028,7 +951,6 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             onClick={(e) => {
-                              e.preventDefault();
                               e.stopPropagation();
                             }}
                             className={cn(
@@ -1076,7 +998,6 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                                 <DropdownMenuItem
                                   key={st.id || st.title}
                                   onClick={(e) => {
-                                    e.preventDefault();
                                     e.stopPropagation();
                                     handleStatusChange(
                                       task,
@@ -1108,19 +1029,21 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                         </DropdownMenu>
 
                         {/* Direct link to Board */}
-                        <span
+                        <button
+                          type="button"
                           onClick={(e) => {
-                            e.preventDefault();
                             e.stopPropagation();
-                            window.location.href = `/board/${task.list.board.id}?taskId=${task.id}`;
+                            router.push(
+                              `/board/${task.list.board.id}?taskId=${task.id}`,
+                            );
                           }}
                           className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
                           title="Abrir ticket en el tablero"
                         >
                           <ExternalLink size={14} />
-                        </span>
+                        </button>
                       </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>

@@ -121,7 +121,11 @@ export function BoardContent({
   const taskIdParam = searchParams.get("taskId");
   const [closedTaskId, setClosedTaskId] = useState<string | null>(null);
 
-  const { lists, setLists, reorderLists, moveTask } = useBoardStore();
+  const lists = useBoardStore((s) => s.lists);
+  const setLists = useBoardStore((s) => s.setLists);
+  const reorderLists = useBoardStore((s) => s.reorderLists);
+  const moveTask = useBoardStore((s) => s.moveTask);
+
   const [activeTask, setActiveTask] = useState<TaskModel | null>(null);
   const [activeList, setActiveList] = useState<ListWithTasks | null>(null);
   const [dragOriginListId, setDragOriginListId] = useState<string | null>(null);
@@ -129,16 +133,18 @@ export function BoardContent({
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
 
+  const effectiveLists = lists && lists.length > 0 ? lists : initialLists;
+
   const urlTaskEntry = useMemo(() => {
     if (!taskIdParam || taskIdParam === closedTaskId) return null;
-    for (const list of lists) {
+    for (const list of effectiveLists) {
       const task = list.tasks.find((t) => t.id === taskIdParam);
       if (task) {
         return { task, listId: list.id, listTitle: list.title };
       }
     }
     return null;
-  }, [lists, taskIdParam, closedTaskId]);
+  }, [effectiveLists, taskIdParam, closedTaskId]);
 
   const handleCloseUrlModal = () => {
     if (taskIdParam) {
