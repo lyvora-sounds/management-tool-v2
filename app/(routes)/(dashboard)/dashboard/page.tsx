@@ -169,10 +169,27 @@ export default async function DashboardPage() {
         completed: true,
         priority: true,
         dueDate: true,
+        quarter: true,
+        assigneeId: true,
+        qaId: true,
+        collaborators: { select: { userId: true } },
+        epic: { select: { id: true, title: true, color: true } },
+        _count: { select: { comments: true, attachments: true } },
+        subtasks: { select: { id: true, completed: true } },
         list: {
           select: {
+            id: true,
             title: true,
-            board: { select: { id: true, title: true } },
+            board: {
+              select: {
+                id: true,
+                title: true,
+                list: {
+                  select: { id: true, title: true, order: true },
+                  orderBy: { order: "asc" },
+                },
+              },
+            },
           },
         },
       },
@@ -246,7 +263,7 @@ export default async function DashboardPage() {
 
       <RecentActivity logs={recentActivity} />
 
-      <AssignedToMe tasks={assignedTasks} />
+      <AssignedToMe tasks={assignedTasks as any} userId={user.id} />
 
       <div>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
