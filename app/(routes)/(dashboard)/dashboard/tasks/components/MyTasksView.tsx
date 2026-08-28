@@ -254,6 +254,19 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
     }
   };
 
+  const handleStatusSelect = (task: TaskItem, val: string) => {
+    const board = boards.find((b) => b.id === task.list.board.id);
+    const existingList = board?.list?.find(
+      (l) => l.id === val || l.title.toLowerCase() === val.toLowerCase(),
+    );
+    if (existingList) {
+      if (existingList.id === task.list.id) return;
+      handleStatusChange(task, existingList.id, undefined);
+    } else {
+      handleStatusChange(task, undefined, val);
+    }
+  };
+
   const getAvailableStatuses = (task: TaskItem) => {
     const board = boards.find((b) => b.id === task.list.board.id);
     const boardLists = board?.list ?? [];
@@ -263,9 +276,8 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
     );
 
     const items: {
-      id?: string;
+      id: string;
       title: string;
-      isPredefined?: boolean;
       active: boolean;
     }[] = [];
 
@@ -284,8 +296,8 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
     for (const predefined of PREDEFINED_STATUSES) {
       if (!existingTitles.has(predefined.toLowerCase())) {
         items.push({
+          id: predefined,
           title: predefined,
-          isPredefined: true,
           active: task.list.title.toLowerCase() === predefined.toLowerCase(),
         });
       }
@@ -947,86 +959,68 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                           </Badge>
                         )}
 
-                        {/* STATUS DROPDOWN TAG ON THE RIGHT */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            onClick={(e) => {
-                              e.stopPropagation();
+                        {/* STATUS SELECT DROPDOWN ON THE RIGHT */}
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          className="shrink-0"
+                        >
+                          <Select
+                            value={task.list.id}
+                            onValueChange={(val) => {
+                              if (val) handleStatusSelect(task, val);
                             }}
-                            className={cn(
-                              "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all cursor-pointer select-none",
-                              "hover:ring-2 hover:ring-primary/20 hover:opacity-90 shadow-2xs shrink-0",
-                              statusTheme.bg,
-                              statusTheme.text,
-                              statusTheme.border,
-                            )}
-                            title="Cambiar estado del ticket"
                           >
-                            {isUpdating ? (
-                              <Loader2
-                                size={11}
-                                className="animate-spin shrink-0"
-                              />
-                            ) : (
-                              <span
-                                className={cn(
-                                  "w-1.5 h-1.5 rounded-full shrink-0",
-                                  statusTheme.dot,
-                                )}
-                              />
-                            )}
-                            <span className="truncate max-w-[120px]">
-                              {task.list.title}
-                            </span>
-                            <ChevronDown
-                              size={11}
-                              className="opacity-60 shrink-0 ml-0.5"
-                            />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="w-48"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <DropdownMenuLabel className="text-[11px] text-muted-foreground px-2 py-1 font-semibold uppercase tracking-wider">
-                              Estado del ticket
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {availableStatuses.map((st) => {
-                              const itemTheme = getStatusTheme(st.title);
-                              return (
-                                <DropdownMenuItem
-                                  key={st.id || st.title}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleStatusChange(
-                                      task,
-                                      st.id,
-                                      st.isPredefined ? st.title : undefined,
-                                    );
-                                  }}
-                                  className="flex items-center justify-between text-xs py-1.5 px-2 cursor-pointer"
-                                >
-                                  <div className="flex items-center gap-2 truncate">
-                                    <span
-                                      className={cn(
-                                        "w-2 h-2 rounded-full shrink-0",
-                                        itemTheme.dot,
-                                      )}
-                                    />
-                                    <span className="truncate">{st.title}</span>
-                                  </div>
-                                  {st.active && (
-                                    <Check
-                                      size={13}
-                                      className="text-primary shrink-0 ml-2"
-                                    />
+                            <SelectTrigger
+                              className={cn(
+                                "h-7 text-xs font-medium rounded-full border px-2.5 py-1 gap-1.5 transition-all shadow-2xs cursor-pointer select-none",
+                                statusTheme.bg,
+                                statusTheme.text,
+                                statusTheme.border,
+                              )}
+                              title="Cambiar estado del ticket"
+                            >
+                              {isUpdating ? (
+                                <Loader2
+                                  size={11}
+                                  className="animate-spin shrink-0"
+                                />
+                              ) : (
+                                <span
+                                  className={cn(
+                                    "w-1.5 h-1.5 rounded-full shrink-0",
+                                    statusTheme.dot,
                                   )}
-                                </DropdownMenuItem>
-                              );
-                            })}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                                />
+                              )}
+                              <span className="truncate max-w-[120px]">
+                                {task.list.title}
+                              </span>
+                            </SelectTrigger>
+                            <SelectContent align="end" className="w-44">
+                              {availableStatuses.map((st) => {
+                                const itemTheme = getStatusTheme(st.title);
+                                return (
+                                  <SelectItem
+                                    key={st.id || st.title}
+                                    value={st.id || st.title}
+                                    className="text-xs cursor-pointer py-1.5"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span
+                                        className={cn(
+                                          "w-2 h-2 rounded-full shrink-0",
+                                          itemTheme.dot,
+                                        )}
+                                      />
+                                      <span className="truncate">{st.title}</span>
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
                         {/* Direct link to Board */}
                         <button
