@@ -13,9 +13,9 @@ const pool =
     connectionString: process.env.DATABASE_URL,
   });
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-});
+const adapter = new PrismaPg(
+  pool as unknown as ConstructorParameters<typeof PrismaPg>[0],
+);
 
 const db =
   globalForPrisma.prisma ||

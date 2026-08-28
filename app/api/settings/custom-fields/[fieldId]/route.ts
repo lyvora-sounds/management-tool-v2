@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { isBoardAdmin } from "@/lib/boardAccess";
+import { isCustomFieldType } from "@/lib/customFieldsDefaults";
 
 export async function PATCH(
   req: Request,
@@ -35,12 +36,20 @@ export async function PATCH(
   const body = await req.json();
   const { name, type, options, enabled } = body;
 
+  if (type !== undefined && !isCustomFieldType(type)) {
+    return NextResponse.json({ error: "Tipo de campo no válido" }, { status: 400 });
+  }
+
+  const nextType = type ?? field.type;
+
   const updated = await db.customField.update({
     where: { id: fieldId },
     data: {
       ...(name !== undefined && { name: name.trim() }),
       ...(type !== undefined && { type }),
-      ...(options !== undefined && { options: type === "SELECT" || field.type === "SELECT" ? options : undefined }),
+      ...(options !== undefined && {
+        options: nextType === "SELECT" ? options : undefined,
+      }),
       ...(enabled !== undefined && { enabled: Boolean(enabled) }),
     },
   });

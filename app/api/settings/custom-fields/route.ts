@@ -2,7 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { hasBoardAccess, isBoardAdmin } from "@/lib/boardAccess";
-import { DEFAULT_CUSTOM_FIELDS } from "@/lib/customFieldsDefaults";
+import { isCustomFieldType } from "@/lib/customFieldsDefaults";
+import { ensureDefaultCustomFields } from "@/lib/ensureDefaultCustomFields";
 
 export async function GET(req: Request) {
   const { userId } = await auth();
@@ -29,32 +30,12 @@ export async function GET(req: Request) {
 
   const isAdmin = await isBoardAdmin(user.id, boardId);
 
-  // Fetch existing fields for board
-  let fields = await db.customField.findMany({
+  await ensureDefaultCustomFields(boardId);
+
+  const fields = await db.customField.findMany({
     where: { boardId },
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
   });
-
-  // If no fields exist yet for this board, auto-seed default fields
-  if (fields.length === 0) {
-    await db.customField.createMany({
-      data: DEFAULT_CUSTOM_FIELDS.map((df) => ({
-        boardId,
-        name: df.name,
-        type: df.type,
-        options: df.options ? df.options : undefined,
-        enabled: true,
-        isDefault: true,
-        defaultKey: df.defaultKey,
-        order: df.order,
-      })),
-    });
-
-    fields = await db.customField.findMany({
-      where: { boardId },
-      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-    });
-  }
 
   return NextResponse.json({ customFields: fields, isAdmin });
 }
@@ -73,9 +54,9 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { boardId, name, type, options, enabled } = body;
 
-  if (!boardId || !name || !type) {
+  if (!boardId || !name || !isCustomFieldType(type)) {
     return NextResponse.json(
-      { error: "boardId, name, and type are required" },
+      { error: "boardId, name, and a valid type are required" },
       { status: 400 }
     );
   }
@@ -94,7 +75,7 @@ export async function POST(req: Request) {
     data: {
       boardId,
       name: name.trim(),
-      type, // "NUMBER" | "TEXT" | "SELECT"
+      type,
       options: type === "SELECT" && Array.isArray(options) ? options : undefined,
       enabled: enabled ?? true,
       isDefault: false,

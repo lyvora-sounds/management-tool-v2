@@ -20,6 +20,7 @@ export function NotificationBell() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchNotifications = useCallback(async () => {
+    if (typeof document !== "undefined" && document.hidden) return;
     try {
       const res = await fetch("/api/notifications");
       if (!res.ok) return;
@@ -34,13 +35,20 @@ export function NotificationBell() {
     const initial = setTimeout(fetchNotifications, 0);
     intervalRef.current = setInterval(fetchNotifications, POLL_INTERVAL);
 
-    const onFocus = () => fetchNotifications();
-    window.addEventListener("focus", onFocus);
+    const onFocusOrVisible = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchNotifications();
+      }
+    };
+
+    window.addEventListener("focus", onFocusOrVisible);
+    document.addEventListener("visibilitychange", onFocusOrVisible);
 
     return () => {
       clearTimeout(initial);
       if (intervalRef.current) clearInterval(intervalRef.current);
-      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("focus", onFocusOrVisible);
+      document.removeEventListener("visibilitychange", onFocusOrVisible);
     };
   }, [fetchNotifications]);
 

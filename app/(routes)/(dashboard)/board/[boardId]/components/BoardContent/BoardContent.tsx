@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useBoardPolling } from "@/hooks/use-board-polling";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -39,7 +39,7 @@ function taskMatchesFilters(
   filters: BoardFiltersState,
 ): boolean {
   // Archive Status
-  const isArchived = Boolean((task as any).archived);
+  const isArchived = Boolean(task.archived);
   if (filters.archiveStatus === "active" && isArchived) return false;
   if (filters.archiveStatus === "archived" && !isArchived) return false;
 
@@ -49,12 +49,12 @@ function taskMatchesFilters(
 
   // Quarter
   if (filters.quarter !== "all") {
-    if ((task as any).quarter !== filters.quarter) return false;
+    if (task.quarter !== filters.quarter) return false;
   }
 
   // Epic
   if (filters.epicId !== "all") {
-    if ((task as any).epicId !== filters.epicId) return false;
+    if (task.epicId !== filters.epicId) return false;
   }
 
   // Labels — task must have ALL selected labels
@@ -117,9 +117,10 @@ export function BoardContent({
 }: BoardContentProps) {
   useBoardPolling();
 
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const taskIdParam = searchParams.get("taskId");
-  const [closedTaskId, setClosedTaskId] = useState<string | null>(null);
 
   const lists = useBoardStore((s) => s.lists);
   const setLists = useBoardStore((s) => s.setLists);
@@ -136,7 +137,7 @@ export function BoardContent({
   const effectiveLists = lists && lists.length > 0 ? lists : initialLists;
 
   const urlTaskEntry = useMemo(() => {
-    if (!taskIdParam || taskIdParam === closedTaskId) return null;
+    if (!taskIdParam) return null;
     for (const list of effectiveLists) {
       const task = list.tasks.find((t) => t.id === taskIdParam);
       if (task) {
@@ -144,15 +145,13 @@ export function BoardContent({
       }
     }
     return null;
-  }, [effectiveLists, taskIdParam, closedTaskId]);
+  }, [effectiveLists, taskIdParam]);
 
   const handleCloseUrlModal = () => {
-    if (taskIdParam) {
-      setClosedTaskId(taskIdParam);
-      const url = new URL(window.location.href);
-      url.searchParams.delete("taskId");
-      window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
-    }
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("taskId");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
   useEffect(() => {
@@ -182,7 +181,7 @@ export function BoardContent({
     const set = new Set<string>();
     for (const list of lists) {
       for (const task of list.tasks) {
-        if ((task as any).quarter) set.add((task as any).quarter);
+        if (task.quarter) set.add(task.quarter);
       }
     }
     return Array.from(set).sort();

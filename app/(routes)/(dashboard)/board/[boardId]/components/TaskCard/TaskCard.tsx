@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -17,6 +17,8 @@ import { TaskActions } from "../TaskActions/TaskActions";
 import { TaskModal } from "../TaskModal/TaskModal";
 import { useBoardStore } from "../../store/useBoardStore";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
+import { targetListForCompletion } from "@/lib/statusTheme";
+import { displayCustomFieldValue } from "@/lib/customValueUtils";
 
 function getInitials(name: string | null | undefined, email: string | undefined) {
   if (name)
@@ -40,6 +42,7 @@ export function TaskCard({
   memberCanAssign,
 }: TaskCardProps) {
   const updateTask = useBoardStore((s) => s.updateTask);
+  const lists = useBoardStore((s) => s.lists);
   const [modalOpen, setModalOpen] = useState(false);
   const [completed, setCompleted] = useState(task.completed);
 
@@ -62,20 +65,22 @@ export function TaskCard({
     opacity: isDragging ? 0.3 : 1,
   };
 
+  const titleById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const list of lists) {
+      for (const item of list.tasks) {
+        map.set(item.id, item.title);
+      }
+    }
+    return map;
+  }, [lists]);
+
   const toggleCompleted = async () => {
     const next = !completed;
     const boardLists = useBoardStore.getState().lists;
-    const doneList = boardLists.find((l) =>
-      /hecho|done|completad|finaliz/i.test(l.title),
-    );
-    const todoList =
-      boardLists.find((l) =>
-        /hacer|todo|to do|pendient|backlog/i.test(l.title),
-      ) || boardLists[0];
+    const targetList = targetListForCompletion(boardLists, listId, next);
 
-    const targetList = next ? doneList : todoList;
-
-    if (targetList && targetList.id !== listId) {
+    if (targetList) {
       useBoardStore
         .getState()
         .moveTask(task.id, listId, targetList.id, targetList.tasks.length);
@@ -175,34 +180,29 @@ export function TaskCard({
         </div>
       </div>
 
-      {/* Epic, Quarter and Custom Values Row if available */}
-      {((task as any).epic || (task as any).quarter || ((task as any).customValues && (task as any).customValues.length > 0)) && (
+      {(task.epic || task.quarter || (task.customValues && task.customValues.length > 0)) && (
         <div className="flex items-center gap-1.5 pl-6 flex-wrap">
-          {(task as any).epic && (
+          {task.epic && (
             <span
               className="text-[10px] font-semibold px-1.5 py-0.2 rounded text-white"
-              style={{ backgroundColor: (task as any).epic.color }}
+              style={{ backgroundColor: task.epic.color }}
             >
-              {(task as any).epic.title}
+              {task.epic.title}
             </span>
           )}
-          {(task as any).quarter && (
+          {task.quarter && (
             <span className="text-[10px] text-muted-foreground font-medium px-1 py-0.2 rounded bg-muted">
-              {(task as any).quarter}
+              {task.quarter}
             </span>
           )}
-          {((task as any).customValues || [])
-            .filter((cv: any) => cv.value && cv.customField?.enabled !== false)
-            .map((cv: any) => {
-              let displayVal = cv.value;
-              if (cv.value && cv.value.startsWith("[")) {
-                try {
-                  const arr = JSON.parse(cv.value);
-                  if (Array.isArray(arr)) displayVal = arr.join(", ");
-                } catch {
-                  // ignore
-                }
-              }
+          {(task.customValues ?? [])
+            .filter((cv) => cv.value && cv.customField?.enabled !== false)
+            .map((cv) => {
+              const displayVal = displayCustomFieldValue(
+                cv.value as string,
+                cv.customField?.defaultKey,
+                titleById,
+              );
 
               return (
                 <span
@@ -290,17 +290,19 @@ export function TaskCard({
         </div>
       )}
 
-      <TaskModal
-        task={task}
-        listId={listId}
-        listTitle={listTitle}
-        boardId={boardId}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        isOwner={isOwner}
-        boardUsers={boardUsers}
-        memberCanAssign={memberCanAssign}
-      />
+      {modalOpen && (
+        <TaskModal
+          task={task}
+          listId={listId}
+          listTitle={listTitle}
+          boardId={boardId}
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          isOwner={isOwner}
+          boardUsers={boardUsers}
+          memberCanAssign={memberCanAssign}
+        />
+      )}
     </div>
   );
 }

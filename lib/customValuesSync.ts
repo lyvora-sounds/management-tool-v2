@@ -1,10 +1,56 @@
 import db from "@/lib/db";
-import { parseListValue, stringifyListValue } from "./customValueUtils";
+import { isChildFieldKey, isParentFieldKey } from "@/lib/customFieldsDefaults";
+import { parseListValue, stringifyListValue } from "@/lib/customValueUtils";
 
-export { parseListValue, stringifyListValue };
+type DbClient = Pick<typeof db, "task" | "customField" | "customFieldValue">;
+
+async function taskOnBoard(
+  tx: DbClient,
+  taskId: string,
+  boardId: string,
+): Promise<boolean> {
+  const task = await tx.task.findFirst({
+    where: { id: taskId, list: { boardId } },
+    select: { id: true },
+  });
+  return Boolean(task);
+}
+
+async function patchChildList(
+  tx: DbClient,
+  parentTaskId: string,
+  childFieldId: string,
+  mutate: (ids: string[]) => string[],
+) {
+  const record = await tx.customFieldValue.findUnique({
+    where: {
+      taskId_customFieldId: {
+        taskId: parentTaskId,
+        customFieldId: childFieldId,
+      },
+    },
+  });
+  const next = mutate(parseListValue(record?.value));
+  await tx.customFieldValue.upsert({
+    where: {
+      taskId_customFieldId: {
+        taskId: parentTaskId,
+        customFieldId: childFieldId,
+      },
+    },
+    update: { value: stringifyListValue(next) },
+    create: {
+      taskId: parentTaskId,
+      customFieldId: childFieldId,
+      value: stringifyListValue(next),
+    },
+  });
+}
 
 /**
- * Bi-directionally sync parent and child custom field values across tasks in a board.
+ * Keep parent/child custom values consistent across tasks.
+ * Values are task IDs (single ID for parent, JSON array of IDs for child).
+ * Does not rewrite the field that was just saved.
  */
 export async function syncParentChildRelationships({
   boardId,
@@ -15,178 +61,112 @@ export async function syncParentChildRelationships({
 }: {
   boardId: string;
   currentTaskId: string;
-  customField: { defaultKey: string | null; name: string };
+  customField: { defaultKey: string | null };
   oldValue: string | null;
   newValue: string | null;
 }) {
-  const isParentField =
-    customField.defaultKey === "parent" || /parent|padre/i.test(customField.name);
-  const isChildField =
-    customField.defaultKey === "child" || /child|hijo/i.test(customField.name);
+  if (!isParentFieldKey(customField.defaultKey) && !isChildFieldKey(customField.defaultKey)) {
+    return;
+  }
 
-  if (!isParentField && !isChildField) return;
-
-  const currentTask = await db.task.findUnique({
-    where: { id: currentTaskId },
-    select: { id: true, title: true },
-  });
-
-  if (!currentTask) return;
-
-  // Find parent and child custom fields for this board
-  const parentField = await db.customField.findFirst({
-    where: {
-      boardId,
-      OR: [{ defaultKey: "parent" }, { name: { contains: "parent", mode: "insensitive" } }],
-    },
-  });
-
-  const childField = await db.customField.findFirst({
-    where: {
-      boardId,
-      OR: [{ defaultKey: "child" }, { name: { contains: "child", mode: "insensitive" } }],
-    },
-  });
-
-  if (isParentField) {
-    const oldParentTitle = oldValue && !oldValue.startsWith("[EPIC]") ? oldValue.trim() : null;
-    const newParentTitle = newValue && !newValue.startsWith("[EPIC]") ? newValue.trim() : null;
-
-    // If old parent changed, remove currentTask from old parent's child list
-    if (oldParentTitle && oldParentTitle !== newParentTitle && childField) {
-      const oldParentTask = await db.task.findFirst({
-        where: { title: oldParentTitle, list: { boardId } },
+  await db.$transaction(async (tx) => {
+    const [parentField, childField] = await Promise.all([
+      tx.customField.findFirst({
+        where: { boardId, defaultKey: "parent" },
         select: { id: true },
-      });
+      }),
+      tx.customField.findFirst({
+        where: { boardId, defaultKey: "child" },
+        select: { id: true },
+      }),
+    ]);
 
-      if (oldParentTask) {
-        const oldParentChildValRecord = await db.customFieldValue.findUnique({
-          where: {
-            taskId_customFieldId: {
-              taskId: oldParentTask.id,
-              customFieldId: childField.id,
-            },
-          },
-        });
+    if (!parentField || !childField) return;
 
-        const currentChildren = parseListValue(oldParentChildValRecord?.value);
-        const updatedChildren = currentChildren.filter((t) => t !== currentTask.title);
+    if (isParentFieldKey(customField.defaultKey)) {
+      const oldParentId = oldValue || null;
+      const newParentId = newValue || null;
+      if (oldParentId === newParentId) return;
 
-        await db.customFieldValue.upsert({
-          where: {
-            taskId_customFieldId: {
-              taskId: oldParentTask.id,
-              customFieldId: childField.id,
-            },
-          },
-          update: { value: stringifyListValue(updatedChildren) },
-          create: {
-            taskId: oldParentTask.id,
-            customFieldId: childField.id,
-            value: stringifyListValue(updatedChildren),
-          },
-        });
+      if (oldParentId && (await taskOnBoard(tx, oldParentId, boardId))) {
+        await patchChildList(tx, oldParentId, childField.id, (ids) =>
+          ids.filter((id) => id !== currentTaskId),
+        );
       }
+
+      if (
+        newParentId &&
+        newParentId !== currentTaskId &&
+        (await taskOnBoard(tx, newParentId, boardId))
+      ) {
+        await patchChildList(tx, newParentId, childField.id, (ids) =>
+          ids.includes(currentTaskId) ? ids : [...ids, currentTaskId],
+        );
+      }
+      return;
     }
 
-    // If new parent set, add currentTask to new parent's child list
-    if (newParentTitle && childField) {
-      const newParentTask = await db.task.findFirst({
-        where: { title: newParentTitle, list: { boardId } },
-        select: { id: true },
-      });
-
-      if (newParentTask) {
-        const newParentChildValRecord = await db.customFieldValue.findUnique({
-          where: {
-            taskId_customFieldId: {
-              taskId: newParentTask.id,
-              customFieldId: childField.id,
-            },
-          },
-        });
-
-        const currentChildren = parseListValue(newParentChildValRecord?.value);
-        if (!currentChildren.includes(currentTask.title)) {
-          const updatedChildren = [...currentChildren, currentTask.title];
-
-          await db.customFieldValue.upsert({
-            where: {
-              taskId_customFieldId: {
-                taskId: newParentTask.id,
-                customFieldId: childField.id,
-              },
-            },
-            update: { value: stringifyListValue(updatedChildren) },
-            create: {
-              taskId: newParentTask.id,
-              customFieldId: childField.id,
-              value: stringifyListValue(updatedChildren),
-            },
-          });
-        }
-      }
-    }
-  } else if (isChildField) {
     const oldChildren = parseListValue(oldValue);
     const newChildren = parseListValue(newValue);
+    const removed = oldChildren.filter((id) => !newChildren.includes(id));
+    const added = newChildren.filter((id) => !oldChildren.includes(id));
 
-    const removedChildren = oldChildren.filter((c) => !newChildren.includes(c));
-    const addedChildren = newChildren.filter((c) => !oldChildren.includes(c));
-
-    // For removed children, clear their parent field if it pointed to currentTask.title
-    if (parentField && removedChildren.length > 0) {
-      for (const childTitle of removedChildren) {
-        const childTask = await db.task.findFirst({
-          where: { title: childTitle, list: { boardId } },
-          select: { id: true },
+    for (const childId of removed) {
+      if (!(await taskOnBoard(tx, childId, boardId))) continue;
+      const parentVal = await tx.customFieldValue.findUnique({
+        where: {
+          taskId_customFieldId: {
+            taskId: childId,
+            customFieldId: parentField.id,
+          },
+        },
+      });
+      if (parentVal?.value === currentTaskId) {
+        await tx.customFieldValue.update({
+          where: { id: parentVal.id },
+          data: { value: null },
         });
-
-        if (childTask) {
-          const parentValRecord = await db.customFieldValue.findUnique({
-            where: {
-              taskId_customFieldId: {
-                taskId: childTask.id,
-                customFieldId: parentField.id,
-              },
-            },
-          });
-
-          if (parentValRecord?.value === currentTask.title) {
-            await db.customFieldValue.update({
-              where: { id: parentValRecord.id },
-              data: { value: null },
-            });
-          }
-        }
       }
     }
 
-    // For added children, set their parent field to currentTask.title
-    if (parentField && addedChildren.length > 0) {
-      for (const childTitle of addedChildren) {
-        const childTask = await db.task.findFirst({
-          where: { title: childTitle, list: { boardId } },
-          select: { id: true },
-        });
+    for (const childId of added) {
+      if (childId === currentTaskId) continue;
+      if (!(await taskOnBoard(tx, childId, boardId))) continue;
 
-        if (childTask) {
-          await db.customFieldValue.upsert({
-            where: {
-              taskId_customFieldId: {
-                taskId: childTask.id,
-                customFieldId: parentField.id,
-              },
-            },
-            update: { value: currentTask.title },
-            create: {
-              taskId: childTask.id,
-              customFieldId: parentField.id,
-              value: currentTask.title,
-            },
-          });
-        }
+      const parentVal = await tx.customFieldValue.findUnique({
+        where: {
+          taskId_customFieldId: {
+            taskId: childId,
+            customFieldId: parentField.id,
+          },
+        },
+      });
+      const previousParentId = parentVal?.value ?? null;
+
+      await tx.customFieldValue.upsert({
+        where: {
+          taskId_customFieldId: {
+            taskId: childId,
+            customFieldId: parentField.id,
+          },
+        },
+        update: { value: currentTaskId },
+        create: {
+          taskId: childId,
+          customFieldId: parentField.id,
+          value: currentTaskId,
+        },
+      });
+
+      if (
+        previousParentId &&
+        previousParentId !== currentTaskId &&
+        (await taskOnBoard(tx, previousParentId, boardId))
+      ) {
+        await patchChildList(tx, previousParentId, childField.id, (ids) =>
+          ids.filter((id) => id !== childId),
+        );
       }
     }
-  }
+  });
 }

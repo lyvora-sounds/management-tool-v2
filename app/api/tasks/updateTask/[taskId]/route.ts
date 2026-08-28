@@ -4,6 +4,7 @@ import db from "@/lib/db";
 import { hasBoardAccess } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
+import { isDoneList } from "@/lib/statusTheme";
 
 export async function PATCH(
   req: Request,
@@ -27,7 +28,6 @@ export async function PATCH(
     assigneeId,
     qaId,
     listId,
-    listTitle,
   } = await req.json();
 
   if (title !== undefined && (typeof title !== "string" || !title.trim())) {
@@ -53,28 +53,6 @@ export async function PATCH(
     targetList = await db.list.findFirst({
       where: { id: listId, boardId: task.list.board.id },
     });
-  } else if (listTitle && typeof listTitle === "string" && listTitle.trim()) {
-    const trimmedTitle = listTitle.trim();
-    targetList = await db.list.findFirst({
-      where: {
-        boardId: task.list.board.id,
-        title: { equals: trimmedTitle, mode: "insensitive" },
-      },
-    });
-
-    if (!targetList) {
-      const lastList = await db.list.findFirst({
-        where: { boardId: task.list.board.id },
-        orderBy: { order: "desc" },
-      });
-      targetList = await db.list.create({
-        data: {
-          title: trimmedTitle,
-          boardId: task.list.board.id,
-          order: lastList ? lastList.order + 1 : 0,
-        },
-      });
-    }
   }
 
   // Derive completed status if moving between lists without explicit completed flag
@@ -83,8 +61,7 @@ export async function PATCH(
   let nextCompletedById = completed !== undefined ? (completed ? user.id : null) : undefined;
 
   if (targetList && targetList.id !== task.listId && completed === undefined) {
-    const isDoneList = /hecho|done|completad|finaliz/i.test(targetList.title);
-    if (isDoneList) {
+    if (isDoneList(targetList.title)) {
       nextCompleted = true;
       nextCompletedAt = new Date();
       nextCompletedById = user.id;

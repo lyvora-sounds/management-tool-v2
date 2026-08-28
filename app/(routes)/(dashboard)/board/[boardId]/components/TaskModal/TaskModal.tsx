@@ -61,7 +61,7 @@ import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { TaskModalProps } from "./TaskModal.types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { getStatusTheme } from "@/lib/statusTheme";
+import { getStatusTheme, isDoneList, targetListForCompletion } from "@/lib/statusTheme";
 
 export function TaskModal({
   task,
@@ -134,10 +134,10 @@ export function TaskModal({
     (currentTask.priority as Priority) ?? null,
   );
   const [currentEpicId, setCurrentEpicId] = useState<string | null>(
-    (currentTask as any).epicId ?? null,
+    currentTask.epicId ?? null,
   );
   const [currentQuarter, setCurrentQuarter] = useState<string>(
-    (currentTask as any).quarter ?? "",
+    currentTask.quarter ?? "",
   );
   const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -171,8 +171,8 @@ export function TaskModal({
       setQa(currentTask.qa);
       setCollaborators(currentTask.collaborators ?? []);
       setPriority((currentTask.priority as Priority) ?? null);
-      setCurrentEpicId((currentTask as any).epicId ?? null);
-      setCurrentQuarter((currentTask as any).quarter ?? "");
+      setCurrentEpicId(currentTask.epicId ?? null);
+      setCurrentQuarter(currentTask.quarter ?? "");
       setEditingTitle(false);
       setEditingDescription(false);
     }, 0);
@@ -226,7 +226,7 @@ export function TaskModal({
     const targetList = lists.find((l) => l.id === targetListId);
     if (!targetList) return;
 
-    const isDone = /hecho|done|completad|finaliz/i.test(targetList.title);
+    const isDone = isDoneList(targetList.title);
     moveTask(
       currentTask.id,
       currentListId,
@@ -258,16 +258,9 @@ export function TaskModal({
 
   const toggleCompleted = async () => {
     const next = !completed;
-    const doneList = lists.find((l) =>
-      /hecho|done|completad|finaliz/i.test(l.title),
-    );
-    const todoList =
-      lists.find((l) => /hacer|todo|to do|pendient|backlog/i.test(l.title)) ||
-      lists[0];
+    const targetList = targetListForCompletion(lists, currentListId, next);
 
-    const targetList = next ? doneList : todoList;
-
-    if (targetList && targetList.id !== currentListId) {
+    if (targetList) {
       moveTask(
         currentTask.id,
         currentListId,
@@ -357,7 +350,7 @@ export function TaskModal({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ epicId }),
     });
-    updateTask(currentListId, currentTask.id, { epicId } as any);
+    updateTask(currentListId, currentTask.id, { epicId });
   };
 
   const saveQuarter = async (quarterVal: string) => {
@@ -367,7 +360,7 @@ export function TaskModal({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ quarter: quarterVal.trim() || null }),
     });
-    updateTask(currentListId, currentTask.id, { quarter: quarterVal.trim() || null } as any);
+    updateTask(currentListId, currentTask.id, { quarter: quarterVal.trim() || null });
   };
 
   const handleAiApply = async (

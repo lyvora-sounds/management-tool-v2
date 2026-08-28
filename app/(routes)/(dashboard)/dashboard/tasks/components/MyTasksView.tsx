@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
@@ -13,15 +13,9 @@ import {
   ShieldCheck,
   Users,
   User,
-  CheckSquare2,
-  MessageSquare,
-  Paperclip,
   Layers,
   ArrowUpDown,
   X,
-  ChevronDown,
-  Check,
-  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -32,17 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { isDoneList } from "@/lib/statusTheme";
+import { PRIORITY_CONFIG } from "@/lib/taskDisplay";
+import { DashboardTaskRow } from "../../components/DashboardTaskRow/DashboardTaskRow";
 
 interface BoardListInfo {
   id: string;
@@ -62,10 +51,10 @@ interface TaskItem {
   title: string;
   description?: string | null;
   completed: boolean;
-  completedAt?: string | null;
+  completedAt?: Date | string | null;
   priority?: string | null;
-  startDate?: string | null;
-  dueDate?: string | null;
+  startDate?: Date | string | null;
+  dueDate?: Date | string | null;
   quarter?: string | null;
   assigneeId?: string | null;
   qaId?: string | null;
@@ -96,86 +85,6 @@ type GroupByOption = "events" | "board" | "role" | "priority";
 type RoleFilter = "all" | "assignee" | "collaborator" | "qa";
 type StatusFilter = "all" | "pending" | "completed";
 
-import { PREDEFINED_STATUSES, getStatusTheme } from "@/lib/statusTheme";
-
-const PRIORITY_CONFIG: Record<
-  string,
-  { label: string; bg: string; text: string; dot: string }
-> = {
-  low: {
-    label: "Baja",
-    bg: "bg-emerald-500/10 dark:bg-emerald-950/30",
-    text: "text-emerald-700 dark:text-emerald-300",
-    dot: "bg-emerald-500",
-  },
-  medium: {
-    label: "Media",
-    bg: "bg-amber-500/10 dark:bg-amber-950/30",
-    text: "text-amber-700 dark:text-amber-300",
-    dot: "bg-amber-500",
-  },
-  high: {
-    label: "Alta",
-    bg: "bg-orange-500/10 dark:bg-orange-950/30",
-    text: "text-orange-700 dark:text-orange-300",
-    dot: "bg-orange-500",
-  },
-  urgent: {
-    label: "Urgente",
-    bg: "bg-rose-500/10 dark:bg-rose-950/30",
-    text: "text-rose-700 dark:text-rose-300",
-    dot: "bg-rose-500",
-  },
-};
-
-function formatDueDate(dueDateStr: string): { label: string; isOverdue: boolean; isToday: boolean; isSoon: boolean } {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const due = new Date(dueDateStr);
-  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
-  const diffDays = Math.round((dueDay.getTime() - today.getTime()) / 86400000);
-
-  if (diffDays < 0) {
-    return {
-      label: `Venció hace ${Math.abs(diffDays)}d`,
-      isOverdue: true,
-      isToday: false,
-      isSoon: false,
-    };
-  }
-  if (diffDays === 0) {
-    return {
-      label: "Hoy",
-      isOverdue: false,
-      isToday: true,
-      isSoon: false,
-    };
-  }
-  if (diffDays === 1) {
-    return {
-      label: "Mañana",
-      isOverdue: false,
-      isToday: false,
-      isSoon: true,
-    };
-  }
-  if (diffDays <= 7) {
-    return {
-      label: `En ${diffDays} días`,
-      isOverdue: false,
-      isToday: false,
-      isSoon: true,
-    };
-  }
-
-  return {
-    label: due.toLocaleDateString("es-ES", { day: "numeric", month: "short" }),
-    isOverdue: false,
-    isToday: false,
-    isSoon: false,
-  };
-}
-
 export function MyTasksView({ initialTasks, userId, boards }: Props) {
   const router = useRouter();
   const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
@@ -188,40 +97,30 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
 
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
 
-  // Status Change Handler
-  const handleStatusChange = async (
-    task: TaskItem,
-    targetListId?: string,
-    targetListTitle?: string,
-  ) => {
-    const nextTitle =
-      targetListTitle ??
-      boards
-        .find((b) => b.id === task.list.board.id)
-        ?.list?.find((l) => l.id === targetListId)?.title;
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
 
-    if (!nextTitle && !targetListId) return;
+  const handleStatusChange = async (task: TaskItem, targetListId: string) => {
+    const nextTitle = boards
+      .find((b) => b.id === task.list.board.id)
+      ?.list?.find((l) => l.id === targetListId)?.title;
+    if (!nextTitle || targetListId === task.list.id) return;
 
-    const isDone = /hecho|done|completad|finaliz/i.test(nextTitle ?? "");
+    const done = isDoneList(nextTitle);
     const prevTask = { ...task };
 
-    // Optimistic UI update
     setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id === task.id) {
-          return {
-            ...t,
-            completed: isDone,
-            completedAt: isDone ? new Date().toISOString() : null,
-            list: {
-              ...t.list,
-              id: targetListId ?? t.list.id,
-              title: nextTitle ?? t.list.title,
-            },
-          };
-        }
-        return t;
-      }),
+      prev.map((t) =>
+        t.id === task.id
+          ? {
+              ...t,
+              completed: done,
+              completedAt: done ? new Date().toISOString() : null,
+              list: { ...t.list, id: targetListId, title: nextTitle },
+            }
+          : t,
+      ),
     );
 
     setUpdatingTaskId(task.id);
@@ -229,81 +128,20 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       const res = await fetch(`/api/tasks/updateTask/${task.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          listId: targetListId,
-          listTitle: targetListTitle,
-        }),
+        body: JSON.stringify({ listId: targetListId }),
       });
-
-      if (!res.ok) {
-        throw new Error("Failed to update status");
-      }
-
+      if (!res.ok) throw new Error("Failed to update status");
       const updated = await res.json();
       setTasks((prev) =>
         prev.map((t) => (t.id === task.id ? { ...t, ...updated } : t)),
       );
       toast.success(`Estado cambiado a "${nextTitle}"`);
     } catch {
-      setTasks((prev) =>
-        prev.map((t) => (t.id === task.id ? prevTask : t)),
-      );
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? prevTask : t)));
       toast.error("Error al actualizar el estado");
     } finally {
       setUpdatingTaskId(null);
     }
-  };
-
-  const handleStatusSelect = (task: TaskItem, val: string) => {
-    const board = boards.find((b) => b.id === task.list.board.id);
-    const existingList = board?.list?.find(
-      (l) => l.id === val || l.title.toLowerCase() === val.toLowerCase(),
-    );
-    if (existingList) {
-      if (existingList.id === task.list.id) return;
-      handleStatusChange(task, existingList.id, undefined);
-    } else {
-      handleStatusChange(task, undefined, val);
-    }
-  };
-
-  const getAvailableStatuses = (task: TaskItem) => {
-    const board = boards.find((b) => b.id === task.list.board.id);
-    const boardLists = board?.list ?? [];
-
-    const existingTitles = new Set(
-      boardLists.map((l) => l.title.toLowerCase().trim()),
-    );
-
-    const items: {
-      id: string;
-      title: string;
-      active: boolean;
-    }[] = [];
-
-    // 1. Board's own configured lists
-    for (const list of boardLists) {
-      items.push({
-        id: list.id,
-        title: list.title,
-        active:
-          task.list.id === list.id ||
-          task.list.title.toLowerCase() === list.title.toLowerCase(),
-      });
-    }
-
-    // 2. Predefined statuses if not already present on this board
-    for (const predefined of PREDEFINED_STATUSES) {
-      if (!existingTitles.has(predefined.toLowerCase())) {
-        items.push({
-          id: predefined,
-          title: predefined,
-          active: task.list.title.toLowerCase() === predefined.toLowerCase(),
-        });
-      }
-    }
-
-    return items;
   };
 
   // Metrics
@@ -769,277 +607,39 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
 
               {/* Tasks in Section */}
               <div className="flex flex-col gap-1.5">
-                {section.tasks.map((task) => {
-                  const isAssignee = task.assigneeId === userId;
-                  const isCollab = task.collaborators.some(
-                    (c) => c.user.id === userId,
-                  );
-                  const isQa = task.qaId === userId;
-
-                  const priorityInfo = task.priority
-                    ? PRIORITY_CONFIG[task.priority]
-                    : null;
-                  const dueInfo = task.dueDate
-                    ? formatDueDate(task.dueDate)
-                    : null;
-                  const subtaskCount = task.subtasks.length;
-                  const subtaskDone = task.subtasks.filter(
-                    (s) => s.completed,
-                  ).length;
-                  const statusTheme = getStatusTheme(
-                    task.list.title,
-                    task.completed,
-                  );
-                  const availableStatuses = getAvailableStatuses(task);
-                  const isUpdating = updatingTaskId === task.id;
-
-                  return (
-                    <div
-                      key={task.id}
-                      onClick={() =>
-                        router.push(
-                          `/board/${task.list.board.id}?taskId=${task.id}`,
-                        )
-                      }
-                      className={cn(
-                        "group relative flex items-center justify-between gap-4 px-4 py-3 rounded-xl border bg-card hover:bg-muted/40 hover:border-primary/40 transition-all shadow-xs cursor-pointer select-none text-foreground w-full",
-                        task.completed && "opacity-60 bg-muted/20",
-                      )}
-                    >
-                      {/* Left: Title, Priority, Epic, Breadcrumb */}
-                      <div className="flex flex-col gap-1 min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className={cn(
-                              "text-sm font-medium leading-snug break-words group-hover:text-primary transition-colors cursor-pointer",
-                              task.completed &&
-                                "line-through text-muted-foreground",
-                            )}
-                          >
-                            {task.title}
-                          </span>
-
-                          {/* Priority Badge */}
-                          {priorityInfo && (
-                            <span
-                              className={cn(
-                                "text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0",
-                                priorityInfo.bg,
-                                priorityInfo.text,
-                              )}
-                            >
-                              {priorityInfo.label}
-                            </span>
-                          )}
-
-                          {/* Epic Badge */}
-                          {task.epic && (
-                            <span
-                              className="text-[9px] font-semibold px-1.5 py-0.2 rounded text-white shrink-0"
-                              style={{ backgroundColor: task.epic.color }}
-                            >
-                              {task.epic.title}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Breadcrumb: Board */}
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
-                          <span
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/board/${task.list.board.id}`);
-                            }}
-                            className="font-medium hover:text-primary transition-colors underline-offset-2 hover:underline cursor-pointer"
-                          >
-                            {task.list.board.title}
-                          </span>
-
-                          {task.quarter && (
-                            <span className="text-[10px] px-1 py-0.2 rounded bg-muted font-medium ml-1">
-                              {task.quarter}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Right: Roles, Status Dropdown, Indicators, Due Date & Direct Link */}
-                      <div
-                        className="flex items-center gap-2.5 shrink-0 ml-auto"
-                        onClick={(e) => e.stopPropagation()}
+                {section.tasks.map((task) => (
+                  <DashboardTaskRow
+                    key={task.id}
+                    task={task}
+                    isAssignee={task.assigneeId === userId}
+                    isCollab={task.collaborators.some((c) => c.user.id === userId)}
+                    isQa={task.qaId === userId}
+                    lists={
+                      boards.find((b) => b.id === task.list.board.id)?.list ?? []
+                    }
+                    updating={updatingTaskId === task.id}
+                    onOpen={() =>
+                      router.push(`/board/${task.list.board.id}?taskId=${task.id}`)
+                    }
+                    onOpenBoard={() => router.push(`/board/${task.list.board.id}`)}
+                    onStatusChange={(listId) => handleStatusChange(task, listId)}
+                    trailing={
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(
+                            `/board/${task.list.board.id}?taskId=${task.id}`,
+                          );
+                        }}
+                        className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
+                        title="Abrir ticket en el tablero"
                       >
-                        {/* User Role in this task */}
-                        <div className="flex items-center gap-1">
-                          {isAssignee && (
-                            <Badge
-                              variant="secondary"
-                              className="text-[10px] h-5 bg-primary/10 text-primary border-primary/20 gap-1 font-medium"
-                            >
-                              <User size={10} />
-                              Responsable
-                            </Badge>
-                          )}
-                          {isCollab && (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] h-5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 gap-1 font-medium"
-                            >
-                              <Users size={10} />
-                              Colaborador
-                            </Badge>
-                          )}
-                          {isQa && (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] h-5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 gap-1 font-medium"
-                            >
-                              <ShieldCheck size={10} />
-                              QA
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Subtasks indicator */}
-                        {subtaskCount > 0 && (
-                          <span
-                            className={cn(
-                              "flex items-center gap-1 text-[11px]",
-                              subtaskDone === subtaskCount
-                                ? "text-primary font-medium"
-                                : "text-muted-foreground",
-                            )}
-                            title={`Subtareas: ${subtaskDone}/${subtaskCount}`}
-                          >
-                            <CheckSquare2 size={12} />
-                            {subtaskDone}/{subtaskCount}
-                          </span>
-                        )}
-
-                        {/* Comments count */}
-                        {(task._count?.comments ?? 0) > 0 && (
-                          <span
-                            className="flex items-center gap-1 text-[11px] text-muted-foreground"
-                            title="Comentarios"
-                          >
-                            <MessageSquare size={12} />
-                            {task._count?.comments}
-                          </span>
-                        )}
-
-                        {/* Attachments count */}
-                        {(task._count?.attachments ?? 0) > 0 && (
-                          <span
-                            className="flex items-center gap-1 text-[11px] text-muted-foreground"
-                            title="Adjuntos"
-                          >
-                            <Paperclip size={12} />
-                            {task._count?.attachments}
-                          </span>
-                        )}
-
-                        {/* Due Date badge */}
-                        {dueInfo && (
-                          <Badge
-                            variant={
-                              dueInfo.isOverdue && !task.completed
-                                ? "destructive"
-                                : dueInfo.isToday && !task.completed
-                                  ? "secondary"
-                                  : "outline"
-                            }
-                            className={cn(
-                              "text-xs gap-1 tabular-nums font-normal",
-                              dueInfo.isToday &&
-                                !task.completed &&
-                                "border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium",
-                            )}
-                          >
-                            <Calendar size={11} />
-                            {dueInfo.label}
-                          </Badge>
-                        )}
-
-                        {/* STATUS SELECT DROPDOWN ON THE RIGHT */}
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          onPointerDown={(e) => e.stopPropagation()}
-                          className="shrink-0"
-                        >
-                          <Select
-                            value={task.list.id}
-                            onValueChange={(val) => {
-                              if (val) handleStatusSelect(task, val);
-                            }}
-                          >
-                            <SelectTrigger
-                              className={cn(
-                                "h-7 text-xs font-medium rounded-full border px-2.5 py-1 gap-1.5 transition-all shadow-2xs cursor-pointer select-none",
-                                statusTheme.bg,
-                                statusTheme.text,
-                                statusTheme.border,
-                              )}
-                              title="Cambiar estado del ticket"
-                            >
-                              {isUpdating ? (
-                                <Loader2
-                                  size={11}
-                                  className="animate-spin shrink-0"
-                                />
-                              ) : (
-                                <span
-                                  className={cn(
-                                    "w-1.5 h-1.5 rounded-full shrink-0",
-                                    statusTheme.dot,
-                                  )}
-                                />
-                              )}
-                              <span className="truncate max-w-[120px]">
-                                {task.list.title}
-                              </span>
-                            </SelectTrigger>
-                            <SelectContent align="end" className="w-44">
-                              {availableStatuses.map((st) => {
-                                const itemTheme = getStatusTheme(st.title);
-                                return (
-                                  <SelectItem
-                                    key={st.id || st.title}
-                                    value={st.id || st.title}
-                                    className="text-xs cursor-pointer py-1.5"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span
-                                        className={cn(
-                                          "w-2 h-2 rounded-full shrink-0",
-                                          itemTheme.dot,
-                                        )}
-                                      />
-                                      <span className="truncate">{st.title}</span>
-                                    </div>
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Direct link to Board */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(
-                              `/board/${task.list.board.id}?taskId=${task.id}`,
-                            );
-                          }}
-                          className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
-                          title="Abrir ticket en el tablero"
-                        >
-                          <ExternalLink size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                        <ExternalLink size={14} />
+                      </button>
+                    }
+                  />
+                ))}
               </div>
             </div>
           ))}

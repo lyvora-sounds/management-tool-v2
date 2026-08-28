@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { TicketSelectCombobox } from "./TicketSelectCombobox";
+import { isChildFieldKey, isTicketRefKey } from "@/lib/customFieldsDefaults";
 
 interface CustomField {
   id: string;
@@ -41,14 +42,11 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
   const [savedSuccessId, setSavedSuccessId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchTaskCustomValues();
-  }, [taskId]);
-
-  const fetchTaskCustomValues = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/tasks/${taskId}/custom-values`);
-      if (res.ok) {
+    const fetchTaskCustomValues = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/tasks/${taskId}/custom-values`);
+        if (!res.ok) return;
         const data = await res.json();
         setFields(data.fields || []);
 
@@ -59,17 +57,19 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
           }
         });
         setValues(valMap);
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchTaskCustomValues();
+  }, [taskId]);
 
   const handleSaveValue = async (customFieldId: string, newValue: string) => {
-    const currentValue = values[customFieldId] ?? "";
-    if (newValue === currentValue) return;
+    const previous = values[customFieldId] ?? "";
+    if (newValue === previous) return;
 
     setSavingFieldId(customFieldId);
     setValues((prev) => ({ ...prev, [customFieldId]: newValue }));
@@ -85,9 +85,11 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
         setSavedSuccessId(customFieldId);
         setTimeout(() => setSavedSuccessId(null), 2000);
       } else {
+        setValues((prev) => ({ ...prev, [customFieldId]: previous }));
         toast.error("Error al guardar el valor personalizado.");
       }
     } catch {
+      setValues((prev) => ({ ...prev, [customFieldId]: previous }));
       toast.error("Error de red.");
     } finally {
       setSavingFieldId(null);
@@ -121,11 +123,7 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
           const val = values[field.id] ?? "";
           const isSaving = savingFieldId === field.id;
           const isSuccess = savedSuccessId === field.id;
-
-          const isTicketRef =
-            field.defaultKey === "parent" ||
-            field.defaultKey === "child" ||
-            /parent|child|padre|hijo/i.test(field.name);
+          const isTicketRef = isTicketRefKey(field.defaultKey);
 
           return (
             <div key={field.id} className="space-y-1 min-w-0">
@@ -146,11 +144,11 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
                   onSelect={(newVal) => handleSaveValue(field.id, newVal)}
                   currentTaskId={taskId}
                   boardId={boardId}
-                  isMulti={field.defaultKey === "child" || /child|hijo/i.test(field.name)}
+                  isMulti={isChildFieldKey(field.defaultKey)}
                   placeholder={
-                    field.defaultKey === "parent"
-                      ? "Seleccionar ticket o Epic padre..."
-                      : "Seleccionar ticket(s) hijo(s)..."
+                    isChildFieldKey(field.defaultKey)
+                      ? "Seleccionar ticket(s) hijo(s)..."
+                      : "Seleccionar ticket padre..."
                   }
                 />
               ) : field.type === "SELECT" && field.options && field.options.length > 0 ? (

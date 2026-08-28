@@ -1,19 +1,39 @@
-export const PREDEFINED_STATUSES = [
-  "Por hacer",
-  "En progreso",
-  "Revisión",
-  "Hecho",
-] as const;
-
-export function getStatusTheme(title: string, completed?: boolean) {
+export function isDoneList(title: string | null | undefined): boolean {
   const s = (title ?? "").toLowerCase().trim();
-  if (
-    completed ||
+  return (
     s.includes("hecho") ||
     s.includes("done") ||
     s.includes("completad") ||
     s.includes("finaliz")
-  ) {
+  );
+}
+
+export function isTodoList(title: string | null | undefined): boolean {
+  const s = (title ?? "").toLowerCase().trim();
+  return (
+    s.includes("hacer") ||
+    s.includes("todo") ||
+    s.includes("to do") ||
+    s.includes("pendient") ||
+    s.includes("backlog")
+  );
+}
+
+export function targetListForCompletion<T extends { id: string; title: string }>(
+  lists: T[],
+  currentListId: string,
+  nextCompleted: boolean,
+): T | null {
+  const target = nextCompleted
+    ? lists.find((l) => isDoneList(l.title))
+    : (lists.find((l) => isTodoList(l.title)) ?? lists[0]);
+  if (!target || target.id === currentListId) return null;
+  return target;
+}
+
+export function getStatusTheme(title: string, completed?: boolean) {
+  const s = (title ?? "").toLowerCase().trim();
+  if (completed || isDoneList(title)) {
     return {
       bg: "bg-emerald-500/10 dark:bg-emerald-950/30",
       text: "text-emerald-700 dark:text-emerald-300",
@@ -55,13 +75,7 @@ export function getStatusTheme(title: string, completed?: boolean) {
       label: title,
     };
   }
-  if (
-    s.includes("hacer") ||
-    s.includes("todo") ||
-    s.includes("to do") ||
-    s.includes("pendient") ||
-    s.includes("backlog")
-  ) {
+  if (isTodoList(title)) {
     return {
       bg: "bg-slate-500/10 dark:bg-slate-800/40",
       text: "text-slate-700 dark:text-slate-300",

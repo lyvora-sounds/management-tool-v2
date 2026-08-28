@@ -263,7 +263,7 @@ export default async function DashboardPage() {
 
       <RecentActivity logs={recentActivity} />
 
-      <AssignedToMe tasks={assignedTasks as any} userId={user.id} />
+      <AssignedToMe tasks={assignedTasks} userId={user.id} />
 
       <div>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">

@@ -348,6 +348,7 @@ model CustomField {
   updatedAt DateTime @updatedAt
 
   @@index([boardId])
+  @@unique([boardId, defaultKey])
 }
 
 model CustomFieldValue {

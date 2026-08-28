@@ -2,7 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { hasBoardAccess } from "@/lib/boardAccess";
-import { DEFAULT_CUSTOM_FIELDS } from "@/lib/customFieldsDefaults";
+import { ensureDefaultCustomFields } from "@/lib/ensureDefaultCustomFields";
+import { syncParentChildRelationships } from "@/lib/customValuesSync";
 
 export async function GET(
   req: Request,
@@ -34,41 +35,18 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Fetch or initialize custom fields for board
-  let fields = await db.customField.findMany({
-    where: { boardId, enabled: true },
-    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-  });
+  await ensureDefaultCustomFields(boardId);
 
-  if (fields.length === 0) {
-    // Check if board has any custom fields at all (enabled or disabled)
-    const totalFields = await db.customField.count({ where: { boardId } });
-    if (totalFields === 0) {
-      await db.customField.createMany({
-        data: DEFAULT_CUSTOM_FIELDS.map((df) => ({
-          boardId,
-          name: df.name,
-          type: df.type,
-          options: df.options ? df.options : undefined,
-          enabled: true,
-          isDefault: true,
-          defaultKey: df.defaultKey,
-          order: df.order,
-        })),
-      });
-
-      fields = await db.customField.findMany({
-        where: { boardId, enabled: true },
-        orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-      });
-    }
-  }
-
-  // Fetch existing values for this task
-  const values = await db.customFieldValue.findMany({
-    where: { taskId },
-    include: { customField: true },
-  });
+  const [fields, values] = await Promise.all([
+    db.customField.findMany({
+      where: { boardId, enabled: true },
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+    }),
+    db.customFieldValue.findMany({
+      where: { taskId },
+      include: { customField: true },
+    }),
+  ]);
 
   return NextResponse.json({ fields, values });
 }
@@ -116,7 +94,7 @@ export async function PATCH(
     where: { id: customFieldId },
   });
 
-  if (!customField) {
+  if (!customField || customField.boardId !== task.list.boardId) {
     return NextResponse.json({ error: "Campo no encontrado" }, { status: 404 });
   }
 
@@ -152,8 +130,6 @@ export async function PATCH(
     },
   });
 
-  // Sync bi-directional parent-child relationships if applicable
-  const { syncParentChildRelationships } = await import("@/lib/customValuesSync");
   await syncParentChildRelationships({
     boardId: task.list.boardId,
     currentTaskId: taskId,
