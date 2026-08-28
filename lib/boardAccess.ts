@@ -51,3 +51,40 @@ export async function isBoardOwner(
   });
   return !!board;
 }
+
+/**
+ * Check if a user is an admin or owner of a board.
+ */
+export async function isBoardAdmin(
+  userIdOrClerkId: string,
+  boardId: string,
+): Promise<boolean> {
+  const user = await db.user.findFirst({
+    where: {
+      OR: [{ id: userIdOrClerkId }, { clerkId: userIdOrClerkId }],
+    },
+    select: { id: true },
+  });
+
+  if (!user) return false;
+
+  const board = await db.board.findFirst({
+    where: {
+      id: boardId,
+      OR: [
+        { userId: user.id },
+        {
+          members: {
+            some: {
+              userId: user.id,
+              role: { in: ["admin", "owner"] },
+            },
+          },
+        },
+      ],
+    },
+    select: { id: true },
+  });
+  return !!board;
+}
+

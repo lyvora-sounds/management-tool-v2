@@ -44,6 +44,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
                 },
               },
               subtasks: { select: { completed: true } },
+              customValues: { include: { customField: true } },
               _count: { select: { comments: true, attachments: true } },
             },
           },

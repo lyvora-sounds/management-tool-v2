@@ -104,6 +104,7 @@ model Board {
   members      BoardMember[]
   invitations  Invitation[]
   activityLogs ActivityLog[]
+  customFields CustomField[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -219,6 +220,7 @@ model Task {
   attachments   Attachment[]
   collaborators TaskCollaborator[]
   subtasks      Subtask[]
+  customValues  CustomFieldValue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -326,4 +328,40 @@ model ActivityLog {
   createdAt DateTime @default(now())
 
   @@index([boardId, createdAt])
+}
+
+model CustomField {
+  id         String   @id @default(cuid())
+  boardId    String
+  board      Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  name       String
+  type       String   // "NUMBER" | "TEXT" | "SELECT"
+  options    Json?    // e.g. ["dev", "integration", "uat", "production"]
+  enabled    Boolean  @default(true)
+  isDefault  Boolean  @default(false)
+  defaultKey String?  // "story_points" | "environment" | "parent" | "child" | "customer"
+  order      Int      @default(0)
+
+  values CustomFieldValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([boardId])
+}
+
+model CustomFieldValue {
+  id            String      @id @default(cuid())
+  taskId        String
+  task          Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  customFieldId String
+  customField   CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+  value         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([taskId, customFieldId])
+  @@index([taskId])
+  @@index([customFieldId])
 }

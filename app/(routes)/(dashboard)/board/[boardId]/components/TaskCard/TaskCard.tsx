@@ -175,8 +175,8 @@ export function TaskCard({
         </div>
       </div>
 
-      {/* Epic and Quarter Row if available */}
-      {((task as any).epic || (task as any).quarter) && (
+      {/* Epic, Quarter and Custom Values Row if available */}
+      {((task as any).epic || (task as any).quarter || ((task as any).customValues && (task as any).customValues.length > 0)) && (
         <div className="flex items-center gap-1.5 pl-6 flex-wrap">
           {(task as any).epic && (
             <span
@@ -191,6 +191,31 @@ export function TaskCard({
               {(task as any).quarter}
             </span>
           )}
+          {((task as any).customValues || [])
+            .filter((cv: any) => cv.value && cv.customField?.enabled !== false)
+            .map((cv: any) => {
+              let displayVal = cv.value;
+              if (cv.value && cv.value.startsWith("[")) {
+                try {
+                  const arr = JSON.parse(cv.value);
+                  if (Array.isArray(arr)) displayVal = arr.join(", ");
+                } catch {
+                  // ignore
+                }
+              }
+
+              return (
+                <span
+                  key={cv.id}
+                  title={`${cv.customField?.name || "Valor"}: ${displayVal}`}
+                  className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 max-w-44 truncate"
+                >
+                  {cv.customField?.defaultKey === "story_points"
+                    ? `${displayVal} SP`
+                    : `${cv.customField?.name}: ${displayVal}`}
+                </span>
+              );
+            })}
         </div>
       )}
 
