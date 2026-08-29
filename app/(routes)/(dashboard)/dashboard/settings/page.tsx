@@ -12,6 +12,7 @@ import {
   Server,
   ShieldCheck,
   UserCog,
+  SlidersHorizontal,
 } from "lucide-react";
 import { UserProfile } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
   PROVIDER_BASE_URLS,
   PROVIDER_DEFAULT_MODELS,
 } from "@/lib/ai/types";
+import { CustomFieldsSettings } from "./components/CustomFieldsSettings";
 
 const PROVIDERS: {
   id: AiProvider;
@@ -89,7 +91,7 @@ const PROVIDERS: {
   },
 ];
 
-type SettingsTab = "account" | "ai";
+type SettingsTab = "account" | "ai" | "custom-fields";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
@@ -173,6 +175,7 @@ export default function SettingsPage() {
   const TABS: { id: SettingsTab; label: string; icon: typeof UserCog }[] = [
     { id: "account", label: "Cuenta", icon: UserCog },
     { id: "ai", label: "Inteligencia artificial", icon: Sparkles },
+    { id: "custom-fields", label: "Valores personalizados", icon: SlidersHorizontal },
   ];
 
   return (
@@ -180,17 +183,17 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Ajustes</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Gestiona tu perfil, tus claves personales de IA y las preferencias de voz.
+          Gestiona tu perfil, tus claves personales de IA, preferencias de voz y valores personalizados.
         </p>
       </div>
 
-      <div className="flex border-b">
+      <div className="flex border-b overflow-x-auto">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
             onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-1.5 py-3 px-4 text-sm font-semibold border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 py-3 px-4 text-sm font-semibold border-b-2 transition-colors shrink-0 ${
               activeTab === id
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -208,6 +211,12 @@ export default function SettingsPage() {
           <UserProfile routing="hash" />
         </div>
       )}
+
+      {/* Custom Fields Settings */}
+      {activeTab === "custom-fields" && (
+        <CustomFieldsSettings />
+      )}
+
 
       {/* La configuración de IA se carga por fetch; la pestaña de cuenta no la
           necesita, así que el spinner se queda acotado aquí. */}

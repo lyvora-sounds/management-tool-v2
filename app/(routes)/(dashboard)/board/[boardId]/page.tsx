@@ -44,6 +44,8 @@ export default async function BoardPage({ params }: BoardPageProps) {
                 },
               },
               subtasks: { select: { completed: true } },
+              epic: { select: { id: true, title: true, color: true } },
+              customValues: { include: { customField: true } },
               _count: { select: { comments: true, attachments: true } },
             },
           },
