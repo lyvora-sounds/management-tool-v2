@@ -7,6 +7,16 @@ export type BoardUser = Pick<UserModel, "id" | "name" | "email">;
 export type TaskCollaborator = { user: BoardUser };
 export type TaskAssignee = { user: BoardUser };
 
+export type TaskCustomValue = {
+  id: string;
+  value: string | null;
+  customField?: {
+    name: string;
+    enabled?: boolean;
+    defaultKey?: string | null;
+  } | null;
+};
+
 export type TaskWithLabels = TaskModel & {
   labels: { label: LabelModel }[];
   assignee?: BoardUser | null;
@@ -14,6 +24,8 @@ export type TaskWithLabels = TaskModel & {
   collaborators: TaskCollaborator[];
   assignees?: TaskAssignee[];
   priority?: string | null;
+  epic?: { id: string; title: string; color: string } | null;
+  customValues?: TaskCustomValue[];
   _count?: {
     comments: number;
     attachments: number;

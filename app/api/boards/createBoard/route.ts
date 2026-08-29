@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { getOrCreateUser } from "@/lib/getOrCreateUser";
+import { defaultCustomFieldRows } from "@/lib/ensureDefaultCustomFields";
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -39,6 +40,11 @@ export async function POST(req: Request) {
             },
           }
         : undefined,
+      customFields: {
+        createMany: {
+          data: defaultCustomFieldRows(),
+        },
+      },
     },
   });
 

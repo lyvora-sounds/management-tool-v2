@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -17,6 +17,8 @@ import { TaskActions } from "../TaskActions/TaskActions";
 import { TaskModal } from "../TaskModal/TaskModal";
 import { useBoardStore } from "../../store/useBoardStore";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
+import { targetListForCompletion } from "@/lib/statusTheme";
+import { displayCustomFieldValue } from "@/lib/customValueUtils";
 
 function getInitials(name: string | null | undefined, email: string | undefined) {
   if (name)
@@ -40,6 +42,7 @@ export function TaskCard({
   memberCanAssign,
 }: TaskCardProps) {
   const updateTask = useBoardStore((s) => s.updateTask);
+  const lists = useBoardStore((s) => s.lists);
   const [modalOpen, setModalOpen] = useState(false);
   const [completed, setCompleted] = useState(task.completed);
 
@@ -62,15 +65,47 @@ export function TaskCard({
     opacity: isDragging ? 0.3 : 1,
   };
 
+  const titleById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const list of lists) {
+      for (const item of list.tasks) {
+        map.set(item.id, item.title);
+      }
+    }
+    return map;
+  }, [lists]);
+
   const toggleCompleted = async () => {
     const next = !completed;
-    setCompleted(next);
-    await fetch(`/api/tasks/updateTask/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completed: next }),
-    });
-    updateTask(listId, task.id, { completed: next });
+    const boardLists = useBoardStore.getState().lists;
+    const targetList = targetListForCompletion(boardLists, listId, next);
+
+    if (targetList) {
+      useBoardStore
+        .getState()
+        .moveTask(task.id, listId, targetList.id, targetList.tasks.length);
+      useBoardStore
+        .getState()
+        .updateTask(targetList.id, task.id, { completed: next });
+      setCompleted(next);
+
+      await fetch(`/api/tasks/updateTask/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listId: targetList.id,
+          completed: next,
+        }),
+      });
+    } else {
+      setCompleted(next);
+      updateTask(listId, task.id, { completed: next });
+      await fetch(`/api/tasks/updateTask/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: next }),
+      });
+    }
   };
 
   const priority = getPriority(task.priority);
@@ -145,22 +180,42 @@ export function TaskCard({
         </div>
       </div>
 
-      {/* Epic and Quarter Row if available */}
-      {((task as any).epic || (task as any).quarter) && (
+      {(task.epic || task.quarter || (task.customValues && task.customValues.length > 0)) && (
         <div className="flex items-center gap-1.5 pl-6 flex-wrap">
-          {(task as any).epic && (
+          {task.epic && (
             <span
               className="text-[10px] font-semibold px-1.5 py-0.2 rounded text-white"
-              style={{ backgroundColor: (task as any).epic.color }}
+              style={{ backgroundColor: task.epic.color }}
             >
-              {(task as any).epic.title}
+              {task.epic.title}
             </span>
           )}
-          {(task as any).quarter && (
+          {task.quarter && (
             <span className="text-[10px] text-muted-foreground font-medium px-1 py-0.2 rounded bg-muted">
-              {(task as any).quarter}
+              {task.quarter}
             </span>
           )}
+          {(task.customValues ?? [])
+            .filter((cv) => cv.value && cv.customField?.enabled !== false)
+            .map((cv) => {
+              const displayVal = displayCustomFieldValue(
+                cv.value as string,
+                cv.customField?.defaultKey,
+                titleById,
+              );
+
+              return (
+                <span
+                  key={cv.id}
+                  title={`${cv.customField?.name || "Valor"}: ${displayVal}`}
+                  className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 max-w-44 truncate"
+                >
+                  {cv.customField?.defaultKey === "story_points"
+                    ? `${displayVal} SP`
+                    : `${cv.customField?.name}: ${displayVal}`}
+                </span>
+              );
+            })}
         </div>
       )}
 
@@ -235,17 +290,19 @@ export function TaskCard({
         </div>
       )}
 
-      <TaskModal
-        task={task}
-        listId={listId}
-        listTitle={listTitle}
-        boardId={boardId}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        isOwner={isOwner}
-        boardUsers={boardUsers}
-        memberCanAssign={memberCanAssign}
-      />
+      {modalOpen && (
+        <TaskModal
+          task={task}
+          listId={listId}
+          listTitle={listTitle}
+          boardId={boardId}
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          isOwner={isOwner}
+          boardUsers={boardUsers}
+          memberCanAssign={memberCanAssign}
+        />
+      )}
     </div>
   );
 }

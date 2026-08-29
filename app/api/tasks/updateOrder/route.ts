@@ -49,10 +49,10 @@ export async function PATCH(req: Request) {
   const allowed = await hasBoardAccess(user.id, boardId);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  await db.$transaction(
+  await Promise.all(
     (items as OrderItem[]).map(({ id, order, listId }) =>
-      db.task.update({ where: { id }, data: { order, listId } })
-    )
+      db.task.update({ where: { id }, data: { order, listId } }),
+    ),
   );
 
   if (movedTaskId && fromListId && toListId && fromListId !== toListId) {

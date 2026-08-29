@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useBoardPolling } from "@/hooks/use-board-polling";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -24,6 +25,7 @@ import type { ListWithTasks, TaskWithLabels } from "../TaskCard/TaskCard.types";
 import { useBoardStore } from "../../store/useBoardStore";
 import { ListItem } from "../ListItem/ListItem";
 import { CreateListForm } from "../CreateListForm/CreateListForm";
+import { TaskModal } from "../TaskModal/TaskModal";
 import { BoardContentProps } from "./BoardContent.types";
 import { BoardFilters } from "../BoardFilters/BoardFilters";
 import { BoardFiltersState } from "../BoardFilters/BoardFilters.types";
@@ -37,7 +39,7 @@ function taskMatchesFilters(
   filters: BoardFiltersState,
 ): boolean {
   // Archive Status
-  const isArchived = Boolean((task as any).archived);
+  const isArchived = Boolean(task.archived);
   if (filters.archiveStatus === "active" && isArchived) return false;
   if (filters.archiveStatus === "archived" && !isArchived) return false;
 
@@ -47,12 +49,12 @@ function taskMatchesFilters(
 
   // Quarter
   if (filters.quarter !== "all") {
-    if ((task as any).quarter !== filters.quarter) return false;
+    if (task.quarter !== filters.quarter) return false;
   }
 
   // Epic
   if (filters.epicId !== "all") {
-    if ((task as any).epicId !== filters.epicId) return false;
+    if (task.epicId !== filters.epicId) return false;
   }
 
   // Labels — task must have ALL selected labels
@@ -115,13 +117,42 @@ export function BoardContent({
 }: BoardContentProps) {
   useBoardPolling();
 
-  const { lists, setLists, reorderLists, moveTask } = useBoardStore();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const taskIdParam = searchParams.get("taskId");
+
+  const lists = useBoardStore((s) => s.lists);
+  const setLists = useBoardStore((s) => s.setLists);
+  const reorderLists = useBoardStore((s) => s.reorderLists);
+  const moveTask = useBoardStore((s) => s.moveTask);
+
   const [activeTask, setActiveTask] = useState<TaskModel | null>(null);
   const [activeList, setActiveList] = useState<ListWithTasks | null>(null);
   const [dragOriginListId, setDragOriginListId] = useState<string | null>(null);
   const [filters, setFilters] = useState<BoardFiltersState>(DEFAULT_FILTERS);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
+
+  const effectiveLists = lists && lists.length > 0 ? lists : initialLists;
+
+  const urlTaskEntry = useMemo(() => {
+    if (!taskIdParam) return null;
+    for (const list of effectiveLists) {
+      const task = list.tasks.find((t) => t.id === taskIdParam);
+      if (task) {
+        return { task, listId: list.id, listTitle: list.title };
+      }
+    }
+    return null;
+  }, [effectiveLists, taskIdParam]);
+
+  const handleCloseUrlModal = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("taskId");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   useEffect(() => {
     setLists(initialLists);
@@ -150,7 +181,7 @@ export function BoardContent({
     const set = new Set<string>();
     for (const list of lists) {
       for (const task of list.tasks) {
-        if ((task as any).quarter) set.add((task as any).quarter);
+        if (task.quarter) set.add(task.quarter);
       }
     }
     return Array.from(set).sort();
@@ -395,6 +426,20 @@ export function BoardContent({
             )}
           </DragOverlay>
         </DndContext>
+      )}
+
+      {urlTaskEntry && (
+        <TaskModal
+          task={urlTaskEntry.task}
+          listId={urlTaskEntry.listId}
+          listTitle={urlTaskEntry.listTitle}
+          boardId={boardId}
+          open={Boolean(urlTaskEntry)}
+          onClose={handleCloseUrlModal}
+          isOwner={isOwner}
+          boardUsers={boardUsers}
+          memberCanAssign={memberCanAssign}
+        />
       )}
     </div>
   );

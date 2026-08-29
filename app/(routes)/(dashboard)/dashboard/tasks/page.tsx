@@ -10,12 +10,20 @@ export default async function MyTasksPage() {
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) redirect("/sign-in");
 
-  // Get all boards user has access to (owned or member)
+  // Get all boards user has access to (owned or member) with their lists
   const boards = await db.board.findMany({
     where: {
       OR: [{ userId: user.id }, { members: { some: { userId: user.id } } }],
     },
-    select: { id: true, title: true, color: true },
+    select: {
+      id: true,
+      title: true,
+      color: true,
+      list: {
+        select: { id: true, title: true, order: true },
+        orderBy: { order: "asc" },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -56,7 +64,7 @@ export default async function MyTasksPage() {
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto w-full">
       <MyTasksView
-        initialTasks={tasks as any}
+        initialTasks={tasks}
         userId={user.id}
         boards={boards}
       />

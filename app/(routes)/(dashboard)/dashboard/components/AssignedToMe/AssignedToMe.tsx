@@ -1,48 +1,84 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { UserCheck, CheckCircle2, Circle, AlertCircle } from "lucide-react";
+import { UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { PRIORITY_COLOR, PRIORITY_LABEL } from "./AssignedToMe.constants";
+import { toast } from "sonner";
+import { isDoneList } from "@/lib/statusTheme";
 import { AssignedTask, AssignedToMeProps } from "./AssignedToMe.types";
+import { DashboardTaskRow } from "../DashboardTaskRow/DashboardTaskRow";
 
-function isOverdue(dueDate: Date | null): boolean {
-  if (!dueDate) return false;
-  return new Date(dueDate) < new Date();
-}
-
-function formatDueDate(date: Date): string {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const due = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
-  if (diffDays < 0) return `Venció hace ${Math.abs(diffDays)}d`;
-  if (diffDays === 0) return "Hoy";
-  if (diffDays === 1) return "Mañana";
-  return due.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
-}
-
-// Agrupa las tareas por board
-function groupByBoard(
-  tasks: AssignedTask[],
-): { boardId: string; boardTitle: string; tasks: AssignedTask[] }[] {
+function groupByBoard(tasks: AssignedTask[]) {
   const map = new Map<
     string,
-    { boardId: string; boardTitle: string; tasks: AssignedTask[] }
+    {
+      boardId: string;
+      boardTitle: string;
+      tasks: AssignedTask[];
+    }
   >();
+
   for (const task of tasks) {
     const { id, title } = task.list.board;
-    if (!map.has(id))
+    if (!map.has(id)) {
       map.set(id, { boardId: id, boardTitle: title, tasks: [] });
+    }
     map.get(id)!.tasks.push(task);
   }
+
   return Array.from(map.values());
 }
 
-export function AssignedToMe({ tasks }: AssignedToMeProps) {
+export function AssignedToMe({ tasks: initialTasks, userId }: AssignedToMeProps) {
+  const router = useRouter();
+  const [tasks, setTasks] = useState<AssignedTask[]>(initialTasks);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
+
+  const handleStatusChange = async (task: AssignedTask, targetListId: string) => {
+    const nextTitle = task.list.board.list?.find((l) => l.id === targetListId)?.title;
+    if (!nextTitle || targetListId === task.list.id) return;
+
+    const prevTask = { ...task };
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === task.id
+          ? {
+              ...t,
+              completed: isDoneList(nextTitle),
+              list: { ...t.list, id: targetListId, title: nextTitle },
+            }
+          : t,
+      ),
+    );
+
+    setUpdatingTaskId(task.id);
+    try {
+      const res = await fetch(`/api/tasks/updateTask/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listId: targetListId }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      toast.success(`Estado cambiado a "${nextTitle}"`);
+    } catch {
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? prevTask : t)));
+      toast.error("Error al actualizar el estado");
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
+
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Asignado a mí</h2>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground rounded-xl border p-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground rounded-xl border p-4 bg-card">
           <UserCheck size={16} className="shrink-0" />
           <span>No tienes tareas asignadas en ningún board</span>
         </div>
@@ -71,58 +107,22 @@ export function AssignedToMe({ tasks }: AssignedToMeProps) {
               {group.boardTitle}
             </Link>
             <div className="flex flex-col gap-1.5">
-              {group.tasks.map((task) => {
-                const overdue = isOverdue(task.dueDate) && !task.completed;
-                return (
-                  <Link
-                    key={task.id}
-                    href={`/board/${task.list.board.id}`}
-                    className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 hover:bg-muted/50 transition-colors group"
-                  >
-                    <span className="shrink-0 text-muted-foreground">
-                      {task.completed ? (
-                        <CheckCircle2 size={15} className="text-primary" />
-                      ) : overdue ? (
-                        <AlertCircle size={15} className="text-destructive" />
-                      ) : (
-                        <Circle size={15} />
-                      )}
-                    </span>
-
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm truncate ${task.completed ? "line-through text-muted-foreground" : ""}`}
-                      >
-                        {task.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {task.list.title}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {task.priority && PRIORITY_COLOR[task.priority] && (
-                        <span className="flex items-center gap-1">
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${PRIORITY_COLOR[task.priority]}`}
-                          />
-                          <span className="text-xs text-muted-foreground hidden sm:inline">
-                            {PRIORITY_LABEL[task.priority]}
-                          </span>
-                        </span>
-                      )}
-                      {task.dueDate && (
-                        <Badge
-                          variant={overdue ? "destructive" : "secondary"}
-                          className="text-xs tabular-nums"
-                        >
-                          {formatDueDate(task.dueDate)}
-                        </Badge>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
+              {group.tasks.map((task) => (
+                <DashboardTaskRow
+                  key={task.id}
+                  task={task}
+                  isAssignee={task.assigneeId === userId}
+                  isCollab={Boolean(task.collaborators?.some((c) => c.userId === userId))}
+                  isQa={task.qaId === userId}
+                  lists={task.list.board.list ?? []}
+                  updating={updatingTaskId === task.id}
+                  onOpen={() =>
+                    router.push(`/board/${task.list.board.id}?taskId=${task.id}`)
+                  }
+                  onOpenBoard={() => router.push(`/board/${task.list.board.id}`)}
+                  onStatusChange={(listId) => handleStatusChange(task, listId)}
+                />
+              ))}
             </div>
           </div>
         ))}

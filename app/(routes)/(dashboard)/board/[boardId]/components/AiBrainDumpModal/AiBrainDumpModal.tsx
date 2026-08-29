@@ -292,7 +292,7 @@ export function AiBrainDumpModal({
                     {/* Metadata controls: List, Epic, Priority, Quarter */}
                     <div className="grid gap-2 sm:grid-cols-4">
                       {/* Destination List */}
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         <label className="text-[10px] font-semibold text-muted-foreground">
                           Lista de destino
                         </label>
@@ -302,8 +302,10 @@ export function AiBrainDumpModal({
                             handleUpdateTaskField(idx, "targetListId", v)
                           }
                         >
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue />
+                          <SelectTrigger className="h-7 text-xs w-full justify-between">
+                            <SelectValue placeholder="Seleccionar lista">
+                              {lists.find((l) => l.id === t.targetListId)?.title || "Seleccionar lista"}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {lists.map((l) => (
@@ -316,7 +318,7 @@ export function AiBrainDumpModal({
                       </div>
 
                       {/* Destination Epic */}
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         <label className="text-[10px] font-semibold text-muted-foreground">
                           Epic
                         </label>
@@ -330,8 +332,24 @@ export function AiBrainDumpModal({
                             )
                           }
                         >
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue placeholder="Sin Epic" />
+                          <SelectTrigger className="h-7 text-xs w-full justify-between">
+                            <SelectValue placeholder="Sin Epic">
+                              {t.targetEpicId && epics.find((e) => e.id === t.targetEpicId) ? (
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <span
+                                    className="w-2 h-2 rounded-full shrink-0"
+                                    style={{
+                                      backgroundColor: epics.find((e) => e.id === t.targetEpicId)?.color,
+                                    }}
+                                  />
+                                  <span className="truncate">
+                                    {epics.find((e) => e.id === t.targetEpicId)?.title}
+                                  </span>
+                                </div>
+                              ) : (
+                                "Sin Epic"
+                              )}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">Sin Epic</SelectItem>
@@ -339,7 +357,7 @@ export function AiBrainDumpModal({
                               <SelectItem key={ep.id} value={ep.id}>
                                 <div className="flex items-center gap-1.5">
                                   <span
-                                    className="w-2 h-2 rounded-full"
+                                    className="w-2 h-2 rounded-full shrink-0"
                                     style={{ backgroundColor: ep.color }}
                                   />
                                   <span>{ep.title}</span>
@@ -351,7 +369,7 @@ export function AiBrainDumpModal({
                       </div>
 
                       {/* Priority */}
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         <label className="text-[10px] font-semibold text-muted-foreground">
                           Prioridad
                         </label>
@@ -361,8 +379,10 @@ export function AiBrainDumpModal({
                             handleUpdateTaskField(idx, "priority", v as Priority)
                           }
                         >
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue />
+                          <SelectTrigger className="h-7 text-xs w-full justify-between">
+                            <SelectValue>
+                              {PRIORITIES.find((p) => p.value === t.priority)?.label || t.priority}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {PRIORITIES.map((p) => (
@@ -375,7 +395,7 @@ export function AiBrainDumpModal({
                       </div>
 
                       {/* Quarter */}
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         <label className="text-[10px] font-semibold text-muted-foreground">
                           Quarter
                         </label>

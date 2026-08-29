@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
-  Circle,
   AlertCircle,
   Calendar,
   Search,
@@ -14,15 +13,11 @@ import {
   ShieldCheck,
   Users,
   User,
-  CheckSquare2,
-  MessageSquare,
-  Paperclip,
   Layers,
   ArrowUpDown,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -33,11 +28,22 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { isDoneList } from "@/lib/statusTheme";
+import { PRIORITY_CONFIG } from "@/lib/taskDisplay";
+import { DashboardTaskRow } from "../../components/DashboardTaskRow/DashboardTaskRow";
+
+interface BoardListInfo {
+  id: string;
+  title: string;
+  order: number;
+}
 
 interface BoardInfo {
   id: string;
   title: string;
   color?: string | null;
+  list?: BoardListInfo[];
 }
 
 interface TaskItem {
@@ -45,10 +51,10 @@ interface TaskItem {
   title: string;
   description?: string | null;
   completed: boolean;
-  completedAt?: string | null;
+  completedAt?: Date | string | null;
   priority?: string | null;
-  startDate?: string | null;
-  dueDate?: string | null;
+  startDate?: Date | string | null;
+  dueDate?: Date | string | null;
   quarter?: string | null;
   assigneeId?: string | null;
   qaId?: string | null;
@@ -79,85 +85,8 @@ type GroupByOption = "events" | "board" | "role" | "priority";
 type RoleFilter = "all" | "assignee" | "collaborator" | "qa";
 type StatusFilter = "all" | "pending" | "completed";
 
-const PRIORITY_CONFIG: Record<
-  string,
-  { label: string; bg: string; text: string; dot: string }
-> = {
-  low: {
-    label: "Baja",
-    bg: "bg-emerald-500/10 dark:bg-emerald-950/30",
-    text: "text-emerald-700 dark:text-emerald-300",
-    dot: "bg-emerald-500",
-  },
-  medium: {
-    label: "Media",
-    bg: "bg-amber-500/10 dark:bg-amber-950/30",
-    text: "text-amber-700 dark:text-amber-300",
-    dot: "bg-amber-500",
-  },
-  high: {
-    label: "Alta",
-    bg: "bg-orange-500/10 dark:bg-orange-950/30",
-    text: "text-orange-700 dark:text-orange-300",
-    dot: "bg-orange-500",
-  },
-  urgent: {
-    label: "Urgente",
-    bg: "bg-rose-500/10 dark:bg-rose-950/30",
-    text: "text-rose-700 dark:text-rose-300",
-    dot: "bg-rose-500",
-  },
-};
-
-function formatDueDate(dueDateStr: string): { label: string; isOverdue: boolean; isToday: boolean; isSoon: boolean } {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const due = new Date(dueDateStr);
-  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
-  const diffDays = Math.round((dueDay.getTime() - today.getTime()) / 86400000);
-
-  if (diffDays < 0) {
-    return {
-      label: `Venció hace ${Math.abs(diffDays)}d`,
-      isOverdue: true,
-      isToday: false,
-      isSoon: false,
-    };
-  }
-  if (diffDays === 0) {
-    return {
-      label: "Hoy",
-      isOverdue: false,
-      isToday: true,
-      isSoon: false,
-    };
-  }
-  if (diffDays === 1) {
-    return {
-      label: "Mañana",
-      isOverdue: false,
-      isToday: false,
-      isSoon: true,
-    };
-  }
-  if (diffDays <= 7) {
-    return {
-      label: `En ${diffDays} días`,
-      isOverdue: false,
-      isToday: false,
-      isSoon: true,
-    };
-  }
-
-  return {
-    label: due.toLocaleDateString("es-ES", { day: "numeric", month: "short" }),
-    isOverdue: false,
-    isToday: false,
-    isSoon: false,
-  };
-}
-
 export function MyTasksView({ initialTasks, userId, boards }: Props) {
+  const router = useRouter();
   const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
   const [search, setSearch] = useState("");
   const [boardFilter, setBoardFilter] = useState("all");
@@ -166,18 +95,53 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
   const [groupBy, setGroupBy] = useState<GroupByOption>("events");
 
-  // Toggle completion
-  const toggleCompleted = async (task: TaskItem) => {
-    const nextCompleted = !task.completed;
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
+
+  const handleStatusChange = async (task: TaskItem, targetListId: string) => {
+    const nextTitle = boards
+      .find((b) => b.id === task.list.board.id)
+      ?.list?.find((l) => l.id === targetListId)?.title;
+    if (!nextTitle || targetListId === task.list.id) return;
+
+    const done = isDoneList(nextTitle);
+    const prevTask = { ...task };
+
     setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, completed: nextCompleted } : t)),
+      prev.map((t) =>
+        t.id === task.id
+          ? {
+              ...t,
+              completed: done,
+              completedAt: done ? new Date().toISOString() : null,
+              list: { ...t.list, id: targetListId, title: nextTitle },
+            }
+          : t,
+      ),
     );
 
-    await fetch(`/api/tasks/updateTask/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completed: nextCompleted }),
-    });
+    setUpdatingTaskId(task.id);
+    try {
+      const res = await fetch(`/api/tasks/updateTask/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listId: targetListId }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      const updated = await res.json();
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...t, ...updated } : t)),
+      );
+      toast.success(`Estado cambiado a "${nextTitle}"`);
+    } catch {
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? prevTask : t)));
+      toast.error("Error al actualizar el estado");
+    } finally {
+      setUpdatingTaskId(null);
+    }
   };
 
   // Metrics
@@ -643,195 +607,39 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
 
               {/* Tasks in Section */}
               <div className="flex flex-col gap-1.5">
-                {section.tasks.map((task) => {
-                  const isAssignee = task.assigneeId === userId;
-                  const isCollab = task.collaborators.some((c) => c.user.id === userId);
-                  const isQa = task.qaId === userId;
-
-                  const priorityInfo = task.priority ? PRIORITY_CONFIG[task.priority] : null;
-                  const dueInfo = task.dueDate ? formatDueDate(task.dueDate) : null;
-                  const subtaskCount = task.subtasks.length;
-                  const subtaskDone = task.subtasks.filter((s) => s.completed).length;
-
-                  return (
-                    <div
-                      key={task.id}
-                      className={cn(
-                        "group flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-xl border bg-card hover:bg-muted/40 transition-all shadow-xs",
-                        task.completed && "opacity-60 bg-muted/20"
-                      )}
-                    >
-                      {/* Left: Complete Checkbox + Title & Context */}
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <button
-                          onClick={() => toggleCompleted(task)}
-                          className="mt-0.5 shrink-0 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-                        >
-                          {task.completed ? (
-                            <CheckCircle2 size={17} className="text-primary" />
-                          ) : (
-                            <Circle size={17} />
-                          )}
-                        </button>
-
-                        <div className="flex flex-col gap-1 min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span
-                              className={cn(
-                                "text-sm font-medium leading-snug break-words",
-                                task.completed && "line-through text-muted-foreground"
-                              )}
-                            >
-                              {task.title}
-                            </span>
-
-                            {/* Priority Badge */}
-                            {priorityInfo && (
-                              <span
-                                className={cn(
-                                  "text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0",
-                                  priorityInfo.bg,
-                                  priorityInfo.text
-                                )}
-                              >
-                                {priorityInfo.label}
-                              </span>
-                            )}
-
-                            {/* Epic Badge */}
-                            {task.epic && (
-                              <span
-                                className="text-[9px] font-semibold px-1.5 py-0.2 rounded text-white shrink-0"
-                                style={{ backgroundColor: task.epic.color }}
-                              >
-                                {task.epic.title}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Breadcrumb: Board > List */}
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
-                            <Link
-                              href={`/board/${task.list.board.id}`}
-                              className="font-medium hover:text-primary transition-colors underline-offset-2 hover:underline"
-                            >
-                              {task.list.board.title}
-                            </Link>
-                            <span>›</span>
-                            <span>{task.list.title}</span>
-
-                            {task.quarter && (
-                              <span className="text-[10px] px-1 py-0.2 rounded bg-muted font-medium ml-1">
-                                {task.quarter}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Right: Roles, Indicators, Due Date & Direct Link */}
-                      <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center pl-7 sm:pl-0 flex-wrap">
-                        {/* User Role in this task */}
-                        <div className="flex items-center gap-1">
-                          {isAssignee && (
-                            <Badge
-                              variant="secondary"
-                              className="text-[10px] h-5 bg-primary/10 text-primary border-primary/20 gap-1 font-medium"
-                            >
-                              <User size={10} />
-                              Responsable
-                            </Badge>
-                          )}
-                          {isCollab && (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] h-5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 gap-1 font-medium"
-                            >
-                              <Users size={10} />
-                              Colaborador
-                            </Badge>
-                          )}
-                          {isQa && (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] h-5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 gap-1 font-medium"
-                            >
-                              <ShieldCheck size={10} />
-                              QA
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Subtasks indicator */}
-                        {subtaskCount > 0 && (
-                          <span
-                            className={cn(
-                              "flex items-center gap-1 text-[11px]",
-                              subtaskDone === subtaskCount
-                                ? "text-primary font-medium"
-                                : "text-muted-foreground"
-                            )}
-                            title={`Subtareas: ${subtaskDone}/${subtaskCount}`}
-                          >
-                            <CheckSquare2 size={12} />
-                            {subtaskDone}/{subtaskCount}
-                          </span>
-                        )}
-
-                        {/* Comments count */}
-                        {(task._count?.comments ?? 0) > 0 && (
-                          <span
-                            className="flex items-center gap-1 text-[11px] text-muted-foreground"
-                            title="Comentarios"
-                          >
-                            <MessageSquare size={12} />
-                            {task._count?.comments}
-                          </span>
-                        )}
-
-                        {/* Attachments count */}
-                        {(task._count?.attachments ?? 0) > 0 && (
-                          <span
-                            className="flex items-center gap-1 text-[11px] text-muted-foreground"
-                            title="Adjuntos"
-                          >
-                            <Paperclip size={12} />
-                            {task._count?.attachments}
-                          </span>
-                        )}
-
-                        {/* Due Date badge */}
-                        {dueInfo && (
-                          <Badge
-                            variant={
-                              dueInfo.isOverdue && !task.completed
-                                ? "destructive"
-                                : dueInfo.isToday && !task.completed
-                                  ? "secondary"
-                                  : "outline"
-                            }
-                            className={cn(
-                              "text-xs gap-1 tabular-nums font-normal",
-                              dueInfo.isToday && !task.completed && "border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium"
-                            )}
-                          >
-                            <Calendar size={11} />
-                            {dueInfo.label}
-                          </Badge>
-                        )}
-
-                        {/* Direct link to Board */}
-                        <Link
-                          href={`/board/${task.list.board.id}`}
-                          className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                          title="Ir al board"
-                        >
-                          <ExternalLink size={14} />
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
+                {section.tasks.map((task) => (
+                  <DashboardTaskRow
+                    key={task.id}
+                    task={task}
+                    isAssignee={task.assigneeId === userId}
+                    isCollab={task.collaborators.some((c) => c.user.id === userId)}
+                    isQa={task.qaId === userId}
+                    lists={
+                      boards.find((b) => b.id === task.list.board.id)?.list ?? []
+                    }
+                    updating={updatingTaskId === task.id}
+                    onOpen={() =>
+                      router.push(`/board/${task.list.board.id}?taskId=${task.id}`)
+                    }
+                    onOpenBoard={() => router.push(`/board/${task.list.board.id}`)}
+                    onStatusChange={(listId) => handleStatusChange(task, listId)}
+                    trailing={
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(
+                            `/board/${task.list.board.id}?taskId=${task.id}`,
+                          );
+                        }}
+                        className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
+                        title="Abrir ticket en el tablero"
+                      >
+                        <ExternalLink size={14} />
+                      </button>
+                    }
+                  />
+                ))}
               </div>
             </div>
           ))}
