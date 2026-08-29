@@ -40,6 +40,23 @@ export async function PATCH(
     return NextResponse.json({ error: "Tipo de campo no válido" }, { status: 400 });
   }
 
+  // Mismas comprobaciones que en el POST: sin ellas, un name no textual da un
+  // 500 y unas options que no sean array rompen después la pantalla de ajustes
+  // al hacer options.join().
+  if (name !== undefined && (typeof name !== "string" || !name.trim())) {
+    return NextResponse.json(
+      { error: "El nombre debe ser un texto no vacío" },
+      { status: 400 }
+    );
+  }
+
+  if (options !== undefined && options !== null && !Array.isArray(options)) {
+    return NextResponse.json(
+      { error: "options debe ser una lista" },
+      { status: 400 }
+    );
+  }
+
   const nextType = type ?? field.type;
 
   const updated = await db.customField.update({
@@ -48,7 +65,8 @@ export async function PATCH(
       ...(name !== undefined && { name: name.trim() }),
       ...(type !== undefined && { type }),
       ...(options !== undefined && {
-        options: nextType === "SELECT" ? options : undefined,
+        options:
+          nextType === "SELECT" && Array.isArray(options) ? options : undefined,
       }),
       ...(enabled !== undefined && { enabled: Boolean(enabled) }),
     },
@@ -83,6 +101,19 @@ export async function DELETE(
     return NextResponse.json(
       { error: "Solo los administradores del board pueden eliminar campos personalizados" },
       { status: 403 }
+    );
+  }
+
+  // Los campos por defecto los recrea ensureDefaultCustomFields en el
+  // siguiente GET, así que borrarlos solo consigue perder sus valores por
+  // cascada y que el campo reaparezca vacío. Para ocultarlos está `enabled`.
+  if (field.defaultKey) {
+    return NextResponse.json(
+      {
+        error:
+          "Los campos por defecto no se pueden eliminar. Desactívalo si no quieres usarlo.",
+      },
+      { status: 400 }
     );
   }
 

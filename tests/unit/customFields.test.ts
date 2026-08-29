@@ -57,6 +57,17 @@ describe("custom value list helpers", () => {
     expect(stringifyListValue([" a ", "b", "a"])).toBe('["a","b"]');
   });
 
+  it("guarda una lista vacía como cadena vacía, no como \"[]\"", () => {
+    // "[]" es truthy y colaba los filtros `value &&`, dejando chips vacíos
+    // en las tarjetas al quitar el último hijo.
+    expect(stringifyListValue([])).toBe("");
+    expect(stringifyListValue(["  ", ""])).toBe("");
+  });
+
+  it("mantiene la ida y vuelta con la lista vacía", () => {
+    expect(parseListValue(stringifyListValue([]))).toEqual([]);
+  });
+
   it("resolves parent/child ids to titles when a lookup is provided", () => {
     const titles = new Map([
       ["t1", "Login"],

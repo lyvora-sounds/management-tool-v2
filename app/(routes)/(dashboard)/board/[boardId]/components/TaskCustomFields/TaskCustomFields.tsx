@@ -37,6 +37,10 @@ interface TaskCustomFieldsProps {
 export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
   const [fields, setFields] = useState<CustomField[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
+  // Último valor confirmado por el servidor. `values` refleja lo que se está
+  // escribiendo en el input, así que no sirve para decidir si hay cambios:
+  // al llegar el onBlur ya contiene el texto nuevo.
+  const [savedValues, setSavedValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [savingFieldId, setSavingFieldId] = useState<string | null>(null);
   const [savedSuccessId, setSavedSuccessId] = useState<string | null>(null);
@@ -57,6 +61,7 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
           }
         });
         setValues(valMap);
+        setSavedValues(valMap);
       } catch {
         // ignore
       } finally {
@@ -68,7 +73,7 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
   }, [taskId]);
 
   const handleSaveValue = async (customFieldId: string, newValue: string) => {
-    const previous = values[customFieldId] ?? "";
+    const previous = savedValues[customFieldId] ?? "";
     if (newValue === previous) return;
 
     setSavingFieldId(customFieldId);
@@ -82,6 +87,7 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
       });
 
       if (res.ok) {
+        setSavedValues((prev) => ({ ...prev, [customFieldId]: newValue }));
         setSavedSuccessId(customFieldId);
         setTimeout(() => setSavedSuccessId(null), 2000);
       } else {

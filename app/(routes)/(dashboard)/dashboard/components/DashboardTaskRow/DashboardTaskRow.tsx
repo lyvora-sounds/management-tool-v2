@@ -197,7 +197,10 @@ export function DashboardTaskRow({
 
         {dueInfo && (
           <Badge
-            variant={dueInfo.variant}
+            // Una tarea completada no se marca en rojo aunque su fecha haya
+            // pasado: ya no está vencida. Este guardo existía en MyTasksView y
+            // se perdió al extraer la fila compartida.
+            variant={task.completed ? "outline" : dueInfo.variant}
             className={cn(
               "text-xs gap-1 tabular-nums font-normal",
               dueInfo.isToday &&

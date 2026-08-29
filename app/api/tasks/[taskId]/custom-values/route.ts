@@ -4,6 +4,8 @@ import db from "@/lib/db";
 import { hasBoardAccess } from "@/lib/boardAccess";
 import { ensureDefaultCustomFields } from "@/lib/ensureDefaultCustomFields";
 import { syncParentChildRelationships } from "@/lib/customValuesSync";
+import { isParentFieldKey, isTicketRefKey } from "@/lib/customFieldsDefaults";
+import { parseListValue } from "@/lib/customValueUtils";
 
 export async function GET(
   req: Request,
@@ -98,44 +100,61 @@ export async function PATCH(
     return NextResponse.json({ error: "Campo no encontrado" }, { status: 404 });
   }
 
-  const existingRecord = await db.customFieldValue.findUnique({
-    where: {
-      taskId_customFieldId: {
-        taskId,
-        customFieldId,
-      },
-    },
-  });
-
-  const oldValue = existingRecord?.value ?? null;
   const valStr = value !== undefined && value !== null ? String(value) : null;
 
-  const customVal = await db.customFieldValue.upsert({
-    where: {
-      taskId_customFieldId: {
-        taskId,
-        customFieldId,
-      },
-    },
-    update: {
-      value: valStr,
-    },
-    create: {
-      taskId,
-      customFieldId,
-      value: valStr,
-    },
-    include: {
-      customField: true,
-    },
-  });
+  // Los campos de padre/hijo guardan ids de tarea. Sin validarlos aquí se
+  // acepta texto libre, y la UI acaba mostrando cuids en crudo donde debería
+  // ir el título de un ticket.
+  if (isTicketRefKey(customField.defaultKey) && valStr) {
+    const referencedIds = isParentFieldKey(customField.defaultKey)
+      ? [valStr]
+      : parseListValue(valStr);
 
-  await syncParentChildRelationships({
-    boardId: task.list.boardId,
-    currentTaskId: taskId,
-    customField,
-    oldValue,
-    newValue: valStr,
+    if (referencedIds.includes(taskId)) {
+      return NextResponse.json(
+        { error: "Una tarea no puede referenciarse a sí misma" },
+        { status: 400 }
+      );
+    }
+
+    if (referencedIds.length > 0) {
+      const found = await db.task.findMany({
+        where: { id: { in: referencedIds }, list: { boardId: task.list.boardId } },
+        select: { id: true },
+      });
+      if (found.length !== referencedIds.length) {
+        return NextResponse.json(
+          { error: "Alguna tarea referenciada no existe en este board" },
+          { status: 400 }
+        );
+      }
+    }
+  }
+
+  // Leer el valor anterior, guardarlo y propagar la relación van juntos: si la
+  // propagación falla a mitad, el valor guardado también se revierte.
+  const customVal = await db.$transaction(async (tx) => {
+    const existingRecord = await tx.customFieldValue.findUnique({
+      where: { taskId_customFieldId: { taskId, customFieldId } },
+    });
+    const oldValue = existingRecord?.value ?? null;
+
+    const saved = await tx.customFieldValue.upsert({
+      where: { taskId_customFieldId: { taskId, customFieldId } },
+      update: { value: valStr },
+      create: { taskId, customFieldId, value: valStr },
+      include: { customField: true },
+    });
+
+    await syncParentChildRelationships(tx, {
+      boardId: task.list.boardId,
+      currentTaskId: taskId,
+      customField,
+      oldValue,
+      newValue: valStr,
+    });
+
+    return saved;
   });
 
   return NextResponse.json(customVal);

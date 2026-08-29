@@ -51,25 +51,32 @@ async function patchChildList(
  * Keep parent/child custom values consistent across tasks.
  * Values are task IDs (single ID for parent, JSON array of IDs for child).
  * Does not rewrite the field that was just saved.
+ *
+ * Recibe el cliente de transacción del llamante en lugar de abrir la suya:
+ * guardar el valor y propagar la relación tienen que ser atómicos, o un fallo
+ * a mitad deja padre e hijo apuntándose de forma inconsistente.
  */
-export async function syncParentChildRelationships({
-  boardId,
-  currentTaskId,
-  customField,
-  oldValue,
-  newValue,
-}: {
-  boardId: string;
-  currentTaskId: string;
-  customField: { defaultKey: string | null };
-  oldValue: string | null;
-  newValue: string | null;
-}) {
+export async function syncParentChildRelationships(
+  tx: DbClient,
+  {
+    boardId,
+    currentTaskId,
+    customField,
+    oldValue,
+    newValue,
+  }: {
+    boardId: string;
+    currentTaskId: string;
+    customField: { defaultKey: string | null };
+    oldValue: string | null;
+    newValue: string | null;
+  },
+) {
   if (!isParentFieldKey(customField.defaultKey) && !isChildFieldKey(customField.defaultKey)) {
     return;
   }
 
-  await db.$transaction(async (tx) => {
+  {
     const [parentField, childField] = await Promise.all([
       tx.customField.findFirst({
         where: { boardId, defaultKey: "parent" },
@@ -168,5 +175,5 @@ export async function syncParentChildRelationships({
         );
       }
     }
-  });
+  }
 }

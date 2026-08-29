@@ -65,14 +65,52 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- Keep the oldest row when a board already has duplicate default keys.
-DELETE FROM "CustomField" a
-USING "CustomField" b
-WHERE a."id" <> b."id"
-  AND a."boardId" = b."boardId"
-  AND a."defaultKey" IS NOT NULL
-  AND a."defaultKey" = b."defaultKey"
-  AND a."createdAt" > b."createdAt";
+-- Deduplicar defaultKey por board, conservando la fila más antigua.
+--
+-- Se ordena por (createdAt, id) y no solo por createdAt: los defaults se crean
+-- en una misma transacción, donde now() devuelve el mismo instante para todas
+-- las filas, así que una comparación estricta por createdAt dejaba duplicados
+-- vivos y hacía fallar el índice único de más abajo, abortando migrate deploy.
+--
+-- Los valores de los duplicados se reasignan al campo superviviente ANTES de
+-- borrar nada. Si se borrase primero, la foránea con ON DELETE CASCADE se
+-- llevaría por delante los valores que los usuarios ya habían rellenado.
+-- Paso 1: traspasar al campo superviviente los valores de los duplicados, solo
+-- cuando esa tarea no tenga ya un valor en el superviviente (la restricción
+-- única (taskId, customFieldId) lo impediría).
+UPDATE "CustomFieldValue" v
+SET "customFieldId" = d.keep_id
+FROM (
+  SELECT
+    "id",
+    first_value("id") OVER (
+      PARTITION BY "boardId", "defaultKey"
+      ORDER BY "createdAt", "id"
+    ) AS keep_id
+  FROM "CustomField"
+  WHERE "defaultKey" IS NOT NULL
+) d
+WHERE v."customFieldId" = d."id"
+  AND d."id" <> d.keep_id
+  AND NOT EXISTS (
+    SELECT 1 FROM "CustomFieldValue" existing
+    WHERE existing."taskId" = v."taskId"
+      AND existing."customFieldId" = d.keep_id
+  );
+
+-- Paso 2: ya sin valores que perder, borrar los duplicados.
+DELETE FROM "CustomField" cf
+USING (
+  SELECT
+    "id",
+    first_value("id") OVER (
+      PARTITION BY "boardId", "defaultKey"
+      ORDER BY "createdAt", "id"
+    ) AS keep_id
+  FROM "CustomField"
+  WHERE "defaultKey" IS NOT NULL
+) d
+WHERE cf."id" = d."id" AND d."id" <> d.keep_id;
 
 CREATE UNIQUE INDEX IF NOT EXISTS "CustomField_boardId_defaultKey_key"
   ON "CustomField"("boardId", "defaultKey");
