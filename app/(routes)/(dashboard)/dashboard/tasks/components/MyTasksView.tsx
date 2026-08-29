@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
-  Circle,
   AlertCircle,
   Calendar,
   Search,
@@ -20,9 +19,11 @@ import {
   Layers,
   ArrowUpDown,
   X,
+  ChevronDown,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -31,13 +32,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+interface BoardListInfo {
+  id: string;
+  title: string;
+  order: number;
+}
 
 interface BoardInfo {
   id: string;
   title: string;
   color?: string | null;
+  list?: BoardListInfo[];
 }
 
 interface TaskItem {
@@ -78,6 +95,8 @@ interface Props {
 type GroupByOption = "events" | "board" | "role" | "priority";
 type RoleFilter = "all" | "assignee" | "collaborator" | "qa";
 type StatusFilter = "all" | "pending" | "completed";
+
+import { PREDEFINED_STATUSES, getStatusTheme } from "@/lib/statusTheme";
 
 const PRIORITY_CONFIG: Record<
   string,
@@ -158,6 +177,7 @@ function formatDueDate(dueDateStr: string): { label: string; isOverdue: boolean;
 }
 
 export function MyTasksView({ initialTasks, userId, boards }: Props) {
+  const router = useRouter();
   const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
   const [search, setSearch] = useState("");
   const [boardFilter, setBoardFilter] = useState("all");
@@ -166,18 +186,124 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
   const [groupBy, setGroupBy] = useState<GroupByOption>("events");
 
-  // Toggle completion
-  const toggleCompleted = async (task: TaskItem) => {
-    const nextCompleted = !task.completed;
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+
+  // Status Change Handler
+  const handleStatusChange = async (
+    task: TaskItem,
+    targetListId?: string,
+    targetListTitle?: string,
+  ) => {
+    const nextTitle =
+      targetListTitle ??
+      boards
+        .find((b) => b.id === task.list.board.id)
+        ?.list?.find((l) => l.id === targetListId)?.title;
+
+    if (!nextTitle && !targetListId) return;
+
+    const isDone = /hecho|done|completad|finaliz/i.test(nextTitle ?? "");
+    const prevTask = { ...task };
+
+    // Optimistic UI update
     setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, completed: nextCompleted } : t)),
+      prev.map((t) => {
+        if (t.id === task.id) {
+          return {
+            ...t,
+            completed: isDone,
+            completedAt: isDone ? new Date().toISOString() : null,
+            list: {
+              ...t.list,
+              id: targetListId ?? t.list.id,
+              title: nextTitle ?? t.list.title,
+            },
+          };
+        }
+        return t;
+      }),
     );
 
-    await fetch(`/api/tasks/updateTask/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completed: nextCompleted }),
-    });
+    setUpdatingTaskId(task.id);
+    try {
+      const res = await fetch(`/api/tasks/updateTask/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listId: targetListId,
+          listTitle: targetListTitle,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update status");
+      }
+
+      const updated = await res.json();
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...t, ...updated } : t)),
+      );
+      toast.success(`Estado cambiado a "${nextTitle}"`);
+    } catch {
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? prevTask : t)),
+      );
+      toast.error("Error al actualizar el estado");
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
+
+  const handleStatusSelect = (task: TaskItem, val: string) => {
+    const board = boards.find((b) => b.id === task.list.board.id);
+    const existingList = board?.list?.find(
+      (l) => l.id === val || l.title.toLowerCase() === val.toLowerCase(),
+    );
+    if (existingList) {
+      if (existingList.id === task.list.id) return;
+      handleStatusChange(task, existingList.id, undefined);
+    } else {
+      handleStatusChange(task, undefined, val);
+    }
+  };
+
+  const getAvailableStatuses = (task: TaskItem) => {
+    const board = boards.find((b) => b.id === task.list.board.id);
+    const boardLists = board?.list ?? [];
+
+    const existingTitles = new Set(
+      boardLists.map((l) => l.title.toLowerCase().trim()),
+    );
+
+    const items: {
+      id: string;
+      title: string;
+      active: boolean;
+    }[] = [];
+
+    // 1. Board's own configured lists
+    for (const list of boardLists) {
+      items.push({
+        id: list.id,
+        title: list.title,
+        active:
+          task.list.id === list.id ||
+          task.list.title.toLowerCase() === list.title.toLowerCase(),
+      });
+    }
+
+    // 2. Predefined statuses if not already present on this board
+    for (const predefined of PREDEFINED_STATUSES) {
+      if (!existingTitles.has(predefined.toLowerCase())) {
+        items.push({
+          id: predefined,
+          title: predefined,
+          active: task.list.title.toLowerCase() === predefined.toLowerCase(),
+        });
+      }
+    }
+
+    return items;
   };
 
   // Metrics
@@ -645,92 +771,103 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
               <div className="flex flex-col gap-1.5">
                 {section.tasks.map((task) => {
                   const isAssignee = task.assigneeId === userId;
-                  const isCollab = task.collaborators.some((c) => c.user.id === userId);
+                  const isCollab = task.collaborators.some(
+                    (c) => c.user.id === userId,
+                  );
                   const isQa = task.qaId === userId;
 
-                  const priorityInfo = task.priority ? PRIORITY_CONFIG[task.priority] : null;
-                  const dueInfo = task.dueDate ? formatDueDate(task.dueDate) : null;
+                  const priorityInfo = task.priority
+                    ? PRIORITY_CONFIG[task.priority]
+                    : null;
+                  const dueInfo = task.dueDate
+                    ? formatDueDate(task.dueDate)
+                    : null;
                   const subtaskCount = task.subtasks.length;
-                  const subtaskDone = task.subtasks.filter((s) => s.completed).length;
+                  const subtaskDone = task.subtasks.filter(
+                    (s) => s.completed,
+                  ).length;
+                  const statusTheme = getStatusTheme(
+                    task.list.title,
+                    task.completed,
+                  );
+                  const availableStatuses = getAvailableStatuses(task);
+                  const isUpdating = updatingTaskId === task.id;
 
                   return (
                     <div
                       key={task.id}
+                      onClick={() =>
+                        router.push(
+                          `/board/${task.list.board.id}?taskId=${task.id}`,
+                        )
+                      }
                       className={cn(
-                        "group flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-xl border bg-card hover:bg-muted/40 transition-all shadow-xs",
-                        task.completed && "opacity-60 bg-muted/20"
+                        "group relative flex items-center justify-between gap-4 px-4 py-3 rounded-xl border bg-card hover:bg-muted/40 hover:border-primary/40 transition-all shadow-xs cursor-pointer select-none text-foreground w-full",
+                        task.completed && "opacity-60 bg-muted/20",
                       )}
                     >
-                      {/* Left: Complete Checkbox + Title & Context */}
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <button
-                          onClick={() => toggleCompleted(task)}
-                          className="mt-0.5 shrink-0 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-                        >
-                          {task.completed ? (
-                            <CheckCircle2 size={17} className="text-primary" />
-                          ) : (
-                            <Circle size={17} />
-                          )}
-                        </button>
+                      {/* Left: Title, Priority, Epic, Breadcrumb */}
+                      <div className="flex flex-col gap-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={cn(
+                              "text-sm font-medium leading-snug break-words group-hover:text-primary transition-colors cursor-pointer",
+                              task.completed &&
+                                "line-through text-muted-foreground",
+                            )}
+                          >
+                            {task.title}
+                          </span>
 
-                        <div className="flex flex-col gap-1 min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
+                          {/* Priority Badge */}
+                          {priorityInfo && (
                             <span
                               className={cn(
-                                "text-sm font-medium leading-snug break-words",
-                                task.completed && "line-through text-muted-foreground"
+                                "text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0",
+                                priorityInfo.bg,
+                                priorityInfo.text,
                               )}
                             >
-                              {task.title}
+                              {priorityInfo.label}
                             </span>
+                          )}
 
-                            {/* Priority Badge */}
-                            {priorityInfo && (
-                              <span
-                                className={cn(
-                                  "text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0",
-                                  priorityInfo.bg,
-                                  priorityInfo.text
-                                )}
-                              >
-                                {priorityInfo.label}
-                              </span>
-                            )}
-
-                            {/* Epic Badge */}
-                            {task.epic && (
-                              <span
-                                className="text-[9px] font-semibold px-1.5 py-0.2 rounded text-white shrink-0"
-                                style={{ backgroundColor: task.epic.color }}
-                              >
-                                {task.epic.title}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Breadcrumb: Board > List */}
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
-                            <Link
-                              href={`/board/${task.list.board.id}`}
-                              className="font-medium hover:text-primary transition-colors underline-offset-2 hover:underline"
+                          {/* Epic Badge */}
+                          {task.epic && (
+                            <span
+                              className="text-[9px] font-semibold px-1.5 py-0.2 rounded text-white shrink-0"
+                              style={{ backgroundColor: task.epic.color }}
                             >
-                              {task.list.board.title}
-                            </Link>
-                            <span>›</span>
-                            <span>{task.list.title}</span>
+                              {task.epic.title}
+                            </span>
+                          )}
+                        </div>
 
-                            {task.quarter && (
-                              <span className="text-[10px] px-1 py-0.2 rounded bg-muted font-medium ml-1">
-                                {task.quarter}
-                              </span>
-                            )}
-                          </div>
+                        {/* Breadcrumb: Board */}
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/board/${task.list.board.id}`);
+                            }}
+                            className="font-medium hover:text-primary transition-colors underline-offset-2 hover:underline cursor-pointer"
+                          >
+                            {task.list.board.title}
+                          </span>
+
+                          {task.quarter && (
+                            <span className="text-[10px] px-1 py-0.2 rounded bg-muted font-medium ml-1">
+                              {task.quarter}
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* Right: Roles, Indicators, Due Date & Direct Link */}
-                      <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center pl-7 sm:pl-0 flex-wrap">
+                      {/* Right: Roles, Status Dropdown, Indicators, Due Date & Direct Link */}
+                      <div
+                        className="flex items-center gap-2.5 shrink-0 ml-auto"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {/* User Role in this task */}
                         <div className="flex items-center gap-1">
                           {isAssignee && (
@@ -769,7 +906,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                               "flex items-center gap-1 text-[11px]",
                               subtaskDone === subtaskCount
                                 ? "text-primary font-medium"
-                                : "text-muted-foreground"
+                                : "text-muted-foreground",
                             )}
                             title={`Subtareas: ${subtaskDone}/${subtaskCount}`}
                           >
@@ -812,7 +949,9 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                             }
                             className={cn(
                               "text-xs gap-1 tabular-nums font-normal",
-                              dueInfo.isToday && !task.completed && "border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium"
+                              dueInfo.isToday &&
+                                !task.completed &&
+                                "border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium",
                             )}
                           >
                             <Calendar size={11} />
@@ -820,14 +959,83 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                           </Badge>
                         )}
 
+                        {/* STATUS SELECT DROPDOWN ON THE RIGHT */}
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          className="shrink-0"
+                        >
+                          <Select
+                            value={task.list.id}
+                            onValueChange={(val) => {
+                              if (val) handleStatusSelect(task, val);
+                            }}
+                          >
+                            <SelectTrigger
+                              className={cn(
+                                "h-7 text-xs font-medium rounded-full border px-2.5 py-1 gap-1.5 transition-all shadow-2xs cursor-pointer select-none",
+                                statusTheme.bg,
+                                statusTheme.text,
+                                statusTheme.border,
+                              )}
+                              title="Cambiar estado del ticket"
+                            >
+                              {isUpdating ? (
+                                <Loader2
+                                  size={11}
+                                  className="animate-spin shrink-0"
+                                />
+                              ) : (
+                                <span
+                                  className={cn(
+                                    "w-1.5 h-1.5 rounded-full shrink-0",
+                                    statusTheme.dot,
+                                  )}
+                                />
+                              )}
+                              <span className="truncate max-w-[120px]">
+                                {task.list.title}
+                              </span>
+                            </SelectTrigger>
+                            <SelectContent align="end" className="w-44">
+                              {availableStatuses.map((st) => {
+                                const itemTheme = getStatusTheme(st.title);
+                                return (
+                                  <SelectItem
+                                    key={st.id || st.title}
+                                    value={st.id || st.title}
+                                    className="text-xs cursor-pointer py-1.5"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span
+                                        className={cn(
+                                          "w-2 h-2 rounded-full shrink-0",
+                                          itemTheme.dot,
+                                        )}
+                                      />
+                                      <span className="truncate">{st.title}</span>
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
                         {/* Direct link to Board */}
-                        <Link
-                          href={`/board/${task.list.board.id}`}
-                          className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                          title="Ir al board"
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(
+                              `/board/${task.list.board.id}?taskId=${task.id}`,
+                            );
+                          }}
+                          className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
+                          title="Abrir ticket en el tablero"
                         >
                           <ExternalLink size={14} />
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   );

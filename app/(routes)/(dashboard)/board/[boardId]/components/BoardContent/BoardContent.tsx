@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useBoardPolling } from "@/hooks/use-board-polling";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -24,6 +25,7 @@ import type { ListWithTasks, TaskWithLabels } from "../TaskCard/TaskCard.types";
 import { useBoardStore } from "../../store/useBoardStore";
 import { ListItem } from "../ListItem/ListItem";
 import { CreateListForm } from "../CreateListForm/CreateListForm";
+import { TaskModal } from "../TaskModal/TaskModal";
 import { BoardContentProps } from "./BoardContent.types";
 import { BoardFilters } from "../BoardFilters/BoardFilters";
 import { BoardFiltersState } from "../BoardFilters/BoardFilters.types";
@@ -115,13 +117,43 @@ export function BoardContent({
 }: BoardContentProps) {
   useBoardPolling();
 
-  const { lists, setLists, reorderLists, moveTask } = useBoardStore();
+  const searchParams = useSearchParams();
+  const taskIdParam = searchParams.get("taskId");
+  const [closedTaskId, setClosedTaskId] = useState<string | null>(null);
+
+  const lists = useBoardStore((s) => s.lists);
+  const setLists = useBoardStore((s) => s.setLists);
+  const reorderLists = useBoardStore((s) => s.reorderLists);
+  const moveTask = useBoardStore((s) => s.moveTask);
+
   const [activeTask, setActiveTask] = useState<TaskModel | null>(null);
   const [activeList, setActiveList] = useState<ListWithTasks | null>(null);
   const [dragOriginListId, setDragOriginListId] = useState<string | null>(null);
   const [filters, setFilters] = useState<BoardFiltersState>(DEFAULT_FILTERS);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
+
+  const effectiveLists = lists && lists.length > 0 ? lists : initialLists;
+
+  const urlTaskEntry = useMemo(() => {
+    if (!taskIdParam || taskIdParam === closedTaskId) return null;
+    for (const list of effectiveLists) {
+      const task = list.tasks.find((t) => t.id === taskIdParam);
+      if (task) {
+        return { task, listId: list.id, listTitle: list.title };
+      }
+    }
+    return null;
+  }, [effectiveLists, taskIdParam, closedTaskId]);
+
+  const handleCloseUrlModal = () => {
+    if (taskIdParam) {
+      setClosedTaskId(taskIdParam);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("taskId");
+      window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+    }
+  };
 
   useEffect(() => {
     setLists(initialLists);
@@ -395,6 +427,20 @@ export function BoardContent({
             )}
           </DragOverlay>
         </DndContext>
+      )}
+
+      {urlTaskEntry && (
+        <TaskModal
+          task={urlTaskEntry.task}
+          listId={urlTaskEntry.listId}
+          listTitle={urlTaskEntry.listTitle}
+          boardId={boardId}
+          open={Boolean(urlTaskEntry)}
+          onClose={handleCloseUrlModal}
+          isOwner={isOwner}
+          boardUsers={boardUsers}
+          memberCanAssign={memberCanAssign}
+        />
       )}
     </div>
   );
