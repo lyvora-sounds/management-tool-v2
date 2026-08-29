@@ -17,6 +17,7 @@ import {
   ArrowUpDown,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -84,8 +85,13 @@ interface Props {
 type GroupByOption = "events" | "board" | "role" | "priority";
 type RoleFilter = "all" | "assignee" | "collaborator" | "qa";
 type StatusFilter = "all" | "pending" | "completed";
+type PriorityKey = "urgent" | "high" | "medium" | "low" | "none";
 
 export function MyTasksView({ initialTasks, userId, boards }: Props) {
+  const t = useTranslations("myTasks");
+  const tPriority = useTranslations("priority");
+  const tFilters = useTranslations("filters");
+  const tDash = useTranslations("dashboard");
   const router = useRouter();
   const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
   const [search, setSearch] = useState("");
@@ -111,15 +117,15 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
     const prevTask = { ...task };
 
     setTasks((prev) =>
-      prev.map((t) =>
-        t.id === task.id
+      prev.map((item) =>
+        item.id === task.id
           ? {
-              ...t,
+              ...item,
               completed: done,
               completedAt: done ? new Date().toISOString() : null,
-              list: { ...t.list, id: targetListId, title: nextTitle },
+              list: { ...item.list, id: targetListId, title: nextTitle },
             }
-          : t,
+          : item,
       ),
     );
 
@@ -133,12 +139,12 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       if (!res.ok) throw new Error("Failed to update status");
       const updated = await res.json();
       setTasks((prev) =>
-        prev.map((t) => (t.id === task.id ? { ...t, ...updated } : t)),
+        prev.map((item) => (item.id === task.id ? { ...item, ...updated } : item)),
       );
-      toast.success(`Estado cambiado a "${nextTitle}"`);
+      toast.success(tDash("statusChanged", { title: nextTitle }));
     } catch {
-      setTasks((prev) => prev.map((t) => (t.id === task.id ? prevTask : t)));
-      toast.error("Error al actualizar el estado");
+      setTasks((prev) => prev.map((item) => (item.id === task.id ? prevTask : item)));
+      toast.error(tDash("statusUpdateError"));
     } finally {
       setUpdatingTaskId(null);
     }
@@ -150,15 +156,15 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const total = tasks.length;
-    const completed = tasks.filter((t) => t.completed).length;
+    const completed = tasks.filter((item) => item.completed).length;
     const pending = total - completed;
 
     let overdue = 0;
     let dueToday = 0;
 
-    for (const t of tasks) {
-      if (t.completed || !t.dueDate) continue;
-      const due = new Date(t.dueDate);
+    for (const item of tasks) {
+      if (item.completed || !item.dueDate) continue;
+      const due = new Date(item.dueDate);
       const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
       if (dueDay < today) overdue++;
       else if (dueDay.getTime() === today.getTime()) dueToday++;
@@ -218,29 +224,29 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       const noDate: TaskItem[] = [];
       const done: TaskItem[] = [];
 
-      for (const t of filteredTasks) {
-        if (t.completed) {
-          done.push(t);
+      for (const item of filteredTasks) {
+        if (item.completed) {
+          done.push(item);
           continue;
         }
-        if (!t.dueDate) {
-          noDate.push(t);
+        if (!item.dueDate) {
+          noDate.push(item);
           continue;
         }
-        const due = new Date(t.dueDate);
+        const due = new Date(item.dueDate);
         const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
 
-        if (dueDay < today) overdue.push(t);
-        else if (dueDay.getTime() === today.getTime()) forToday.push(t);
-        else if (dueDay <= weekEnd) thisWeek.push(t);
-        else upcoming.push(t);
+        if (dueDay < today) overdue.push(item);
+        else if (dueDay.getTime() === today.getTime()) forToday.push(item);
+        else if (dueDay <= weekEnd) thisWeek.push(item);
+        else upcoming.push(item);
       }
 
       const sections = [];
       if (overdue.length > 0)
         sections.push({
           id: "overdue",
-          title: "Vencidas",
+          title: tFilters("overdue"),
           icon: <AlertCircle size={15} className="text-rose-500" />,
           badgeVariant: "destructive" as const,
           tasks: overdue,
@@ -248,7 +254,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       if (forToday.length > 0)
         sections.push({
           id: "today",
-          title: "Para Hoy",
+          title: tFilters("today"),
           icon: <Clock size={15} className="text-amber-500" />,
           badgeVariant: "secondary" as const,
           tasks: forToday,
@@ -256,7 +262,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       if (thisWeek.length > 0)
         sections.push({
           id: "week",
-          title: "Esta semana",
+          title: tFilters("thisWeek"),
           icon: <Calendar size={15} className="text-blue-500" />,
           badgeVariant: "outline" as const,
           tasks: thisWeek,
@@ -264,7 +270,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       if (upcoming.length > 0)
         sections.push({
           id: "upcoming",
-          title: "Próximas",
+          title: t("upcoming"),
           icon: <Calendar size={15} className="text-muted-foreground" />,
           badgeVariant: "outline" as const,
           tasks: upcoming,
@@ -272,7 +278,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       if (noDate.length > 0)
         sections.push({
           id: "nodate",
-          title: "Sin fecha asignada",
+          title: tFilters("noDate"),
           icon: <CheckSquare size={15} className="text-muted-foreground" />,
           badgeVariant: "outline" as const,
           tasks: noDate,
@@ -280,7 +286,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       if (done.length > 0)
         sections.push({
           id: "done",
-          title: "Completadas",
+          title: tFilters("completed"),
           icon: <CheckCircle2 size={15} className="text-emerald-500" />,
           badgeVariant: "secondary" as const,
           tasks: done,
@@ -291,12 +297,12 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
 
     if (groupBy === "board") {
       const map = new Map<string, { title: string; color?: string | null; tasks: TaskItem[] }>();
-      for (const t of filteredTasks) {
-        const b = t.list.board;
+      for (const item of filteredTasks) {
+        const b = item.list.board;
         if (!map.has(b.id)) {
           map.set(b.id, { title: b.title, color: b.color, tasks: [] });
         }
-        map.get(b.id)!.tasks.push(t);
+        map.get(b.id)!.tasks.push(item);
       }
       return Array.from(map.entries()).map(([id, val]) => ({
         id,
@@ -312,17 +318,17 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       const collabTasks: TaskItem[] = [];
       const qaTasks: TaskItem[] = [];
 
-      for (const t of filteredTasks) {
-        if (t.assigneeId === userId) assigneeTasks.push(t);
-        else if (t.collaborators.some((c) => c.user.id === userId)) collabTasks.push(t);
-        else if (t.qaId === userId) qaTasks.push(t);
+      for (const item of filteredTasks) {
+        if (item.assigneeId === userId) assigneeTasks.push(item);
+        else if (item.collaborators.some((c) => c.user.id === userId)) collabTasks.push(item);
+        else if (item.qaId === userId) qaTasks.push(item);
       }
 
       const sections = [];
       if (assigneeTasks.length > 0)
         sections.push({
           id: "role-assignee",
-          title: "Soy Responsable (Asignado)",
+          title: t("roleAssigneeTitle"),
           icon: <User size={15} className="text-primary" />,
           badgeVariant: "secondary" as const,
           tasks: assigneeTasks,
@@ -330,7 +336,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       if (collabTasks.length > 0)
         sections.push({
           id: "role-collab",
-          title: "Soy Colaborador",
+          title: t("roleCollaboratorTitle"),
           icon: <Users size={15} className="text-blue-500" />,
           badgeVariant: "outline" as const,
           tasks: collabTasks,
@@ -338,7 +344,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       if (qaTasks.length > 0)
         sections.push({
           id: "role-qa",
-          title: "Soy Revisor de QA",
+          title: t("roleQaTitle"),
           icon: <ShieldCheck size={15} className="text-emerald-500" />,
           badgeVariant: "outline" as const,
           tasks: qaTasks,
@@ -347,22 +353,22 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
     }
 
     if (groupBy === "priority") {
-      const priorityKeys = ["urgent", "high", "medium", "low", "none"];
+      const priorityKeys: PriorityKey[] = ["urgent", "high", "medium", "low", "none"];
       const sections = [];
       for (const key of priorityKeys) {
         const groupTasks = filteredTasks.filter(
-          (t) => (t.priority ?? "none") === key,
+          (item) => (item.priority ?? "none") === key,
         );
         if (groupTasks.length > 0) {
           const cfg = PRIORITY_CONFIG[key] ?? {
-            label: "Sin prioridad",
+            label: tPriority("none"),
             bg: "bg-muted",
             text: "text-muted-foreground",
             dot: "bg-muted-foreground",
           };
           sections.push({
             id: key,
-            title: cfg.label,
+            title: tPriority(key),
             icon: <span className={cn("w-2.5 h-2.5 rounded-full", cfg.dot)} />,
             badgeVariant: "outline" as const,
             tasks: groupTasks,
@@ -373,16 +379,16 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
     }
 
     return [];
-  }, [filteredTasks, groupBy, userId]);
+  }, [filteredTasks, groupBy, userId, t, tFilters, tPriority]);
 
   return (
     <div className="flex flex-col gap-6">
       {/* Header & Metrics */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Mis tasks</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Todas tus tareas asignadas, colaboraciones y revisiones de QA en un solo lugar.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -395,7 +401,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
               statusFilter === "all" && "ring-2 ring-primary border-primary/50"
             )}
           >
-            <span className="text-muted-foreground">Total:</span>
+            <span className="text-muted-foreground">{t("total")}</span>
             <span className="font-bold">{metrics.total}</span>
           </button>
 
@@ -406,21 +412,21 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
               statusFilter === "pending" && "ring-2 ring-primary border-primary/50"
             )}
           >
-            <span className="text-muted-foreground">Pendientes:</span>
+            <span className="text-muted-foreground">{t("pending")}</span>
             <span className="font-bold">{metrics.pending}</span>
           </button>
 
           {metrics.overdue > 0 && (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-medium">
               <AlertCircle size={13} />
-              <span>{metrics.overdue} vencidas</span>
+              <span>{t("overdueCount", { count: metrics.overdue })}</span>
             </div>
           )}
 
           {metrics.dueToday > 0 && (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
               <Clock size={13} />
-              <span>{metrics.dueToday} hoy</span>
+              <span>{t("todayCount", { count: metrics.dueToday })}</span>
             </div>
           )}
 
@@ -431,7 +437,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
               statusFilter === "completed" && "ring-2 ring-primary border-primary/50"
             )}
           >
-            <span className="text-muted-foreground">Completadas:</span>
+            <span className="text-muted-foreground">{t("completed")}</span>
             <span className="font-bold text-emerald-600 dark:text-emerald-400">
               {metrics.completed}
             </span>
@@ -449,7 +455,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <Input
-              placeholder="Buscar tareas o tableros..."
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-8 pl-8 text-xs bg-background"
@@ -468,11 +474,15 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
           {boards.length > 0 && (
             <Select value={boardFilter} onValueChange={(val) => setBoardFilter(val ?? "all")}>
               <SelectTrigger className="h-8 text-xs w-auto min-w-32 bg-background">
-                <SelectValue placeholder="Tablero" />
+                <SelectValue placeholder={t("board")}>
+                  {boardFilter === "all"
+                    ? t("allBoards")
+                    : (boards.find((b) => b.id === boardFilter)?.title ?? t("board"))}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all" className="text-xs">
-                  Todos los tableros
+                  {t("allBoards")}
                 </SelectItem>
                 {boards.map((b) => (
                   <SelectItem key={b.id} value={b.id} className="text-xs">
@@ -489,20 +499,28 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
             onValueChange={(val) => setRoleFilter((val ?? "all") as RoleFilter)}
           >
             <SelectTrigger className="h-8 text-xs w-auto min-w-32 bg-background">
-              <SelectValue placeholder="Mi Rol" />
+              <SelectValue placeholder={t("myRole")}>
+                {roleFilter === "all"
+                  ? t("allRoles")
+                  : roleFilter === "assignee"
+                    ? t("assignee")
+                    : roleFilter === "collaborator"
+                      ? t("collaborator")
+                      : t("qa")}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs">
-                Todos los roles
+                {t("allRoles")}
               </SelectItem>
               <SelectItem value="assignee" className="text-xs">
-                Responsable (Asignado)
+                {t("assignee")}
               </SelectItem>
               <SelectItem value="collaborator" className="text-xs">
-                Colaborador
+                {t("collaborator")}
               </SelectItem>
               <SelectItem value="qa" className="text-xs">
-                QA
+                {t("qa")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -510,23 +528,27 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
           {/* Priority Filter */}
           <Select value={priorityFilter} onValueChange={(val) => setPriorityFilter(val ?? "all")}>
             <SelectTrigger className="h-8 text-xs w-auto min-w-28 bg-background">
-              <SelectValue placeholder="Prioridad" />
+              <SelectValue placeholder={tPriority("label")}>
+                {priorityFilter === "all"
+                  ? tPriority("all")
+                  : tPriority(priorityFilter as "urgent" | "high" | "medium" | "low")}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs">
-                Todas las prioridades
+                {tPriority("all")}
               </SelectItem>
               <SelectItem value="urgent" className="text-xs">
-                Urgente
+                {tPriority("urgent")}
               </SelectItem>
               <SelectItem value="high" className="text-xs">
-                Alta
+                {tPriority("high")}
               </SelectItem>
               <SelectItem value="medium" className="text-xs">
-                Media
+                {tPriority("medium")}
               </SelectItem>
               <SelectItem value="low" className="text-xs">
-                Baja
+                {tPriority("low")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -541,13 +563,13 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
             className="border rounded-lg bg-background p-0.5"
           >
             <ToggleGroupItem value="all" className="text-xs h-7 px-2.5">
-              Todas
+              {tFilters("all")}
             </ToggleGroupItem>
             <ToggleGroupItem value="pending" className="text-xs h-7 px-2.5">
-              Pendientes
+              {tFilters("pending")}
             </ToggleGroupItem>
             <ToggleGroupItem value="completed" className="text-xs h-7 px-2.5">
-              Completadas
+              {tFilters("completed")}
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
@@ -555,7 +577,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
         {/* Group By Selector */}
         <div className="flex items-center gap-1.5 self-end lg:self-auto shrink-0">
           <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <ArrowUpDown size={12} /> Agrupar:
+            <ArrowUpDown size={12} /> {t("groupBy")}
           </span>
           <ToggleGroup
             value={[groupBy]}
@@ -565,17 +587,17 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
             }}
             className="border rounded-lg bg-background p-0.5"
           >
-            <ToggleGroupItem value="events" className="text-xs h-7 px-2" title="Por Fecha / Eventos">
-              Eventos
+            <ToggleGroupItem value="events" className="text-xs h-7 px-2" title={t("byEventsTitle")}>
+              {t("byEvents")}
             </ToggleGroupItem>
-            <ToggleGroupItem value="board" className="text-xs h-7 px-2" title="Por Tablero">
-              Tablero
+            <ToggleGroupItem value="board" className="text-xs h-7 px-2" title={t("byBoardTitle")}>
+              {t("byBoard")}
             </ToggleGroupItem>
-            <ToggleGroupItem value="role" className="text-xs h-7 px-2" title="Por Rol">
-              Rol
+            <ToggleGroupItem value="role" className="text-xs h-7 px-2" title={t("byRoleTitle")}>
+              {t("byRole")}
             </ToggleGroupItem>
-            <ToggleGroupItem value="priority" className="text-xs h-7 px-2" title="Por Prioridad">
-              Prioridad
+            <ToggleGroupItem value="priority" className="text-xs h-7 px-2" title={t("byPriorityTitle")}>
+              {t("byPriority")}
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
@@ -585,11 +607,11 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
       {filteredTasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-dashed bg-card/50">
           <CheckCircle2 className="h-10 w-10 text-muted-foreground/50 mb-3" />
-          <h3 className="text-base font-semibold">No se encontraron tareas</h3>
+          <h3 className="text-base font-semibold">{t("noTasks")}</h3>
           <p className="text-xs text-muted-foreground max-w-sm mt-1">
             {tasks.length === 0
-              ? "Aún no tienes tareas asignadas en ningún tablero."
-              : "No hay tareas que coincidan con los filtros seleccionados."}
+              ? t("noAssigned")
+              : t("noMatch")}
           </p>
         </div>
       ) : (
@@ -633,7 +655,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
                           );
                         }}
                         className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
-                        title="Abrir ticket en el tablero"
+                        title={t("openOnBoard")}
                       >
                         <ExternalLink size={14} />
                       </button>

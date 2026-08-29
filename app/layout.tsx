@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Outfit, Figtree } from "next/font/google";
 import { Toaster } from "sonner";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { CookieBanner } from "@/components/CookieBanner";
@@ -13,49 +15,65 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Kiki — Gestión de proyectos",
-    template: "%s | Kiki",
-  },
-  description: "Organiza proyectos, colabora con tu equipo y alcanza tus objetivos con Kiki. Boards Kanban, tareas, subtareas, calendario y más.",
-  keywords: ["gestión de proyectos", "kanban", "tareas", "colaboración", "equipos", "productividad"],
-  authors: [{ name: "Kiki" }],
-  creator: "Kiki",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://kikiboard.xyz"),
-  openGraph: {
-    title: "Kiki — Gestión de proyectos",
-    description: "Organiza proyectos, colabora con tu equipo y alcanza tus objetivos.",
-    url: "https://kikiboard.xyz",
-    siteName: "Kiki",
-    locale: "es_ES",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Kiki — Gestión de proyectos",
-    description: "Organiza proyectos, colabora con tu equipo y alcanza tus objetivos.",
-  },
-  icons: {
-    icon: "/kikilogo.ico",
-    shortcut: "/kikilogo.ico",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("meta");
+  const locale = await getLocale();
+  const title = t("title");
+  const description = t("description");
 
-export default function RootLayout({
+  return {
+    title: {
+      default: title,
+      template: "%s | Kiki",
+    },
+    description,
+    keywords:
+      locale === "es"
+        ? ["gestión de proyectos", "kanban", "tickets", "colaboración", "equipos", "productividad"]
+        : ["project management", "kanban", "tickets", "collaboration", "teams", "productivity"],
+    authors: [{ name: "Kiki" }],
+    creator: "Kiki",
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://kikiboard.xyz"),
+    openGraph: {
+      title,
+      description: t("ogDescription"),
+      url: "https://kikiboard.xyz",
+      siteName: "Kiki",
+      locale: locale === "es" ? "es_ES" : "en_US",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: t("ogDescription"),
+    },
+    icons: {
+      icon: "/kikilogo.ico",
+      shortcut: "/kikilogo.ico",
+    },
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" className={cn("font-sans", figtree.variable)}>
+    <html lang={locale} className={cn("font-sans", figtree.variable)}>
       <body className={outfit.className}>
         <ClerkProvider>
-          {children}
-          <Toaster richColors closeButton position="bottom-right" />
-          <CookieBanner />
+          <NextIntlClientProvider key={locale} locale={locale} messages={messages}>
+            {children}
+            <Toaster richColors closeButton position="bottom-right" />
+            <CookieBanner />
+          </NextIntlClientProvider>
         </ClerkProvider>
       </body>
     </html>
   );
 }
+

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Flame } from "lucide-react";
 
 interface PriorityCounts {
@@ -17,17 +18,26 @@ interface PriorityBreakdownChartProps {
 const R = 38;
 const C = 2 * Math.PI * R;
 
+const PRIORITY_ITEMS = [
+  { key: "urgent", color: "#ef4444" },
+  { key: "high", color: "#f97316" },
+  { key: "medium", color: "#eab308" },
+  { key: "low", color: "#22c55e" },
+  { key: "none", color: "#94a3b8" },
+] as const;
+
 export function PriorityBreakdownChart({ counts }: PriorityBreakdownChartProps) {
+  const t = useTranslations("dashboard");
+  const tPriority = useTranslations("priority");
+  const tCommon = useTranslations("common");
   const total =
     counts.urgent + counts.high + counts.medium + counts.low + counts.none;
 
-  const items = [
-    { key: "urgent", label: "Urgente", count: counts.urgent, color: "#ef4444" },
-    { key: "high", label: "Alta", count: counts.high, color: "#f97316" },
-    { key: "medium", label: "Media", count: counts.medium, color: "#eab308" },
-    { key: "low", label: "Baja", count: counts.low, color: "#22c55e" },
-    { key: "none", label: "Sin prioridad", count: counts.none, color: "#94a3b8" },
-  ];
+  const items = PRIORITY_ITEMS.map((item) => ({
+    ...item,
+    label: tPriority(item.key),
+    count: counts[item.key],
+  }));
 
   let acc = 0;
   const segments =
@@ -49,10 +59,10 @@ export function PriorityBreakdownChart({ counts }: PriorityBreakdownChartProps) 
           <div className="p-1.5 rounded-md bg-orange-500/10 text-orange-500">
             <Flame size={16} />
           </div>
-          <h3 className="text-sm font-semibold">Distribución por Prioridad</h3>
+          <h3 className="text-sm font-semibold">{t("priorityBreakdown")}</h3>
         </div>
         <span className="text-xs text-muted-foreground tabular-nums">
-          {total} {total === 1 ? "tarea" : "tareas"}
+          {t("taskCount", { count: total })}
         </span>
       </div>
 
@@ -88,7 +98,7 @@ export function PriorityBreakdownChart({ counts }: PriorityBreakdownChartProps) 
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-xl font-bold tabular-nums">{total}</span>
-            <span className="text-[10px] text-muted-foreground">Total</span>
+            <span className="text-[10px] text-muted-foreground">{tCommon("total")}</span>
           </div>
         </div>
 

@@ -1,0 +1,68 @@
+{
+  "ticket": {
+    "en": "ticket",
+    "es": "ticket",
+    "caseSensitive": false,
+    "description": "Core atomic work item unit in boards"
+  },
+  "tickets": {
+    "en": "tickets",
+    "es": "tickets",
+    "caseSensitive": false,
+    "description": "Plural of ticket"
+  },
+  "custom values": {
+    "en": "custom values",
+    "es": "custom values",
+    "caseSensitive": false,
+    "description": "User-configured custom metadata values on tickets"
+  },
+  "story points": {
+    "en": "story points",
+    "es": "story points",
+    "caseSensitive": false,
+    "description": "Agile sizing and estimation points"
+  },
+  "custom fields": {
+    "en": "custom fields",
+    "es": "campos personalizados",
+    "caseSensitive": false,
+    "description": "Field definitions configured on workspace / board"
+  },
+  "kanban": {
+    "en": "kanban",
+    "es": "kanban",
+    "caseSensitive": false,
+    "description": "Kanban board layout and methodology"
+  },
+  "epic": {
+    "en": "epic",
+    "es": "épica",
+    "caseSensitive": false,
+    "description": "High-level grouping for multiple tickets"
+  },
+  "epics": {
+    "en": "epics",
+    "es": "épicas",
+    "caseSensitive": false,
+    "description": "High-level grouping collection"
+  },
+  "board": {
+    "en": "board",
+    "es": "tablero",
+    "caseSensitive": false,
+    "description": "Project board containing lists and tickets"
+  },
+  "boards": {
+    "en": "boards",
+    "es": "tableros",
+    "caseSensitive": false,
+    "description": "Plural of board"
+  },
+  "backlog": {
+    "en": "backlog",
+    "es": "backlog",
+    "caseSensitive": false,
+    "description": "Backlog of tickets"
+  }
+}

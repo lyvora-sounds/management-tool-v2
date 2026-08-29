@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { VoiceInput } from "@/components/Shared/VoiceInput/VoiceInput";
 import { useBoardStore } from "../../store/useBoardStore";
 import { ParsedTask } from "@/lib/ai/types";
@@ -47,6 +48,11 @@ export function AiBrainDumpModal({
   onClose,
   onSuccess,
 }: AiBrainDumpModalProps) {
+  const t = useTranslations("brainDump");
+  const tTask = useTranslations("task");
+  const tPriority = useTranslations("priority");
+  const tBoard = useTranslations("board");
+  const tCommon = useTranslations("common");
   const lists = useBoardStore((s) => s.lists);
   const [inputText, setInputText] = useState("");
   const [parsing, setParsing] = useState(false);
@@ -81,7 +87,7 @@ export function AiBrainDumpModal({
 
   const handleParse = async () => {
     if (!inputText.trim()) {
-      toast.info("Introduce o dicta algún texto para procesar");
+      toast.info(t("emptyInput"));
       return;
     }
 
@@ -112,16 +118,19 @@ export function AiBrainDumpModal({
         });
 
         setParsedTasks(prepared);
-        toast.success(`Se han extraído ${prepared.length} tareas`);
+        toast.success(t("extracted", { count: prepared.length }));
       } else {
-        if (data.error && data.error.includes("Ajustes")) {
+        if (
+          data.error &&
+          (data.error.includes("Ajustes") || data.error.includes("Settings"))
+        ) {
           setNoApiKey(true);
         } else {
-          toast.error(data.error || "Error al procesar con IA");
+          toast.error(data.error || t("processError"));
         }
       }
     } catch {
-      toast.error("Error de conexión al llamar a la IA");
+      toast.error(t("connectionError"));
     } finally {
       setParsing(false);
     }
@@ -162,16 +171,16 @@ export function AiBrainDumpModal({
 
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`${data.count} tareas añadidas al board`);
+        toast.success(t("added", { count: data.count }));
         setInputText("");
         setParsedTasks([]);
         onSuccess();
         onClose();
       } else {
-        toast.error(data.error || "Error al guardar tareas");
+        toast.error(data.error || t("saveError"));
       }
     } catch {
-      toast.error("Error de conexión");
+      toast.error(tCommon("connectionError"));
     } finally {
       setInserting(false);
     }
@@ -186,7 +195,7 @@ export function AiBrainDumpModal({
               <Sparkles size={18} />
             </div>
             <DialogTitle className="text-base font-semibold">
-              Brain Dump con Inteligencia Artificial
+              {t("title")}
             </DialogTitle>
           </div>
           <VoiceInput onTranscript={handleVoiceTranscript} className="mr-6" />
@@ -197,17 +206,17 @@ export function AiBrainDumpModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-semibold text-muted-foreground">
-                Pega tus notas, actas de reunión o escribe tus ideas libres:
+                {t("inputLabel")}
               </label>
               <span className="text-[11px] text-muted-foreground">
-                Soporta Español y English
+                {t("supportsLang")}
               </span>
             </div>
             <Textarea
               rows={4}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Ejemplo: Necesitamos implementar el rediseño del navbar para el Q3 con fecha límite 20 de septiembre. Además hay que arreglar el bug de inicio de sesión urgente con dos subtareas: revisar tokens y actualizar cookies..."
+              placeholder={t("placeholder")}
               className="text-sm bg-background resize-y"
             />
             <div className="flex justify-end pt-1">
@@ -222,7 +231,7 @@ export function AiBrainDumpModal({
                 ) : (
                   <Sparkles size={13} />
                 )}
-                <span>Extraer y estructurar tareas con IA</span>
+                <span>{t("extract")}</span>
               </Button>
             </div>
           </div>
@@ -231,10 +240,10 @@ export function AiBrainDumpModal({
           {noApiKey && (
             <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs space-y-2">
               <p className="font-semibold text-amber-700 dark:text-amber-400">
-                Clave API de IA requerida
+                {t("needsKeyTitle")}
               </p>
               <p className="text-muted-foreground">
-                Para usar Brain Dump, por favor agrega tu API key personal (OpenAI, Claude, Gemini, DeepSeek, Grok o Kimi) en Ajustes.
+                {t("needsKey")}
               </p>
               <Link
                 href="/dashboard/settings"
@@ -243,7 +252,7 @@ export function AiBrainDumpModal({
                   className: "gap-1.5 mt-2 h-7 text-xs",
                 })}
               >
-                <span>Ir a Ajustes</span>
+                <span>{t("goToSettings")}</span>
                 <ArrowRight size={13} />
               </Link>
             </div>
@@ -255,15 +264,15 @@ export function AiBrainDumpModal({
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-bold flex items-center gap-2">
                   <ListPlus size={16} className="text-primary" />
-                  <span>Tareas detectadas ({parsedTasks.length})</span>
+                  <span>{t("detected", { count: parsedTasks.length })}</span>
                 </h4>
                 <span className="text-xs text-muted-foreground">
-                  Revisa y ajusta antes de insertar en el board
+                  {t("reviewHint")}
                 </span>
               </div>
 
               <div className="space-y-3">
-                {parsedTasks.map((t, idx) => (
+                {parsedTasks.map((item, idx) => (
                   <div
                     key={idx}
                     className="p-4 rounded-xl border bg-card hover:border-primary/40 transition-colors space-y-3"
@@ -271,19 +280,19 @@ export function AiBrainDumpModal({
                     {/* Top Row: Title + Remove */}
                     <div className="flex items-start justify-between gap-3">
                       <Input
-                        value={t.title}
+                        value={item.title}
                         onChange={(e) =>
                           handleUpdateTaskField(idx, "title", e.target.value)
                         }
                         className="font-semibold text-sm h-8"
-                        placeholder="Título de la tarea"
+                        placeholder={tTask("titlePlaceholder")}
                       />
                       <Button
                         size="icon"
                         variant="ghost"
                         onClick={() => handleRemoveTask(idx)}
                         className="h-8 w-8 text-muted-foreground hover:text-rose-500 shrink-0"
-                        title="Descartar tarea"
+                        title={t("discardTicket")}
                       >
                         <Trash2 size={14} />
                       </Button>
@@ -294,17 +303,17 @@ export function AiBrainDumpModal({
                       {/* Destination List */}
                       <div className="space-y-1 min-w-0">
                         <label className="text-[10px] font-semibold text-muted-foreground">
-                          Lista de destino
+                          {t("targetList")}
                         </label>
                         <Select
-                          value={t.targetListId}
+                          value={item.targetListId}
                           onValueChange={(v) =>
                             handleUpdateTaskField(idx, "targetListId", v)
                           }
                         >
                           <SelectTrigger className="h-7 text-xs w-full justify-between">
-                            <SelectValue placeholder="Seleccionar lista">
-                              {lists.find((l) => l.id === t.targetListId)?.title || "Seleccionar lista"}
+                            <SelectValue placeholder={t("selectList")}>
+                              {lists.find((l) => l.id === item.targetListId)?.title || t("selectList")}
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
@@ -320,10 +329,10 @@ export function AiBrainDumpModal({
                       {/* Destination Epic */}
                       <div className="space-y-1 min-w-0">
                         <label className="text-[10px] font-semibold text-muted-foreground">
-                          Epic
+                          {t("epic")}
                         </label>
                         <Select
-                          value={t.targetEpicId || "none"}
+                          value={item.targetEpicId || "none"}
                           onValueChange={(v) =>
                             handleUpdateTaskField(
                               idx,
@@ -333,26 +342,26 @@ export function AiBrainDumpModal({
                           }
                         >
                           <SelectTrigger className="h-7 text-xs w-full justify-between">
-                            <SelectValue placeholder="Sin Epic">
-                              {t.targetEpicId && epics.find((e) => e.id === t.targetEpicId) ? (
+                            <SelectValue placeholder={t("noEpic")}>
+                              {item.targetEpicId && epics.find((e) => e.id === item.targetEpicId) ? (
                                 <div className="flex items-center gap-1.5 truncate">
                                   <span
                                     className="w-2 h-2 rounded-full shrink-0"
                                     style={{
-                                      backgroundColor: epics.find((e) => e.id === t.targetEpicId)?.color,
+                                      backgroundColor: epics.find((e) => e.id === item.targetEpicId)?.color,
                                     }}
                                   />
                                   <span className="truncate">
-                                    {epics.find((e) => e.id === t.targetEpicId)?.title}
+                                    {epics.find((e) => e.id === item.targetEpicId)?.title}
                                   </span>
                                 </div>
                               ) : (
-                                "Sin Epic"
+                                t("noEpic")
                               )}
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">Sin Epic</SelectItem>
+                            <SelectItem value="none">{t("noEpic")}</SelectItem>
                             {epics.map((ep) => (
                               <SelectItem key={ep.id} value={ep.id}>
                                 <div className="flex items-center gap-1.5">
@@ -371,23 +380,23 @@ export function AiBrainDumpModal({
                       {/* Priority */}
                       <div className="space-y-1 min-w-0">
                         <label className="text-[10px] font-semibold text-muted-foreground">
-                          Prioridad
+                          {tTask("priority")}
                         </label>
                         <Select
-                          value={t.priority}
+                          value={item.priority}
                           onValueChange={(v) =>
                             handleUpdateTaskField(idx, "priority", v as Priority)
                           }
                         >
                           <SelectTrigger className="h-7 text-xs w-full justify-between">
                             <SelectValue>
-                              {PRIORITIES.find((p) => p.value === t.priority)?.label || t.priority}
+                              {item.priority ? tPriority(item.priority) : item.priority}
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {PRIORITIES.map((p) => (
                               <SelectItem key={p.value} value={p.value}>
-                                {p.label}
+                                {tPriority(p.value)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -397,10 +406,10 @@ export function AiBrainDumpModal({
                       {/* Quarter */}
                       <div className="space-y-1 min-w-0">
                         <label className="text-[10px] font-semibold text-muted-foreground">
-                          Quarter
+                          {tBoard("quarter")}
                         </label>
                         <Input
-                          value={t.quarter || ""}
+                          value={item.quarter || ""}
                           onChange={(e) =>
                             handleUpdateTaskField(idx, "quarter", e.target.value)
                           }
@@ -411,13 +420,13 @@ export function AiBrainDumpModal({
                     </div>
 
                     {/* Subtasks Checklist */}
-                    {t.subtasks && t.subtasks.length > 0 && (
+                    {item.subtasks && item.subtasks.length > 0 && (
                       <div className="space-y-1 pt-1">
                         <span className="text-[11px] font-semibold text-muted-foreground">
-                          Subtareas ({t.subtasks.length}):
+                          {t("subtasksCount", { count: item.subtasks.length })}
                         </span>
                         <ul className="space-y-1 pl-2">
-                          {t.subtasks.map((sub, sIdx) => (
+                          {item.subtasks.map((sub, sIdx) => (
                             <li
                               key={sIdx}
                               className="text-xs text-muted-foreground flex items-center gap-1.5"
@@ -436,7 +445,7 @@ export function AiBrainDumpModal({
               {/* Insert action bar */}
               <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button variant="ghost" size="sm" onClick={onClose}>
-                  Cancelar
+                  {tCommon("cancel")}
                 </Button>
                 <Button
                   size="sm"
@@ -449,7 +458,7 @@ export function AiBrainDumpModal({
                   ) : (
                     <Check size={13} />
                   )}
-                  <span>Insertar {parsedTasks.length} tareas en el Board</span>
+                  <span>{t("insertAll", { count: parsedTasks.length })}</span>
                 </Button>
               </div>
             </div>

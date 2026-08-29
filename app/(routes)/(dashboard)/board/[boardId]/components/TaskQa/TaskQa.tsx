@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Props } from "./TaskQa.types";
 import type { BoardUser } from "../TaskCard/TaskCard.types";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -31,6 +32,8 @@ export function TaskQa({
   memberCanAssign,
   onQaChange,
 }: Props) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
 
   const selectUser = async (user: BoardUser | null) => {
@@ -49,7 +52,7 @@ export function TaskQa({
     if (!qa) return null;
     return (
       <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 h-8 bg-muted/40 text-xs">
-        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">QA:</span>
+        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{t("qaLabel")}:</span>
         <div
           title={qa.name ?? qa.email}
           className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-semibold flex items-center justify-center"
@@ -77,7 +80,7 @@ export function TaskQa({
               )}
             >
               <ShieldCheck size={14} className={qa ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"} />
-              <span>{qa ? "QA:" : "QA"}</span>
+              <span>{qa ? `${t("qaLabel")}:` : t("qaLabel")}</span>
               {qa && (
                 <div
                   title={qa.name ?? qa.email}
@@ -92,7 +95,7 @@ export function TaskQa({
         <PopoverContent className="w-60 flex flex-col gap-1 p-2" align="start">
           <div className="flex items-center justify-between px-1 pb-1.5 border-b mb-1">
             <p className="text-xs font-semibold text-muted-foreground">
-              QA / Calidad (1 persona)
+              {t("qaQuality")}
             </p>
             {qa && (
               <button
@@ -100,14 +103,14 @@ export function TaskQa({
                 className="text-[11px] text-muted-foreground hover:text-destructive flex items-center gap-0.5 cursor-pointer"
               >
                 <X size={12} />
-                Quitar
+                {tCommon("remove")}
               </button>
             )}
           </div>
 
           {boardUsers.length === 0 && (
             <p className="text-xs text-muted-foreground px-1 py-2">
-              No hay miembros en este tablero
+              {t("noMembers")}
             </p>
           )}
 

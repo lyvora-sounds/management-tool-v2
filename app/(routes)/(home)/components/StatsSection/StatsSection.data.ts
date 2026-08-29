@@ -1,6 +1,6 @@
 export const stats = [
-  { value: 10000, suffix: "+", label: "Tareas completadas" },
-  { value: 500, suffix: "+", label: "Equipos activos" },
-  { value: 99, suffix: "%", label: "Uptime garantizado" },
-  { value: 2, suffix: "min", label: "Para empezar" },
-];
+  { value: 10000, suffix: "+", label: "statsTasks" },
+  { value: 500, suffix: "+", label: "statsTeams" },
+  { value: 99, suffix: "%", label: "statsUptime" },
+  { value: 2, suffix: "min", label: "statsStart" },
+] as const;

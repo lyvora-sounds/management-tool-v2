@@ -1,32 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { GreetingProps } from "./Greeting.types";
 
-function getGreeting(hour: number): string {
-  if (hour >= 6 && hour < 13) return "Buenos días";
-  if (hour >= 13 && hour < 20) return "Buenas tardes";
-  return "Buenas noches";
+function greetingKey(hour: number) {
+  if (hour >= 6 && hour < 13) return "greetingMorning" as const;
+  if (hour >= 13 && hour < 20) return "greetingAfternoon" as const;
+  return "greetingEvening" as const;
 }
 
 export function Greeting({ name }: GreetingProps) {
-  const [greeting, setGreeting] = useState<string | null>(null);
-  const displayName = name?.split(" ")[0] ?? "usuario";
+  const t = useTranslations("dashboard");
+  const [key, setKey] = useState<
+    "greetingMorning" | "greetingAfternoon" | "greetingEvening" | null
+  >(null);
+  const displayName = name?.split(" ")[0] ?? t("greetingFallbackName");
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      setGreeting(getGreeting(new Date().getHours()));
+    const timeout = setTimeout(() => {
+      setKey(greetingKey(new Date().getHours()));
     }, 0);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timeout);
   }, []);
+
+  const greeting = key ? t(key) : t("greetingHello");
 
   return (
     <div className="flex flex-col gap-0.5">
       <h1 className="text-2xl font-bold">
-        {greeting ? `${greeting}, ${displayName} 👋` : `Hola, ${displayName} 👋`}
+        {greeting}, {displayName} 👋
       </h1>
       <p className="text-sm text-muted-foreground">
-        Aquí tienes un resumen de tu actividad
+        {t("greetingSubtitle")}
       </p>
     </div>
   );

@@ -10,11 +10,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useLocale, useTranslations } from "next-intl";
+import { dateLocale } from "@/i18n/routing";
 import { Notification } from "./NotificationBell.types";
 
 const POLL_INTERVAL = 30_000; // 30 seconds
 
 export function NotificationBell() {
+  const t = useTranslations("notifications");
+  const locale = useLocale();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -88,13 +92,13 @@ export function NotificationBell() {
       />
       <PopoverContent align="end" className="w-80 p-0 flex flex-col">
         <div className="flex items-center justify-between px-3 py-2 border-b">
-          <span className="text-sm font-medium">Notificaciones</span>
+          <span className="text-sm font-medium">{t("title")}</span>
           {unreadCount > 0 && (
             <button
               onClick={markAllRead}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              Marcar todas como leídas
+              {t("markAllRead")}
             </button>
           )}
         </div>
@@ -102,7 +106,7 @@ export function NotificationBell() {
         <div className="overflow-y-auto max-h-80 flex flex-col divide-y">
           {notifications.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Sin notificaciones nuevas
+              {t("empty")}
             </p>
           ) : (
             notifications.map((n) => (
@@ -116,7 +120,7 @@ export function NotificationBell() {
               >
                 <span className="text-sm leading-snug">{n.message}</span>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(n.createdAt).toLocaleString("es-ES", {
+                  {new Date(n.createdAt).toLocaleString(dateLocale(locale), {
                     day: "2-digit",
                     month: "short",
                     hour: "2-digit",
@@ -131,7 +135,7 @@ export function NotificationBell() {
         {notifications.length > 0 && (
           <div className="border-t px-3 py-2">
             <Badge variant="secondary" className="text-xs">
-              {unreadCount} sin leer
+              {t("unread", { count: unreadCount })}
             </Badge>
           </div>
         )}

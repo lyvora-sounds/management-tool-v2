@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Props } from "./TaskAssignee.types";
 import type { BoardUser } from "../TaskCard/TaskCard.types";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -31,6 +32,8 @@ export function TaskAssignee({
   memberCanAssign,
   onAssigneeChange,
 }: Props) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
 
   const selectUser = async (user: BoardUser | null) => {
@@ -74,7 +77,7 @@ export function TaskAssignee({
               className={cn("h-8 gap-1.5", assignee && "border-primary/40 bg-primary/5")}
             >
               <User size={14} className={assignee ? "text-primary" : "text-muted-foreground"} />
-              <span>{assignee ? "Asignado:" : "Asignar"}</span>
+              <span>{assignee ? t("assigned") : t("assign")}</span>
               {assignee && (
                 <div
                   title={assignee.name ?? assignee.email}
@@ -89,7 +92,7 @@ export function TaskAssignee({
         <PopoverContent className="w-60 flex flex-col gap-1 p-2" align="start">
           <div className="flex items-center justify-between px-1 pb-1.5 border-b mb-1">
             <p className="text-xs font-semibold text-muted-foreground">
-              Asignado (1 responsable)
+              {t("assignedOwner")}
             </p>
             {assignee && (
               <button
@@ -97,14 +100,14 @@ export function TaskAssignee({
                 className="text-[11px] text-muted-foreground hover:text-destructive flex items-center gap-0.5 cursor-pointer"
               >
                 <X size={12} />
-                Quitar
+                {tCommon("remove")}
               </button>
             )}
           </div>
 
           {boardUsers.length === 0 && (
             <p className="text-xs text-muted-foreground px-1 py-2">
-              No hay miembros en este tablero
+              {t("noMembers")}
             </p>
           )}
 

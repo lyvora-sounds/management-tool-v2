@@ -10,10 +10,13 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import { Member, Invitation, BoardOwner, Props } from "./BoardMembers.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 
 export function BoardMembers({ boardId, open, onClose }: Props) {
+  const t = useTranslations("members");
+  const tCommon = useTranslations("common");
   const [owner, setOwner] = useState<BoardOwner | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -50,7 +53,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? "Error al enviar la invitación");
+      setError(data.error ?? t("inviteError"));
     } else {
       setInvitations((prev) => [data, ...prev]);
       setEmail("");
@@ -76,7 +79,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
     if (res.ok) {
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
     } else {
-      setError("No se pudo eliminar el miembro. Inténtalo de nuevo.");
+      setError(t("removeError"));
     }
   };
 
@@ -86,36 +89,36 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users size={18} />
-            Miembros del board
+            {t("title")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-5">
           {/* Invite form — owner only */}
           {isOwner && <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">Invitar por email</p>
+            <p className="text-sm font-medium">{t("inviteByEmail")}</p>
             <div className="flex gap-2">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(null); }}
                 onKeyDown={(e) => e.key === "Enter" && handleInvite()}
-                placeholder="correo@ejemplo.com"
+                placeholder={t("emailPlaceholder")}
                 className="flex-1 rounded-md border bg-transparent px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
               />
               <Button size="sm" onClick={handleInvite} disabled={loading || !email.trim()}>
-                {loading ? "..." : "Invitar"}
+                {loading ? "..." : t("invite")}
               </Button>
             </div>
             {error && <p className="text-xs text-destructive">{error}</p>}
-            {success && <p className="text-xs text-green-600">Invitación enviada</p>}
+            {success && <p className="text-xs text-green-600">{t("inviteSent")}</p>}
           </div>}
 
           {/* Members (Including Admin/Owner) */}
           {(owner || members.length > 0) && (
             <div className="flex flex-col gap-1">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Miembros ({ (owner ? 1 : 0) + members.length })
+                {t("membersCount", { count: (owner ? 1 : 0) + members.length })}
               </p>
 
               {/* Admin / Owner */}
@@ -129,7 +132,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                     )}
                   </div>
                   <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-semibold shrink-0">
-                    Admin
+                    {t("admin")}
                   </Badge>
                 </div>
               )}
@@ -145,7 +148,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                     )}
                   </div>
                   <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
-                    Miembro
+                    {t("member")}
                   </Badge>
                   {isOwner && (
                     <button
@@ -164,7 +167,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
           {invitations.length > 0 && (
             <div className="flex flex-col gap-1">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Invitaciones pendientes
+                {t("pendingInvitations")}
               </p>
               {invitations.map((inv) => (
                 <div key={inv.id} className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition-colors">
@@ -172,7 +175,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{inv.email}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Mail size={10} /> Pendiente
+                      <Mail size={10} /> {t("pending")}
                     </p>
                   </div>
                   <button
@@ -188,16 +191,18 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
 
           {members.length === 0 && invitations.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-2">
-              No hay miembros ni invitaciones aún.
+              {t("empty")}
             </p>
           )}
         </div>
       </DialogContent>
       <ConfirmModal
         open={!!confirmMember}
-        title="Eliminar miembro"
-        description={`¿Eliminar a "${confirmMember?.user.name ?? confirmMember?.user.email}" del board? Perderá acceso inmediatamente.`}
-        confirmLabel="Eliminar"
+        title={t("removeTitle")}
+        description={t("removeDescription", {
+          name: confirmMember?.user.name ?? confirmMember?.user.email ?? "",
+        })}
+        confirmLabel={tCommon("delete")}
         variant="warning"
         onConfirm={() => {
           if (confirmMember) removeMember(confirmMember.id);

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, ExternalLink, Pencil, Trash2, Users } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,23 +16,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useBoardsStore } from "@/store/useBoardsStore";
+import { formatRelativeTime } from "@/lib/i18nFormat";
 import { BoardCardProps } from "./BoardCard.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 
-function timeAgo(date: Date): string {
-  const diffMs = Date.now() - new Date(date).getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 60) return "hace poco";
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `hace ${diffH}h`;
-  const diffD = Math.floor(diffH / 24);
-  if (diffD === 1) return "ayer";
-  if (diffD < 7) return `hace ${diffD}d`;
-  return new Date(date).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
-}
-
 export function BoardCard({ board }: BoardCardProps) {
   const { id, title, color, updatedAt, isOwner, totalTasks, completedTasks, totalLists } = board;
+  const t = useTranslations();
+  const tBoards = useTranslations("boards");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const router = useRouter();
   const renameBoard = useBoardsStore((s) => s.renameBoard);
   const removeBoard = useBoardsStore((s) => s.removeBoard);
@@ -64,10 +58,10 @@ export function BoardCard({ board }: BoardCardProps) {
     if (res.ok) {
       renameBoard(id, trimmed);
       setCurrentTitle(trimmed);
-      toast.success("Board renombrado");
+      toast.success(tBoards("renamed"));
     } else {
       setRenameValue(currentTitle);
-      toast.error("Error al renombrar el board");
+      toast.error(tBoards("renameError"));
     }
     setIsRenaming(false);
     setLoading(false);
@@ -79,9 +73,9 @@ export function BoardCard({ board }: BoardCardProps) {
     if (res.ok) {
       removeBoard(id);
       router.refresh();
-      toast.success("Board eliminado");
+      toast.success(tBoards("deleted"));
     } else {
-      toast.error("Error al eliminar el board");
+      toast.error(tBoards("deleteError"));
       setLoading(false);
     }
   };
@@ -108,7 +102,7 @@ export function BoardCard({ board }: BoardCardProps) {
               className={`text-[10px] px-1.5 py-0 h-5 ${hasColor ? "bg-white/20 text-white border-0" : ""}`}
             >
               <Users size={9} className="mr-1" />
-              Miembro
+              {tBoards("member")}
             </Badge>
           )}
 
@@ -127,18 +121,18 @@ export function BoardCard({ board }: BoardCardProps) {
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem onClick={() => router.push(`/board/${id}`)}>
                 <ExternalLink size={14} />
-                Abrir
+                {tBoards("open")}
               </DropdownMenuItem>
               {isOwner && (
                 <>
                   <DropdownMenuItem onClick={() => { setRenameValue(currentTitle); setIsRenaming(true); }}>
                     <Pencil size={14} />
-                    Renombrar
+                    {tBoards("rename")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)} disabled={loading}>
                     <Trash2 size={14} />
-                    Eliminar
+                    {tBoards("delete")}
                   </DropdownMenuItem>
                 </>
               )}
@@ -170,7 +164,7 @@ export function BoardCard({ board }: BoardCardProps) {
             </h3>
           )}
           <p className={`text-xs ${mutedTextColor}`}>
-            {totalLists} lista{totalLists !== 1 ? "s" : ""} · {totalTasks} tarea{totalTasks !== 1 ? "s" : ""}
+            {tBoards("listTaskMeta", { lists: totalLists, tasks: totalTasks })}
           </p>
         </div>
 
@@ -183,16 +177,16 @@ export function BoardCard({ board }: BoardCardProps) {
             />
           </div>
           <div className={`flex items-center justify-between text-[10px] ${mutedTextColor}`}>
-            <span>{completedTasks}/{totalTasks} completadas</span>
-            <span>{timeAgo(updatedAt)}</span>
+            <span>{tBoards("completedShort", { done: completedTasks, total: totalTasks })}</span>
+            <span>{formatRelativeTime(updatedAt, t, locale)}</span>
           </div>
         </div>
       </Link>
       <ConfirmModal
         open={confirmDelete}
-        title="Eliminar board"
-        description={`¿Eliminar "${currentTitle}"? Se perderán todas las listas y tareas. Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar"
+        title={tBoards("deleteTitle")}
+        description={tBoards("deleteDescription", { title: currentTitle })}
+        confirmLabel={tCommon("delete")}
         loading={loading}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}

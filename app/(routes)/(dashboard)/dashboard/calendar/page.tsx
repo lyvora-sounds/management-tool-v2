@@ -9,12 +9,16 @@ import {
   Circle,
   ExternalLink,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { dateLocale } from "@/i18n/routing";
 import { CalendarTask } from "./calendar.types";
-import { WEEKDAYS, MONTHS } from "./calendar.constants";
+
+const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+const MONTH_KEYS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"] as const;
 
 function isSameDay(a: Date, b: Date) {
   return (
@@ -45,6 +49,11 @@ function buildGrid(year: number, month: number): (Date | null)[] {
 
 export default function CalendarPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("calendar");
+  const tCommon = useTranslations("common");
+  const tWeekdays = useTranslations("weekdays");
+  const tMonths = useTranslations("months");
   const today = new Date();
 
   const [year, setYear] = useState(today.getFullYear());
@@ -62,8 +71,8 @@ export default function CalendarPage() {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => fetchTasks(year, month), 0);
-    return () => clearTimeout(t);
+    const timeout = setTimeout(() => fetchTasks(year, month), 0);
+    return () => clearTimeout(timeout);
   }, [year, month, fetchTasks]);
 
   const prevMonth = () => {
@@ -101,9 +110,9 @@ export default function CalendarPage() {
   return (
     <div className="flex flex-col h-full p-3 sm:p-6 gap-4 sm:gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Calendario</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         {loading && (
-          <span className="text-sm text-muted-foreground">Cargando...</span>
+          <span className="text-sm text-muted-foreground">{tCommon("loading")}</span>
         )}
       </div>
 
@@ -116,7 +125,7 @@ export default function CalendarPage() {
               <ChevronLeft size={16} />
             </Button>
             <span className="text-base font-semibold">
-              {MONTHS[month]} {year}
+              {tMonths(MONTH_KEYS[month])} {year}
             </span>
             <Button variant="outline" size="icon" onClick={nextMonth}>
               <ChevronRight size={16} />
@@ -125,12 +134,12 @@ export default function CalendarPage() {
 
           {/* Weekday headers */}
           <div className="grid grid-cols-7 text-center">
-            {WEEKDAYS.map((d) => (
+            {WEEKDAY_KEYS.map((key) => (
               <div
-                key={d}
+                key={key}
                 className="text-xs font-medium text-muted-foreground py-1"
               >
-                {d}
+                {tWeekdays(key)}
               </div>
             ))}
           </div>
@@ -144,8 +153,8 @@ export default function CalendarPage() {
               const dayTasks = tasksByDay[key] ?? [];
               const isToday = isSameDay(date, today);
               const isSelected = selected ? isSameDay(date, selected) : false;
-              const pending = dayTasks.filter((t) => !t.completed).length;
-              const done = dayTasks.filter((t) => t.completed).length;
+              const pending = dayTasks.filter((task) => !task.completed).length;
+              const done = dayTasks.filter((task) => task.completed).length;
 
               return (
                 <button
@@ -187,7 +196,7 @@ export default function CalendarPage() {
                               : "bg-primary/10 text-primary",
                           )}
                         >
-                          {pending} pendiente{pending !== 1 ? "s" : ""}
+                          {t("pendingCount", { count: pending })}
                         </span>
                       )}
                       {done > 0 && (
@@ -199,7 +208,7 @@ export default function CalendarPage() {
                               : "bg-muted-foreground/10 text-muted-foreground",
                           )}
                         >
-                          {done} hecha{done !== 1 ? "s" : ""}
+                          {t("doneCount", { count: done })}
                         </span>
                       )}
                     </div>
@@ -217,7 +226,7 @@ export default function CalendarPage() {
             <>
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold capitalize">
-                  {selected.toLocaleDateString("es-ES", {
+                  {selected.toLocaleDateString(dateLocale(locale), {
                     weekday: "long",
                     day: "numeric",
                     month: "long",
@@ -228,7 +237,7 @@ export default function CalendarPage() {
 
               {selectedDayTasks.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Sin tareas para este día
+                  {t("noTasksForDay")}
                 </p>
               ) : (
                 <div className="flex flex-col gap-2 overflow-y-auto">
@@ -288,10 +297,10 @@ export default function CalendarPage() {
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center gap-2 text-muted-foreground">
-              <p className="text-sm">Selecciona un día para ver sus tareas</p>
+              <p className="text-sm">{t("selectDay")}</p>
               {daysWithTasksCount > 0 && (
                 <p className="text-xs">
-                  {daysWithTasksCount} días con tareas este mes
+                  {t("daysWithTasks", { count: daysWithTasksCount })}
                 </p>
               )}
             </div>

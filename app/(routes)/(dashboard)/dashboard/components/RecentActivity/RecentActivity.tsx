@@ -1,32 +1,23 @@
+"use client";
+
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "lucide-react";
+import { formatRelativeTime } from "@/lib/i18nFormat";
 import { RecentActivityProps } from "./RecentActivity.types";
 import { TYPE_ICON } from "./RecentActivity.constants";
 
-function timeAgo(date: Date): string {
-  const diffMs = Date.now() - new Date(date).getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "ahora";
-  if (diffMin < 60) return `hace ${diffMin}min`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `hace ${diffH}h`;
-  const diffD = Math.floor(diffH / 24);
-  if (diffD === 1) return "ayer";
-  if (diffD < 7) return `hace ${diffD}d`;
-  return new Date(date).toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "short",
-  });
-}
-
 export function RecentActivity({ logs }: RecentActivityProps) {
+  const t = useTranslations();
+  const locale = useLocale();
+
   if (logs.length === 0) {
     return (
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Actividad reciente</h2>
+        <h2 className="text-lg font-semibold">{t("dashboard.recentActivity")}</h2>
         <div className="flex items-center gap-2 text-sm text-muted-foreground rounded-xl border p-4">
           <Activity size={16} className="shrink-0" />
-          <span>Sin actividad reciente</span>
+          <span>{t("dashboard.noActivity")}</span>
         </div>
       </div>
     );
@@ -34,7 +25,7 @@ export function RecentActivity({ logs }: RecentActivityProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">Actividad reciente</h2>
+      <h2 className="text-lg font-semibold">{t("dashboard.recentActivity")}</h2>
       <div className="flex flex-col divide-y rounded-xl border bg-card overflow-hidden">
         {logs.map((log) => (
           <div key={log.id} className="flex items-start gap-3 px-4 py-3">
@@ -53,7 +44,7 @@ export function RecentActivity({ logs }: RecentActivityProps) {
               </div>
             </div>
             <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
-              {timeAgo(log.createdAt)}
+              {formatRelativeTime(log.createdAt, t, locale)}
             </span>
           </div>
         ))}

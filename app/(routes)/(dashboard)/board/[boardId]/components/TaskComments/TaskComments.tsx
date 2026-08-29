@@ -3,11 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
+import { useLocale, useTranslations } from "next-intl";
 import { CommentItem, TaskCommentsProps } from "./TaskComments.types";
 import { CommentsSkeleton } from "@/components/skeletons";
 
 export function TaskComments({ taskId }: TaskCommentsProps) {
+  const t = useTranslations("task");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "es" ? es : enUS;
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
@@ -56,14 +60,14 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <p className="text-xs font-medium text-muted-foreground mb-3">Comentarios</p>
+      <p className="text-xs font-medium text-muted-foreground mb-3">{t("comments")}</p>
 
       {/* List */}
       <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1">
         {fetching && <CommentsSkeleton count={3} />}
         {!fetching && comments.length === 0 && (
           <p className="text-xs text-muted-foreground text-center py-6">
-            Sin comentarios todavía
+            {t("noComments")}
           </p>
         )}
         {!fetching && comments.map((c) => (
@@ -72,7 +76,10 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
               <span className="text-xs font-medium">{c.user.name || c.user.email}</span>
               <div className="flex items-center gap-1">
                 <span className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: es })}
+                  {formatDistanceToNow(new Date(c.createdAt), {
+                    addSuffix: true,
+                    locale: dateFnsLocale,
+                  })}
                 </span>
                 <button
                   onClick={() => deleteComment(c.id)}
@@ -104,7 +111,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
               submit();
             }
           }}
-          placeholder="Escribe un comentario..."
+          placeholder={t("commentPlaceholder")}
           rows={1}
           disabled={loading}
           style={{ height: "24px" }}

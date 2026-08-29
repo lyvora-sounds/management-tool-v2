@@ -19,6 +19,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface TaskShareModalProps {
   taskId: string;
@@ -33,6 +34,8 @@ export function TaskShareModal({
   open,
   onClose,
 }: TaskShareModalProps) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -65,12 +68,12 @@ export function TaskShareModal({
       const data = await res.json();
       if (res.ok && data.shareUrl) {
         setShareUrl(data.shareUrl);
-        toast.success("Enlace público generado");
+        toast.success(t("shareGenerated"));
       } else {
-        toast.error(data.error || "Error al generar enlace");
+        toast.error(data.error || t("shareError"));
       }
     } catch {
-      toast.error("Error de conexión");
+      toast.error(tCommon("connectionError"));
     } finally {
       setLoading(false);
     }
@@ -82,12 +85,12 @@ export function TaskShareModal({
       const res = await fetch(`/api/tasks/${taskId}/share`, { method: "DELETE" });
       if (res.ok) {
         setShareUrl(null);
-        toast.success("Enlace revocado");
+        toast.success(t("shareRevoked"));
       } else {
-        toast.error("Error al revocar enlace");
+        toast.error(t("revokeError"));
       }
     } catch {
-      toast.error("Error de conexión");
+      toast.error(tCommon("connectionError"));
     } finally {
       setLoading(false);
     }
@@ -97,7 +100,7 @@ export function TaskShareModal({
     if (!shareUrl) return;
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
-    toast.success("Enlace copiado al portapapeles");
+    toast.success(t("shareCopied"));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -107,14 +110,13 @@ export function TaskShareModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Share2 size={18} className="text-primary" />
-            <span>Compartir tarjeta públicamente</span>
+            <span>{t("sharePublicTitle")}</span>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
           <p className="text-xs text-muted-foreground">
-            Cualquier persona con el enlace podrá ver los detalles, checklist y archivos de &quot;
-            <span className="font-semibold text-foreground">{taskTitle}</span>&quot; en modo solo lectura, sin necesidad de iniciar sesión.
+            {t("shareDescription", { title: taskTitle })}
           </p>
 
           {loading ? (
@@ -134,7 +136,7 @@ export function TaskShareModal({
                   variant="outline"
                   onClick={copyToClipboard}
                   className="shrink-0 h-9 w-9"
-                  title="Copiar enlace"
+                  title={t("copyLink")}
                 >
                   {copied ? (
                     <Check size={14} className="text-emerald-500" />
@@ -146,7 +148,7 @@ export function TaskShareModal({
                   href={shareUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="Abrir en pestaña nueva"
+                  title={t("openNewTab")}
                   className={buttonVariants({
                     size: "icon",
                     variant: "ghost",
@@ -160,7 +162,7 @@ export function TaskShareModal({
               <div className="flex items-center justify-between pt-2 border-t text-xs">
                 <span className="text-emerald-600 flex items-center gap-1 font-medium">
                   <Globe size={13} />
-                  <span>Enlace activo</span>
+                  <span>{t("linkActive")}</span>
                 </span>
                 <Button
                   variant="ghost"
@@ -169,7 +171,7 @@ export function TaskShareModal({
                   className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 h-7 text-xs gap-1"
                 >
                   <Trash2 size={12} />
-                  <span>Revocar enlace</span>
+                  <span>{t("revokeLink")}</span>
                 </Button>
               </div>
             </div>
@@ -179,11 +181,11 @@ export function TaskShareModal({
                 <Globe size={24} className="text-muted-foreground" />
               </div>
               <p className="text-xs text-muted-foreground max-w-xs">
-                Esta tarjeta actualmente es privada y solo visible para los miembros del board.
+                {t("sharePrivate")}
               </p>
               <Button onClick={generateLink} size="sm" className="gap-1.5 mt-1">
                 <Share2 size={14} />
-                <span>Generar enlace público</span>
+                <span>{t("generatePublicLink")}</span>
               </Button>
             </div>
           )}

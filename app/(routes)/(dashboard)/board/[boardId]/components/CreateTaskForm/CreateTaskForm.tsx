@@ -5,10 +5,13 @@ import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { useBoardStore } from "../../store/useBoardStore";
 import { CreateTaskFormProps } from "./CreateTaskForm.types";
 
 export function CreateTaskForm({ listId }: CreateTaskFormProps) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,10 +44,10 @@ export function CreateTaskForm({ listId }: CreateTaskFormProps) {
         addTask(listId, { ...task, labels: [], collaborators: [], assignee: null, qa: null });
         handleClose();
       } else {
-        toast.error("Error al crear la tarea");
+        toast.error(t("createError"));
       }
     } catch {
-      toast.error("Error al crear la tarea");
+      toast.error(t("createError"));
     } finally {
       setLoading(false);
     }
@@ -57,7 +60,7 @@ export function CreateTaskForm({ listId }: CreateTaskFormProps) {
         className="flex items-center gap-1.5 w-full text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-lg px-2 py-1.5 text-xs transition-colors"
       >
         <Plus className="h-3.5 w-3.5" />
-        Añadir tarea
+        {t("addTicket")}
       </button>
     );
   }
@@ -66,7 +69,7 @@ export function CreateTaskForm({ listId }: CreateTaskFormProps) {
     <div className="flex flex-col gap-2">
       <Input
         ref={inputRef}
-        placeholder="Nombre de la tarea"
+        placeholder={t("titlePlaceholder")}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => {
@@ -81,7 +84,7 @@ export function CreateTaskForm({ listId }: CreateTaskFormProps) {
           onClick={handleSubmit}
           disabled={!title.trim() || loading}
         >
-          {loading ? "Añadiendo..." : "Añadir"}
+          {loading ? tCommon("adding") : tCommon("add")}
         </Button>
         <Button size="icon" variant="ghost" onClick={handleClose}>
           <X className="h-4 w-4" />

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import {
   PRIORITIES,
@@ -18,6 +19,8 @@ import {
 } from "./TaskPriority.constants";
 
 export function TaskPriority({ taskId, priority, onSaved }: TaskPriorityProps) {
+  const tPriority = useTranslations("priority");
+  const tTask = useTranslations("task");
   const [open, setOpen] = useState(false);
   const current = getPriority(priority);
 
@@ -31,10 +34,14 @@ export function TaskPriority({ taskId, priority, onSaved }: TaskPriorityProps) {
       body: JSON.stringify({ priority: value }),
     });
     if (res.ok) {
-      toast.success(value ? `Prioridad: ${PRIORITIES.find((p) => p.value === value)?.label}` : "Prioridad eliminada");
+      toast.success(
+        value
+          ? tPriority("set", { label: tPriority(value) })
+          : tPriority("removed"),
+      );
     } else {
       onSaved(prev as Priority | null);
-      toast.error("Error al cambiar la prioridad");
+      toast.error(tTask("priorityError"));
     }
   };
 
@@ -48,7 +55,7 @@ export function TaskPriority({ taskId, priority, onSaved }: TaskPriorityProps) {
             className={cn(current && current.bg, "gap-1.5")}
           >
             <Flag size={13} />
-            {current ? current.label : "Prioridad"}
+            {current ? tPriority(current.value) : tPriority("label")}
           </Button>
         }
       />
@@ -66,7 +73,7 @@ export function TaskPriority({ taskId, priority, onSaved }: TaskPriorityProps) {
               className="w-2.5 h-2.5 rounded-full shrink-0"
               style={{ backgroundColor: p.color }}
             />
-            {p.label}
+            {tPriority(p.value)}
           </button>
         ))}
         {priority && (
@@ -76,7 +83,7 @@ export function TaskPriority({ taskId, priority, onSaved }: TaskPriorityProps) {
               onClick={() => select(null)}
               className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-muted w-full text-left transition-colors"
             >
-              Quitar prioridad
+              {tPriority("remove")}
             </button>
           </>
         )}

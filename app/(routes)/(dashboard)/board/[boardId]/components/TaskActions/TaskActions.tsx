@@ -13,11 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { useBoardStore } from "../../store/useBoardStore";
 import { TaskActionsProps } from "./TaskActions.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 
 export function TaskActions({ taskId, listId }: TaskActionsProps) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
   const removeTask = useBoardStore((s) => s.removeTask);
   const moveTask = useBoardStore((s) => s.moveTask);
   const lists = useBoardStore((s) => s.lists);
@@ -58,10 +61,10 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
         }),
       });
       if (!res.ok) throw new Error("move failed");
-      toast.success(`Movida a "${targetList?.title}"`);
+      toast.success(t("movedTo", { title: targetList?.title ?? "" }));
     } catch {
       moveTask(taskId, toListId, listId, originalIndex);
-      toast.error("No se pudo mover la tarea");
+      toast.error(t("moveError"));
     } finally {
       setLoading(false);
     }
@@ -72,9 +75,9 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
     const res = await fetch(`/api/tasks/deleteTask/${taskId}`, { method: "DELETE" });
     if (res.ok) {
       removeTask(listId, taskId);
-      toast.success("Tarea eliminada");
+      toast.success(t("deleted"));
     } else {
-      toast.error("Error al eliminar la tarea");
+      toast.error(t("deleteError"));
     }
     setLoading(false);
   };
@@ -83,9 +86,9 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
     <>
     <ConfirmModal
       open={confirmDelete}
-      title="Eliminar tarea"
-      description="¿Eliminar esta tarea? Se perderán todos sus comentarios, adjuntos y subtareas."
-      confirmLabel="Eliminar"
+      title={t("deleteTitle")}
+      description={t("deleteDescription")}
+      confirmLabel={tCommon("delete")}
       loading={loading}
       onConfirm={handleDelete}
       onCancel={() => setConfirmDelete(false)}
@@ -103,7 +106,7 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
             <DropdownMenuSub>
               <DropdownMenuSubTrigger disabled={loading}>
                 <CornerUpRight size={14} />
-                Mover a lista
+                {t("moveToList")}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {otherLists.map((l) => (
@@ -127,7 +130,7 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
           disabled={loading}
         >
           <Trash2 size={14} />
-          Eliminar tarea
+          {t("deleteTicket")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

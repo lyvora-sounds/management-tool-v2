@@ -1,6 +1,10 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { BarChart2 } from "lucide-react";
-import { DAYS_ES } from "./WeeklyActivity.constants";
 import { WeeklyActivityProps } from "./WeeklyActivity.types";
+
+const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
 function intensityClass(count: number, max: number): string {
   if (count === 0) return "bg-muted";
@@ -13,6 +17,8 @@ function intensityClass(count: number, max: number): string {
 }
 
 export function WeeklyActivity({ days }: WeeklyActivityProps) {
+  const t = useTranslations("dashboard");
+  const tDays = useTranslations("weekdays");
   const max = Math.max(...days.map((d) => d.count), 0);
   const total = days.reduce((acc, d) => acc + d.count, 0);
 
@@ -21,18 +27,17 @@ export function WeeklyActivity({ days }: WeeklyActivityProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart2 size={16} className="text-muted-foreground" />
-          <span className="text-sm font-medium">Actividad semanal</span>
+          <span className="text-sm font-medium">{t("weeklyActivity")}</span>
         </div>
         <span className="text-xs text-muted-foreground tabular-nums">
-          {total} tarea{total !== 1 ? "s" : ""} completada
-          {total !== 1 ? "s" : ""}
+          {t("completedCount", { count: total })}
         </span>
       </div>
 
       <div className="flex items-end gap-2">
         {days.map((day, i) => {
           const date = new Date(day.date + "T12:00:00");
-          const dayName = DAYS_ES[date.getDay() === 0 ? 6 : date.getDay() - 1];
+          const dayName = tDays(WEEKDAY_KEYS[date.getDay() === 0 ? 6 : date.getDay() - 1]);
           const isToday = i === days.length - 1;
 
           return (
@@ -46,7 +51,7 @@ export function WeeklyActivity({ days }: WeeklyActivityProps) {
                 style={{ height: 48 }}
               >
                 <div
-                  title={`${day.count} completada${day.count !== 1 ? "s" : ""}`}
+                  title={t("completedShort", { count: day.count })}
                   className={`w-full rounded-md transition-all ${intensityClass(day.count, max)} ${day.count === 0 ? "h-1.5" : ""}`}
                   style={
                     day.count > 0
