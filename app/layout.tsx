@@ -30,7 +30,9 @@ export async function generateMetadata(): Promise<Metadata> {
     keywords:
       locale === "es"
         ? ["gestión de proyectos", "kanban", "tickets", "colaboración", "equipos", "productividad"]
-        : ["project management", "kanban", "tickets", "collaboration", "teams", "productivity"],
+        : locale === "tl"
+          ? ["pamamahala ng proyekto", "kanban", "tickets", "kolaborasyon", "mga team", "produktibidad"]
+          : ["project management", "kanban", "tickets", "collaboration", "teams", "productivity"],
     authors: [{ name: "Kiki" }],
     creator: "Kiki",
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://kikiboard.xyz"),
@@ -39,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: t("ogDescription"),
       url: "https://kikiboard.xyz",
       siteName: "Kiki",
-      locale: locale === "es" ? "es_ES" : "en_US",
+      locale: locale === "es" ? "es_ES" : locale === "tl" ? "fil_PH" : "en_US",
       type: "website",
     },
     twitter: {

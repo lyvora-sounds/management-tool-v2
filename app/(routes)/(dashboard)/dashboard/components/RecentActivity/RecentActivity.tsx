@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "lucide-react";
 import { formatRelativeTime } from "@/lib/i18nFormat";
+import { FormattedLogMessage } from "@/components/Shared/FormattedLogMessage";
 import { RecentActivityProps } from "./RecentActivity.types";
 import { TYPE_ICON } from "./RecentActivity.constants";
 
@@ -33,7 +34,9 @@ export function RecentActivity({ logs }: RecentActivityProps) {
               {TYPE_ICON[log.type] ?? "•"}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm leading-snug">{log.message}</p>
+              <p className="text-sm leading-snug">
+                <FormattedLogMessage message={log.message} />
+              </p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <Link
                   href={`/board/${log.board.id}`}

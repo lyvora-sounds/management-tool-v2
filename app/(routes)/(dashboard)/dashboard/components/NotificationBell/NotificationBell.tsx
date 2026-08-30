@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 import { dateLocale } from "@/i18n/routing";
+import { FormattedLogMessage } from "@/components/Shared/FormattedLogMessage";
 import { Notification } from "./NotificationBell.types";
 
 const POLL_INTERVAL = 30_000; // 30 seconds
@@ -118,7 +119,9 @@ export function NotificationBell() {
                   !n.read && "bg-primary/5"
                 )}
               >
-                <span className="text-sm leading-snug">{n.message}</span>
+                <span className="text-sm leading-snug">
+                  <FormattedLogMessage message={n.message} />
+                </span>
                 <span className="text-xs text-muted-foreground">
                   {new Date(n.createdAt).toLocaleString(dateLocale(locale), {
                     day: "2-digit",

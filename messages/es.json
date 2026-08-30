@@ -29,6 +29,7 @@
     "language": "Idioma",
     "english": "Inglés",
     "spanish": "Español",
+    "tagalog": "Tagalog",
     "selectLanguage": "Seleccionar idioma",
     "unnamed": "Sin nombre",
     "owner": "Propietario",
@@ -922,11 +923,33 @@
     "noAssigned": "Aún no tienes tickets asignados en ningún tablero.",
     "noMatch": "No hay tickets que coincidan con los filtros seleccionados."
   },
+  "activity": {
+    "listCreated": "{actor} creó la lista \"{list}\"",
+    "listDeleted": "{actor} eliminó la lista \"{list}\"",
+    "ticketCreated": "{actor} creó el ticket \"{ticket}\" en \"{list}\"",
+    "ticketDeleted": "{actor} eliminó el ticket \"{ticket}\"",
+    "ticketMoved": "{actor} movió el ticket \"{ticket}\" de \"{from}\" a \"{to}\"",
+    "ticketCompleted": "{actor} completó el ticket \"{ticket}\"",
+    "ticketReopened": "{actor} reactivó el ticket \"{ticket}\"",
+    "ticketRenamed": "{actor} renombró el ticket \"{ticket}\" a \"{newTitle}\"",
+    "ticketAssigned": "{actor} asignó \"{ticket}\" a {assignee}",
+    "ticketUnassigned": "{actor} desasignó el ticket \"{ticket}\"",
+    "collaboratorAdded": "{actor} agregó a {name} como colaborador en \"{ticket}\"",
+    "collaboratorRemoved": "{actor} removió a {name} de colaboradores en \"{ticket}\"",
+    "qaAssigned": "{actor} asignó a {name} como QA de \"{ticket}\"",
+    "qaRemoved": "{actor} removió al QA del ticket \"{ticket}\"",
+    "brainDump": "{actor} creó {count, plural, one {# ticket} other {# tickets}} con AI Brain Dump",
+    "brainDumpCount": "Se crearon {count, plural, one {# ticket} other {# tickets}} con AI Brain Dump"
+  },
   "notifications": {
     "title": "Notificaciones",
     "markAllRead": "Marcar todas como leídas",
     "empty": "Sin notificaciones nuevas",
-    "unread": "{count} sin leer"
+    "unread": "{count} sin leer",
+    "assignedYou": "{actor} te asignó el ticket \"{ticket}\"",
+    "commented": "{actor} comentó en el ticket \"{ticket}\"",
+    "assignedYouQa": "{actor} te asignó como QA en el ticket \"{ticket}\"",
+    "addedYouCollaborator": "{actor} te agregó como colaborador en el ticket \"{ticket}\""
   },
   "invite": {
     "loadError": "Error al cargar la invitación",

@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { hasBoardAccess } from "@/lib/boardAccess";
+import { encodeLogMessage } from "@/lib/activityMessages";
 
 export async function GET(
   _req: Request,
@@ -88,7 +89,10 @@ export async function POST(
           db.notification.createMany({
             data: notifyList.map((notifyUserId) => ({
               type: "comment",
-              message: `${actorName} comentó en la tarea "${task.title}"`,
+              message: encodeLogMessage("notifications.commented", {
+                actor: actorName,
+                ticket: task.title,
+              }),
               userId: notifyUserId,
               boardId: task.list.board.id,
               taskId,

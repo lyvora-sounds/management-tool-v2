@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLocale, useTranslations } from "next-intl";
 import { dateLocale } from "@/i18n/routing";
+import { FormattedLogMessage } from "@/components/Shared/FormattedLogMessage";
 import type { ActivityLog, BoardActivityProps } from "./BoardActivity.types";
 import { TYPE_ICON } from "./BoardActivity.constants";
 import { ActivitySkeleton } from "@/components/skeletons";
@@ -63,7 +64,9 @@ export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
                   {TYPE_ICON[log.type] ?? "•"}
                 </span>
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-sm leading-snug">{log.message}</span>
+                  <span className="text-sm leading-snug">
+                    <FormattedLogMessage message={log.message} />
+                  </span>
                   <span className="text-xs text-muted-foreground">
                     {new Date(log.createdAt).toLocaleString(dateLocale(locale), {
                       day: "2-digit",

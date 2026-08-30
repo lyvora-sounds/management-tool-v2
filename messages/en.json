@@ -29,6 +29,7 @@
     "language": "Language",
     "english": "English",
     "spanish": "Spanish",
+    "tagalog": "Tagalog",
     "selectLanguage": "Select language",
     "unnamed": "Untitled",
     "owner": "Owner",
@@ -922,11 +923,33 @@
     "noAssigned": "You don't have tickets assigned on any board yet.",
     "noMatch": "No tickets match the selected filters."
   },
+  "activity": {
+    "listCreated": "{actor} created the list \"{list}\"",
+    "listDeleted": "{actor} deleted the list \"{list}\"",
+    "ticketCreated": "{actor} created the ticket \"{ticket}\" in \"{list}\"",
+    "ticketDeleted": "{actor} deleted the ticket \"{ticket}\"",
+    "ticketMoved": "{actor} moved the ticket \"{ticket}\" from \"{from}\" to \"{to}\"",
+    "ticketCompleted": "{actor} completed the ticket \"{ticket}\"",
+    "ticketReopened": "{actor} reopened the ticket \"{ticket}\"",
+    "ticketRenamed": "{actor} renamed the ticket \"{ticket}\" to \"{newTitle}\"",
+    "ticketAssigned": "{actor} assigned \"{ticket}\" to {assignee}",
+    "ticketUnassigned": "{actor} unassigned the ticket \"{ticket}\"",
+    "collaboratorAdded": "{actor} added {name} as a collaborator on \"{ticket}\"",
+    "collaboratorRemoved": "{actor} removed {name} as a collaborator on \"{ticket}\"",
+    "qaAssigned": "{actor} assigned {name} as QA of \"{ticket}\"",
+    "qaRemoved": "{actor} removed QA from the ticket \"{ticket}\"",
+    "brainDump": "{actor} created {count, plural, one {# ticket} other {# tickets}} with AI Brain Dump",
+    "brainDumpCount": "Created {count, plural, one {# ticket} other {# tickets}} with AI Brain Dump"
+  },
   "notifications": {
     "title": "Notifications",
     "markAllRead": "Mark all as read",
     "empty": "No new notifications",
-    "unread": "{count} unread"
+    "unread": "{count} unread",
+    "assignedYou": "{actor} assigned you the ticket \"{ticket}\"",
+    "commented": "{actor} commented on the ticket \"{ticket}\"",
+    "assignedYouQa": "{actor} assigned you as QA on the ticket \"{ticket}\"",
+    "addedYouCollaborator": "{actor} added you as a collaborator on the ticket \"{ticket}\""
   },
   "invite": {
     "loadError": "Could not load the invitation",

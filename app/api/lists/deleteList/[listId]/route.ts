@@ -28,7 +28,8 @@ export async function DELETE(
 
   await createActivity({
     type: "list_deleted",
-    message: `${user.name ?? user.email} eliminó la lista "${list.title}"`,
+    key: "activity.listDeleted",
+    params: { actor: user.name ?? user.email, list: list.title },
     boardId: list.board.id,
     userId: user.id,
   });
