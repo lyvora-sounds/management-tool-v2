@@ -2,7 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { hasBoardAccess, getBoardRole } from "@/lib/boardAccess";
+import { canManageBoard } from "@/lib/boardRoles";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -25,7 +26,10 @@ export async function GET(
     include: { user: { select: { id: true, name: true, email: true } } },
   });
   if (!board) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const isOwner = board.userId === user.id;
+
+  const role = await getBoardRole(user.id, boardId);
+  const isOwner = role === "owner";
+  const canManage = canManageBoard(role);
 
   const [members, invitations] = await Promise.all([
     db.boardMember.findMany({
@@ -33,7 +37,7 @@ export async function GET(
       include: { user: { select: { name: true, email: true } } },
       orderBy: { createdAt: "asc" },
     }),
-    isOwner
+    canManage
       ? db.invitation.findMany({
           where: { boardId, status: "pending" },
           orderBy: { createdAt: "desc" },
@@ -46,6 +50,8 @@ export async function GET(
     members,
     invitations,
     isOwner,
+    canManage,
+    role,
   });
 }
 
@@ -61,7 +67,12 @@ export async function POST(
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const board = await db.board.findUnique({ where: { id: boardId } });
-  if (!board || board.userId !== user.id) {
+  if (!board) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Invitar deja de ser exclusivo del propietario: los administradores están
+  // para esto.
+  const role = await getBoardRole(user.id, boardId);
+  if (!canManageBoard(role)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
