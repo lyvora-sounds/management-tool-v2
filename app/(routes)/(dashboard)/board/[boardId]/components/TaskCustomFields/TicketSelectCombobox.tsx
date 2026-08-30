@@ -8,6 +8,7 @@ import { useBoardStore } from "../../store/useBoardStore";
 import { cn } from "@/lib/utils";
 import { getStatusTheme } from "@/lib/statusTheme";
 import { parseListValue, stringifyListValue } from "@/lib/customValueUtils";
+import { useTranslations } from "next-intl";
 
 interface BoardTaskItem {
   id: string;
@@ -29,9 +30,11 @@ export function TicketSelectCombobox({
   onSelect,
   currentTaskId,
   boardId,
-  placeholder = "Buscar y seleccionar...",
+  placeholder,
   isMulti = false,
 }: TicketSelectComboboxProps) {
+  const t = useTranslations("task");
+  const resolvedPlaceholder = placeholder ?? t("searchSelect");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [boardTasks, setBoardTasks] = useState<BoardTaskItem[]>([]);
@@ -109,7 +112,7 @@ export function TicketSelectCombobox({
       t.listTitle.toLowerCase().includes(searchLower),
   );
 
-  const displaySingleTitle = selectedTask?.title || (value ? titleById.get(value) || value : placeholder);
+  const displaySingleTitle = selectedTask?.title || (value ? titleById.get(value) || value : resolvedPlaceholder);
 
   return (
     <div className="relative w-full space-y-1.5" ref={dropdownRef}>
@@ -153,8 +156,8 @@ export function TicketSelectCombobox({
             ) : (
               <span className="truncate">
                 {selectedIds.length > 0
-                  ? `Añadir más (${selectedIds.length} seleccionado${selectedIds.length > 1 ? "s" : ""})`
-                  : placeholder}
+                  ? t("addMoreSelected", { count: selectedIds.length })
+                  : resolvedPlaceholder}
               </span>
             )}
           </div>
@@ -168,7 +171,7 @@ export function TicketSelectCombobox({
             size="icon"
             onClick={() => onSelect("")}
             className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
-            title="Borrar selección"
+            title={t("clearSelection")}
           >
             <X size={13} />
           </Button>
@@ -183,7 +186,7 @@ export function TicketSelectCombobox({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre..."
+              placeholder={t("searchByName")}
               className="w-full h-8 pl-8 pr-2 text-xs bg-muted/50 rounded-md border-0 outline-none focus:ring-1 focus:ring-ring"
               autoFocus
             />
@@ -192,11 +195,11 @@ export function TicketSelectCombobox({
           <div className="overflow-y-auto flex-1 space-y-1 pr-1">
             {loading ? (
               <p className="text-xs text-muted-foreground text-center py-4">
-                Cargando elementos...
+                {t("loadingItems")}
               </p>
             ) : filteredTasks.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-4">
-                No se encontraron tickets en el board.
+                {t("noTicketsOnBoard")}
               </p>
             ) : (
               filteredTasks.map((t) => {

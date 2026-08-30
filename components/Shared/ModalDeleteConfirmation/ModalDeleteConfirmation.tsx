@@ -3,19 +3,23 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ConfirmModalProps } from "./ModalDeleteConfirmation.types";
 
 export function ConfirmModal({
   open,
   title,
   description,
-  confirmLabel = "Confirmar",
-  cancelLabel = "Cancelar",
+  confirmLabel,
+  cancelLabel,
   variant = "destructive",
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const t = useTranslations("common");
+  const resolvedConfirm = confirmLabel ?? t("confirm");
+  const resolvedCancel = cancelLabel ?? t("cancel");
   const confirmRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -76,7 +80,7 @@ export function ConfirmModal({
             disabled={loading}
             className="px-4 py-2 text-sm rounded-lg border border-border bg-background hover:bg-muted text-foreground transition-colors disabled:opacity-50"
           >
-            {cancelLabel}
+            {resolvedCancel}
           </button>
           <button
             ref={confirmRef}
@@ -88,7 +92,7 @@ export function ConfirmModal({
                 : "bg-amber-500 hover:bg-amber-600 active:bg-amber-700"
             }`}
           >
-            {loading ? "Procesando..." : confirmLabel}
+            {loading ? t("processing") : resolvedConfirm}
           </button>
         </div>
       </div>

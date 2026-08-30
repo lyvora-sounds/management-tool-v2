@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { BoardLinksProps } from "./BoardLinks.types";
 import type { BoardLink } from "@/app/api/boards/[boardId]/links/route";
 
@@ -18,6 +19,8 @@ export function BoardLinks({
   isOwner,
   initialLinks,
 }: BoardLinksProps) {
+  const t = useTranslations("links");
+  const tCommon = useTranslations("common");
   const [links, setLinks] = useState<BoardLink[]>(initialLinks);
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -40,7 +43,7 @@ export function BoardLinks({
     if (res.ok) {
       setLinks(next);
     } else {
-      toast.error("Error al guardar los links");
+      toast.error(t("saveError"));
     }
     setSaving(false);
   };
@@ -60,13 +63,13 @@ export function BoardLinks({
     setLabel("");
     setUrl("");
     setAdding(false);
-    toast.success("Link agregado");
+    toast.success(t("added"));
   };
 
   const handleDelete = async (id: string) => {
     const next = links.filter((l) => l.id !== id);
     await save(next);
-    toast.success("Link eliminado");
+    toast.success(t("deleted"));
   };
 
   const handleEdit = async (id: string) => {
@@ -83,7 +86,7 @@ export function BoardLinks({
     setEditingId(null);
     setLabel("");
     setUrl("");
-    toast.success("Link actualizado");
+    toast.success(t("updated"));
   };
 
   const startEdit = (link: BoardLink) => {
@@ -106,7 +109,7 @@ export function BoardLinks({
         render={
           <Button variant="outline" size="sm" className="relative">
             <Link2 size={15} />
-            <span className="hidden sm:inline">Links</span>
+            <span className="hidden sm:inline">{t("title")}</span>
             {links.length > 0 && (
               <span className="absolute -top-1.5 -right-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
                 {links.length}
@@ -118,7 +121,7 @@ export function BoardLinks({
 
       <PopoverContent align="end" className="w-80 p-3 flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">Links del proyecto</p>
+          <p className="text-sm font-semibold">{t("projectLinks")}</p>
           {isOwner && !adding && !editingId && (
             <button
               onClick={() => {
@@ -128,7 +131,7 @@ export function BoardLinks({
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <Plus size={13} />
-              Agregar
+              {tCommon("add")}
             </button>
           )}
         </div>
@@ -137,14 +140,14 @@ export function BoardLinks({
         {(adding || editingId) && (
           <div className="flex flex-col gap-2 p-2.5 rounded-lg border border-border bg-muted/40">
             <Input
-              placeholder="Nombre (ej: Production)"
+              placeholder={t("namePlaceholder")}
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               className="h-8 text-sm"
               autoFocus
             />
             <Input
-              placeholder="URL (ej: https://...)"
+              placeholder={t("urlPlaceholder")}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               className="h-8 text-sm"
@@ -161,7 +164,7 @@ export function BoardLinks({
                 onClick={cancel}
                 className="h-7 text-xs"
               >
-                Cancelar
+                {tCommon("cancel")}
               </Button>
               <Button
                 size="sm"
@@ -171,7 +174,7 @@ export function BoardLinks({
                 disabled={saving || !label.trim() || !url.trim()}
                 className="h-7 text-xs"
               >
-                {saving ? "Guardando..." : editingId ? "Guardar" : "Agregar"}
+                {saving ? tCommon("saving") : editingId ? tCommon("save") : tCommon("add")}
               </Button>
             </div>
           </div>
@@ -180,9 +183,7 @@ export function BoardLinks({
         {/* Links list */}
         {links.length === 0 && !adding ? (
           <p className="text-xs text-muted-foreground text-center py-3">
-            {isOwner
-              ? 'Sin links. Haz click en "Agregar" para añadir uno.'
-              : "Sin links añadidos aún."}
+            {isOwner ? t("emptyOwner") : t("empty")}
           </p>
         ) : (
           <ul className="flex flex-col gap-1">

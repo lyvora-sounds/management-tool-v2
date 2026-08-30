@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { TicketSelectCombobox } from "./TicketSelectCombobox";
 import { isChildFieldKey, isTicketRefKey } from "@/lib/customFieldsDefaults";
 
@@ -35,6 +36,8 @@ interface TaskCustomFieldsProps {
 }
 
 export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
   const [fields, setFields] = useState<CustomField[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   // Último valor confirmado por el servidor. `values` refleja lo que se está
@@ -92,11 +95,11 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
         setTimeout(() => setSavedSuccessId(null), 2000);
       } else {
         setValues((prev) => ({ ...prev, [customFieldId]: previous }));
-        toast.error("Error al guardar el valor personalizado.");
+        toast.error(t("saveCustomValueError"));
       }
     } catch {
       setValues((prev) => ({ ...prev, [customFieldId]: previous }));
-      toast.error("Error de red.");
+      toast.error(tCommon("connectionError"));
     } finally {
       setSavingFieldId(null);
     }
@@ -106,7 +109,7 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
         <Loader2 size={14} className="animate-spin" />
-        <span>Cargando valores personalizados...</span>
+        <span>{t("loadingCustomValues")}</span>
       </div>
     );
   }
@@ -120,7 +123,7 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
       <div className="flex items-center justify-between border-b pb-2">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           <SlidersHorizontal size={14} className="text-primary" />
-          <span>Valores Personalizados</span>
+          <span>{t("customValues")}</span>
         </div>
       </div>
 
@@ -153,8 +156,8 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
                   isMulti={isChildFieldKey(field.defaultKey)}
                   placeholder={
                     isChildFieldKey(field.defaultKey)
-                      ? "Seleccionar ticket(s) hijo(s)..."
-                      : "Seleccionar ticket padre..."
+                      ? t("selectChildren")
+                      : t("selectParent")
                   }
                 />
               ) : field.type === "SELECT" && field.options && field.options.length > 0 ? (
@@ -163,11 +166,11 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
                   onValueChange={(v) => handleSaveValue(field.id, !v || v === "none" ? "" : v)}
                 >
                   <SelectTrigger className="h-8 text-xs bg-background">
-                    <SelectValue placeholder="Seleccionar..." />
+                    <SelectValue placeholder={t("select")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none" className="text-xs text-muted-foreground">
-                      Sin especificar
+                      {t("unspecified")}
                     </SelectItem>
                     {field.options.map((opt) => (
                       <SelectItem key={opt} value={opt} className="text-xs">
@@ -182,7 +185,7 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
                   value={val}
                   onChange={(e) => setValues({ ...values, [field.id]: e.target.value })}
                   onBlur={(e) => handleSaveValue(field.id, e.target.value)}
-                  placeholder="Ej. 1, 2, 5..."
+                  placeholder={t("numberPlaceholder")}
                   className="h-8 text-xs bg-background"
                 />
               ) : (
@@ -193,8 +196,8 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
                   onBlur={(e) => handleSaveValue(field.id, e.target.value)}
                   placeholder={
                     field.defaultKey === "customer"
-                      ? "ej. Nombre del cliente"
-                      : "Escribe un valor..."
+                      ? t("customerPlaceholder")
+                      : t("valuePlaceholder")
                   }
                   className="h-8 text-xs bg-background"
                 />

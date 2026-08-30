@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShieldCheck, X, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface BoardPermissionsProps {
   boardId: string;
@@ -18,6 +19,8 @@ export function BoardPermissions({
   onClose,
   initialMemberCanAssign,
 }: BoardPermissionsProps) {
+  const t = useTranslations("permissions");
+  const tCommon = useTranslations("common");
   const [memberCanAssign, setMemberCanAssign] = useState(initialMemberCanAssign);
   const [saving, setSaving] = useState(false);
 
@@ -33,10 +36,10 @@ export function BoardPermissions({
       body: JSON.stringify({ memberCanAssign: value }),
     });
     if (res.ok) {
-      toast.success(value ? "Miembros pueden asignar tareas" : "Solo el propietario puede asignar");
+      toast.success(value ? t("membersCanAssign") : t("ownerOnly"));
     } else {
       setMemberCanAssign(prev);
-      toast.error("Error al guardar permisos");
+      toast.error(t("saveError"));
     }
     setSaving(false);
   };
@@ -47,7 +50,7 @@ export function BoardPermissions({
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <div className="flex items-center gap-2">
             <ShieldCheck size={17} className="text-muted-foreground" />
-            <span className="font-medium text-sm">Permisos del board</span>
+            <span className="font-medium text-sm">{t("title")}</span>
           </div>
           <button
             onClick={onClose}
@@ -62,9 +65,9 @@ export function BoardPermissions({
             <div className="flex items-start gap-3">
               <UserCheck size={17} className="text-muted-foreground mt-0.5 shrink-0" />
               <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">Asignar tareas</span>
+                <span className="text-sm font-medium">{t("assignTickets")}</span>
                 <span className="text-xs text-muted-foreground">
-                  Permite que los miembros puedan asignar tareas a cualquier usuario del board.
+                  {t("assignHint")}
                 </span>
               </div>
             </div>
@@ -86,7 +89,7 @@ export function BoardPermissions({
 
         <div className="px-5 pb-4 flex justify-end">
           <Button variant="outline" size="sm" onClick={onClose}>
-            Cerrar
+            {tCommon("close")}
           </Button>
         </div>
       </div>

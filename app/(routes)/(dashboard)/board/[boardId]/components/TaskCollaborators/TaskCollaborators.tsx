@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Props } from "./TaskCollaborators.types";
 import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -32,6 +33,7 @@ export function TaskCollaborators({
   memberCanAssign,
   onCollaboratorsChange,
 }: Props) {
+  const t = useTranslations("task");
   const [open, setOpen] = useState(false);
   const activeIds = new Set(collaborators.map((c) => c.user.id));
 
@@ -94,7 +96,7 @@ export function TaskCollaborators({
               )}
             >
               <Users size={14} className={assigned.length > 0 ? "text-blue-500" : "text-muted-foreground"} />
-              <span>Colaboradores</span>
+              <span>{t("collaborators")}</span>
               {assigned.length > 0 && (
                 <div className="flex -space-x-1.5 items-center -mr-1">
                   {assigned.slice(0, 3).map((u) => (
@@ -119,13 +121,13 @@ export function TaskCollaborators({
         <PopoverContent className="w-60 flex flex-col gap-1 p-2" align="start">
           <div className="px-1 pb-1.5 border-b mb-1">
             <p className="text-xs font-semibold text-muted-foreground">
-              Colaboradores ({assigned.length})
+              {t("collaboratorsCount", { count: assigned.length })}
             </p>
           </div>
 
           {boardUsers.length === 0 && (
             <p className="text-xs text-muted-foreground px-1 py-2">
-              No hay miembros en este tablero
+              {t("noMembers")}
             </p>
           )}
 

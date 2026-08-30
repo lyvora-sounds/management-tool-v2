@@ -12,7 +12,10 @@ import { SearchResultsSkeleton } from "@/components/skeletons";
 
 const DEBOUNCE_MS = 300;
 
+import { useTranslations } from "next-intl";
+
 export function GlobalSearch() {
+  const t = useTranslations("dashboard");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -108,7 +111,7 @@ export function GlobalSearch() {
         className="flex items-center gap-2 h-8 px-15 rounded-full border-muted-foreground/20 bg-muted/50 text-sm text-muted-foreground hover:bg-muted transition-colors"
       >
         <Search size={14} />
-        <span>Buscar...</span>
+        <span>{t("searchButton")}</span>
         <Kbd className="ml-2 text-xs border rounded px-1 py-0.5 bg-background hidden sm:block">
           ⌘K
         </Kbd>
@@ -124,17 +127,9 @@ export function GlobalSearch() {
               value={query}
               onChange={(e) => handleChange(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Buscar boards y tareas..."
+              placeholder={t("searchBoardsAndTasks")}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
-            {/* {query && (
-              <button
-                onClick={() => handleChange("")}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X size={14} />
-              </button>
-            )} */}
           </div>
 
           {/* Results */}
@@ -143,20 +138,20 @@ export function GlobalSearch() {
 
             {!loading && query.length >= 2 && !hasResults && (
               <p className="text-sm text-muted-foreground text-center py-8">
-                Sin resultados para &quot;{query}&quot;
+                {t("noResults")} &quot;{query}&quot;
               </p>
             )}
 
             {!loading && query.length < 2 && (
               <p className="text-sm text-muted-foreground text-center py-8">
-                Escribe al menos 2 caracteres
+                {t("searchBoardsAndTasks")}
               </p>
             )}
 
             {!loading && results.boards.length > 0 && (
               <div className="flex flex-col">
                 <p className="text-xs font-medium text-muted-foreground px-3 py-1.5">
-                  Boards
+                  {t("searchBoards")}
                 </p>
                 {results.boards.map((board) => {
                   const idx = itemCounter++;
@@ -188,7 +183,7 @@ export function GlobalSearch() {
             {!loading && results.tasks.length > 0 && (
               <div className="flex flex-col">
                 <p className="text-xs font-medium text-muted-foreground px-3 py-1.5 mt-1">
-                  Tareas
+                  {t("searchTasks")}
                 </p>
                 {results.tasks.map((task) => {
                   const idx = itemCounter++;
@@ -238,9 +233,9 @@ export function GlobalSearch() {
           {hasResults && (
             <div className="border-t px-3 py-2 flex items-center gap-3 text-xs text-muted-foreground">
               <KbdGroup>
-                <Kbd className="border rounded px-1">↑↓</Kbd> navegar
-                <Kbd className="border rounded px-1">↵</Kbd> ir
-                <Kbd className="border rounded px-1">Esc</Kbd> cerrar
+                <Kbd className="border rounded px-1">↑↓</Kbd> {t("searchNavigate")}
+                <Kbd className="border rounded px-1">↵</Kbd> {t("searchOpen")}
+                <Kbd className="border rounded px-1">Esc</Kbd> {t("searchClose")}
               </KbdGroup>
             </div>
           )}

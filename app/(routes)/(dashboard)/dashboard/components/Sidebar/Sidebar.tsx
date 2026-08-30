@@ -1,4 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
+import { getTranslations } from "next-intl/server";
+import { Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -9,7 +11,6 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarRoutes } from "../SidebarRoutes/SidebarRoutes";
 import { SidebarItem } from "../SidebarRoutes/SidebarItem/SidebarItem";
-import { settingsRoute } from "../SidebarRoutes/SidebarRoutes.data";
 import { SidebarUserFooter } from "../SidebarUserFooter/SidebarUserFooter";
 import { SidebarLogo } from "../SidebarLogo/SidebarLogo";
 
@@ -20,6 +21,7 @@ export async function AppSidebar() {
   } catch {
     // Clerk error — render sidebar without user info
   }
+  const t = await getTranslations("sidebar");
 
   return (
     <Sidebar>
@@ -35,7 +37,13 @@ export async function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-2 border-t gap-1">
-        <SidebarItem item={settingsRoute} />
+        <SidebarItem
+          item={{
+            label: t("settings"),
+            href: "/dashboard/settings",
+            icon: <Settings size={18} />,
+          }}
+        />
         {/* Separa Ajustes del bloque de usuario: llevan al mismo sitio y
             pegados se leían como un único botón. */}
         {user && <SidebarSeparator className="my-1" />}

@@ -28,7 +28,8 @@ export async function DELETE(
 
   await createActivity({
     type: "task_deleted",
-    message: `${user.name ?? user.email} eliminó la tarea "${task.title}"`,
+    key: "activity.ticketDeleted",
+    params: { actor: user.name ?? user.email, ticket: task.title },
     boardId: task.list.board.id,
     userId: user.id,
   });

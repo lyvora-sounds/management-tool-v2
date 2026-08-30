@@ -6,6 +6,7 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 import { SidebarUserFooterProps } from "./SidebarUserFooter.types";
 
@@ -13,6 +14,8 @@ export function SidebarUserFooter({ name, email, imageUrl }: SidebarUserFooterPr
   const { signOut } = useClerk();
   const router = useRouter();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const t = useTranslations("sidebar");
+  const tCommon = useTranslations("common");
 
   const handleSignOut = () => {
     signOut(() => router.push("/"));
@@ -22,10 +25,10 @@ export function SidebarUserFooter({ name, email, imageUrl }: SidebarUserFooterPr
     <>
       <ConfirmModal
         open={confirmSignOut}
-        title="Cerrar sesión"
-        description="¿Seguro que quieres cerrar sesión?"
-        confirmLabel="Cerrar sesión"
-        cancelLabel="Cancelar"
+        title={t("signOut")}
+        description={t("signOutConfirm")}
+        confirmLabel={t("signOut")}
+        cancelLabel={tCommon("cancel")}
         variant="warning"
         onConfirm={handleSignOut}
         onCancel={() => setConfirmSignOut(false)}
@@ -65,8 +68,8 @@ export function SidebarUserFooter({ name, email, imageUrl }: SidebarUserFooterPr
 
         <button
           onClick={() => setConfirmSignOut(true)}
-          title="Cerrar sesión"
-          aria-label="Cerrar sesión"
+          title={t("signOut")}
+          aria-label={t("signOut")}
           className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-sidebar-accent hover:text-destructive transition-colors"
         >
           <LogOut size={16} />

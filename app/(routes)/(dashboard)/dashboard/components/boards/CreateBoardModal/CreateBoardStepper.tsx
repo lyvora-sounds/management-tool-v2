@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BoardFormData, DEFAULT_LISTS } from "./CreateBoardStepper.types";
+import { BoardFormData } from "./CreateBoardStepper.types";
 import { StepBasicInfo } from "./steps/StepBasicInfo";
 import { StepColorPicker } from "./steps/StepColorPicker";
 import { StepInitialLists } from "./steps/StepInitialLists";
@@ -14,18 +15,19 @@ interface CreateBoardStepperProps {
   onSuccess: () => void;
 }
 
-const STEP_LABELS = ["Información", "Color", "Listas"];
-
-const INITIAL_DATA: BoardFormData = {
-  title: "",
-  description: "",
-  color: "",
-  lists: [...DEFAULT_LISTS],
-};
-
 export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
+  const t = useTranslations("boards");
+  const tCommon = useTranslations("common");
+  const defaultLists = () => [t("defaultTodo"), t("defaultDoing"), t("defaultDone")];
+  const stepLabels = [t("stepInfo"), t("stepColor"), t("stepLists")];
+
   const [step, setStep] = useState(0);
-  const [data, setData] = useState<BoardFormData>(INITIAL_DATA);
+  const [data, setData] = useState<BoardFormData>({
+    title: "",
+    description: "",
+    color: "",
+    lists: defaultLists(),
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -53,18 +55,23 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
 
       if (!res.ok) {
         const body = await res.json();
-        setError(body.error || "Error al crear el board");
+        setError(body.error || t("createError"));
         return;
       }
 
       const board = await res.json();
       addBoard(board);
       setStep(0);
-      setData(INITIAL_DATA);
+      setData({
+        title: "",
+        description: "",
+        color: "",
+        lists: defaultLists(),
+      });
       onSuccess();
       router.refresh();
     } catch {
-      setError("Error de conexión");
+      setError(tCommon("connectionError"));
     } finally {
       setLoading(false);
     }
@@ -80,8 +87,8 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
     <div className="flex flex-col gap-6">
       {/* Step indicator */}
       <div className="flex items-center gap-1">
-        {STEP_LABELS.map((label, i) => (
-          <div key={label} className="flex items-center gap-1">
+        {stepLabels.map((label, i) => (
+          <div key={i} className="flex items-center gap-1">
             <div className="flex items-center gap-1.5">
               <div
                 className={cn(
@@ -102,7 +109,7 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
                 {label}
               </span>
             </div>
-            {i < STEP_LABELS.length - 1 && (
+            {i < stepLabels.length - 1 && (
               <div
                 className={cn(
                   "h-px w-6 mx-1 transition-colors",
@@ -127,16 +134,16 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
           onClick={() => setStep((s) => s - 1)}
           disabled={step === 0 || loading}
         >
-          Atrás
+          {tCommon("back")}
         </Button>
 
-        {step < STEP_LABELS.length - 1 ? (
+        {step < stepLabels.length - 1 ? (
           <Button
             type="button"
             onClick={() => setStep((s) => s + 1)}
             disabled={!canAdvance}
           >
-            Siguiente
+            {tCommon("next")}
           </Button>
         ) : (
           <Button
@@ -144,7 +151,7 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
             onClick={handleSubmit}
             disabled={loading || !data.title.trim()}
           >
-            {loading ? "Creando..." : "Crear"}
+            {loading ? tCommon("creating") : tCommon("create")}
           </Button>
         )}
       </div>

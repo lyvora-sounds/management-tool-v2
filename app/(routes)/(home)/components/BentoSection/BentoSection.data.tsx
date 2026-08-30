@@ -6,41 +6,41 @@ import {
 } from "lucide-react";
 
 export const tasks = [
-  { title: "Diseñar landing page", list: "En progreso", done: false },
-  { title: "Revisar pull request", list: "Por hacer", done: false },
-  { title: "Deploy a producción", list: "Completado", done: true },
-  { title: "Reunión de equipo", list: "Por hacer", done: false },
-  { title: "Actualizar documentación", list: "En progreso", done: false },
-  { title: "Corregir bug #142", list: "Completado", done: true },
-];
+  { title: "task1", list: "task1List", done: false },
+  { title: "task2", list: "task2List", done: false },
+  { title: "task3", list: "task3List", done: true },
+  { title: "task4", list: "task4List", done: false },
+  { title: "task5", list: "task5List", done: false },
+  { title: "task6", list: "task6List", done: true },
+] as const;
 
 export const notifications = [
   {
     icon: <UserCircle size={14} />,
-    msg: "Ana te asignó una tarea",
-    time: "ahora",
+    msg: "notif1",
+    time: "timeNow",
   },
   {
     icon: <MessageSquare size={14} />,
-    msg: "Nuevo comentario en #diseño",
-    time: "1min",
+    msg: "notif2",
+    time: "time1min",
   },
   {
     icon: <CheckCircle2 size={14} />,
-    msg: "Tarea completada por Carlos",
-    time: "3min",
+    msg: "notif3",
+    time: "time3min",
   },
   {
     icon: <Bell size={14} />,
-    msg: "Recordatorio: entrega mañana",
-    time: "5min",
+    msg: "notif4",
+    time: "time5min",
   },
   {
     icon: <UserCircle size={14} />,
-    msg: "Luis se unió al board",
-    time: "10min",
+    msg: "notif5",
+    time: "time10min",
   },
-];
+] as const;
 
 export const members = [
   { name: "Ana", color: "bg-violet-500" },
@@ -52,22 +52,22 @@ export const members = [
 export const bars = [40, 70, 50, 90, 60, 80, 45];
 
 export const labels = [
-  { text: "Urgente", color: "bg-red-500" },
-  { text: "Alta", color: "bg-orange-400" },
-  { text: "Diseño", color: "bg-violet-500" },
-  { text: "Dev", color: "bg-blue-500" },
-  { text: "Media", color: "bg-yellow-400" },
-  { text: "QA", color: "bg-teal-500" },
-  { text: "Baja", color: "bg-slate-400" },
-  { text: "Marketing", color: "bg-pink-500" },
-];
+  { text: "labelUrgent", color: "bg-red-500" },
+  { text: "labelHigh", color: "bg-orange-400" },
+  { text: "labelDesign", color: "bg-violet-500" },
+  { text: "labelDev", color: "bg-blue-500" },
+  { text: "labelMedium", color: "bg-yellow-400" },
+  { text: "labelQa", color: "bg-teal-500" },
+  { text: "labelLow", color: "bg-slate-400" },
+  { text: "labelMarketing", color: "bg-pink-500" },
+] as const;
 
 export const highlighted = [4, 9, 14, 18, 22, 27];
 
 export const subtasks = [
-  { label: "Definir wireframes", done: true },
-  { label: "Diseño en Figma", done: true },
-  { label: "Implementar componentes", done: false },
-  { label: "Revisar con el equipo", done: false },
-  { label: "Deploy a staging", done: false },
-];
+  { label: "sub1", done: true },
+  { label: "sub2", done: true },
+  { label: "sub3", done: false },
+  { label: "sub4", done: false },
+  { label: "sub5", done: false },
+] as const;

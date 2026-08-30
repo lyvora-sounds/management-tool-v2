@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { hasBoardAccess, isBoardAdmin } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
+import { encodeLogMessage } from "@/lib/activityMessages";
 
 export async function POST(
   req: Request,
@@ -57,7 +58,8 @@ export async function POST(
 
     await createActivity({
       type: "task_collaborator_removed",
-      message: `${actorName} removió a ${collabName} de colaboradores en "${task.title}"`,
+      key: "activity.collaboratorRemoved",
+      params: { actor: actorName, name: collabName, ticket: task.title },
       boardId: task.list.board.id,
       userId: user.id,
     });
@@ -73,7 +75,10 @@ export async function POST(
       await db.notification.create({
         data: {
           type: "collaborator_added",
-          message: `${actorName} te agregó como colaborador en la tarea "${task.title}"`,
+          message: encodeLogMessage("notifications.addedYouCollaborator", {
+            actor: actorName,
+            ticket: task.title,
+          }),
           userId: collaboratorId,
           boardId: task.list.board.id,
           taskId,
@@ -84,7 +89,8 @@ export async function POST(
     // Log activity
     await createActivity({
       type: "task_collaborator_added",
-      message: `${actorName} agregó a ${collabName} como colaborador en "${task.title}"`,
+      key: "activity.collaboratorAdded",
+      params: { actor: actorName, name: collabName, ticket: task.title },
       boardId: task.list.board.id,
       userId: user.id,
     });

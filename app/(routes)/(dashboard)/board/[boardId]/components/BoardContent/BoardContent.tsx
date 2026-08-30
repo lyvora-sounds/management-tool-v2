@@ -33,6 +33,7 @@ import { BoardListView } from "../BoardListView/BoardListView";
 import { LayoutList, Columns3 } from "lucide-react";
 import { DEFAULT_FILTERS } from "./BoardContent.constants";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 function taskMatchesFilters(
   task: TaskWithLabels,
@@ -43,19 +44,6 @@ function taskMatchesFilters(
   if (filters.archiveStatus === "active" && isArchived) return false;
   if (filters.archiveStatus === "archived" && !isArchived) return false;
 
-  // Status
-  if (filters.status === "completed" && !task.completed) return false;
-  if (filters.status === "pending" && task.completed) return false;
-
-  // Quarter
-  if (filters.quarter !== "all") {
-    if (task.quarter !== filters.quarter) return false;
-  }
-
-  // Epic
-  if (filters.epicId !== "all") {
-    if (task.epicId !== filters.epicId) return false;
-  }
 
   // Labels — task must have ALL selected labels
   if (filters.labelIds.length > 0) {
@@ -115,6 +103,7 @@ export function BoardContent({
   boardUsers,
   memberCanAssign,
 }: BoardContentProps) {
+  const t = useTranslations("board");
   useBoardPolling();
 
   const router = useRouter();
@@ -341,7 +330,7 @@ export function BoardContent({
             variant={view === "kanban" ? "secondary" : "ghost"}
             size="icon"
             onClick={() => setView("kanban")}
-            title="Vista Kanban"
+            title={t("kanbanView")}
           >
             <Columns3 size={16} />
           </Button>
@@ -349,7 +338,7 @@ export function BoardContent({
             variant={view === "list" ? "secondary" : "ghost"}
             size="icon"
             onClick={() => setView("list")}
-            title="Vista Lista"
+            title={t("listView")}
           >
             <LayoutList size={16} />
           </Button>
@@ -361,7 +350,7 @@ export function BoardContent({
         <div className="flex items-center gap-3">
           <Progress className="flex-1" value={progress} />
           <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-            {doneTasks}/{totalTasks} completadas
+            {t("completedProgress", { done: doneTasks, total: totalTasks })}
           </span>
         </div>
       )}
@@ -393,9 +382,9 @@ export function BoardContent({
                 <div className="flex flex-col items-center justify-center gap-2 w-64 py-10 rounded-xl border-2 border-dashed border-border/50 text-muted-foreground/60 shrink-0 select-none">
                   <Columns3 size={20} />
                   <p className="text-xs text-center leading-relaxed">
-                    Crea tu primera lista
+                    {t("emptyLists")}
                     <br />
-                    para empezar a organizar
+                    {t("emptyListsHint")}
                   </p>
                 </div>
               )}

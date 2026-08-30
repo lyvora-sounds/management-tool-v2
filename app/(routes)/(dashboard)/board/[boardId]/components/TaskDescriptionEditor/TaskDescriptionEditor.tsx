@@ -15,7 +15,7 @@ import {
   Minus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { useTranslations } from "next-intl";
 import { Props, ToolbarButtonProps } from "./TaskDescriptionEditor.types";
 
 function ToolbarButton({
@@ -49,11 +49,13 @@ export function TaskDescriptionEditor({
   onCancel,
   loading,
 }: Props) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit,
-      Placeholder.configure({ placeholder: "Añade una descripción..." }),
+      Placeholder.configure({ placeholder: t("descriptionPlaceholder") }),
     ],
     content,
     editorProps: {
@@ -73,21 +75,21 @@ export function TaskDescriptionEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive("bold")}
-          title="Bold"
+          title={t("editorBold")}
         >
           <Bold size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive("italic")}
-          title="Italic"
+          title={t("editorItalic")}
         >
           <Italic size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCode().run()}
           active={editor.isActive("code")}
-          title="Inline code"
+          title={t("editorCode")}
         >
           <Code size={14} />
         </ToolbarButton>
@@ -99,7 +101,7 @@ export function TaskDescriptionEditor({
             editor.chain().focus().toggleHeading({ level: 2 }).run()
           }
           active={editor.isActive("heading", { level: 2 })}
-          title="Heading 2"
+          title={t("editorH2")}
         >
           <Heading2 size={14} />
         </ToolbarButton>
@@ -108,7 +110,7 @@ export function TaskDescriptionEditor({
             editor.chain().focus().toggleHeading({ level: 3 }).run()
           }
           active={editor.isActive("heading", { level: 3 })}
-          title="Heading 3"
+          title={t("editorH3")}
         >
           <Heading3 size={14} />
         </ToolbarButton>
@@ -118,34 +120,34 @@ export function TaskDescriptionEditor({
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive("bulletList")}
-          title="Bullet list"
+          title={t("editorBullet")}
         >
           <List size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive("orderedList")}
-          title="Ordered list"
+          title={t("editorOrdered")}
         >
           <ListOrdered size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive("blockquote")}
-          title="Quote"
+          title={t("editorQuote")}
         >
           <Quote size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           active={editor.isActive("codeBlock")}
-          title="Code block"
+          title={t("editorCodeBlock")}
         >
           <span className="text-xs font-mono font-bold">{"<>"}</span>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="Divider"
+          title={t("editorDivider")}
         >
           <Minus size={14} />
         </ToolbarButton>
@@ -161,10 +163,10 @@ export function TaskDescriptionEditor({
           onClick={() => onSave(editor.getHTML())}
           disabled={loading}
         >
-          Guardar
+          {tCommon("save")}
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel} disabled={loading}>
-          Cancelar
+          {tCommon("cancel")}
         </Button>
       </div>
     </div>

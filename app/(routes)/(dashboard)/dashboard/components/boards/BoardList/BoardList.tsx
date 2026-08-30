@@ -1,8 +1,10 @@
 import { LayoutDashboard, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { BoardCard } from "./BoardCard";
 import { BoardListProps } from "./BoardList.types";
 
 function EmptySection({ shared }: { shared?: boolean }) {
+  const t = useTranslations("boards");
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center gap-2">
       {shared ? (
@@ -11,7 +13,7 @@ function EmptySection({ shared }: { shared?: boolean }) {
         <LayoutDashboard size={24} className="text-muted-foreground" />
       )}
       <p className="text-sm text-muted-foreground">
-        {shared ? "No eres miembro de ningún board todavía" : "No tienes boards propios todavía"}
+        {shared ? t("emptyShared") : t("emptyOwn")}
       </p>
     </div>
   );
@@ -28,6 +30,7 @@ function BoardGrid({ boards }: { boards: BoardListProps["boards"] }) {
 }
 
 export function BoardList({ boards }: BoardListProps) {
+  const t = useTranslations("boards");
   const ownBoards = boards.filter((b) => b.isOwner);
   const sharedBoards = boards.filter((b) => !b.isOwner);
 
@@ -41,7 +44,7 @@ export function BoardList({ boards }: BoardListProps) {
         <div className="flex items-center gap-2">
           <LayoutDashboard size={15} className="text-muted-foreground" />
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            Mis boards
+            {t("myBoards")}
           </h2>
           <span className="text-xs text-muted-foreground">({ownBoards.length})</span>
         </div>
@@ -53,7 +56,7 @@ export function BoardList({ boards }: BoardListProps) {
           <div className="flex items-center gap-2">
             <Users size={15} className="text-muted-foreground" />
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Compartidos conmigo
+              {t("sharedWithMe")}
             </h2>
             <span className="text-xs text-muted-foreground">({sharedBoards.length})</span>
           </div>

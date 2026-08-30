@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface BoardIntegrationsModalProps {
   boardId: string;
@@ -31,6 +32,8 @@ export function BoardIntegrationsModal({
   open,
   onClose,
 }: BoardIntegrationsModalProps) {
+  const t = useTranslations("integrations");
+  const tCommon = useTranslations("common");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -59,7 +62,7 @@ export function BoardIntegrationsModal({
         setNotifyOnTaskMoved(data.notifyOnTaskMoved ?? false);
       }
     } catch {
-      toast.error("Error al cargar integraciones");
+      toast.error(t("loadError"));
     } finally {
       setLoading(false);
     }
@@ -82,13 +85,13 @@ export function BoardIntegrationsModal({
       });
 
       if (res.ok) {
-        toast.success("Integraciones de webhooks guardadas");
+        toast.success(t("saved"));
         onClose();
       } else {
-        toast.error("Error al guardar integraciones");
+        toast.error(t("saveError"));
       }
     } catch {
-      toast.error("Error de red");
+      toast.error(tCommon("connectionError"));
     } finally {
       setSaving(false);
     }
@@ -100,7 +103,7 @@ export function BoardIntegrationsModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Webhook size={18} className="text-primary" />
-            <span>Integraciones y Alertas de Webhooks</span>
+            <span>{t("title")}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -114,7 +117,7 @@ export function BoardIntegrationsModal({
             <div className="space-y-2">
               <Label className="text-xs font-semibold flex items-center gap-1.5">
                 <MessageSquare size={14} className="text-emerald-600" />
-                <span>Slack Incoming Webhook URL</span>
+                <span>{t("slackUrl")}</span>
               </Label>
               <Input
                 placeholder="https://hooks.slack.com/services/..."
@@ -123,7 +126,7 @@ export function BoardIntegrationsModal({
                 className="text-xs font-mono"
               />
               <p className="text-[11px] text-muted-foreground">
-                Recibe notificaciones automáticas en tu canal de Slack configurado.
+                {t("slackHint")}
               </p>
             </div>
 
@@ -131,7 +134,7 @@ export function BoardIntegrationsModal({
             <div className="space-y-2">
               <Label className="text-xs font-semibold flex items-center gap-1.5">
                 <MessageSquare size={14} className="text-indigo-500" />
-                <span>Discord Webhook URL</span>
+                <span>{t("discordUrl")}</span>
               </Label>
               <Input
                 placeholder="https://discord.com/api/webhooks/..."
@@ -140,7 +143,7 @@ export function BoardIntegrationsModal({
                 className="text-xs font-mono"
               />
               <p className="text-[11px] text-muted-foreground">
-                Envía tarjetas informativas con diseño embebido a tu canal de Discord.
+                {t("discordHint")}
               </p>
             </div>
 
@@ -148,7 +151,7 @@ export function BoardIntegrationsModal({
             <div className="space-y-3 p-4 rounded-xl border bg-muted/30">
               <Label className="text-xs font-semibold flex items-center gap-1.5">
                 <Bell size={13} />
-                <span>Eventos que disparan notificaciones</span>
+                <span>{t("events")}</span>
               </Label>
 
               <div className="space-y-2 pt-1">
@@ -162,7 +165,7 @@ export function BoardIntegrationsModal({
                     htmlFor="trigger-create"
                     className="text-xs font-medium cursor-pointer"
                   >
-                    Al crear una nueva tarjeta / tarea
+                    {t("onCreate")}
                   </label>
                 </div>
 
@@ -176,7 +179,7 @@ export function BoardIntegrationsModal({
                     htmlFor="trigger-complete"
                     className="text-xs font-medium cursor-pointer"
                   >
-                    Al marcar una tarjeta como completada
+                    {t("onComplete")}
                   </label>
                 </div>
 
@@ -190,7 +193,7 @@ export function BoardIntegrationsModal({
                     htmlFor="trigger-move"
                     className="text-xs font-medium cursor-pointer"
                   >
-                    Al mover una tarjeta entre listas
+                    {t("onMove")}
                   </label>
                 </div>
               </div>
@@ -199,7 +202,7 @@ export function BoardIntegrationsModal({
             {/* Footer */}
             <div className="flex justify-end gap-2 pt-2 border-t">
               <Button type="button" variant="ghost" size="sm" onClick={onClose}>
-                Cancelar
+                {tCommon("cancel")}
               </Button>
               <Button type="submit" size="sm" disabled={saving} className="gap-1.5">
                 {saving ? (
@@ -207,7 +210,7 @@ export function BoardIntegrationsModal({
                 ) : (
                   <Save size={13} />
                 )}
-                <span>Guardar integraciones</span>
+                <span>{t("save")}</span>
               </Button>
             </div>
           </form>

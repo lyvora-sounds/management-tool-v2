@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Calendar,
   User,
@@ -12,7 +13,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { formatDueDate, PRIORITY_CONFIG } from "@/lib/taskDisplay";
+import { formatDueDate } from "@/lib/i18nFormat";
+import { PRIORITY_CONFIG } from "@/lib/taskDisplay";
 import {
   TaskStatusSelect,
   type StatusListOption,
@@ -58,8 +60,19 @@ export function DashboardTaskRow({
   onStatusChange: (listId: string) => void;
   trailing?: ReactNode;
 }) {
-  const priorityInfo = task.priority ? PRIORITY_CONFIG[task.priority.toLowerCase()] : null;
-  const dueInfo = task.dueDate ? formatDueDate(task.dueDate) : null;
+  const t = useTranslations();
+  const locale = useLocale();
+  const rawPriority = task.priority?.toLowerCase() ?? "";
+  const priorityKey =
+    rawPriority === "urgent" ||
+    rawPriority === "high" ||
+    rawPriority === "medium" ||
+    rawPriority === "low" ||
+    rawPriority === "none"
+      ? rawPriority
+      : null;
+  const priorityInfo = priorityKey ? PRIORITY_CONFIG[priorityKey] : null;
+  const dueInfo = task.dueDate ? formatDueDate(task.dueDate, t, locale) : null;
   const subtasks = task.subtasks ?? [];
   const subtaskCount = subtasks.length;
   const subtaskDone = subtasks.filter((s) => s.completed).length;
@@ -85,7 +98,7 @@ export function DashboardTaskRow({
             {task.title}
           </span>
 
-          {priorityInfo && (
+          {priorityKey && priorityInfo && (
             <span
               className={cn(
                 "text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0",
@@ -93,7 +106,7 @@ export function DashboardTaskRow({
                 priorityInfo.text,
               )}
             >
-              {priorityInfo.label}
+              {t(`priority.${priorityKey}`)}
             </span>
           )}
 
@@ -137,7 +150,7 @@ export function DashboardTaskRow({
               className="text-[10px] h-5 bg-primary/10 text-primary border-primary/20 gap-1 font-medium"
             >
               <User size={10} />
-              Responsable
+              {t("task.roleAssignee")}
             </Badge>
           )}
           {isCollab && (
@@ -146,7 +159,7 @@ export function DashboardTaskRow({
               className="text-[10px] h-5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 gap-1 font-medium"
             >
               <Users size={10} />
-              Colaborador
+              {t("task.roleCollaborator")}
             </Badge>
           )}
           {isQa && (
@@ -155,7 +168,7 @@ export function DashboardTaskRow({
               className="text-[10px] h-5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 gap-1 font-medium"
             >
               <ShieldCheck size={10} />
-              QA
+              {t("task.roleQa")}
             </Badge>
           )}
         </div>
@@ -168,7 +181,7 @@ export function DashboardTaskRow({
                 subtaskDone === subtaskCount &&
                   "text-emerald-600 dark:text-emerald-400 font-medium",
               )}
-              title={`${subtaskDone} de ${subtaskCount} subtareas completadas`}
+              title={t("task.subtasksTitle", { done: subtaskDone, total: subtaskCount })}
             >
               <CheckSquare2 size={12} />
               <span>
@@ -178,7 +191,10 @@ export function DashboardTaskRow({
           )}
 
           {commentCount > 0 && (
-            <span className="flex items-center gap-1 tabular-nums" title={`${commentCount} comentarios`}>
+            <span
+              className="flex items-center gap-1 tabular-nums"
+              title={t("task.commentsCount", { count: commentCount })}
+            >
               <MessageSquare size={12} />
               <span>{commentCount}</span>
             </span>
@@ -187,7 +203,7 @@ export function DashboardTaskRow({
           {attachmentCount > 0 && (
             <span
               className="flex items-center gap-1 tabular-nums"
-              title={`${attachmentCount} archivos adjuntos`}
+              title={t("task.attachmentsCount", { count: attachmentCount })}
             >
               <Paperclip size={12} />
               <span>{attachmentCount}</span>

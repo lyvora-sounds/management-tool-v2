@@ -13,97 +13,82 @@ export const mainStats = [
   {
     value: 10000,
     suffix: "+",
-    label: "Tareas completadas",
-    desc: "por equipos activos en la plataforma",
+    label: "tasksLabel",
+    desc: "tasksDesc",
   },
   {
     value: 500,
     suffix: "+",
-    label: "Equipos activos",
-    desc: "gestionando proyectos cada día",
+    label: "teamsLabel",
+    desc: "teamsDesc",
   },
   {
     value: 99,
     suffix: "%",
-    label: "Uptime garantizado",
-    desc: "infraestructura confiable 24/7",
+    label: "uptimeLabel",
+    desc: "uptimeDesc",
   },
   {
     value: 2,
     suffix: "min",
-    label: "Para empezar",
-    desc: "desde el registro hasta tu primer board",
+    label: "startLabel",
+    desc: "startDesc",
   },
-];
+] as const;
 
 export const benefits = [
   {
     Icon: Zap,
-    title: "Velocidad real",
+    title: "speedTitle",
     value: "3×",
-    desc: "Los equipos que usan Kiki reportan completar proyectos hasta 3 veces más rápido gracias a la visibilidad centralizada.",
+    desc: "speedDesc",
   },
   {
     Icon: TrendingUp,
-    title: "Más entregas",
+    title: "deliveryTitle",
     value: "87%",
-    desc: "de los equipos mejoran su tasa de entrega a tiempo en el primer mes de uso.",
+    desc: "deliveryDesc",
   },
   {
     Icon: Users,
-    title: "Adopción de equipo",
+    title: "adoptionTitle",
     value: "94%",
-    desc: "de los miembros invitados se activan en las primeras 24 horas.",
+    desc: "adoptionDesc",
   },
   {
     Icon: BarChart2,
-    title: "Tareas completadas",
+    title: "completedTitle",
     value: "+40%",
-    desc: "de incremento promedio en productividad tras el primer sprint gestionado en Kiki.",
+    desc: "completedDesc",
   },
   {
     Icon: Clock,
-    title: "Ahorro de tiempo",
+    title: "timeTitle",
     value: "5h/sem",
-    desc: "que los equipos recuperan al eliminar reuniones de status update innecesarias.",
+    desc: "timeDesc",
   },
   {
     Icon: CheckCircle2,
-    title: "Reducción de errores",
+    title: "errorsTitle",
     value: "60%",
-    desc: "menos tareas olvidadas o duplicadas gracias a las asignaciones y notificaciones automáticas.",
+    desc: "errorsDesc",
   },
-];
+] as const;
 
 export const pillars = [
   {
     Icon: ShieldCheck,
-    title: "Seguridad primero",
-    points: [
-      "Autenticación segura con Clerk",
-      "Roles y permisos por board",
-      "Acceso solo para miembros invitados",
-      "Datos encriptados en tránsito",
-    ],
+    title: "securityTitle",
+    points: ["securityP1", "securityP2", "securityP3", "securityP4"],
   },
   {
     Icon: Globe,
-    title: "Siempre disponible",
-    points: [
-      "99% uptime en infraestructura cloud",
-      "Despliegue en Vercel Edge Network",
-      "Base de datos gestionada en Neon",
-      "Actualizaciones sin interrupciones",
-    ],
+    title: "availableTitle",
+    points: ["availableP1", "availableP2", "availableP3", "availableP4"],
   },
   {
     Icon: Zap,
-    title: "Rendimiento rápido",
-    points: [
-      "Carga inicial < 1s en conexiones rápidas",
-      "Interfaz reactiva sin recargas de página",
-      "Caché inteligente en servidor",
-      "Optimizado para Next.js 15",
-    ],
+    title: "perfTitle",
+    points: ["perfP1", "perfP2", "perfP3", "perfP4"],
   },
-];
+] as const;

@@ -47,7 +47,8 @@ export async function POST(req: Request) {
 
   await createActivity({
     type: "list_created",
-    message: `${user.name ?? user.email} creó la lista "${list.title}"`,
+    key: "activity.listCreated",
+    params: { actor: user.name ?? user.email, list: list.title },
     boardId,
     userId: user.id,
   });

@@ -27,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useLocale, useTranslations } from "next-intl";
+import { dateLocale } from "@/i18n/routing";
 import { useBoardStore } from "../../store/useBoardStore";
 
 interface ArchiveTasksModalProps {
@@ -42,6 +44,9 @@ export function ArchiveTasksModal({
   onClose,
   onRefreshBoard,
 }: ArchiveTasksModalProps) {
+  const t = useTranslations("board");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const lists = useBoardStore((s) => s.lists);
   const [activeTab, setActiveTab] = useState<"bulk_archive" | "view_archived">("bulk_archive");
   const [archivedTasks, setArchivedTasks] = useState<any[]>([]);
@@ -86,7 +91,7 @@ export function ArchiveTasksModal({
         setArchivedTasks(data.tasks || []);
       }
     } catch {
-      toast.error("Error al cargar tareas archivadas");
+      toast.error(t("archiveLoadError"));
     } finally {
       setLoading(false);
     }
@@ -109,7 +114,7 @@ export function ArchiveTasksModal({
   const handleBulkArchive = async () => {
     const idsToArchive = selectedToArchive.length > 0 ? selectedToArchive : eligibleTasks.map((t) => t.id);
     if (idsToArchive.length === 0) {
-      toast.info("No hay tareas seleccionadas para archivar");
+      toast.info(t("archiveNoneSelected"));
       return;
     }
 
@@ -123,15 +128,15 @@ export function ArchiveTasksModal({
 
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`${data.archivedCount} tareas archivadas`);
+        toast.success(t("archiveSuccess", { count: data.archivedCount }));
         setSelectedToArchive([]);
         onRefreshBoard();
         onClose();
       } else {
-        toast.error(data.error || "Error al archivar");
+        toast.error(data.error || t("archiveError"));
       }
     } catch {
-      toast.error("Error de red");
+      toast.error(tCommon("connectionError"));
     } finally {
       setActionLoading(false);
     }
@@ -149,15 +154,15 @@ export function ArchiveTasksModal({
 
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`${data.unarchivedCount} tareas restauradas al board`);
+        toast.success(t("archiveRestoreSuccess", { count: data.unarchivedCount }));
         setSelectedToRestore([]);
         await loadArchivedTasks();
         onRefreshBoard();
       } else {
-        toast.error(data.error || "Error al restaurar");
+        toast.error(data.error || t("archiveRestoreError"));
       }
     } catch {
-      toast.error("Error de red");
+      toast.error(tCommon("connectionError"));
     } finally {
       setActionLoading(false);
     }
@@ -172,7 +177,7 @@ export function ArchiveTasksModal({
               <Archive size={18} />
             </div>
             <DialogTitle className="text-base font-semibold">
-              Archivo de Tareas & Limpieza de Trimestres
+              {t("archiveTitle")}
             </DialogTitle>
           </div>
         </DialogHeader>
@@ -187,7 +192,7 @@ export function ArchiveTasksModal({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Archivar tareas activas ({eligibleTasks.length})
+            {t("archiveActive", { count: eligibleTasks.length })}
           </button>
           <button
             onClick={() => setActiveTab("view_archived")}
@@ -197,7 +202,7 @@ export function ArchiveTasksModal({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Ver archivo y restaurar
+            {t("archiveViewRestore")}
           </button>
         </div>
 
@@ -208,7 +213,7 @@ export function ArchiveTasksModal({
               <div className="p-4 rounded-xl border bg-muted/30 space-y-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                   <Filter size={13} />
-                  <span>Criterios de archivo masivo</span>
+                  <span>{t("archiveCriteria")}</span>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -222,13 +227,13 @@ export function ArchiveTasksModal({
                       htmlFor="completed-only"
                       className="text-xs font-medium cursor-pointer"
                     >
-                      Solo tareas completadas
+                      {t("archiveCompletedOnly")}
                     </label>
                   </div>
 
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-muted-foreground">
-                      Filtrar por Trimestre / Quarter
+                      {t("archiveFilterQuarter")}
                     </label>
                     <Select
                       value={quarterFilter}
@@ -238,7 +243,7 @@ export function ArchiveTasksModal({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos los trimestres</SelectItem>
+                        <SelectItem value="all">{t("allQuarters")}</SelectItem>
                         {availableQuarters.map((q) => (
                           <SelectItem key={q} value={q}>
                             {q}
@@ -258,13 +263,13 @@ export function ArchiveTasksModal({
                     className="font-medium text-primary hover:underline"
                   >
                     {selectedToArchive.length === eligibleTasks.length
-                      ? "Desmarcar todas"
-                      : "Seleccionar todas"}
+                      ? t("archiveDeselectAll")
+                      : t("archiveSelectAll")}
                   </button>
                   <span className="text-muted-foreground tabular-nums">
                     {selectedToArchive.length > 0
-                      ? `${selectedToArchive.length} seleccionadas`
-                      : `${eligibleTasks.length} candidatas`}
+                      ? t("archiveSelectedCount", { count: selectedToArchive.length })
+                      : t("archiveCandidates", { count: eligibleTasks.length })}
                   </span>
                 </div>
 
@@ -272,7 +277,7 @@ export function ArchiveTasksModal({
                   <div className="text-center py-10 border rounded-xl bg-card space-y-2">
                     <CheckCircle2 size={24} className="text-emerald-500 mx-auto" />
                     <p className="text-xs text-muted-foreground">
-                      No hay tareas que coincidan con los filtros de archivo seleccionados.
+                      {t("archiveEmptyFilter")}
                     </p>
                   </div>
                 ) : (
@@ -320,7 +325,7 @@ export function ArchiveTasksModal({
               {/* Action bar */}
               <div className="flex justify-end gap-2 pt-3 border-t">
                 <Button variant="ghost" size="sm" onClick={onClose}>
-                  Cancelar
+                  {tCommon("cancel")}
                 </Button>
                 <Button
                   size="sm"
@@ -334,7 +339,9 @@ export function ArchiveTasksModal({
                     <Archive size={13} />
                   )}
                   <span>
-                    Archivar {selectedToArchive.length > 0 ? `(${selectedToArchive.length})` : `(${eligibleTasks.length})`}
+                    {t("archiveButton", {
+                      count: selectedToArchive.length > 0 ? selectedToArchive.length : eligibleTasks.length,
+                    })}
                   </span>
                 </Button>
               </div>
@@ -350,16 +357,16 @@ export function ArchiveTasksModal({
               ) : archivedTasks.length === 0 ? (
                 <div className="text-center py-12 border rounded-xl bg-card space-y-2">
                   <Archive size={24} className="text-muted-foreground mx-auto" />
-                  <p className="text-sm font-medium">No hay tareas archivadas</p>
+                  <p className="text-sm font-medium">{t("archiveEmpty")}</p>
                   <p className="text-xs text-muted-foreground">
-                    Las tareas que archives aparecerán aquí para que puedas consultarlas o restaurarlas en cualquier momento.
+                    {t("archiveEmptyHint")}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs pb-1">
                     <span className="text-muted-foreground">
-                      {archivedTasks.length} tareas archivadas
+                      {t("archiveCount", { count: archivedTasks.length })}
                     </span>
                     {selectedToRestore.length > 0 && (
                       <Button
@@ -370,36 +377,42 @@ export function ArchiveTasksModal({
                         className="h-7 text-xs gap-1"
                       >
                         <RotateCcw size={12} />
-                        <span>Restaurar {selectedToRestore.length} seleccionadas</span>
+                        <span>{t("archiveRestoreSelected", { count: selectedToRestore.length })}</span>
                       </Button>
                     )}
                   </div>
 
                   <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-                    {archivedTasks.map((t) => (
+                    {archivedTasks.map((task) => (
                       <div
-                        key={t.id}
+                        key={task.id}
                         className="flex items-center justify-between p-3 rounded-lg border bg-card text-xs"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <Checkbox
-                            checked={selectedToRestore.includes(t.id)}
+                            checked={selectedToRestore.includes(task.id)}
                             onCheckedChange={(c) => {
                               setSelectedToRestore((prev) =>
-                                c ? [...prev, t.id] : prev.filter((id) => id !== t.id),
+                                c ? [...prev, task.id] : prev.filter((id) => id !== task.id),
                               );
                             }}
                           />
                           <div className="space-y-0.5 truncate">
                             <p className="font-semibold text-foreground truncate">
-                              {t.title}
+                              {task.title}
                             </p>
                             <p className="text-[11px] text-muted-foreground flex items-center gap-2">
-                              <span>Lista: {t.list?.title || "General"}</span>
-                              {t.quarter && <span>• {t.quarter}</span>}
-                              {t.archivedAt && (
+                              <span>
+                                {t("archiveList", {
+                                  title: task.list?.title || t("archiveListFallback"),
+                                })}
+                              </span>
+                              {task.quarter && <span>• {task.quarter}</span>}
+                              {task.archivedAt && (
                                 <span>
-                                  • Archivado: {new Date(t.archivedAt).toLocaleDateString()}
+                                  • {t("archiveArchivedOn", {
+                                    date: new Date(task.archivedAt).toLocaleDateString(dateLocale(locale)),
+                                  })}
                                 </span>
                               )}
                             </p>
@@ -409,12 +422,12 @@ export function ArchiveTasksModal({
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleRestore([t.id])}
+                          onClick={() => handleRestore([task.id])}
                           disabled={actionLoading}
                           className="h-7 text-xs gap-1 shrink-0 ml-2 text-primary hover:text-primary hover:bg-primary/10"
                         >
                           <RotateCcw size={12} />
-                          <span>Restaurar</span>
+                          <span>{t("archiveRestore")}</span>
                         </Button>
                       </div>
                     ))}

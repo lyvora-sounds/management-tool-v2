@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface EpicItem {
   id: string;
@@ -59,6 +60,8 @@ export function BoardEpicsModal({
   onClose,
   onEpicsChange,
 }: BoardEpicsModalProps) {
+  const t = useTranslations("epics");
+  const tCommon = useTranslations("common");
   const [epics, setEpics] = useState<EpicItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -90,7 +93,7 @@ export function BoardEpicsModal({
         setEpics(data.epics || []);
       }
     } catch {
-      toast.error("Error al cargar Epics");
+      toast.error(t("loadError"));
     } finally {
       setLoading(false);
     }
@@ -114,7 +117,7 @@ export function BoardEpicsModal({
       });
 
       if (res.ok) {
-        toast.success("Epic creado exitosamente");
+        toast.success(t("created"));
         setTitle("");
         setDescription("");
         setCreating(false);
@@ -122,10 +125,10 @@ export function BoardEpicsModal({
         onEpicsChange?.();
       } else {
         const err = await res.json();
-        toast.error(err.error || "Error al crear Epic");
+        toast.error(err.error || t("createError"));
       }
     } catch {
-      toast.error("Error de red");
+      toast.error(tCommon("connectionError"));
     } finally {
       setLoading(false);
     }
@@ -146,18 +149,18 @@ export function BoardEpicsModal({
       });
 
       if (res.ok) {
-        toast.success("Epic actualizado");
+        toast.success(t("updated"));
         setEditingId(null);
         await loadEpics();
         onEpicsChange?.();
       }
     } catch {
-      toast.error("Error al actualizar Epic");
+      toast.error(t("updateError"));
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Eliminar el Epic "${name}"? Las tareas asociadas no se borrarán.`)) return;
+    if (!confirm(t("deleteConfirm", { name }))) return;
 
     try {
       const res = await fetch(`/api/boards/${boardId}/epics?epicId=${id}`, {
@@ -165,12 +168,12 @@ export function BoardEpicsModal({
       });
 
       if (res.ok) {
-        toast.success("Epic eliminado");
+        toast.success(t("deleted"));
         await loadEpics();
         onEpicsChange?.();
       }
     } catch {
-      toast.error("Error al eliminar Epic");
+      toast.error(t("deleteError"));
     }
   };
 
@@ -183,7 +186,7 @@ export function BoardEpicsModal({
               <Layers size={18} />
             </div>
             <DialogTitle className="text-base font-semibold">
-              Gestión de Epics & Trimestres
+              {t("manageTitle")}
             </DialogTitle>
           </div>
           {!creating && (
@@ -193,7 +196,7 @@ export function BoardEpicsModal({
               className="gap-1.5 h-8 text-xs mr-6"
             >
               <Plus size={13} />
-              <span>Nuevo Epic</span>
+              <span>{t("newEpic")}</span>
             </Button>
           )}
         </DialogHeader>
@@ -206,7 +209,7 @@ export function BoardEpicsModal({
               className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-4"
             >
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold">Crear nuevo Epic</h4>
+                <h4 className="text-sm font-semibold">{t("createNew")}</h4>
                 <Button
                   type="button"
                   variant="ghost"
@@ -221,11 +224,11 @@ export function BoardEpicsModal({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1 sm:col-span-2">
                   <label className="text-xs font-semibold text-muted-foreground">
-                    Título del Epic
+                    {t("epicTitle")}
                   </label>
                   <Input
                     required
-                    placeholder="Ej. Rediseño de Checkout, Migración v2..."
+                    placeholder={t("titlePlaceholder")}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="bg-background"
@@ -235,10 +238,10 @@ export function BoardEpicsModal({
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                     <Calendar size={12} />
-                    <span>Trimestre / Quarter</span>
+                    <span>{t("quarterLabel")}</span>
                   </label>
                   <Input
-                    placeholder="Ej. 2026-Q1, 2026-Q2..."
+                    placeholder={t("quarterPlaceholder")}
                     value={quarter}
                     onChange={(e) => setQuarter(e.target.value)}
                     className="bg-background"
@@ -247,7 +250,7 @@ export function BoardEpicsModal({
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground">
-                    Color identificativo
+                    {t("color")}
                   </label>
                   <div className="flex items-center gap-1.5 pt-1">
                     {PRESET_COLORS.map((c) => (
@@ -266,10 +269,10 @@ export function BoardEpicsModal({
 
                 <div className="space-y-1 sm:col-span-2">
                   <label className="text-xs font-semibold text-muted-foreground">
-                    Descripción (opcional)
+                    {t("descriptionOptional")}
                   </label>
                   <Input
-                    placeholder="Objetivo principal del epic..."
+                    placeholder={t("descriptionPlaceholder")}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="bg-background"
@@ -284,11 +287,11 @@ export function BoardEpicsModal({
                   size="sm"
                   onClick={() => setCreating(false)}
                 >
-                  Cancelar
+                  {tCommon("cancel")}
                 </Button>
                 <Button type="submit" size="sm" disabled={loading}>
                   {loading && <Loader2 size={13} className="animate-spin mr-1" />}
-                  <span>Guardar Epic</span>
+                  <span>{t("saveEpic")}</span>
                 </Button>
               </div>
             </form>
@@ -304,13 +307,13 @@ export function BoardEpicsModal({
               <div className="p-3 rounded-full bg-muted w-fit mx-auto">
                 <Layers size={24} className="text-muted-foreground" />
               </div>
-              <p className="text-sm font-medium">No hay Epics creados en este board</p>
+              <p className="text-sm font-medium">{t("empty")}</p>
               <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                Los Epics te permiten agrupar tareas por iniciativas estratégicas o trimestres (Q1, Q2, etc.) y seguir su progreso global.
+                {t("emptyHint")}
               </p>
               <Button size="sm" onClick={() => setCreating(true)} className="gap-1 mt-2">
                 <Plus size={13} />
-                <span>Crear primer Epic</span>
+                <span>{t("createFirst")}</span>
               </Button>
             </div>
           ) : (
@@ -328,13 +331,13 @@ export function BoardEpicsModal({
                           <Input
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
-                            placeholder="Título del Epic"
+                            placeholder={t("epicTitle")}
                             className="text-sm font-semibold"
                           />
                           <Input
                             value={editQuarter}
                             onChange={(e) => setEditQuarter(e.target.value)}
-                            placeholder="Quarter (Ej. 2026-Q1)"
+                            placeholder={t("quarterEditPlaceholder")}
                             className="w-32 text-xs"
                           />
                           <Button
@@ -423,7 +426,10 @@ export function BoardEpicsModal({
                         <div className="space-y-1.5 pt-1">
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>
-                              {epic.completedTasks} de {epic.totalTasks} tareas completadas
+                              {t("progress", {
+                                completed: epic.completedTasks,
+                                total: epic.totalTasks,
+                              })}
                             </span>
                             <span className="font-semibold tabular-nums">
                               {epic.progress}%

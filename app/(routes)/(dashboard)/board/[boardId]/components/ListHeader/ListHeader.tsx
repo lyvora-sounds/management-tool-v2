@@ -10,11 +10,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { useBoardStore } from "../../store/useBoardStore";
 import { ListHeaderProps } from "./ListHeader.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 
 export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
+  const t = useTranslations("list");
+  const tCommon = useTranslations("common");
   const renameList = useBoardStore((s) => s.renameList);
   const removeList = useBoardStore((s) => s.removeList);
 
@@ -50,9 +53,9 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
     if (res.ok) {
       renameList(listId, trimmed);
       setSavedTitle(trimmed);
-      toast.success("Lista renombrada");
+      toast.success(t("renamed"));
     } else {
-      toast.error("Error al renombrar la lista");
+      toast.error(t("renameError"));
     }
     setIsEditing(false);
     setLoading(false);
@@ -63,9 +66,9 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
     const res = await fetch(`/api/lists/deleteList/${listId}`, { method: "DELETE" });
     if (res.ok) {
       removeList(listId);
-      toast.success("Lista eliminada");
+      toast.success(t("deleted"));
     } else {
-      toast.error("Error al eliminar la lista");
+      toast.error(t("deleteError"));
     }
     setLoading(false);
   };
@@ -110,7 +113,7 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={startEditing} className="cursor-pointer">
               <Pencil size={14} />
-              Renombrar lista
+              {t("renameList")}
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
@@ -118,16 +121,16 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
               disabled={loading}
             >
               <Trash2 size={14} />
-              Eliminar lista
+              {t("deleteList")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
       <ConfirmModal
         open={confirmDelete}
-        title="Eliminar lista"
-        description={`¿Eliminar "${savedTitle}"? Se eliminarán todas las tareas que contiene.`}
-        confirmLabel="Eliminar"
+        title={t("deleteTitle")}
+        description={t("deleteDescription", { title: savedTitle })}
+        confirmLabel={tCommon("delete")}
         loading={loading}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}

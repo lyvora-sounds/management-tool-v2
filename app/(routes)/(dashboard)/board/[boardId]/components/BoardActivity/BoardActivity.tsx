@@ -9,11 +9,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLocale, useTranslations } from "next-intl";
+import { dateLocale } from "@/i18n/routing";
+import { FormattedLogMessage } from "@/components/Shared/FormattedLogMessage";
 import type { ActivityLog, BoardActivityProps } from "./BoardActivity.types";
 import { TYPE_ICON } from "./BoardActivity.constants";
 import { ActivitySkeleton } from "@/components/skeletons";
 
 export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
+  const t = useTranslations("board");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +46,7 @@ export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
         <DialogHeader className="px-4 py-4 border-b bg-muted/50">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Activity size={16} />
-            Actividad del board
+            {t("activityTitle")}
           </DialogTitle>
         </DialogHeader>
 
@@ -48,7 +54,7 @@ export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
           {loading && <ActivitySkeleton count={5} />}
           {!loading && logs.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Sin actividad aún
+              {t("activityEmpty")}
             </p>
           )}
           {!loading &&
@@ -58,9 +64,11 @@ export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
                   {TYPE_ICON[log.type] ?? "•"}
                 </span>
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-sm leading-snug">{log.message}</span>
+                  <span className="text-sm leading-snug">
+                    <FormattedLogMessage message={log.message} />
+                  </span>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(log.createdAt).toLocaleString("es-ES", {
+                    {new Date(log.createdAt).toLocaleString(dateLocale(locale), {
                       day: "2-digit",
                       month: "short",
                       hour: "2-digit",
@@ -74,7 +82,7 @@ export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
 
         <div className="border-t px-4 py-3 flex justify-end">
           <Button variant="outline" size="sm" onClick={onClose}>
-            Cerrar
+            {tCommon("close")}
           </Button>
         </div>
       </DialogContent>

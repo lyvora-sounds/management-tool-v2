@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
 import { CreateBoardModal } from "../components/boards/CreateBoardModal/CreateBoardModal";
+import { getTranslations } from "next-intl/server";
 import { BoardList } from "../components/boards/BoardList/BoardList";
 
 export default async function BoardsPage() {
@@ -52,13 +53,15 @@ export default async function BoardsPage() {
     };
   });
 
+  const t = await getTranslations("boards");
+
   return (
     <div className="p-3 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Boards</h1>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
-            {boards.length} board{boards.length !== 1 ? "s" : ""} en total
+            {t("totalCount", { count: boards.length })}
           </p>
         </div>
         <CreateBoardModal />

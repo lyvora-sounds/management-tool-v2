@@ -55,7 +55,8 @@ export async function POST(req: Request) {
 
   await createActivity({
     type: "task_created",
-    message: `${user.name ?? user.email} creó la tarea "${task.title}" en "${list.title}"`,
+    key: "activity.ticketCreated",
+    params: { actor: user.name ?? user.email, ticket: task.title, list: list.title },
     boardId: list.boardId,
     userId: user.id,
   });

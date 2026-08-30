@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { getTranslations } from "next-intl/server";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 import { KikiLogo } from "@/components/Shared/KikiLogo/KikiLogo";
+import { LanguageSwitcher } from "@/components/Shared/LanguageSwitcher";
 
 export async function HomeNavbar() {
   const { userId } = await auth();
   const isSignedIn = !!userId;
+  const t = await getTranslations("nav");
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-4 sm:px-8 h-16 border-b bg-background/80 backdrop-blur-sm">
@@ -19,25 +22,26 @@ export async function HomeNavbar() {
           href="/functions"
           className="hover:text-foreground transition-colors"
         >
-          Funciones
+          {t("functions")}
         </Link>
         <Link href="/stats" className="hover:text-foreground transition-colors">
-          Estadísticas
+          {t("stats")}
         </Link>
       </nav>
 
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         {isSignedIn ? (
           <Link href="/dashboard">
-            <InteractiveHoverButton>Ir al dashboard</InteractiveHoverButton>
+            <InteractiveHoverButton>{t("goToDashboard")}</InteractiveHoverButton>
           </Link>
         ) : (
           <>
             <Link href="/sign-in">
-              <InteractiveHoverButton>Iniciar sesión</InteractiveHoverButton>
+              <InteractiveHoverButton>{t("signIn")}</InteractiveHoverButton>
             </Link>
             <Link href="/sign-up">
-              <InteractiveHoverButton>Registrarse</InteractiveHoverButton>
+              <InteractiveHoverButton>{t("signUp")}</InteractiveHoverButton>
             </Link>
           </>
         )}
@@ -45,3 +49,4 @@ export async function HomeNavbar() {
     </header>
   );
 }
+

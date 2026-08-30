@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { UserProfile } from "@clerk/nextjs";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,56 +38,63 @@ const PROVIDERS: {
   id: AiProvider;
   name: string;
   badge: string;
-  description: string;
+  descriptionKey:
+    | "providerOpenaiDesc"
+    | "providerClaudeDesc"
+    | "providerGeminiDesc"
+    | "providerDeepseekDesc"
+    | "providerGrokDesc"
+    | "providerKimiDesc"
+    | "providerCustomDesc";
   keyPlaceholder: string;
 }[] = [
   {
     id: "openai",
     name: "OpenAI",
     badge: "GPT-4o, GPT-4o-mini",
-    description: "Modelos insignia de OpenAI con soporte multimodal y alta velocidad.",
+    descriptionKey: "providerOpenaiDesc",
     keyPlaceholder: "sk-proj-...",
   },
   {
     id: "claude",
     name: "Anthropic Claude",
     badge: "Claude 3.5 / 3.7 Sonnet",
-    description: "Excelente razonamiento, redacción detallada y seguimiento de instrucciones.",
+    descriptionKey: "providerClaudeDesc",
     keyPlaceholder: "sk-ant-...",
   },
   {
     id: "gemini",
     name: "Google Gemini",
     badge: "Gemini 2.0 Flash, 1.5 Pro",
-    description: "Modelos rápidos y económicos con amplia ventana de contexto.",
+    descriptionKey: "providerGeminiDesc",
     keyPlaceholder: "AIzaSy...",
   },
   {
     id: "deepseek",
     name: "DeepSeek",
     badge: "DeepSeek-V3 / R1 (Chat)",
-    description: "Modelos de razonamiento de alto rendimiento a bajo coste.",
+    descriptionKey: "providerDeepseekDesc",
     keyPlaceholder: "sk-...",
   },
   {
     id: "grok",
     name: "xAI Grok",
     badge: "Grok 2",
-    description: "Modelos avanzados de xAI con API compatible con OpenAI.",
+    descriptionKey: "providerGrokDesc",
     keyPlaceholder: "xai-...",
   },
   {
     id: "kimi",
     name: "Kimi / Moonshot AI",
     badge: "Moonshot-v1",
-    description: "Modelos optimizados de Moonshot AI para procesamiento de lenguaje largo.",
+    descriptionKey: "providerKimiDesc",
     keyPlaceholder: "sk-...",
   },
   {
     id: "custom",
-    name: "Personalizado / Ollama / Local",
+    name: "Custom / Ollama / Local",
     badge: "OpenAI-Compatible",
-    description: "Cualquier servidor compatible con la API de OpenAI (Ollama, vLLM, LMStudio).",
+    descriptionKey: "providerCustomDesc",
     keyPlaceholder: "sk-...",
   },
 ];
@@ -94,6 +102,8 @@ const PROVIDERS: {
 type SettingsTab = "account" | "ai" | "custom-fields";
 
 export default function SettingsPage() {
+  const t = useTranslations("settings");
+  const tCommon = useTranslations("common");
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
   const [provider, setProvider] = useState<AiProvider>("openai");
   const [apiKey, setApiKey] = useState("");
@@ -123,8 +133,8 @@ export default function SettingsPage() {
         setBaseUrl(data.baseUrl || "");
         setVoiceLanguage(data.voiceLanguage || "es-ES");
       }
-    } catch (err) {
-      toast.error("Error al cargar la configuración.");
+    } catch {
+      toast.error(t("loadError"));
     } finally {
       setLoading(false);
     }
@@ -159,31 +169,35 @@ export default function SettingsPage() {
         setHasApiKey(data.hasApiKey);
         setMaskedApiKey(data.maskedApiKey);
         setApiKey("");
-        toast.success("Configuración guardada correctamente");
+        toast.success(t("saveSuccess"));
       } else {
-        toast.error(data.error || "Error al guardar configuración");
+        toast.error(data.error || t("saveError"));
       }
-    } catch (err) {
-      toast.error("Error de red al guardar.");
+    } catch {
+      toast.error(tCommon("connectionError"));
     } finally {
       setSaving(false);
     }
   };
 
   const selectedProviderMeta = PROVIDERS.find((p) => p.id === provider);
+  const providerName =
+    selectedProviderMeta?.id === "custom"
+      ? t("providerCustom")
+      : selectedProviderMeta?.name;
 
   const TABS: { id: SettingsTab; label: string; icon: typeof UserCog }[] = [
-    { id: "account", label: "Cuenta", icon: UserCog },
-    { id: "ai", label: "Inteligencia artificial", icon: Sparkles },
-    { id: "custom-fields", label: "Valores personalizados", icon: SlidersHorizontal },
+    { id: "account", label: t("tabAccount"), icon: UserCog },
+    { id: "ai", label: t("tabAi"), icon: Sparkles },
+    { id: "custom-fields", label: t("tabCustomFields"), icon: SlidersHorizontal },
   ];
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Ajustes</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Gestiona tu perfil, tus claves personales de IA, preferencias de voz y valores personalizados.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -236,22 +250,22 @@ export default function SettingsPage() {
                 <Sparkles size={20} />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Proveedor de IA (BYOK)</h2>
+                <h2 className="text-lg font-semibold">{t("aiProviderTitle")}</h2>
                 <p className="text-xs text-muted-foreground">
-                  Tu API Key se almacena cifrada individualmente (AES-256) y se usa exclusivamente para tus peticiones.
+                  {t("aiProviderDesc")}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
               <ShieldCheck size={16} />
-              <span>Cifrado personal</span>
+              <span>{t("personalEncryption")}</span>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Provider Selector */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Proveedor de IA</Label>
+              <Label className="text-sm font-medium">{t("aiProvider")}</Label>
               <Select
                 value={provider}
                 onValueChange={(v) => handleProviderChange(v as AiProvider)}
@@ -263,7 +277,9 @@ export default function SettingsPage() {
                   {PROVIDERS.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       <div className="flex items-center justify-between gap-3">
-                        <span className="font-medium">{p.name}</span>
+                        <span className="font-medium">
+                          {p.id === "custom" ? t("providerCustom") : p.name}
+                        </span>
                         <span className="text-[11px] text-muted-foreground">
                           {p.badge}
                         </span>
@@ -274,21 +290,21 @@ export default function SettingsPage() {
               </Select>
               {selectedProviderMeta && (
                 <p className="text-xs text-muted-foreground">
-                  {selectedProviderMeta.description}
+                  {t(selectedProviderMeta.descriptionKey)}
                 </p>
               )}
             </div>
 
             {/* Model Name */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Modelo</Label>
+              <Label className="text-sm font-medium">{t("model")}</Label>
               <Input
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 placeholder={PROVIDER_DEFAULT_MODELS[provider]}
               />
               <p className="text-xs text-muted-foreground">
-                Por defecto:{" "}
+                {t("modelDefault")}{" "}
                 <code className="text-[11px] bg-muted px-1 py-0.5 rounded">
                   {PROVIDER_DEFAULT_MODELS[provider]}
                 </code>
@@ -301,12 +317,12 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium flex items-center gap-1.5">
                 <Key size={14} />
-                <span>Clave API ({selectedProviderMeta?.name})</span>
+                <span>{t("apiKey", { name: providerName ?? "" })}</span>
               </Label>
               {hasApiKey && (
                 <span className="text-xs text-emerald-600 flex items-center gap-1">
                   <CheckCircle2 size={13} />
-                  <span>Clave activa configurada ({maskedApiKey})</span>
+                  <span>{t("keyActive", { masked: maskedApiKey })}</span>
                 </span>
               )}
             </div>
@@ -316,15 +332,15 @@ export default function SettingsPage() {
               onChange={(e) => setApiKey(e.target.value)}
               placeholder={
                 hasApiKey
-                  ? `Guardada (${maskedApiKey}). Escribe aquí para cambiarla`
-                  : selectedProviderMeta?.keyPlaceholder || "Pega tu clave de API..."
+                  ? t("keyPlaceholderChange", { masked: maskedApiKey })
+                  : selectedProviderMeta?.keyPlaceholder || t("keyPlaceholder")
               }
             />
             {!hasApiKey && (
               <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
                 <AlertCircle size={13} />
                 <span>
-                  Necesitas configurar una clave API para usar &quot;Mejorar con IA&quot; y &quot;Brain Dump&quot;.
+                  {t("keyNeeded")}
                 </span>
               </p>
             )}
@@ -335,15 +351,15 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label className="text-sm font-medium flex items-center gap-1.5">
                 <Server size={14} />
-                <span>Base URL / Endpoint personalizado</span>
+                <span>{t("customEndpoint")}</span>
               </Label>
               <Input
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
-                placeholder="http://localhost:11434 o https://mi-proxy-ia.com"
+                placeholder={t("customEndpointPlaceholder")}
               />
               <p className="text-xs text-muted-foreground">
-                URL base para servidores locales u endpoints personalizados compatibles con OpenAI.
+                {t("customEndpointHint")}
               </p>
             </div>
           )}
@@ -356,15 +372,15 @@ export default function SettingsPage() {
               <Globe size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">Idioma y Reconocimiento de Voz</h2>
+              <h2 className="text-lg font-semibold">{t("voiceTitle")}</h2>
               <p className="text-xs text-muted-foreground">
-                Idioma preferido para dictar tareas y notas por voz.
+                {t("voiceDesc")}
               </p>
             </div>
           </div>
 
           <div className="space-y-2 max-w-sm">
-            <Label className="text-sm font-medium">Idioma de voz por defecto</Label>
+            <Label className="text-sm font-medium">{t("voiceLanguage")}</Label>
             <Select
               value={voiceLanguage}
               onValueChange={(v) => setVoiceLanguage(v ?? "es-ES")}
@@ -373,8 +389,8 @@ export default function SettingsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="es-ES">🇪🇸 Español (es-ES)</SelectItem>
-                <SelectItem value="en-US">🇺🇸 English (en-US)</SelectItem>
+                <SelectItem value="es-ES">🇪🇸 {tCommon("spanish")} (es-ES)</SelectItem>
+                <SelectItem value="en-US">🇺🇸 {tCommon("english")} (en-US)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -387,7 +403,7 @@ export default function SettingsPage() {
             ) : (
               <Save size={16} />
             )}
-            <span>Guardar cambios</span>
+            <span>{t("saveChanges")}</span>
           </Button>
         </div>
       </form>

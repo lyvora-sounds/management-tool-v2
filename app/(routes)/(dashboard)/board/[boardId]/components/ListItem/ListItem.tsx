@@ -7,8 +7,10 @@ import { TaskCard } from "../TaskCard/TaskCard";
 import { CreateTaskForm } from "../CreateTaskForm/CreateTaskForm";
 import { ListHeader } from "../ListHeader/ListHeader";
 import { ArrowDownToLine } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function ListItem({ list, boardId, isOwner, boardUsers, memberCanAssign }: ListItemProps) {
+  const t = useTranslations("board");
   const {
     attributes,
     listeners,
@@ -48,7 +50,7 @@ export function ListItem({ list, boardId, isOwner, boardUsers, memberCanAssign }
           {list.tasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-1.5 py-6 rounded-lg border-2 border-dashed border-border/50 text-muted-foreground/50 select-none">
               <ArrowDownToLine size={16} />
-              <span className="text-xs">Arrastra una tarea aquí</span>
+              <span className="text-xs">{t("dropTicket")}</span>
             </div>
           ) : (
             list.tasks.map((task) => (

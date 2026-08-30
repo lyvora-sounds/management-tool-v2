@@ -6,6 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { ImproveTaskResult } from "@/lib/ai/types";
 import Link from "next/link";
 
@@ -26,6 +27,8 @@ export function TaskAiImprove({
   currentDescription,
   onApply,
 }: TaskAiImproveProps) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImproveTaskResult | null>(null);
@@ -53,15 +56,18 @@ export function TaskAiImprove({
         setImprovedTitle(data.title);
         setSelectedSubtasks(data.suggestedSubtasks.map(() => true));
       } else {
-        if (data.error && data.error.includes("Ajustes")) {
+        if (
+          data.error &&
+          (data.error.includes("Ajustes") || data.error.includes("Settings"))
+        ) {
           setNoApiKey(true);
         } else {
-          toast.error(data.error || "Error al mejorar la tarea con IA");
+          toast.error(data.error || t("improveError"));
           setOpen(false);
         }
       }
     } catch {
-      toast.error("Error de conexión al llamar a la IA");
+      toast.error(tCommon("connectionError"));
       setOpen(false);
     } finally {
       setLoading(false);
@@ -83,7 +89,7 @@ export function TaskAiImprove({
     await onApply(improvedTitle, result.description, accepted);
     setOpen(false);
     setResult(null);
-    toast.success("Mejoras de IA aplicadas a la tarjeta");
+    toast.success(t("aiApplied"));
   };
 
   if (!open) {
@@ -96,7 +102,7 @@ export function TaskAiImprove({
         className="gap-1.5 h-8 text-xs border-primary/30 text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
       >
         <Sparkles size={13} />
-        <span>Mejorar con IA</span>
+        <span>{t("improveWithAi")}</span>
       </Button>
     );
   }
@@ -109,7 +115,7 @@ export function TaskAiImprove({
             <Sparkles size={16} />
           </div>
           <h4 className="text-sm font-bold text-foreground">
-            Sugerencias de IA
+            {t("aiSuggestions")}
           </h4>
         </div>
         <Button
@@ -122,7 +128,7 @@ export function TaskAiImprove({
           className="h-7 px-2 text-xs text-muted-foreground"
         >
           <X size={14} />
-          <span>Cerrar</span>
+          <span>{tCommon("close")}</span>
         </Button>
       </div>
 
@@ -130,16 +136,16 @@ export function TaskAiImprove({
         <div className="flex flex-col items-center justify-center py-6 gap-2">
           <Loader2 className="animate-spin text-primary" size={24} />
           <p className="text-xs text-muted-foreground animate-pulse">
-            Consultando a tu modelo de IA configurado...
+            {t("aiConsulting")}
           </p>
         </div>
       ) : noApiKey ? (
         <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs space-y-2">
           <p className="font-semibold text-amber-700 dark:text-amber-400">
-            Clave de IA no configurada
+            {t("aiKeyMissing")}
           </p>
           <p className="text-muted-foreground">
-            Para usar las funciones de IA, debes registrar tu propia clave de API (OpenAI, Claude, Gemini, DeepSeek, Grok, Kimi) en los ajustes de tu cuenta.
+            {t("aiNeedsKey")}
           </p>
           <Link
             href="/dashboard/settings"
@@ -148,7 +154,7 @@ export function TaskAiImprove({
               className: "gap-1.5 mt-2 h-7 text-xs",
             })}
           >
-            <span>Ir a Ajustes</span>
+            <span>{t("goToSettings")}</span>
             <ArrowRight size={13} />
           </Link>
         </div>
@@ -157,7 +163,7 @@ export function TaskAiImprove({
           {/* Improved Title */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-muted-foreground">
-              Título mejorado
+              {t("improvedTitle")}
             </label>
             <Input
               value={improvedTitle}
@@ -170,7 +176,7 @@ export function TaskAiImprove({
           {result.description && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground">
-                Descripción enriquecida sugerida
+                {t("suggestedDescription")}
               </label>
               <div
                 className="p-3 rounded-lg border bg-background text-xs prose prose-xs dark:prose-invert max-w-none max-h-48 overflow-y-auto"
@@ -183,10 +189,12 @@ export function TaskAiImprove({
           {result.suggestedSubtasks.length > 0 && (
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground flex items-center justify-between">
-                <span>Subtareas sugeridas (desmarca para omitir)</span>
+                <span>{t("suggestedSubtasks")}</span>
                 <span className="text-[10px] text-muted-foreground font-normal">
-                  {selectedSubtasks.filter(Boolean).length}/
-                  {result.suggestedSubtasks.length} seleccionadas
+                  {t("selectedCount", {
+                    selected: selectedSubtasks.filter(Boolean).length,
+                    total: result.suggestedSubtasks.length,
+                  })}
                 </span>
               </label>
               <ul className="space-y-1.5">
@@ -223,7 +231,7 @@ export function TaskAiImprove({
               className="gap-1.5 h-8 text-xs font-semibold"
             >
               <Check size={13} />
-              <span>Aplicar cambios</span>
+              <span>{t("applyChanges")}</span>
             </Button>
             <Button
               variant="ghost"
@@ -234,7 +242,7 @@ export function TaskAiImprove({
               }}
               className="h-8 text-xs"
             >
-              Descartar
+              {t("discard")}
             </Button>
           </div>
         </div>
