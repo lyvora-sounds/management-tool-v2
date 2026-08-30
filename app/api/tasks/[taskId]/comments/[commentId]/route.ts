@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { isBoardAdmin } from "@/lib/boardAccess";
 
 export async function DELETE(
   _req: Request,
@@ -21,9 +22,12 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  // Puede borrar el autor, y también quien administra el board: moderar los
+  // comentarios entra en la gestión, no solo en la propiedad.
   const isAuthor = comment.userId === user.id;
-  const isBoardOwner = comment.task.list.board.userId === user.id;
-  if (!isAuthor && !isBoardOwner) {
+  const canModerate =
+    isAuthor || (await isBoardAdmin(user.id, comment.task.list.board.id));
+  if (!canModerate) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

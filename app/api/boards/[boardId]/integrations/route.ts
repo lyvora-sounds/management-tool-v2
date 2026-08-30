@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { hasBoardAccess, isBoardAdmin } from "@/lib/boardAccess";
 
 export async function GET(
   req: Request,
@@ -38,8 +38,15 @@ export async function PATCH(
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const hasAccess = await hasBoardAccess(userId, boardId);
-  if (!hasAccess) return NextResponse.json({ error: "Sin acceso" }, { status: 403 });
+  // Escribir aquí redirige los webhooks de Slack/Discord, es decir, a dónde
+  // se envía la actividad del board. No es cosa de cualquier miembro.
+  const admin = await isBoardAdmin(userId, boardId);
+  if (!admin) {
+    return NextResponse.json(
+      { error: "Solo los administradores pueden cambiar las integraciones" },
+      { status: 403 }
+    );
+  }
 
   const body = await req.json();
   const {

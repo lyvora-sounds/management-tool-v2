@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { isBoardOwner } from "@/lib/boardAccess";
+import { isBoardAdmin } from "@/lib/boardAccess";
 
 export async function PATCH(
   req: Request,
@@ -14,7 +14,7 @@ export async function PATCH(
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const owner = await isBoardOwner(user.id, boardId);
+  const owner = await isBoardAdmin(user.id, boardId);
   if (!owner) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { memberCanAssign } = await req.json();

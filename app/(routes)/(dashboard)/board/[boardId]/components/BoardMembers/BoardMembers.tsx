@@ -21,6 +21,9 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  // Gestionar el board es cosa de propietario y administradores; la propiedad
+  // en sí (traspasar, borrar) sigue siendo exclusiva del propietario.
+  const [canManage, setCanManage] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +39,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
         setMembers(data.members ?? []);
         setInvitations(data.invitations ?? []);
         setIsOwner(data.isOwner ?? false);
+        setCanManage(data.canManage ?? false);
       });
   }, [open, boardId]);
 
@@ -70,6 +74,21 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
       method: "DELETE",
     });
     if (!res.ok) setInvitations(prev);
+  };
+
+  const changeRole = async (memberId: string, role: string) => {
+    const prev = members;
+    setMembers((ms) => ms.map((m) => (m.id === memberId ? { ...m, role } : m)));
+    const res = await fetch(`/api/boards/${boardId}/members/${memberId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    if (!res.ok) {
+      setMembers(prev);
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "No se pudo cambiar el rol.");
+    }
   };
 
   const removeMember = async (memberId: string) => {
@@ -140,7 +159,11 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
               {/* Other Members */}
               {members.map((member) => (
                 <div key={member.id} className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition-colors">
-                  <UserCheck size={15} className="text-green-600 shrink-0" />
+                  {member.role === "admin" ? (
+                    <Shield size={15} className="text-blue-600 shrink-0" />
+                  ) : (
+                    <UserCheck size={15} className="text-green-600 shrink-0" />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{member.user.name ?? member.user.email}</p>
                     {member.user.name && (
