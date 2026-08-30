@@ -1,3 +1,5 @@
+import type { AppTranslator } from "@/lib/i18nFormat";
+
 export type LogParams = Record<string, string | number>;
 
 export type DecodedLog = {
@@ -29,9 +31,7 @@ export function decodeLogMessage(raw: string): DecodedLog | null {
   return parseLegacyLog(raw);
 }
 
-type Translate = (key: string, values?: LogParams) => string;
-
-export function formatLogMessage(raw: string, t: Translate): string {
+export function formatLogMessage(raw: string, t: AppTranslator): string {
   const decoded = decodeLogMessage(raw);
   if (!decoded) return raw;
   try {

@@ -1,8 +1,12 @@
 import { dateLocale, type Locale } from "@/i18n/routing";
 
-type Translate = (key: string, values?: Record<string, string | number | Date>) => string;
+/** Compatible with next-intl's `t()` when keys come from runtime strings. */
+export type AppTranslator = (
+  key: any,
+  values?: Record<string, string | number | Date>,
+) => string;
 
-export function formatRelativeTime(date: Date | string, t: Translate, locale: string): string {
+export function formatRelativeTime(date: Date | string, t: AppTranslator, locale: string): string {
   const diffMs = Date.now() - new Date(date).getTime();
   const diffMin = Math.floor(diffMs / 60000);
   if (diffMin < 1) return t("relative.justNow");
@@ -20,7 +24,7 @@ export function formatRelativeTime(date: Date | string, t: Translate, locale: st
 
 export function formatDueDate(
   date: Date | string,
-  t: Translate,
+  t: AppTranslator,
   locale: string,
 ): {
   label: string;
