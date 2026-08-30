@@ -18,6 +18,9 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  // Gestionar el board es cosa de propietario y administradores; la propiedad
+  // en sí (traspasar, borrar) sigue siendo exclusiva del propietario.
+  const [canManage, setCanManage] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +36,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
         setMembers(data.members ?? []);
         setInvitations(data.invitations ?? []);
         setIsOwner(data.isOwner ?? false);
+        setCanManage(data.canManage ?? false);
       });
   }, [open, boardId]);
 
@@ -69,6 +73,21 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
     if (!res.ok) setInvitations(prev);
   };
 
+  const changeRole = async (memberId: string, role: string) => {
+    const prev = members;
+    setMembers((ms) => ms.map((m) => (m.id === memberId ? { ...m, role } : m)));
+    const res = await fetch(`/api/boards/${boardId}/members/${memberId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    if (!res.ok) {
+      setMembers(prev);
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "No se pudo cambiar el rol.");
+    }
+  };
+
   const removeMember = async (memberId: string) => {
     const res = await fetch(`/api/boards/${boardId}/members/${memberId}`, {
       method: "DELETE",
@@ -91,8 +110,8 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
         </DialogHeader>
 
         <div className="flex flex-col gap-5">
-          {/* Invite form — owner only */}
-          {isOwner && <div className="flex flex-col gap-2">
+          {/* Invite form — propietario y administradores */}
+          {canManage && <div className="flex flex-col gap-2">
             <p className="text-sm font-medium">Invitar por email</p>
             <div className="flex gap-2">
               <input
@@ -129,7 +148,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                     )}
                   </div>
                   <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-semibold shrink-0">
-                    Admin
+                    Propietario
                   </Badge>
                 </div>
               )}
@@ -137,17 +156,36 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
               {/* Other Members */}
               {members.map((member) => (
                 <div key={member.id} className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition-colors">
-                  <UserCheck size={15} className="text-green-600 shrink-0" />
+                  {member.role === "admin" ? (
+                    <Shield size={15} className="text-blue-600 shrink-0" />
+                  ) : (
+                    <UserCheck size={15} className="text-green-600 shrink-0" />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{member.user.name ?? member.user.email}</p>
                     {member.user.name && (
                       <p className="text-xs text-muted-foreground truncate">{member.user.email}</p>
                     )}
                   </div>
-                  <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
-                    Miembro
-                  </Badge>
-                  {isOwner && (
+
+                  {canManage ? (
+                    <select
+                      value={member.role === "admin" ? "admin" : "member"}
+                      onChange={(e) => changeRole(member.id, e.target.value)}
+                      className="shrink-0 rounded-md border bg-transparent px-1.5 py-0.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      aria-label={`Rol de ${member.user.name ?? member.user.email}`}
+                    >
+                      <option value="member">Miembro</option>
+                      <option value="admin">Administrador</option>
+                    </select>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
+                      {member.role === "admin" ? "Administrador" : "Miembro"}
+                    </Badge>
+                  )}
+
+                  {/* Un admin no puede echar a otro admin: eso es del propietario. */}
+                  {(isOwner || (canManage && member.role !== "admin")) && (
                     <button
                       onClick={() => setConfirmMember(member)}
                       className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all cursor-pointer p-1"

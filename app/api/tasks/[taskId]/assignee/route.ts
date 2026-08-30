@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess, isBoardOwner } from "@/lib/boardAccess";
+import { hasBoardAccess, isBoardAdmin } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 
 export async function POST(
@@ -22,12 +22,13 @@ export async function POST(
   if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const boardId = task.list.board.id;
-  const isOwner = await isBoardOwner(user.id, boardId);
+  // Los administradores asignan siempre; los miembros solo si el board lo permite.
+  const canManage = await isBoardAdmin(user.id, boardId);
   const hasAccess = await hasBoardAccess(user.id, boardId);
 
   if (!hasAccess) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  if (!isOwner && !task.list.board.memberCanAssign) {
+  if (!canManage && !task.list.board.memberCanAssign) {
     return NextResponse.json({ error: "Sin permiso para asignar tareas" }, { status: 403 });
   }
 
