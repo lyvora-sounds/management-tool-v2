@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 320" width="100%" height="100%">
+  <rect width="1080" height="320" fill="#ffffff"/>
+  <defs>
+    <marker id="inv-arrow-cyan" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#0284c7"/>
+    </marker>
+    <marker id="inv-arrow-indigo" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#6366f1"/>
+    </marker>
+    <marker id="inv-arrow-emerald" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <text x="32" y="28" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Invite a collaborator</text>
+  <text x="1048" y="28" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Owner or admin · 7-day token</text>
+
+  <rect x="32" y="48" width="220" height="236" rx="14" fill="#faf5ff" stroke="#9333ea" stroke-width="2.5"/>
+  <g transform="translate(52, 70)" fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round">
+    <rect x="4" y="8" width="24" height="16" rx="2"/>
+    <path d="M4 8 l12 9 12-9"/>
+  </g>
+  <text x="52" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Send invite</text>
+  <text x="52" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">POST /api/boards/</text>
+  <text x="52" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">[id]/invitations</text>
+  <text x="52" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">email + unique token</text>
+  <path d="M32 248 H252 V270 Q252 284 238 284 H46 Q32 284 32 270 Z" fill="#0f172a"/>
+  <text x="142" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">ADMIN</text>
+
+  <line x1="252" y1="148" x2="304" y2="148" stroke="#0284c7" stroke-width="2.5" marker-end="url(#inv-arrow-cyan)"/>
+  <rect x="248" y="134" width="60" height="28" rx="12" fill="#0284c7"/>
+  <text x="278" y="152" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff">EMAIL</text>
+
+  <rect x="312" y="48" width="220" height="236" rx="14" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5"/>
+  <g transform="translate(332, 70)" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round">
+    <path d="M8 18 h18 a8 8 0 0 0 0-16 10 10 0 0 0-18 4 7 7 0 0 0-2 12 z"/>
+  </g>
+  <text x="332" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Resend</text>
+  <text x="332" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Mail from</text>
+  <text x="332" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">no-reply@kikiboard.xyz</text>
+  <text x="332" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">with /invite/[token]</text>
+  <path d="M312 248 H532 V270 Q532 284 518 284 H326 Q312 284 312 270 Z" fill="#0f172a"/>
+  <text x="422" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">DELIVERY</text>
+
+  <line x1="532" y1="148" x2="584" y2="148" stroke="#6366f1" stroke-width="2.5" marker-end="url(#inv-arrow-indigo)"/>
+  <rect x="528" y="134" width="60" height="28" rx="12" fill="#6366f1"/>
+  <text x="558" y="152" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff">OPEN</text>
+
+  <rect x="592" y="48" width="220" height="236" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
+  <g transform="translate(612, 70)" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round">
+    <rect x="6" y="4" width="20" height="24" rx="3"/>
+    <circle cx="16" cy="14" r="3"/>
+    <path d="M16 17 v4"/>
+  </g>
+  <text x="612" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Accept page</text>
+  <text x="612" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Must be signed in</text>
+  <text x="612" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">as the invited email.</text>
+  <text x="612" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Rejects used/expired</text>
+  <path d="M592 248 H812 V270 Q812 284 798 284 H606 Q592 284 592 270 Z" fill="#0f172a"/>
+  <text x="702" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">GATE</text>
+
+  <line x1="812" y1="148" x2="864" y2="148" stroke="#10b981" stroke-width="2.5" marker-end="url(#inv-arrow-emerald)"/>
+  <rect x="821" y="134" width="74" height="28" rx="12" fill="#10b981"/>
+  <text x="858" y="152" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff">JOIN</text>
+
+  <rect x="872" y="48" width="176" height="236" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5"/>
+  <g transform="translate(892, 70)" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round">
+    <circle cx="11" cy="12" r="5"/>
+    <circle cx="22" cy="12" r="5"/>
+    <path d="M4 26 c1-6 5-9 9-9 m6 0 c4 0 8 3 9 9"/>
+  </g>
+  <text x="892" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">BoardMember</text>
+  <text x="892" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Upsert member,</text>
+  <text x="892" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">mark invitation</text>
+  <text x="892" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">accepted, open board</text>
+  <path d="M872 248 H1048 V270 Q1048 284 1034 284 H886 Q872 284 872 270 Z" fill="#0f172a"/>
+  <text x="960" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">MEMBER</text>
+</svg>

@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 320" width="100%" height="100%">
+  <rect width="1080" height="320" fill="#ffffff"/>
+  <defs>
+    <marker id="col-arrow-cyan" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#0284c7"/>
+    </marker>
+    <marker id="col-arrow-indigo" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#6366f1"/>
+    </marker>
+    <marker id="col-arrow-emerald" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <text x="32" y="28" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a">People, comments, notifications</text>
+  <text x="1048" y="28" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Unread poll every 30s</text>
+
+  <rect x="32" y="48" width="220" height="236" rx="14" fill="#faf5ff" stroke="#9333ea" stroke-width="2.5"/>
+  <g transform="translate(52, 70)" fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round">
+    <circle cx="16" cy="10" r="6"/>
+    <path d="M5 28 c1.5-7 6-11 11-11 s9.5 4 11 11"/>
+  </g>
+  <text x="52" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Assign people</text>
+  <text x="52" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Assignee, QA, and</text>
+  <text x="52" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">collaborators.</text>
+  <text x="52" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Skips self-notify</text>
+  <path d="M32 248 H252 V270 Q252 284 238 284 H46 Q32 284 32 270 Z" fill="#0f172a"/>
+  <text x="142" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">PEOPLE</text>
+
+  <line x1="252" y1="148" x2="304" y2="148" stroke="#0284c7" stroke-width="2.5" marker-end="url(#col-arrow-cyan)"/>
+  <rect x="241" y="134" width="74" height="28" rx="12" fill="#0284c7"/>
+  <text x="278" y="152" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff">COMMENT</text>
+
+  <rect x="312" y="48" width="220" height="236" rx="14" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5"/>
+  <g transform="translate(332, 70)" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round">
+    <path d="M6 8 h20 a4 4 0 0 1 4 4 v8 a4 4 0 0 1-4 4 H14 l-8 6 v-6 H6 a4 4 0 0 1-4-4 v-8 a4 4 0 0 1 4-4 z"/>
+  </g>
+  <text x="332" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Comment</text>
+  <text x="332" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Tiptap rich text.</text>
+  <text x="332" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Notifies assignee,</text>
+  <text x="332" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">QA, collaborators</text>
+  <path d="M312 248 H532 V270 Q532 284 518 284 H326 Q312 284 312 270 Z" fill="#0f172a"/>
+  <text x="422" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">THREAD</text>
+
+  <line x1="532" y1="148" x2="584" y2="148" stroke="#6366f1" stroke-width="2.5" marker-end="url(#col-arrow-indigo)"/>
+  <rect x="521" y="134" width="74" height="28" rx="12" fill="#6366f1"/>
+  <text x="558" y="152" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff">NOTIFY</text>
+
+  <rect x="592" y="48" width="220" height="236" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
+  <g transform="translate(612, 70)" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round">
+    <path d="M10 20 a6 6 0 0 1 12 0"/>
+    <path d="M8 14 a8 8 0 0 1 16 0 v6 H8 z"/>
+    <path d="M16 4 v3"/>
+  </g>
+  <text x="612" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Notification row</text>
+  <text x="612" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">type assigned |</text>
+  <text x="612" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">comment, with boardId</text>
+  <text x="612" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">and taskId</text>
+  <path d="M592 248 H812 V270 Q812 284 798 284 H606 Q592 284 592 270 Z" fill="#0f172a"/>
+  <text x="702" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">INBOX</text>
+
+  <line x1="812" y1="148" x2="864" y2="148" stroke="#10b981" stroke-width="2.5" marker-end="url(#col-arrow-emerald)"/>
+  <rect x="828" y="134" width="60" height="28" rx="12" fill="#10b981"/>
+  <text x="858" y="152" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff">POLL</text>
+
+  <rect x="872" y="48" width="176" height="236" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5"/>
+  <g transform="translate(892, 70)" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round">
+    <circle cx="16" cy="16" r="12"/>
+    <path d="M16 8 v8 l5 3"/>
+  </g>
+  <text x="892" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Badge</text>
+  <text x="892" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">GET unread (50),</text>
+  <text x="892" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">30s + on focus,</text>
+  <text x="892" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">mark one / all read</text>
+  <path d="M872 248 H1048 V270 Q1048 284 1034 284 H886 Q872 284 872 270 Z" fill="#0f172a"/>
+  <text x="960" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">UI</text>
+</svg>
