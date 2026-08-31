@@ -1,79 +1,67 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 320" width="100%" height="100%">
-  <rect width="1080" height="320" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" width="100%" height="100%">
+  <rect width="1080" height="360" fill="#F7F7F7"/>
   <defs>
-    <marker id="wh-arrow-cyan" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
-      <polygon points="0,0 8,4 0,8" fill="#0284c7"/>
-    </marker>
-    <marker id="wh-arrow-indigo" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
-      <polygon points="0,0 8,4 0,8" fill="#6366f1"/>
-    </marker>
-    <marker id="wh-arrow-emerald" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
-      <polygon points="0,0 8,4 0,8" fill="#10b981"/>
+    <marker id="whTipGold" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#D3A05B" fill-opacity="0.85"/>
     </marker>
   </defs>
 
-  <text x="32" y="28" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Clerk → Neon identity sync</text>
-  <text x="1048" y="28" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Public route · Svix signature</text>
+  <rect x="32" y="28" width="1" height="16" fill="#D3A05B"/>
+  <text x="42" y="41" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">WEBHOOK</text>
+  <text x="1048" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">Public route · Svix signature</text>
+  <text x="32" y="76" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" letter-spacing="-0.025em">
+    <tspan fill="#13233C">Clerk to Neon </tspan><tspan fill="#D3A05B">sync</tspan>
+  </text>
+  <rect x="32" y="90" width="40" height="2" fill="#D3A05B"/>
 
-  <rect x="32" y="48" width="220" height="236" rx="14" fill="#faf5ff" stroke="#9333ea" stroke-width="2.5"/>
-  <g transform="translate(52, 70)" fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round">
+  <rect x="32" y="120" width="200" height="200" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(52, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
     <path d="M8 18 h18 a8 8 0 0 0 0-16 10 10 0 0 0-18 4 7 7 0 0 0-2 12 z"/>
   </g>
-  <text x="52" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Clerk event</text>
-  <text x="52" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">user.updated or</text>
-  <text x="52" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">user.deleted posted</text>
-  <text x="52" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">to /api/webhooks/clerk</text>
-  <path d="M32 248 H252 V270 Q252 284 238 284 H46 Q32 284 32 270 Z" fill="#0f172a"/>
-  <text x="142" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">WEBHOOK</text>
+  <text x="52" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Clerk event</text>
+  <text x="52" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">user.updated or</text>
+  <text x="52" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">user.deleted posted</text>
+  <text x="52" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">to /api/webhooks/clerk</text>
 
-  <line x1="252" y1="148" x2="304" y2="148" stroke="#0284c7" stroke-width="2.5" marker-end="url(#wh-arrow-cyan)"/>
-  <rect x="241" y="134" width="74" height="28" rx="12" fill="#0284c7"/>
-  <text x="278" y="152" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff">VERIFY</text>
+  <line x1="232" y1="220" x2="296" y2="220" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#whTipGold)"/>
+  <text x="264" y="210" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">VERIFY</text>
 
-  <rect x="312" y="48" width="220" height="236" rx="14" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5"/>
-  <g transform="translate(332, 70)" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round">
+  <rect x="304" y="120" width="200" height="200" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(324, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
     <path d="M16 4 l10 4 v8 c0 7-4.5 11-10 13 C10 27 6 23 6 16 V8 z"/>
     <line x1="16" y1="12" x2="16" y2="18"/>
-    <circle cx="16" cy="21" r="1.2" fill="#0284c7" stroke="none"/>
+    <circle cx="16" cy="21" r="1.2"/>
   </g>
-  <text x="332" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Svix</text>
-  <text x="332" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Checks svix-id,</text>
-  <text x="332" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">timestamp, and</text>
-  <text x="332" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">signature headers</text>
-  <path d="M312 248 H532 V270 Q532 284 518 284 H326 Q312 284 312 270 Z" fill="#0f172a"/>
-  <text x="422" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">AUTH</text>
+  <text x="324" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Svix</text>
+  <text x="324" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Checks svix-id,</text>
+  <text x="324" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">timestamp, and</text>
+  <text x="324" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">signature headers</text>
 
-  <line x1="532" y1="148" x2="584" y2="148" stroke="#6366f1" stroke-width="2.5" marker-end="url(#wh-arrow-indigo)"/>
-  <rect x="521" y="134" width="74" height="28" rx="12" fill="#6366f1"/>
-  <text x="558" y="152" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff">BRANCH</text>
+  <line x1="504" y1="220" x2="568" y2="220" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#whTipGold)"/>
+  <text x="536" y="210" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">BRANCH</text>
 
-  <rect x="592" y="48" width="220" height="236" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
-  <g transform="translate(612, 68)" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="576" y="120" width="200" height="200" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(596, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="10" cy="10" r="6"/>
     <circle cx="22" cy="22" r="6"/>
     <path d="M14.5 14.5 L17.5 17.5"/>
   </g>
-  <text x="612" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Event type</text>
-  <text x="612" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">updated → name/email</text>
-  <text x="612" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">deleted → drop User</text>
-  <text x="612" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">row by clerkId</text>
-  <path d="M592 248 H812 V270 Q812 284 798 284 H606 Q592 284 592 270 Z" fill="#0f172a"/>
-  <text x="702" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">DISPATCH</text>
+  <text x="596" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Event type</text>
+  <text x="596" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">updated → name/email</text>
+  <text x="596" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">deleted → drop User</text>
+  <text x="596" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">row by clerkId</text>
 
-  <line x1="812" y1="148" x2="864" y2="148" stroke="#10b981" stroke-width="2.5" marker-end="url(#wh-arrow-emerald)"/>
-  <rect x="828" y="134" width="60" height="28" rx="12" fill="#10b981"/>
-  <text x="858" y="152" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#ffffff">WRITE</text>
+  <line x1="776" y1="220" x2="840" y2="220" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#whTipGold)"/>
+  <text x="808" y="210" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">WRITE</text>
 
-  <rect x="872" y="48" width="176" height="236" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5"/>
-  <g transform="translate(892, 70)" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round">
+  <rect x="848" y="120" width="200" height="200" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(868, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
     <ellipse cx="16" cy="9" rx="11" ry="4"/>
     <path d="M5 9 v14 c0 2.4 22 2.4 22 0 V9"/>
     <path d="M5 16 c0 2.2 22 2.2 22 0"/>
   </g>
-  <text x="892" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">User row</text>
-  <text x="892" y="144" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Cascade deletes</text>
-  <text x="892" y="160" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">owned boards on</text>
-  <text x="892" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">account removal</text>
-  <path d="M872 248 H1048 V270 Q1048 284 1034 284 H886 Q872 284 872 270 Z" fill="#0f172a"/>
-  <text x="960" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="0.08em" fill="#ffffff">POSTGRES</text>
+  <text x="868" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">User row</text>
+  <text x="868" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Cascade deletes</text>
+  <text x="868" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">owned boards on</text>
+  <text x="868" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">account removal</text>
 </svg>

@@ -1,79 +1,89 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 460" width="100%" height="100%">
-  <rect width="1000" height="460" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 480" width="100%" height="100%">
+  <rect width="1080" height="480" fill="#F7F7F7"/>
   <defs>
-    <marker id="dm-arrow-slate" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
-      <polygon points="0,0 8,4 0,8" fill="#94a3b8"/>
+    <marker id="dmTipGold" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#D3A05B" fill-opacity="0.85"/>
     </marker>
   </defs>
 
-  <text x="32" y="28" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Core data model</text>
-  <text x="968" y="28" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Owner lives on Board.userId</text>
+  <rect x="32" y="28" width="1" height="16" fill="#D3A05B"/>
+  <text x="42" y="41" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">DATA MODEL</text>
+  <text x="1048" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">Owner lives on Board.userId</text>
+  <text x="32" y="76" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" letter-spacing="-0.025em">
+    <tspan fill="#13233C">Core data </tspan><tspan fill="#D3A05B">model</tspan>
+  </text>
+  <rect x="32" y="90" width="40" height="2" fill="#D3A05B"/>
 
-  <rect x="32" y="52" width="220" height="150" rx="14" fill="#faf5ff" stroke="#9333ea" stroke-width="2.5"/>
-  <g transform="translate(52, 68)" fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round">
+  <rect x="32" y="120" width="200" height="150" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(52, 136)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
     <circle cx="16" cy="10" r="6"/>
     <path d="M5 28 c1.5-7 6-11 11-11 s9.5 4 11 11"/>
   </g>
-  <text x="52" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">User</text>
-  <text x="52" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">clerkId · email · name</text>
-  <text x="52" y="156" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">settings · calendarSync</text>
-  <text x="52" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">notifications</text>
+  <text x="52" y="186" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">User</text>
+  <text x="52" y="210" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">clerkId · email · name</text>
+  <text x="52" y="230" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">settings · calendarSync</text>
+  <text x="52" y="250" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">notifications</text>
 
-  <rect x="292" y="52" width="220" height="150" rx="14" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5"/>
-  <g transform="translate(312, 68)" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round">
+  <line x1="232" y1="195" x2="296" y2="195" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#dmTipGold)"/>
+  <text x="264" y="185" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">OWNS</text>
+
+  <rect x="304" y="120" width="200" height="150" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(324, 136)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
     <rect x="4" y="6" width="24" height="20" rx="3"/>
     <path d="M8 12 h16"/>
   </g>
-  <text x="312" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Board</text>
-  <text x="312" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">owner userId</text>
-  <text x="312" y="156" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">members · invitations</text>
-  <text x="312" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">labels · epics · fields</text>
+  <text x="324" y="186" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Board</text>
+  <text x="324" y="210" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">owner userId</text>
+  <text x="324" y="230" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">members · invitations</text>
+  <text x="324" y="250" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">labels · epics · fields</text>
 
-  <rect x="552" y="52" width="200" height="150" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
-  <g transform="translate(572, 68)" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round">
+  <line x1="504" y1="195" x2="568" y2="195" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#dmTipGold)"/>
+  <text x="536" y="185" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">HAS</text>
+
+  <rect x="576" y="120" width="200" height="150" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(596, 136)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
     <rect x="4" y="6" width="12" height="20" rx="2"/>
     <rect x="20" y="6" width="12" height="20" rx="2"/>
   </g>
-  <text x="572" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">List</text>
-  <text x="572" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">title · order</text>
-  <text x="572" y="156" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Kanban column</text>
-  <text x="572" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Done title → complete</text>
+  <text x="596" y="186" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">List</text>
+  <text x="596" y="210" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">title · order</text>
+  <text x="596" y="230" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Kanban column</text>
+  <text x="596" y="250" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Done title → complete</text>
 
-  <rect x="792" y="52" width="176" height="150" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5"/>
-  <g transform="translate(812, 68)" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round">
+  <line x1="776" y1="195" x2="840" y2="195" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#dmTipGold)"/>
+  <text x="808" y="185" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">HOLDS</text>
+
+  <rect x="848" y="120" width="200" height="150" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(868, 136)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
     <rect x="6" y="4" width="20" height="24" rx="3"/>
     <path d="M11 12 h10"/>
   </g>
-  <text x="812" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Task</text>
-  <text x="812" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">assignee · QA</text>
-  <text x="812" y="156" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">epic · shareToken</text>
-  <text x="812" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">archived · dates</text>
+  <text x="868" y="186" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Task</text>
+  <text x="868" y="210" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">assignee · QA</text>
+  <text x="868" y="230" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">epic · shareToken</text>
+  <text x="868" y="250" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">archived · dates</text>
 
-  <line x1="252" y1="127" x2="284" y2="127" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#dm-arrow-slate)"/>
-  <line x1="512" y1="127" x2="544" y2="127" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#dm-arrow-slate)"/>
-  <line x1="752" y1="127" x2="784" y2="127" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#dm-arrow-slate)"/>
+  <rect x="32" y="296" width="200" height="152" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="52" y="328" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">On a task</text>
+  <text x="52" y="354" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Subtask checklist</text>
+  <text x="52" y="374" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Comment thread</text>
+  <text x="52" y="394" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Attachment (Blob)</text>
+  <text x="52" y="414" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">TaskLabel · CustomValue</text>
+  <text x="52" y="434" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">TaskCollaborator</text>
 
-  <rect x="32" y="236" width="220" height="188" rx="14" fill="#faf5ff" stroke="#9333ea" stroke-width="2.5"/>
-  <text x="52" y="268" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">On a task</text>
-  <text x="52" y="294" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Subtask checklist</text>
-  <text x="52" y="316" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Comment thread</text>
-  <text x="52" y="338" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Attachment (Blob)</text>
-  <text x="52" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">TaskLabel · CustomValue</text>
-  <text x="52" y="382" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">TaskCollaborator</text>
+  <rect x="304" y="296" width="200" height="152" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="324" y="328" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">On a board</text>
+  <text x="324" y="354" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">BoardMember.role</text>
+  <text x="324" y="374" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Invitation token</text>
+  <text x="324" y="394" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">ActivityLog (last 100)</text>
+  <text x="324" y="414" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Label · Epic · CustomField</text>
+  <text x="324" y="434" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Slack / Discord URLs</text>
 
-  <rect x="292" y="236" width="220" height="188" rx="14" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5"/>
-  <text x="312" y="268" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">On a board</text>
-  <text x="312" y="294" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">BoardMember.role</text>
-  <text x="312" y="316" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Invitation token</text>
-  <text x="312" y="338" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">ActivityLog (last 100)</text>
-  <text x="312" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Label · Epic · CustomField</text>
-  <text x="312" y="382" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Slack / Discord URLs</text>
-
-  <rect x="552" y="236" width="416" height="188" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
-  <text x="572" y="268" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Task people</text>
-  <text x="572" y="294" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">assigneeId — primary owner of the work</text>
-  <text x="572" y="316" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">qaId — reviewer</text>
-  <text x="572" y="338" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">collaborators — extra watchers (notified on comments)</text>
-  <text x="572" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">completedById — who ticked it done</text>
-  <text x="572" y="382" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Assigning is gated by admin or memberCanAssign</text>
+  <rect x="576" y="296" width="472" height="152" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="596" y="328" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Task people</text>
+  <text x="596" y="354" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">assigneeId — primary owner of the work</text>
+  <text x="596" y="374" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">qaId — reviewer</text>
+  <text x="596" y="394" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">collaborators — extra watchers (notified on comments)</text>
+  <text x="596" y="414" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">completedById — who ticked it done</text>
+  <text x="596" y="434" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Assigning is gated by admin or memberCanAssign</text>
 </svg>
