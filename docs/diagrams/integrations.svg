@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 430" width="100%" height="100%">
+  <rect width="1000" height="430" fill="#ffffff"/>
+  <defs>
+    <marker id="int-arrow-cyan" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <text x="32" y="28" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Outbound integrations</text>
+  <text x="968" y="28" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Board webhooks · user OAuth · MCP</text>
+
+  <rect x="32" y="48" width="320" height="350" rx="14" fill="#faf5ff" stroke="#9333ea" stroke-width="2.5"/>
+  <text x="52" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Channels</text>
+
+  <g transform="translate(52, 108)">
+    <g fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round">
+      <path d="M8 18 h18 a8 8 0 0 0 0-16 10 10 0 0 0-18 4 7 7 0 0 0-2 12 z"/>
+    </g>
+    <text x="48" y="14" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" fill="#0f172a">Slack webhook</text>
+    <text x="48" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Board.slackWebhookUrl</text>
+  </g>
+  <g transform="translate(52, 168)">
+    <g fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round">
+      <circle cx="16" cy="16" r="11"/>
+      <circle cx="16" cy="16" r="4"/>
+    </g>
+    <text x="48" y="14" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" fill="#0f172a">Discord webhook</text>
+    <text x="48" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Colored embeds per event</text>
+  </g>
+  <g transform="translate(52, 228)">
+    <g fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round">
+      <rect x="6" y="6" width="20" height="20" rx="3"/>
+      <path d="M10 14 h12 M14 10 v12"/>
+    </g>
+    <text x="48" y="14" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" fill="#0f172a">Google Calendar</text>
+    <text x="48" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">OAuth · encrypted tokens</text>
+  </g>
+  <g transform="translate(52, 288)">
+    <g fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round">
+      <circle cx="10" cy="16" r="5"/>
+      <line x1="15" y1="16" x2="28" y2="16"/>
+      <line x1="24" y1="16" x2="24" y2="21"/>
+      <line x1="27" y1="16" x2="27" y2="20"/>
+    </g>
+    <text x="48" y="14" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" fill="#0f172a">Public share + MCP</text>
+    <text x="48" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">shareToken page · AI tools</text>
+  </g>
+
+  <rect x="384" y="48" width="584" height="100" rx="14" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5"/>
+  <text x="404" y="82" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Task event → chat</text>
+  <text x="404" y="104" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">sendBoardWebhookNotification on create / complete / move. Each event has a board-level toggle</text>
+  <text x="404" y="122" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">(notifyOnTaskCreated default on, moved default off).</text>
+
+  <rect x="384" y="168" width="584" height="100" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
+  <text x="404" y="202" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Due date → Google Calendar</text>
+  <text x="404" y="224" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">/api/integrations/google-calendar/auth → Google consent → callback stores encrypted tokens.</text>
+  <text x="404" y="242" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">syncTaskToGoogleCalendar writes an all-day [Kikiboard] event and saves googleEventId.</text>
+
+  <rect x="384" y="288" width="584" height="110" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5"/>
+  <text x="404" y="322" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Share links and MCP</text>
+  <text x="404" y="344" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">POST /api/tasks/[id]/share mints a UUID token. /share/task/[token] is public (no Clerk).</text>
+  <text x="404" y="362" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">mcp/server.ts talks to the same HTTP APIs: list/create/update tasks, brain dump, archive, epics.</text>
+  <text x="404" y="380" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">DELETE share clears the token and revokes the public page.</text>
+</svg>

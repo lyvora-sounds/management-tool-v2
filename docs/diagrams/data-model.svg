@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 460" width="100%" height="100%">
+  <rect width="1000" height="460" fill="#ffffff"/>
+  <defs>
+    <marker id="dm-arrow-slate" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <text x="32" y="28" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Core data model</text>
+  <text x="968" y="28" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Owner lives on Board.userId</text>
+
+  <rect x="32" y="52" width="220" height="150" rx="14" fill="#faf5ff" stroke="#9333ea" stroke-width="2.5"/>
+  <g transform="translate(52, 68)" fill="none" stroke="#9333ea" stroke-width="1.8" stroke-linecap="round">
+    <circle cx="16" cy="10" r="6"/>
+    <path d="M5 28 c1.5-7 6-11 11-11 s9.5 4 11 11"/>
+  </g>
+  <text x="52" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">User</text>
+  <text x="52" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">clerkId · email · name</text>
+  <text x="52" y="156" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">settings · calendarSync</text>
+  <text x="52" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">notifications</text>
+
+  <rect x="292" y="52" width="220" height="150" rx="14" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5"/>
+  <g transform="translate(312, 68)" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round">
+    <rect x="4" y="6" width="24" height="20" rx="3"/>
+    <path d="M8 12 h16"/>
+  </g>
+  <text x="312" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Board</text>
+  <text x="312" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">owner userId</text>
+  <text x="312" y="156" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">members · invitations</text>
+  <text x="312" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">labels · epics · fields</text>
+
+  <rect x="552" y="52" width="200" height="150" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
+  <g transform="translate(572, 68)" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round">
+    <rect x="4" y="6" width="12" height="20" rx="2"/>
+    <rect x="20" y="6" width="12" height="20" rx="2"/>
+  </g>
+  <text x="572" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">List</text>
+  <text x="572" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">title · order</text>
+  <text x="572" y="156" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Kanban column</text>
+  <text x="572" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">Done title → complete</text>
+
+  <rect x="792" y="52" width="176" height="150" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="2.5"/>
+  <g transform="translate(812, 68)" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round">
+    <rect x="6" y="4" width="20" height="24" rx="3"/>
+    <path d="M11 12 h10"/>
+  </g>
+  <text x="812" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Task</text>
+  <text x="812" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">assignee · QA</text>
+  <text x="812" y="156" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">epic · shareToken</text>
+  <text x="812" y="174" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#64748b">archived · dates</text>
+
+  <line x1="252" y1="127" x2="284" y2="127" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#dm-arrow-slate)"/>
+  <line x1="512" y1="127" x2="544" y2="127" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#dm-arrow-slate)"/>
+  <line x1="752" y1="127" x2="784" y2="127" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#dm-arrow-slate)"/>
+
+  <rect x="32" y="236" width="220" height="188" rx="14" fill="#faf5ff" stroke="#9333ea" stroke-width="2.5"/>
+  <text x="52" y="268" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">On a task</text>
+  <text x="52" y="294" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Subtask checklist</text>
+  <text x="52" y="316" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Comment thread</text>
+  <text x="52" y="338" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Attachment (Blob)</text>
+  <text x="52" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">TaskLabel · CustomValue</text>
+  <text x="52" y="382" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">TaskCollaborator</text>
+
+  <rect x="292" y="236" width="220" height="188" rx="14" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5"/>
+  <text x="312" y="268" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">On a board</text>
+  <text x="312" y="294" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">BoardMember.role</text>
+  <text x="312" y="316" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Invitation token</text>
+  <text x="312" y="338" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">ActivityLog (last 100)</text>
+  <text x="312" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Label · Epic · CustomField</text>
+  <text x="312" y="382" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Slack / Discord URLs</text>
+
+  <rect x="552" y="236" width="416" height="188" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
+  <text x="572" y="268" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" fill="#0f172a">Task people</text>
+  <text x="572" y="294" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">assigneeId — primary owner of the work</text>
+  <text x="572" y="316" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">qaId — reviewer</text>
+  <text x="572" y="338" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">collaborators — extra watchers (notified on comments)</text>
+  <text x="572" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">completedById — who ticked it done</text>
+  <text x="572" y="382" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#0f172a">Assigning is gated by admin or memberCanAssign</text>
+</svg>
