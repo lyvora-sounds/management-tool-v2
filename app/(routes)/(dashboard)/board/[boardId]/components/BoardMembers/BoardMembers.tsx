@@ -87,7 +87,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
     if (!res.ok) {
       setMembers(prev);
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "No se pudo cambiar el rol.");
+      setError(data.error ?? t("roleChangeError"));
     }
   };
 
@@ -113,8 +113,8 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
         </DialogHeader>
 
         <div className="flex flex-col gap-5">
-          {/* Invite form — owner only */}
-          {isOwner && <div className="flex flex-col gap-2">
+          {/* Invite form — propietario y administradores */}
+          {canManage && <div className="flex flex-col gap-2">
             <p className="text-sm font-medium">{t("inviteByEmail")}</p>
             <div className="flex gap-2">
               <input
@@ -129,9 +129,12 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                 {loading ? "..." : t("invite")}
               </Button>
             </div>
-            {error && <p className="text-xs text-destructive">{error}</p>}
             {success && <p className="text-xs text-green-600">{t("inviteSent")}</p>}
           </div>}
+
+          {/* Fuera del formulario: cambiar rol y expulsar también fallan, y sus
+              errores quedaban invisibles para quien no ve el bloque de invitar. */}
+          {error && <p className="text-xs text-destructive">{error}</p>}
 
           {/* Members (Including Admin/Owner) */}
           {(owner || members.length > 0) && (
@@ -151,15 +154,22 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                     )}
                   </div>
                   <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-semibold shrink-0">
-                    {t("admin")}
+                    {t("owner")}
                   </Badge>
                 </div>
               )}
 
               {/* Other Members */}
-              {members.map((member) => (
+              {members.map((member) => {
+                const isAdmin = member.role === "admin";
+                // Un admin no puede tocar a otro admin —ni degradarlo ni
+                // echarlo—: eso queda para el propietario. Es la misma regla
+                // que aplican PATCH y DELETE de members/[memberId].
+                const canEditMember = isOwner || (canManage && !isAdmin);
+
+                return (
                 <div key={member.id} className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition-colors">
-                  {member.role === "admin" ? (
+                  {isAdmin ? (
                     <Shield size={15} className="text-blue-600 shrink-0" />
                   ) : (
                     <UserCheck size={15} className="text-green-600 shrink-0" />
@@ -170,10 +180,26 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                       <p className="text-xs text-muted-foreground truncate">{member.user.email}</p>
                     )}
                   </div>
-                  <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
-                    {t("member")}
-                  </Badge>
-                  {isOwner && (
+
+                  {canEditMember ? (
+                    <select
+                      value={isAdmin ? "admin" : "member"}
+                      onChange={(e) => changeRole(member.id, e.target.value)}
+                      className="shrink-0 rounded-md border bg-transparent px-1.5 py-0.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
+                      aria-label={t("roleLabel", {
+                        name: member.user.name ?? member.user.email,
+                      })}
+                    >
+                      <option value="member">{t("member")}</option>
+                      <option value="admin">{t("admin")}</option>
+                    </select>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
+                      {isAdmin ? t("admin") : t("member")}
+                    </Badge>
+                  )}
+
+                  {canEditMember && (
                     <button
                       onClick={() => setConfirmMember(member)}
                       className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all cursor-pointer p-1"
@@ -182,7 +208,8 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                     </button>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -201,12 +228,16 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
                       <Mail size={10} /> {t("pending")}
                     </p>
                   </div>
-                  <button
-                    onClick={() => cancelInvitation(inv.id)}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  {/* Revocar invitaciones es solo del propietario: al admin le
+                      devolvía 404 y la fila reaparecía sin explicación. */}
+                  {isOwner && (
+                    <button
+                      onClick={() => cancelInvitation(inv.id)}
+                      className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

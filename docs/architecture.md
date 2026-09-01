@@ -1,6 +1,6 @@
 # Architecture
 
-Kikiboard is a Next.js 15 App Router app. The browser talks to Route Handlers under `app/api`. Those handlers resolve the Clerk user to a Neon `User`, check board access, then mutate Prisma models. Outbound calls (email, chat webhooks, calendar, LLM providers) happen after the write.
+Kikiboard is a Next.js 16 App Router app. The browser talks to Route Handlers under `app/api`. Those handlers resolve the Clerk user to a Neon `User`, check board access, then mutate Prisma models. Outbound calls (email, chat webhooks, calendar, LLM providers) happen after the write.
 
 ![Kikiboard system](./diagrams/architecture.svg)
 
@@ -8,7 +8,7 @@ Kikiboard is a Next.js 15 App Router app. The browser talks to Route Handlers un
 
 | Layer | Choice |
 |---|---|
-| UI | Next.js 15 App Router, Tailwind v4, shadcn/ui, Zustand, dnd-kit, Tiptap |
+| UI | Next.js 16 App Router, Tailwind v4, shadcn/ui, Zustand, dnd-kit, Tiptap |
 | Auth | Clerk (`clerkMiddleware` + `auth.protect`) |
 | Data | Prisma 7 → PostgreSQL on Neon |
 | Files | Vercel Blob (`access: "private"`) |
