@@ -39,7 +39,7 @@ export function TaskCard({
   listId,
   listTitle,
   boardId,
-  isOwner,
+  canManage,
   boardUsers,
   memberCanAssign,
 }: TaskCardProps) {
@@ -303,7 +303,7 @@ export function TaskCard({
           boardId={boardId}
           open={modalOpen}
           onClose={() => setModalOpen(false)}
-          isOwner={isOwner}
+          canManage={canManage}
           boardUsers={boardUsers}
           memberCanAssign={memberCanAssign}
         />

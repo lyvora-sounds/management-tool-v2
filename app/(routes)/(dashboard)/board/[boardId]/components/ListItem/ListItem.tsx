@@ -9,7 +9,7 @@ import { ListHeader } from "../ListHeader/ListHeader";
 import { ArrowDownToLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-export function ListItem({ list, boardId, isOwner, boardUsers, memberCanAssign }: ListItemProps) {
+export function ListItem({ list, boardId, canManage, boardUsers, memberCanAssign }: ListItemProps) {
   const t = useTranslations("board");
   const {
     attributes,
@@ -54,7 +54,7 @@ export function ListItem({ list, boardId, isOwner, boardUsers, memberCanAssign }
             </div>
           ) : (
             list.tasks.map((task) => (
-              <TaskCard key={task.id} task={task} listId={list.id} listTitle={list.title} boardId={boardId} isOwner={isOwner} boardUsers={boardUsers} memberCanAssign={memberCanAssign} />
+              <TaskCard key={task.id} task={task} listId={list.id} listTitle={list.title} boardId={boardId} canManage={canManage} boardUsers={boardUsers} memberCanAssign={memberCanAssign} />
             ))
           )}
         </div>
