@@ -44,6 +44,16 @@ export async function PATCH(
     );
   }
 
+  // Misma regla que en DELETE: un admin no toca a otro admin. Sin esto, el
+  // guard de DELETE es papel mojado —bastaba degradar al otro a member y
+  // luego echarlo— y dos administradores podrían desactivarse entre ellos.
+  if (ctx.role !== "owner" && ctx.member.role === "admin") {
+    return NextResponse.json(
+      { error: "Solo el propietario puede cambiar el rol de un administrador" },
+      { status: 403 }
+    );
+  }
+
   // El propietario no es una fila de BoardMember, así que su rol no se toca
   // por aquí. Cambiar la propiedad del board es otra operación.
   const updated = await db.boardMember.update({

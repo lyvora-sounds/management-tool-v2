@@ -1,6 +1,6 @@
 # Kikiboard application flows
 
-Kikiboard is a collaborative project board (Kanban + list) built with Next.js 15, Clerk, Prisma, and Neon. These notes describe **how work moves through the product**, not every file.
+Kikiboard is a collaborative project board (Kanban + list) built with Next.js 16, Clerk, Prisma, and Neon. These notes describe **how work moves through the product**, not every file.
 
 Each page has an SVG diagram plus the route, permission, and side-effect details taken from the current code.
 

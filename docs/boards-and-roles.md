@@ -43,14 +43,14 @@ Views on `/board/[boardId]`: Kanban (dnd-kit) and a list toggle.
 | Role | Stored as | Can |
 |---|---|---|
 | **Owner** | `Board.userId` (no member row) | All admin actions + delete board + remove admins |
-| **Admin** | `BoardMember.role = "admin"` | Invites, roles, `memberCanAssign`, custom fields, integrations. Cannot delete/rename the board, revoke invitations, or kick another admin |
+| **Admin** | `BoardMember.role = "admin"` | Invites, roles, `memberCanAssign`, custom fields, integrations. Cannot delete/rename the board, revoke invitations, or touch another admin (neither demote nor kick) |
 | **Member** | `BoardMember.role = "member"` (default) | Work on tasks. Assign people only if `board.memberCanAssign` |
 
 `getBoardRole` in `lib/boardAccess.ts` is the source of truth. Manage endpoints that fail ACL return **404** so members cannot enumerate invitations or members they should not see.
 
 `PATCH /api/boards/[boardId]/permissions` (admin/owner) sets `memberCanAssign`.
 
-`PATCH` / `DELETE /api/boards/[boardId]/members/[memberId]` change or remove a member. Only the owner can delete an admin.
+`PATCH` / `DELETE /api/boards/[boardId]/members/[memberId]` change or remove a member. Both refuse when the caller is an admin and the target is an admin (`403`) — only the owner acts on admins. `PATCH` enforces this too, otherwise the `DELETE` guard could be walked around by demoting the other admin first.
 
 ## API permission cheat sheet
 
@@ -66,7 +66,7 @@ Views on `/board/[boardId]`: Kanban (dnd-kit) and a list toggle.
 | Assign / QA / collaborators (dedicated routes) | ✓ | ✓ | only if `memberCanAssign` |
 | Delete someone else’s comment | ✓ | ✓ | author only |
 
-Some header controls are shown more broadly than the API allows (rename/delete board, invite form). Trust the table above, not the button visibility.
+The members dialog matches this table: the invite form and the role selector appear for admins, the role selector and the remove button are hidden on other admins, and revoking an invitation is owner-only. The board header still shows rename/delete more broadly than the API allows — there, trust the table, not the button.
 
 ## Related board APIs
 
