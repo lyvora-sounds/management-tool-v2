@@ -121,7 +121,7 @@
     "heroBadge": "Pamamahala ng proyekto, pina-simple",
     "heroTitle1": "Ayusin ang trabaho mo.",
     "heroTitle2": "Makipagtulungan nang maayos.",
-    "heroDescription": "Mga boards, lists, tickets at higit pa — nasa iisang lugar. Imbitahan ang team, mag-assign ng tickets, at subaybayan ang bawat proyekto nang real time.",
+    "heroDescription": "Mga boards, <underline>lists, tickets at higit pa</underline> — nasa iisang lugar. Imbitahan ang team, mag-assign ng tickets, at subaybayan ang bawat <highlight>proyekto</highlight> nang real time.",
     "heroCta": "Magsimula",
     "heroSubtext": "Libre · Setup sa 2 minuto",
     "ctaHeading": "Simulan ang pag-aayos ng trabaho",

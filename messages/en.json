@@ -121,7 +121,7 @@
     "heroBadge": "Project management, simplified",
     "heroTitle1": "Organize your work.",
     "heroTitle2": "Collaborate smoothly.",
-    "heroDescription": "Boards, lists, tickets and more — all in one place. Invite your team, assign tickets and track each project in real time.",
+    "heroDescription": "Boards, <underline>lists, tickets and more</underline> — all in one place. Invite your team, assign tickets and track each <highlight>project</highlight> in real time.",
     "heroCta": "Get started",
     "heroSubtext": "Free · Setup in 2 minutes",
     "ctaHeading": "Start organizing your work",
