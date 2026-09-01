@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Mic, Square, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -16,6 +17,7 @@ export function VoiceInput({
   defaultLang = "es-ES",
   className = "",
 }: VoiceInputProps) {
+  const t = useTranslations("voice");
   const [recording, setRecording] = useState(false);
   const [lang, setLang] = useState<"es-ES" | "en-US">(defaultLang);
   const [transcribing, setTranscribing] = useState(false);
@@ -41,7 +43,11 @@ export function VoiceInput({
     if (recording) return;
     const next = lang === "es-ES" ? "en-US" : "es-ES";
     setLang(next);
-    toast.info(`Idioma de voz: ${next === "es-ES" ? "Español (ES)" : "English (US)"}`);
+    toast.info(
+      t("langToast", {
+        label: next === "es-ES" ? t("spanishLabel") : t("englishLabel"),
+      }),
+    );
   };
 
   const startBrowserRecognition = () => {
@@ -69,7 +75,7 @@ export function VoiceInput({
         rec.onerror = (e: any) => {
           console.warn("Speech recognition error:", e.error);
           if (e.error === "not-allowed") {
-            toast.error("Permiso de micrófono denegado.");
+            toast.error(t("micDenied"));
           }
           setRecording(false);
         };
@@ -113,7 +119,7 @@ export function VoiceInput({
       mediaRecorder.start();
       setRecording(true);
     } catch (err) {
-      toast.error("No se pudo acceder al micrófono.");
+      toast.error(t("micUnavailable"));
       setRecording(false);
     }
   };
@@ -137,7 +143,7 @@ export function VoiceInput({
         toast.error(data.error);
       }
     } catch (err: any) {
-      toast.error("Error al transcribir la grabación de voz.");
+      toast.error(t("transcribeError"));
     } finally {
       setTranscribing(false);
     }
@@ -179,17 +185,17 @@ export function VoiceInput({
         {transcribing ? (
           <>
             <Loader2 size={13} className="animate-spin" />
-            <span>Transcribiendo...</span>
+            <span>{t("transcribing")}</span>
           </>
         ) : recording ? (
           <>
             <Square size={12} className="fill-current" />
-            <span>Detener</span>
+            <span>{t("stop")}</span>
           </>
         ) : (
           <>
             <Mic size={13} />
-            <span>Voz</span>
+            <span>{t("voice")}</span>
           </>
         )}
       </Button>
@@ -198,7 +204,9 @@ export function VoiceInput({
         type="button"
         onClick={toggleLanguage}
         disabled={recording || transcribing}
-        title={`Cambiar idioma (actual: ${lang === "es-ES" ? "Español" : "English"})`}
+        title={t("changeLanguage", {
+          label: lang === "es-ES" ? t("spanishLabel") : t("englishLabel"),
+        })}
         className="h-8 px-2 text-[11px] font-semibold rounded-md border border-input bg-background hover:bg-muted text-muted-foreground flex items-center gap-1 transition-colors"
       >
         <Globe size={11} />

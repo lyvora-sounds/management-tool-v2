@@ -3,9 +3,12 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { StepProps } from "../CreateBoardStepper.types";
 
 export function StepInitialLists({ data, onChange }: StepProps) {
+  const t = useTranslations("boards");
+
   const updateList = (index: number, value: string) => {
     const next = [...data.lists];
     next[index] = value;
@@ -23,7 +26,7 @@ export function StepInitialLists({ data, onChange }: StepProps) {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-muted-foreground">
-        Listas iniciales del board (opcional)
+        {t("listsHint")}
       </p>
       <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-1">
         {data.lists.map((list, i) => (
@@ -31,7 +34,7 @@ export function StepInitialLists({ data, onChange }: StepProps) {
             <Input
               value={list}
               onChange={(e) => updateList(i, e.target.value)}
-              placeholder={`Lista ${i + 1}`}
+              placeholder={t("listPlaceholder", { n: i + 1 })}
             />
             <Button
               type="button"
@@ -52,7 +55,7 @@ export function StepInitialLists({ data, onChange }: StepProps) {
         className="self-start"
       >
         <Plus className="mr-1 h-4 w-4" />
-        Añadir lista
+        {t("addList")}
       </Button>
     </div>
   );

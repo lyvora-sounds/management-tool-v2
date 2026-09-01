@@ -64,7 +64,13 @@ export async function PATCH(req: Request) {
     if (task && fromList && toList) {
       await createActivity({
         type: "task_moved",
-        message: `${user.name ?? user.email} movió "${task.title}" de "${fromList.title}" a "${toList.title}"`,
+        key: "activity.ticketMoved",
+        params: {
+          actor: user.name ?? user.email,
+          ticket: task.title,
+          from: fromList.title,
+          to: toList.title,
+        },
         boardId: task.list.boardId,
         userId: user.id,
       });

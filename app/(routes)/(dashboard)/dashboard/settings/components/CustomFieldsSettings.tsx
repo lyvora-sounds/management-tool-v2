@@ -9,13 +9,12 @@ import {
   Shield,
   ShieldAlert,
   Loader2,
-  Check,
-  X,
   LayoutGrid,
   ListFilter,
   Sparkles,
   Info,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,7 +57,18 @@ export interface CustomFieldItem {
   order: number;
 }
 
+function typeLabel(
+  type: CustomFieldItem["type"],
+  t: ReturnType<typeof useTranslations<"settings">>,
+) {
+  if (type === "SELECT") return t("typeSelect");
+  if (type === "NUMBER") return t("typeNumber");
+  return t("typeText");
+}
+
 export function CustomFieldsSettings() {
+  const t = useTranslations("settings");
+  const tCommon = useTranslations("common");
   const [boards, setBoards] = useState<BoardOption[]>([]);
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
   const [customFields, setCustomFields] = useState<CustomFieldItem[]>([]);
@@ -102,7 +112,7 @@ export function CustomFieldsSettings() {
         }
       }
     } catch {
-      toast.error("Error al cargar los boards.");
+      toast.error(t("loadBoardsError"));
     } finally {
       setLoadingBoards(false);
     }
@@ -118,7 +128,7 @@ export function CustomFieldsSettings() {
         setIsAdmin(data.isAdmin);
       }
     } catch {
-      toast.error("Error al cargar los campos personalizados.");
+      toast.error(t("loadFieldsError"));
     } finally {
       setLoadingFields(false);
     }
@@ -146,13 +156,13 @@ export function CustomFieldsSettings() {
         setCustomFields((prev) =>
           prev.map((f) => (f.id === field.id ? { ...f, enabled: field.enabled } : f))
         );
-        toast.error("No se pudo actualizar el campo.");
+        toast.error(t("updateFieldError"));
       }
     } catch {
       setCustomFields((prev) =>
         prev.map((f) => (f.id === field.id ? { ...f, enabled: field.enabled } : f))
       );
-      toast.error("Error de red.");
+      toast.error(tCommon("connectionError"));
     } finally {
       setSavingFieldId(null);
     }
@@ -179,7 +189,7 @@ export function CustomFieldsSettings() {
   const handleSaveField = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fieldName.trim()) {
-      toast.error("Escribe un nombre para el campo.");
+      toast.error(t("fieldNameRequired"));
       return;
     }
 
@@ -192,7 +202,7 @@ export function CustomFieldsSettings() {
         : null;
 
     if (fieldType === "SELECT" && (!optionsArray || optionsArray.length === 0)) {
-      toast.error("Debes añadir al menos una opción para el campo de tipo Lista.");
+      toast.error(t("selectOptionsRequired"));
       return;
     }
 
@@ -216,11 +226,11 @@ export function CustomFieldsSettings() {
           setCustomFields((prev) =>
             prev.map((f) => (f.id === updated.id ? updated : f))
           );
-          toast.success("Campo actualizado correctamente.");
+          toast.success(t("fieldUpdated"));
           setDialogOpen(false);
         } else {
           const data = await res.json();
-          toast.error(data.error || "Error al actualizar campo.");
+          toast.error(data.error || t("updateFieldError"));
         }
       } else {
         // Create new custom field
@@ -239,15 +249,15 @@ export function CustomFieldsSettings() {
         if (res.ok) {
           const created = await res.json();
           setCustomFields((prev) => [...prev, created]);
-          toast.success("Campo personalizado creado.");
+          toast.success(t("fieldCreated"));
           setDialogOpen(false);
         } else {
           const data = await res.json();
-          toast.error(data.error || "Error al crear campo.");
+          toast.error(data.error || t("createFieldError"));
         }
       }
     } catch {
-      toast.error("Error de red.");
+      toast.error(tCommon("connectionError"));
     } finally {
       setSubmitting(false);
     }
@@ -261,13 +271,13 @@ export function CustomFieldsSettings() {
 
       if (res.ok) {
         setCustomFields((prev) => prev.filter((f) => f.id !== fieldId));
-        toast.success("Campo eliminado.");
+        toast.success(t("fieldDeleted"));
       } else {
         const data = await res.json();
-        toast.error(data.error || "Error al eliminar campo.");
+        toast.error(data.error || t("deleteFieldError"));
       }
     } catch {
-      toast.error("Error de red al eliminar.");
+      toast.error(tCommon("connectionError"));
     } finally {
       setDeletingField(null);
     }
@@ -289,9 +299,9 @@ export function CustomFieldsSettings() {
     return (
       <div className="rounded-xl border bg-card p-8 text-center space-y-3">
         <LayoutGrid size={36} className="mx-auto text-muted-foreground opacity-50" />
-        <h3 className="text-lg font-semibold">No se encontraron boards</h3>
+        <h3 className="text-lg font-semibold">{t("noBoardsFound")}</h3>
         <p className="text-sm text-muted-foreground">
-          Crea o únete a un board para configurar sus valores personalizados.
+          {t("noBoardsHint")}
         </p>
       </div>
     );
@@ -307,9 +317,9 @@ export function CustomFieldsSettings() {
               <SlidersHorizontal size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">Configuración por Board</h2>
+              <h2 className="text-lg font-semibold">{t("customFields")}</h2>
               <p className="text-xs text-muted-foreground">
-                Selecciona un board para gestionar sus campos y valores personalizados.
+                {t("customFieldsDescription")}
               </p>
             </div>
           </div>
@@ -320,12 +330,12 @@ export function CustomFieldsSettings() {
               {isAdmin ? (
                 <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 gap-1.5 py-1 px-3">
                   <Shield size={13} />
-                  <span>Administrador</span>
+                  <span>{t("admin")}</span>
                 </Badge>
               ) : (
                 <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/20 gap-1.5 py-1 px-3">
                   <ShieldAlert size={13} />
-                  <span>Solo lectura</span>
+                  <span>{t("readOnly")}</span>
                 </Badge>
               )}
             </div>
@@ -335,7 +345,7 @@ export function CustomFieldsSettings() {
         {/* Boards Selector Tabs/Dropdown */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0 mr-2">
-            Board activo:
+            {t("activeBoard")}
           </Label>
           <div className="flex flex-wrap gap-2 flex-1">
             {boards.map((b) => (
@@ -358,7 +368,7 @@ export function CustomFieldsSettings() {
                 <span className="truncate max-w-40">{b.title}</span>
                 {b.isAdmin && (
                   <span className="text-[10px] opacity-75 bg-black/10 dark:bg-white/10 px-1 rounded">
-                    Admin
+                    {t("adminShort")}
                   </span>
                 )}
               </button>
@@ -370,7 +380,7 @@ export function CustomFieldsSettings() {
           <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2.5 rounded-lg">
             <Info size={14} className="shrink-0" />
             <span>
-              Solo los administradores del board pueden editar o crear campos personalizados. Puedes ver la lista activa.
+              {t("adminOnlyHint")}
             </span>
           </div>
         )}
@@ -389,10 +399,10 @@ export function CustomFieldsSettings() {
               <div>
                 <h3 className="text-base font-semibold flex items-center gap-2">
                   <Sparkles size={16} className="text-primary" />
-                  <span>Campos Por Defecto del Sistema</span>
+                  <span>{t("defaultSystemFields")}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Campos estándar prediseñados (`Story points`, `Environment`, `Parent`, `Child`, `Customer`). Puedes habilitarlos o deshabilitarlos para los tickets.
+                  {t("defaultSystemFieldsHint")}
                 </p>
               </div>
             </div>
@@ -407,15 +417,15 @@ export function CustomFieldsSettings() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm">{field.name}</span>
                       <Badge variant="secondary" className="text-[10px] uppercase tracking-wider font-semibold">
-                        {field.type === "SELECT" ? "Lista" : field.type === "NUMBER" ? "Número" : "Texto"}
+                        {typeLabel(field.type, t)}
                       </Badge>
                       <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                        Por defecto
+                        {t("isDefault")}
                       </Badge>
                     </div>
                     {field.options && field.options.length > 0 && (
                       <p className="text-xs text-muted-foreground truncate">
-                        Opciones: <code className="text-[11px]">{field.options.join(", ")}</code>
+                        {t("optionsLabel")} <code className="text-[11px]">{field.options.join(", ")}</code>
                       </p>
                     )}
                   </div>
@@ -429,13 +439,13 @@ export function CustomFieldsSettings() {
                         className="h-8 text-xs text-muted-foreground hover:text-foreground"
                       >
                         <Edit2 size={13} className="mr-1" />
-                        Opciones
+                        {t("editOptions")}
                       </Button>
                     )}
 
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-muted-foreground">
-                        {field.enabled ? "Habilitado" : "Deshabilitado"}
+                        {field.enabled ? t("enabled") : t("disabled")}
                       </span>
                       <Switch
                         checked={field.enabled}
@@ -455,26 +465,26 @@ export function CustomFieldsSettings() {
               <div>
                 <h3 className="text-base font-semibold flex items-center gap-2">
                   <ListFilter size={16} className="text-primary" />
-                  <span>Campos Personalizados Adicionales</span>
+                  <span>{t("additionalCustomFields")}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Campos propios creados a medida para este board.
+                  {t("additionalCustomFieldsHint")}
                 </p>
               </div>
 
               {isAdmin && (
                 <Button onClick={openCreateDialog} size="sm" className="gap-1.5 text-xs">
                   <Plus size={15} />
-                  <span>Añadir campo personalizado</span>
+                  <span>{t("addCustomField")}</span>
                 </Button>
               )}
             </div>
 
             {userCustomFields.length === 0 ? (
               <div className="py-8 text-center border rounded-lg border-dashed text-muted-foreground space-y-1">
-                <p className="text-sm font-medium">No hay campos personalizados adicionales creados.</p>
+                <p className="text-sm font-medium">{t("emptyAdditionalFields")}</p>
                 <p className="text-xs">
-                  Haz clic en &quot;Añadir campo personalizado&quot; para crear uno nuevo (ej. Prioridad Impacto, Cliente VIP, etc.).
+                  {t("emptyFields")}
                 </p>
               </div>
             ) : (
@@ -488,12 +498,12 @@ export function CustomFieldsSettings() {
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">{field.name}</span>
                         <Badge variant="secondary" className="text-[10px] uppercase tracking-wider font-semibold">
-                          {field.type === "SELECT" ? "Lista" : field.type === "NUMBER" ? "Número" : "Texto"}
+                          {typeLabel(field.type, t)}
                         </Badge>
                       </div>
                       {field.options && field.options.length > 0 && (
                         <p className="text-xs text-muted-foreground truncate">
-                          Opciones: <code className="text-[11px]">{field.options.join(", ")}</code>
+                          {t("optionsLabel")} <code className="text-[11px]">{field.options.join(", ")}</code>
                         </p>
                       )}
                     </div>
@@ -506,7 +516,7 @@ export function CustomFieldsSettings() {
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
                             onClick={() => openEditDialog(field)}
-                            title="Editar campo"
+                            title={t("editField")}
                           >
                             <Edit2 size={14} />
                           </Button>
@@ -515,7 +525,7 @@ export function CustomFieldsSettings() {
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             onClick={() => setDeletingField(field)}
-                            title="Eliminar campo"
+                            title={t("deleteField")}
                           >
                             <Trash2 size={14} />
                           </Button>
@@ -543,23 +553,25 @@ export function CustomFieldsSettings() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingField ? `Editar campo "${editingField.name}"` : "Nuevo campo personalizado"}
+              {editingField
+                ? t("editFieldTitle", { name: editingField.name })
+                : t("newCustomField")}
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSaveField} className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Nombre del campo</Label>
+              <Label className="text-sm font-medium">{t("fieldNameLabel")}</Label>
               <Input
                 value={fieldName}
                 onChange={(e) => setFieldName(e.target.value)}
-                placeholder="Ej. Story points, Ambiente, Cliente..."
+                placeholder={t("fieldNamePlaceholder")}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Tipo de dato</Label>
+              <Label className="text-sm font-medium">{t("dataType")}</Label>
               <Select
                 value={fieldType}
                 onValueChange={(v) => setFieldType(v as "NUMBER" | "TEXT" | "SELECT")}
@@ -569,38 +581,38 @@ export function CustomFieldsSettings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TEXT">Texto plano</SelectItem>
-                  <SelectItem value="NUMBER">Número</SelectItem>
-                  <SelectItem value="SELECT">Lista de opciones (Desplegable)</SelectItem>
+                  <SelectItem value="TEXT">{t("typePlainText")}</SelectItem>
+                  <SelectItem value="NUMBER">{t("typeNumber")}</SelectItem>
+                  <SelectItem value="SELECT">{t("typeSelectDropdown")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {fieldType === "SELECT" && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Opciones (separadas por comas)</Label>
+                <Label className="text-sm font-medium">{t("optionsCommaSeparated")}</Label>
                 <Input
                   value={fieldOptionsStr}
                   onChange={(e) => setFieldOptionsStr(e.target.value)}
-                  placeholder="ej. dev, integration, uat, production o 1, 2, 3, 5, 8"
+                  placeholder={t("optionsPlaceholder")}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Escribe los valores separados por comas que aparecerán en la lista.
+                  {t("optionsHint")}
                 </p>
               </div>
             )}
 
             <div className="flex items-center justify-between pt-2">
-              <Label className="text-sm font-medium">Habilitar en tickets</Label>
+              <Label className="text-sm font-medium">{t("enableOnTickets")}</Label>
               <Switch checked={fieldEnabled} onCheckedChange={setFieldEnabled} />
             </div>
 
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancelar
+                {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? <Loader2 size={16} className="animate-spin" /> : "Guardar campo"}
+                {submitting ? <Loader2 size={16} className="animate-spin" /> : t("saveField")}
               </Button>
             </DialogFooter>
           </form>
@@ -610,9 +622,9 @@ export function CustomFieldsSettings() {
       {/* Delete Confirmation Modal */}
       <ConfirmModal
         open={Boolean(deletingField)}
-        title="Eliminar campo personalizado"
-        description={`¿Estás seguro de eliminar el campo "${deletingField?.name}"? Se perderán los valores asignados a las tareas.`}
-        confirmLabel="Eliminar"
+        title={t("deleteFieldTitle")}
+        description={t("deleteFieldDescription", { name: deletingField?.name ?? "" })}
+        confirmLabel={tCommon("delete")}
         variant="destructive"
         onConfirm={() => {
           if (deletingField) handleDeleteField(deletingField.id);

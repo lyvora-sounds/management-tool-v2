@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ export function TaskStatusSelect({
   updating?: boolean;
   onSelect: (listId: string) => void;
 }) {
+  const t = useTranslations("task");
   const statusTheme = getStatusTheme(currentListTitle, completed);
 
   return (
@@ -46,7 +48,7 @@ export function TaskStatusSelect({
           statusTheme.text,
           statusTheme.border,
         )}
-        title="Cambiar estado del ticket"
+        title={t("changeStatus")}
       >
         {updating ? (
           <Loader2 size={11} className="animate-spin shrink-0" />

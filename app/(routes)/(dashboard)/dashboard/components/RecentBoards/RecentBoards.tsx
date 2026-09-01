@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock, LayoutDashboard } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Board, RecentBoardsProps } from "./RecentBoards.types";
 
 const STORAGE_KEY = "recent_boards";
 
 export function RecentBoards({ boards }: RecentBoardsProps) {
+  const t = useTranslations("dashboard");
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -37,7 +39,7 @@ export function RecentBoards({ boards }: RecentBoardsProps) {
       <div className="flex items-center gap-2">
         <Clock size={15} className="text-muted-foreground" />
         <h2 className="text-sm font-medium text-muted-foreground">
-          Visitados recientemente
+          {t("recentlyVisited")}
         </h2>
       </div>
       <div className="flex flex-wrap gap-2">

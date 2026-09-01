@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import db from "@/lib/db";
 import { getOrCreateUser } from "@/lib/getOrCreateUser";
 import { CreateBoardModal } from "./components/boards/CreateBoardModal/CreateBoardModal";
@@ -20,13 +21,14 @@ export default async function DashboardPage() {
 
   const user = await getOrCreateUser(userId);
   if (!user) {
-    // Clerk API failed but user IS authenticated — avoid redirect loop, show retry
+    const tDash = await getTranslations("dashboard");
+    const tCommon = await getTranslations("common");
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-3">
-        <p className="text-sm font-medium">Servicio temporalmente no disponible</p>
-        <p className="text-xs text-muted-foreground">Recarga la página en unos segundos.</p>
+        <p className="text-sm font-medium">{tDash("unavailable")}</p>
+        <p className="text-xs text-muted-foreground">{tDash("unavailableHint")}</p>
         <a href="/dashboard" className="text-xs underline text-muted-foreground hover:text-foreground">
-          Reintentar
+          {tCommon("retry")}
         </a>
       </div>
     );
@@ -237,6 +239,8 @@ export default async function DashboardPage() {
     return { date: key, count };
   });
 
+  const tBoards = await getTranslations("boards");
+
   return (
     <div className="p-3 sm:p-6 flex flex-col gap-6">
       <Greeting name={user.name} />
@@ -267,7 +271,7 @@ export default async function DashboardPage() {
 
       <div>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 className="text-lg font-semibold">Mis boards</h2>
+          <h2 className="text-lg font-semibold">{tBoards("myBoards")}</h2>
           <CreateBoardModal />
         </div>
         <RecentBoards boards={boards} />

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Plus, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ import { useBoardStore } from "../../store/useBoardStore";
 import { CreateListFormProps } from "./CreateListForm.types";
 
 export function CreateListForm({ boardId }: CreateListFormProps) {
+  const t = useTranslations("board");
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,10 +43,10 @@ export function CreateListForm({ boardId }: CreateListFormProps) {
         addList({ ...list, tasks: [] });
         handleClose();
       } else {
-        toast.error("Error al crear la lista");
+        toast.error(t("createListError"));
       }
     } catch {
-      toast.error("Error al crear la lista");
+      toast.error(t("createListError"));
     } finally {
       setLoading(false);
     }
@@ -54,10 +56,10 @@ export function CreateListForm({ boardId }: CreateListFormProps) {
     return (
       <button
         onClick={handleOpen}
-        className="flex items-center gap-2 bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl w-64 shrink-0 p-3 text-sm font-medium transition-colors"
+        className="flex items-center gap-2 bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl w-64 shrink-0 p-3 text-sm font-medium transition-colors cursor-pointer"
       >
         <Plus className="h-4 w-4" />
-        Añadir lista
+        {t("addList")}
       </button>
     );
   }
@@ -66,7 +68,7 @@ export function CreateListForm({ boardId }: CreateListFormProps) {
     <div className="bg-muted rounded-xl w-64 shrink-0 p-3 flex flex-col gap-2">
       <Input
         ref={inputRef}
-        placeholder="Nombre de la lista"
+        placeholder={t("addListPlaceholder")}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => {
@@ -75,10 +77,10 @@ export function CreateListForm({ boardId }: CreateListFormProps) {
         }}
       />
       <div className="flex items-center gap-1">
-        <Button size="sm" onClick={handleSubmit} disabled={!title.trim() || loading}>
-          {loading ? "Añadiendo..." : "Añadir"}
+        <Button size="sm" onClick={handleSubmit} disabled={!title.trim() || loading} className="cursor-pointer">
+          {loading ? t("adding") : t("add")}
         </Button>
-        <Button size="icon" variant="ghost" onClick={handleClose}>
+        <Button size="icon" variant="ghost" onClick={handleClose} className="cursor-pointer">
           <X className="h-4 w-4" />
         </Button>
       </div>

@@ -12,8 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PRESET_COLORS } from "./TaskLabels.data";
+import { useTranslations } from "next-intl";
 
 export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: TaskLabelsProps) {
+  const t = useTranslations("labels");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [labels, setLabels] = useState<LabelModel[]>([]);
   const [activeIds, setActiveIds] = useState<Set<string>>(
@@ -107,7 +110,7 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
         render={
           <Button variant="outline">
             <Tag size={15} />
-            <span>Etiquetas</span>
+            <span>{t("title")}</span>
             {/* {activeIds.size > 0 && (
               <div className="flex gap-1">
                 {labels
@@ -131,7 +134,7 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
         {!showForm ? (
           <>
             <p className="text-xs font-medium text-muted-foreground px-1">
-              Etiquetas
+              {t("title")}
             </p>
 
             <div className="flex flex-col gap-1">
@@ -167,13 +170,13 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
               onClick={openCreate}
               className="mt-1 w-full rounded-md border border-dashed py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors"
             >
-              + Crear etiqueta
+              + {t("create")}
             </button>
           </>
         ) : (
           <>
             <p className="text-xs font-medium text-muted-foreground px-1">
-              {editingLabel ? "Editar etiqueta" : "Nueva etiqueta"}
+              {editingLabel ? t("edit") : t("new")}
             </p>
 
             {/* Color preview */}
@@ -188,7 +191,7 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
             <input
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
-              placeholder="Título (opcional)"
+              placeholder={t("titleOptional")}
               className="w-full rounded-md border bg-transparent px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
             />
 
@@ -213,13 +216,13 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
                 onClick={saveLabel}
                 className="flex-1 rounded-md bg-primary text-primary-foreground py-1.5 text-sm font-medium hover:bg-primary/90 transition-colors"
               >
-                Guardar
+                {tCommon("save")}
               </button>
               <button
                 onClick={() => setShowForm(false)}
                 className="flex-1 rounded-md border py-1.5 text-sm hover:bg-muted transition-colors"
               >
-                Cancelar
+                {tCommon("cancel")}
               </button>
             </div>
 
@@ -232,7 +235,7 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
                 className="flex items-center justify-center gap-1 text-xs text-destructive hover:bg-destructive/10 rounded-md py-1.5 transition-colors"
               >
                 <Trash2 size={12} />
-                Eliminar etiqueta
+                {t("deleteLabel")}
               </button>
             )}
           </>

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import db from "@/lib/db";
 import {
   CheckCircle2,
@@ -12,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { PRIORITIES } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskPriority/TaskPriority.constants";
 import { KikiLogo } from "@/components/Shared/KikiLogo/KikiLogo";
+import { dateLocale } from "@/i18n/routing";
 import Link from "next/link";
 
 interface Props {
@@ -20,6 +22,11 @@ interface Props {
 
 export default async function PublicTaskSharePage({ params }: Props) {
   const { token } = await params;
+  const locale = await getLocale();
+  const tShare = await getTranslations("share");
+  const tTask = await getTranslations("task");
+  const tPriority = await getTranslations("priority");
+  const dateFmt = dateLocale(locale);
 
   const task = await db.task.findUnique({
     where: { shareToken: token },
@@ -67,12 +74,12 @@ export default async function PublicTaskSharePage({ params }: Props) {
         <div className="flex items-center gap-3">
           <KikiLogo />
           <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-            Vista pública
+            {tShare("publicView")}
           </span>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <ShieldCheck size={14} className="text-emerald-500" />
-          <span>Solo lectura</span>
+          <span>{tShare("readOnly")}</span>
         </div>
       </header>
 
@@ -126,7 +133,7 @@ export default async function PublicTaskSharePage({ params }: Props) {
                       borderColor: `${priorityMeta.color}40`,
                     }}
                   >
-                    {priorityMeta.label}
+                    {tPriority(priorityMeta.value)}
                   </Badge>
                 )}
 
@@ -158,11 +165,11 @@ export default async function PublicTaskSharePage({ params }: Props) {
                     <Calendar size={13} />
                     <span>
                       {task.startDate
-                        ? new Date(task.startDate).toLocaleDateString()
+                        ? new Date(task.startDate).toLocaleDateString(dateFmt)
                         : ""}{" "}
                       {task.startDate && task.dueDate ? "→ " : ""}
                       {task.dueDate
-                        ? new Date(task.dueDate).toLocaleDateString()
+                        ? new Date(task.dueDate).toLocaleDateString(dateFmt)
                         : ""}
                     </span>
                   </div>
@@ -175,7 +182,7 @@ export default async function PublicTaskSharePage({ params }: Props) {
           {task.description && (
             <div className="pt-4 border-t space-y-2">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Descripción
+                {tTask("description")}
               </h3>
               <div
                 className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed"
@@ -189,7 +196,7 @@ export default async function PublicTaskSharePage({ params }: Props) {
             <div className="pt-4 border-t space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Checklist de Subtareas ({completedSubtasks}/{totalSubtasks})
+                  {tShare("subtasks", { done: completedSubtasks, total: totalSubtasks })}
                 </h3>
                 <span className="text-xs font-medium text-muted-foreground tabular-nums">
                   {subtaskProgress}%
@@ -241,7 +248,7 @@ export default async function PublicTaskSharePage({ params }: Props) {
             <div className="pt-4 border-t space-y-2">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <Paperclip size={13} />
-                <span>Adjuntos ({task.attachments.length})</span>
+                <span>{tTask("attachmentsCount", { count: task.attachments.length })}</span>
               </h3>
               <div className="grid gap-2 sm:grid-cols-2">
                 {task.attachments.map((att) => (
@@ -267,7 +274,7 @@ export default async function PublicTaskSharePage({ params }: Props) {
             <div className="pt-4 border-t space-y-3">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <MessageSquare size={13} />
-                <span>Comentarios ({task.comments.length})</span>
+                <span>{tShare("comments", { count: task.comments.length })}</span>
               </h3>
               <div className="space-y-3">
                 {task.comments.map((c) => (
@@ -277,10 +284,10 @@ export default async function PublicTaskSharePage({ params }: Props) {
                   >
                     <div className="flex items-center justify-between text-muted-foreground">
                       <span className="font-semibold text-foreground">
-                        {c.user.name || "Usuario"}
+                        {c.user.name || tShare("unknownUser")}
                       </span>
                       <span>
-                        {new Date(c.createdAt).toLocaleString()}
+                        {new Date(c.createdAt).toLocaleString(dateFmt)}
                       </span>
                     </div>
                     <div
@@ -297,7 +304,7 @@ export default async function PublicTaskSharePage({ params }: Props) {
 
       {/* Footer */}
       <footer className="border-t py-6 px-4 text-center text-xs text-muted-foreground">
-        <span>Organizado con </span>
+        <span>{tShare("organizedWith")} </span>
         <Link
           href="https://kikiboard.xyz"
           target="_blank"

@@ -124,7 +124,13 @@ export async function PATCH(
   if (targetList && targetList.id !== task.listId) {
     await createActivity({
       type: "task_moved",
-      message: `${actor} movió la tarea "${task.title}" de "${task.list.title}" a "${targetList.title}"`,
+      key: "activity.ticketMoved",
+      params: {
+        actor,
+        ticket: task.title,
+        from: task.list.title,
+        to: targetList.title,
+      },
       boardId: task.list.board.id,
       userId: user.id,
     });
@@ -133,9 +139,8 @@ export async function PATCH(
   if (nextCompleted !== undefined && nextCompleted !== task.completed) {
     await createActivity({
       type: nextCompleted ? "task_completed" : "task_reopened",
-      message: nextCompleted
-        ? `${actor} completó la tarea "${task.title}"`
-        : `${actor} reactivó la tarea "${task.title}"`,
+      key: nextCompleted ? "activity.ticketCompleted" : "activity.ticketReopened",
+      params: { actor, ticket: task.title },
       boardId: task.list.board.id,
       userId: user.id,
     });
@@ -154,7 +159,8 @@ export async function PATCH(
   } else if (title !== undefined && title.trim() !== task.title) {
     await createActivity({
       type: "task_renamed",
-      message: `${actor} renombró la tarea "${task.title}" a "${title.trim()}"`,
+      key: "activity.ticketRenamed",
+      params: { actor, ticket: task.title, newTitle: title.trim() },
       boardId: task.list.board.id,
       userId: user.id,
     });

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 340" width="100%" height="100%">
+  <rect width="1080" height="340" fill="#F7F7F7"/>
+
+  <rect x="32" y="28" width="1" height="16" fill="#D3A05B"/>
+  <text x="42" y="41" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">BOARDS</text>
+  <text x="1048" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">POST /api/boards/createBoard</text>
+  <text x="32" y="76" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" letter-spacing="-0.025em">
+    <tspan fill="#13233C">Board </tspan><tspan fill="#D3A05B">lifecycle</tspan>
+  </text>
+  <rect x="32" y="90" width="40" height="2" fill="#D3A05B"/>
+
+  <line x1="73" y1="148" x2="853" y2="148" stroke="#D3A05B" stroke-width="1" stroke-opacity="0.85"/>
+
+  <rect x="56" y="131" width="34" height="34" rx="4" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="73" y="153" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#D3A05B">01</text>
+  <text x="56" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" fill="#13233C">Create board</text>
+  <text x="56" y="226" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Title required.</text>
+  <text x="56" y="246" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Optional description,</text>
+  <text x="56" y="266" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">color, starter lists.</text>
+
+  <rect x="316" y="131" width="34" height="34" rx="4" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="333" y="153" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#D3A05B">02</text>
+  <text x="316" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" fill="#13233C">Defaults</text>
+  <text x="316" y="226" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Optional lists by order.</text>
+  <text x="316" y="246" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Custom fields: story</text>
+  <text x="316" y="266" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">points, env, parent…</text>
+
+  <rect x="576" y="131" width="34" height="34" rx="4" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="593" y="153" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#D3A05B">03</text>
+  <text x="576" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" fill="#13233C">Kanban / list</text>
+  <text x="576" y="226" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">dnd-kit reorder of</text>
+  <text x="576" y="246" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">lists and cards.</text>
+  <text x="576" y="266" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Epics, labels, archive.</text>
+
+  <rect x="836" y="131" width="34" height="34" rx="4" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="853" y="153" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#D3A05B">04</text>
+  <text x="836" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" fill="#13233C">Team</text>
+  <text x="836" y="226" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Invites, roles,</text>
+  <text x="836" y="246" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">webhooks. Only the</text>
+  <text x="836" y="266" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">owner may delete.</text>
+</svg>

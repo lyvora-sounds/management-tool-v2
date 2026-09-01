@@ -1,12 +1,14 @@
+import { getTranslations } from "next-intl/server";
 import { TrendingUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { GlobalProgressProps } from "./GlobalProgress.types";
 
-export function GlobalProgress({
+export async function GlobalProgress({
   totalTasks,
   completedTasks,
   completedThisWeek,
 }: GlobalProgressProps) {
+  const t = await getTranslations("dashboard");
   const pct =
     totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
@@ -15,7 +17,7 @@ export function GlobalProgress({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp size={16} className="text-muted-foreground" />
-          <span className="text-sm font-medium">Progreso global</span>
+          <span className="text-sm font-medium">{t("globalProgress")}</span>
         </div>
         <span className="text-2xl font-bold tabular-nums">{pct}%</span>
       </div>
@@ -24,10 +26,10 @@ export function GlobalProgress({
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
-          {completedTasks} de {totalTasks} tareas completadas
+          {t("completedOf", { done: completedTasks, total: totalTasks })}
         </span>
         <span className="text-emerald-500 font-medium">
-          +{completedThisWeek} esta semana
+          {t("plusThisWeek", { count: completedThisWeek })}
         </span>
       </div>
     </div>

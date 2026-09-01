@@ -7,6 +7,7 @@ import { UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { isDoneList } from "@/lib/statusTheme";
+import { useTranslations } from "next-intl";
 import { AssignedTask, AssignedToMeProps } from "./AssignedToMe.types";
 import { DashboardTaskRow } from "../DashboardTaskRow/DashboardTaskRow";
 
@@ -32,6 +33,7 @@ function groupByBoard(tasks: AssignedTask[]) {
 }
 
 export function AssignedToMe({ tasks: initialTasks, userId }: AssignedToMeProps) {
+  const t = useTranslations("dashboard");
   const router = useRouter();
   const [tasks, setTasks] = useState<AssignedTask[]>(initialTasks);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
@@ -65,10 +67,10 @@ export function AssignedToMe({ tasks: initialTasks, userId }: AssignedToMeProps)
         body: JSON.stringify({ listId: targetListId }),
       });
       if (!res.ok) throw new Error("Failed to update status");
-      toast.success(`Estado cambiado a "${nextTitle}"`);
+      toast.success(t("statusChanged", { title: nextTitle }));
     } catch {
-      setTasks((prev) => prev.map((t) => (t.id === task.id ? prevTask : t)));
-      toast.error("Error al actualizar el estado");
+      setTasks((prev) => prev.map((item) => (item.id === task.id ? prevTask : item)));
+      toast.error(t("statusUpdateError"));
     } finally {
       setUpdatingTaskId(null);
     }
@@ -77,10 +79,10 @@ export function AssignedToMe({ tasks: initialTasks, userId }: AssignedToMeProps)
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Asignado a mí</h2>
+        <h2 className="text-lg font-semibold">{t("assignedToMe")}</h2>
         <div className="flex items-center gap-2 text-sm text-muted-foreground rounded-xl border p-4 bg-card">
           <UserCheck size={16} className="shrink-0" />
-          <span>No tienes tareas asignadas en ningún board</span>
+          <span>{t("noAssigned")}</span>
         </div>
       </div>
     );
@@ -91,9 +93,9 @@ export function AssignedToMe({ tasks: initialTasks, userId }: AssignedToMeProps)
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Asignado a mí</h2>
+        <h2 className="text-lg font-semibold">{t("assignedToMe")}</h2>
         <Badge variant="secondary">
-          {tasks.length} tarea{tasks.length !== 1 ? "s" : ""}
+          {t("taskCount", { count: tasks.length })}
         </Badge>
       </div>
 

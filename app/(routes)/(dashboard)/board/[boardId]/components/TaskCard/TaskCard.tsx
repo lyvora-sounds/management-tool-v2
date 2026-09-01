@@ -19,6 +19,8 @@ import { useBoardStore } from "../../store/useBoardStore";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
 import { targetListForCompletion } from "@/lib/statusTheme";
 import { displayCustomFieldValue } from "@/lib/customValueUtils";
+import { useLocale, useTranslations } from "next-intl";
+import { dateLocale } from "@/i18n/routing";
 
 function getInitials(name: string | null | undefined, email: string | undefined) {
   if (name)
@@ -41,6 +43,9 @@ export function TaskCard({
   boardUsers,
   memberCanAssign,
 }: TaskCardProps) {
+  const t = useTranslations("task");
+  const tPriority = useTranslations("priority");
+  const locale = useLocale();
   const updateTask = useBoardStore((s) => s.updateTask);
   const lists = useBoardStore((s) => s.lists);
   const [modalOpen, setModalOpen] = useState(false);
@@ -171,7 +176,7 @@ export function TaskCard({
               priority.bg,
             )}
           >
-            {priority.label}
+            {tPriority(priority.value)}
           </span>
         )}
 
@@ -207,7 +212,7 @@ export function TaskCard({
               return (
                 <span
                   key={cv.id}
-                  title={`${cv.customField?.name || "Valor"}: ${displayVal}`}
+                  title={`${cv.customField?.name || t("customValues")}: ${displayVal}`}
                   className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 max-w-44 truncate"
                 >
                   {cv.customField?.defaultKey === "story_points"
@@ -235,7 +240,7 @@ export function TaskCard({
                 )}
               >
                 <Calendar size={11} />
-                {due.toLocaleDateString("es-ES", {
+                {due.toLocaleDateString(dateLocale(locale), {
                   day: "2-digit",
                   month: "short",
                 })}
@@ -272,7 +277,7 @@ export function TaskCard({
           <div className="flex items-center gap-1 shrink-0 ml-auto">
             {task.qa && (
               <div
-                title={`QA: ${task.qa.name ?? task.qa.email}`}
+                title={t("qaPrefix", { name: task.qa.name ?? task.qa.email })}
                 className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center ring-1 ring-background shadow-xs"
               >
                 {getInitials(task.qa.name, task.qa.email)}
@@ -280,7 +285,7 @@ export function TaskCard({
             )}
             {task.assignee && (
               <div
-                title={`Asignado: ${task.assignee.name ?? task.assignee.email}`}
+                title={t("assigneePrefix", { name: task.assignee.name ?? task.assignee.email })}
                 className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center ring-1 ring-background shadow-xs"
               >
                 {getInitials(task.assignee.name, task.assignee.email)}

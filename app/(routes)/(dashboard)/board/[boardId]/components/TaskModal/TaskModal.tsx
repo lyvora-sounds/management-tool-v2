@@ -60,6 +60,7 @@ import type { LabelModel } from "@/lib/generated/prisma/models/Label";
 import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { TaskModalProps } from "./TaskModal.types";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { getStatusTheme, isDoneList, targetListForCompletion } from "@/lib/statusTheme";
 
@@ -74,6 +75,8 @@ export function TaskModal({
   boardUsers,
   memberCanAssign,
 }: TaskModalProps) {
+  const t = useTranslations("task");
+  const tBoard = useTranslations("board");
   const lists = useBoardStore((s) => s.lists);
   const updateTask = useBoardStore((s) => s.updateTask);
   const addSubtask = useBoardStore((s) => s.addSubtask);
@@ -247,12 +250,12 @@ export function TaskModal({
         body: JSON.stringify({ listId: targetListId }),
       });
       if (res.ok) {
-        toast.success(`Movido a "${targetList.title}"`);
+        toast.success(t("movedTo", { title: targetList.title }));
       } else {
-        toast.error("Error al mover la tarea");
+        toast.error(t("moveError"));
       }
     } catch {
-      toast.error("Error al mover la tarea");
+      toast.error(t("moveError"));
     }
   };
 
@@ -280,8 +283,8 @@ export function TaskModal({
       if (res.ok) {
         toast.success(
           next
-            ? `Completada y movida a "${targetList.title}"`
-            : `Reactivada y movida a "${targetList.title}"`,
+            ? t("completedAndMoved", { title: targetList.title })
+            : t("reopenedAndMoved", { title: targetList.title }),
         );
       }
     } else {
@@ -293,7 +296,7 @@ export function TaskModal({
         body: JSON.stringify({ completed: next }),
       });
       if (res.ok) {
-        toast.success(next ? "Tarea completada" : "Tarea reactivada");
+        toast.success(next ? t("completed") : t("reopened"));
       }
     }
   };
@@ -313,10 +316,10 @@ export function TaskModal({
     if (res.ok) {
       updateTask(currentListId, currentTask.id, { title: trimmed });
       setSavedTitle(trimmed);
-      toast.success("Título actualizado");
+      toast.success(t("titleUpdated"));
     } else {
       setTitle(savedTitle);
-      toast.error("Error al actualizar el título");
+      toast.error(t("titleUpdateError"));
     }
     setLoading(false);
   };
@@ -335,9 +338,9 @@ export function TaskModal({
     if (res.ok) {
       updateTask(currentListId, currentTask.id, { description: html || null });
       setSavedDescription(html);
-      toast.success("Descripción guardada");
+      toast.success(t("descriptionSaved"));
     } else {
-      toast.error("Error al guardar la descripción");
+      toast.error(t("descriptionSaveError"));
     }
     setEditingDescription(false);
     setLoading(false);
@@ -430,7 +433,7 @@ export function TaskModal({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-44">
                   <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                    Estado / Columna
+                    {t("statusColumn")}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {lists.map((l) => (
@@ -466,10 +469,10 @@ export function TaskModal({
                 size="sm"
                 onClick={() => setShareModalOpen(true)}
                 className="h-7 text-xs gap-1 px-2 text-muted-foreground hover:text-foreground"
-                title="Compartir enlace público de solo lectura"
+                title={t("shareTitle")}
               >
                 <Share2 size={13} />
-                <span className="hidden sm:inline">Compartir</span>
+                <span className="hidden sm:inline">{t("share")}</span>
               </Button>
 
               <div className="flex items-center gap-1 border-l pl-2">
@@ -479,7 +482,7 @@ export function TaskModal({
                   className="h-7 w-7"
                   disabled={!hasPrev}
                   onClick={() => goTo(currentIndex - 1)}
-                  title="Tarea anterior (←)"
+                  title={t("previous")}
                 >
                   <ChevronLeft size={15} />
                 </Button>
@@ -492,7 +495,7 @@ export function TaskModal({
                   className="h-7 w-7"
                   disabled={!hasNext}
                   onClick={() => goTo(currentIndex + 1)}
-                  title="Tarea siguiente (→)"
+                  title={t("next")}
                 >
                   <ChevronRight size={15} />
                 </Button>
@@ -510,7 +513,7 @@ export function TaskModal({
               }`}
               onClick={() => setMobileTab("details")}
             >
-              Detalles
+              {t("details")}
             </button>
             <button
               className={`flex-1 py-2 text-sm font-medium transition-colors ${
@@ -520,7 +523,7 @@ export function TaskModal({
               }`}
               onClick={() => setMobileTab("comments")}
             >
-              Comentarios
+              {t("comments")}
             </button>
           </div>
 
@@ -669,10 +672,10 @@ export function TaskModal({
                     >
                       <SelectTrigger className="h-8 text-xs w-auto min-w-28 gap-1">
                         <Layers size={13} className="text-muted-foreground" />
-                        <SelectValue placeholder="Epic" />
+                        <SelectValue placeholder={tBoard("epicFilter")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Sin Epic</SelectItem>
+                        <SelectItem value="none">{t("noEpic")}</SelectItem>
                         {epics.map((ep) => (
                           <SelectItem key={ep.id} value={ep.id}>
                             <div className="flex items-center gap-1.5">
@@ -692,7 +695,7 @@ export function TaskModal({
                   <div className="flex items-center gap-1 border rounded-md px-2 py-1 h-8 bg-background">
                     <Calendar size={13} className="text-muted-foreground" />
                     <input
-                      placeholder="Q (ej. 2026-Q1)"
+                      placeholder={t("quarterPlaceholder")}
                       value={currentQuarter}
                       onChange={(e) => setCurrentQuarter(e.target.value)}
                       onBlur={() => saveQuarter(currentQuarter)}
@@ -705,7 +708,7 @@ export function TaskModal({
                     onClick={() => attachmentsRef.current?.openFilePicker()}
                   >
                     <Paperclip size={15} />
-                    <span>Adjuntar</span>
+                    <span>{t("attach")}</span>
                   </Button>
                   <TaskAssignee
                     taskId={currentTask.id}
@@ -787,7 +790,7 @@ export function TaskModal({
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <AlignLeft size={15} />
-                  <span>Descripción</span>
+                  <span>{t("description")}</span>
                 </div>
 
                 {editingDescription ? (
@@ -809,7 +812,7 @@ export function TaskModal({
                       />
                     ) : (
                       <span className="text-muted-foreground">
-                        Añade una descripción...
+                        {t("descriptionPlaceholder")}
                       </span>
                     )}
                   </div>

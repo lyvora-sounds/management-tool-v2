@@ -11,32 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslations } from "next-intl";
 import {
   BoardFiltersProps,
   FilterArchive,
   FilterDueDate,
   FilterStatus,
 } from "./BoardFilters.types";
-
-const STATUS_OPTIONS: { value: FilterStatus; label: string }[] = [
-  { value: "all", label: "Todas" },
-  { value: "pending", label: "Pendientes" },
-  { value: "completed", label: "Completadas" },
-];
-
-const ARCHIVE_OPTIONS: { value: FilterArchive; label: string }[] = [
-  { value: "active", label: "Activas" },
-  { value: "archived", label: "Archivadas" },
-  { value: "all", label: "Todas (+ Archivo)" },
-];
-
-const DUE_OPTIONS: { value: FilterDueDate; label: string }[] = [
-  { value: "all", label: "Cualquier fecha" },
-  { value: "overdue", label: "Vencidas" },
-  { value: "today", label: "Hoy" },
-  { value: "week", label: "Esta semana" },
-  { value: "none", label: "Sin fecha" },
-];
 
 function getInitials(name: string | null | undefined, email: string) {
   if (name)
@@ -57,6 +38,29 @@ export function BoardFilters({
   availableQuarters = [],
   availableMembers = [],
 }: BoardFiltersProps) {
+  const t = useTranslations("filters");
+  const tBoard = useTranslations("board");
+  const tCommon = useTranslations("common");
+
+  const STATUS_OPTIONS: { value: FilterStatus; label: string }[] = [
+    { value: "all", label: t("all") },
+    { value: "pending", label: t("pending") },
+    { value: "completed", label: t("completed") },
+  ];
+
+  const ARCHIVE_OPTIONS: { value: FilterArchive; label: string }[] = [
+    { value: "active", label: t("active") },
+    { value: "archived", label: t("archived") },
+    { value: "all", label: t("allWithArchive") },
+  ];
+
+  const DUE_OPTIONS: { value: FilterDueDate; label: string }[] = [
+    { value: "all", label: t("anyDate") },
+    { value: "overdue", label: t("overdue") },
+    { value: "today", label: t("today") },
+    { value: "week", label: t("thisWeek") },
+    { value: "none", label: t("noDate") },
+  ];
   const hasActiveFilters =
     filters.status !== "all" ||
     filters.dueDate !== "all" ||
@@ -131,14 +135,14 @@ export function BoardFilters({
         >
           <SelectTrigger className="h-8 text-xs w-auto min-w-32 gap-1.5 bg-background">
             <User size={12} className="text-muted-foreground" />
-            <SelectValue placeholder="Miembro" />
+            <SelectValue placeholder={tBoard("member")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all" className="text-xs">
-              Todos los miembros
+              {tBoard("allMembers")}
             </SelectItem>
             <SelectItem value="unassigned" className="text-xs text-muted-foreground">
-              Sin asignar
+              {tBoard("unassigned")}
             </SelectItem>
             {availableMembers.map((member) => (
               <SelectItem key={member.id} value={member.id} className="text-xs">
@@ -179,11 +183,11 @@ export function BoardFilters({
         >
           <SelectTrigger className="h-8 text-xs w-auto min-w-28 gap-1 bg-background">
             <Calendar size={12} className="text-muted-foreground" />
-            <SelectValue placeholder="Quarter" />
+            <SelectValue placeholder={tBoard("quarter")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all" className="text-xs">
-              Todos los trimestres
+              {tBoard("allQuarters")}
             </SelectItem>
             {availableQuarters.map((q) => (
               <SelectItem key={q} value={q} className="text-xs">
@@ -202,11 +206,11 @@ export function BoardFilters({
         >
           <SelectTrigger className="h-8 text-xs w-auto min-w-28 gap-1 bg-background">
             <Layers size={12} className="text-muted-foreground" />
-            <SelectValue placeholder="Epic" />
+            <SelectValue placeholder={tBoard("epicFilter")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all" className="text-xs">
-              Todos los Epics
+              {tBoard("allEpics")}
             </SelectItem>
             {availableEpics.map((ep) => (
               <SelectItem key={ep.id} value={ep.id} className="text-xs">
@@ -237,7 +241,7 @@ export function BoardFilters({
                 }`}
                 style={{ backgroundColor: label.color }}
               >
-                {label.title || "Sin nombre"}
+                {label.title || tCommon("unnamed")}
               </Badge>
             );
           })}
@@ -248,7 +252,7 @@ export function BoardFilters({
       {hasActiveFilters && (
         <Button variant="ghost" size="sm" onClick={reset} className="h-8 text-xs gap-1 text-muted-foreground">
           <X size={12} />
-          Limpiar
+          {tCommon("clear")}
         </Button>
       )}
     </div>

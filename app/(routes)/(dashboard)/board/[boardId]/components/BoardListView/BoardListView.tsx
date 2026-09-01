@@ -15,6 +15,8 @@ import { TaskActions } from "../TaskActions/TaskActions";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
 import { BoardListViewProps, TaskRowProps } from "./BoardListView.types";
 import type { ListWithTasks, BoardUser } from "../TaskCard/TaskCard.types";
+import { useLocale, useTranslations } from "next-intl";
+import { dateLocale } from "@/i18n/routing";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -27,10 +29,10 @@ function getInitials(name: string | null, email: string) {
   return email[0].toUpperCase();
 }
 
-function formatDate(date: Date | string | null | undefined) {
+function formatDate(date: Date | string | null | undefined, locale: string) {
   if (!date) return null;
   const d = new Date(date);
-  return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
+  return d.toLocaleDateString(dateLocale(locale), { day: "2-digit", month: "short" });
 }
 
 function isDueSoon(date: Date | string | null | undefined) {
@@ -56,6 +58,9 @@ function TaskRow({
   boardUsers,
   memberCanAssign,
 }: TaskRowProps) {
+  const t = useTranslations("task");
+  const tPriority = useTranslations("priority");
+  const locale = useLocale();
   const updateTask = useBoardStore((s) => s.updateTask);
   const [completed, setCompleted] = useState(task.completed);
   const [modalOpen, setModalOpen] = useState(false);
@@ -100,7 +105,7 @@ function TaskRow({
           <span
             className="w-2 h-2 rounded-full shrink-0"
             style={{ backgroundColor: priority.color }}
-            title={priority.label}
+            title={tPriority(priority.value)}
           />
         )}
 
@@ -122,7 +127,7 @@ function TaskRow({
               priority.bg,
             )}
           >
-            {priority.label}
+            {tPriority(priority.value)}
           </span>
         )}
 
@@ -139,7 +144,7 @@ function TaskRow({
             )}
           >
             <Calendar size={12} />
-            {formatDate(due)}
+            {formatDate(due, locale)}
           </span>
         )}
 
@@ -147,7 +152,7 @@ function TaskRow({
         <div className="flex items-center gap-1 shrink-0">
           {task.qa && (
             <div
-              title={`QA: ${task.qa.name ?? task.qa.email}`}
+              title={t("qaPrefix", { name: task.qa.name ?? task.qa.email })}
               className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center ring-1 ring-background shrink-0"
             >
               {getInitials(task.qa.name, task.qa.email)}
@@ -155,7 +160,7 @@ function TaskRow({
           )}
           {task.assignee && (
             <div
-              title={`Asignado: ${task.assignee.name ?? task.assignee.email}`}
+              title={t("assigneePrefix", { name: task.assignee.name ?? task.assignee.email })}
               className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center ring-1 ring-background shrink-0"
             >
               {getInitials(task.assignee.name, task.assignee.email)}
@@ -166,7 +171,7 @@ function TaskRow({
               {task.collaborators.slice(0, 2).map(({ user }) => (
                 <div
                   key={user.id}
-                  title={`Colaborador: ${user.name ?? user.email}`}
+                  title={t("collaboratorPrefix", { name: user.name ?? user.email })}
                   className="w-5 h-5 rounded-full bg-blue-600 text-white text-[9px] font-medium flex items-center justify-center ring-1 ring-background"
                 >
                   {getInitials(user.name, user.email)}
@@ -229,6 +234,7 @@ function ListGroup({
   boardUsers: BoardUser[];
   memberCanAssign: boolean;
 }) {
+  const tBoard = useTranslations("board");
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -245,7 +251,7 @@ function ListGroup({
         )}
         <span className="text-sm font-semibold">{list.title}</span>
         <span className="text-xs text-muted-foreground ml-1">
-          {list.tasks.length} {list.tasks.length === 1 ? "tarea" : "tareas"}
+          {tBoard("ticketCount", { count: list.tasks.length })}
         </span>
       </button>
 
@@ -253,7 +259,7 @@ function ListGroup({
         <div className="flex flex-col gap-0.5 ml-4 mt-0.5">
           {list.tasks.length === 0 ? (
             <p className="text-xs text-muted-foreground px-3 py-1.5">
-              Sin tareas
+              {tBoard("emptyList")}
             </p>
           ) : (
             list.tasks.map((task) => (

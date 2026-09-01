@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
+import { useLocale, useTranslations } from "next-intl";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,10 @@ export function TaskDatePicker({
   hideTrigger = false,
   onSaved,
 }: TaskDatePickerProps) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "es" ? es : enUS;
   const updateTask = useBoardStore((s) => s.updateTask);
 
   const [open, setOpen] = useState(false);
@@ -69,10 +74,10 @@ export function TaskDatePicker({
 
   const dateSummary = (
     <span className="flex items-center gap-1.5">
-      {startEnabled && start ? format(start, "d MMM", { locale: es }) : ""}
+      {startEnabled && start ? format(start, "d MMM", { locale: dateFnsLocale }) : ""}
       {startEnabled && start && dueEnabled && due ? " → " : ""}
       {dueEnabled && due
-        ? format(buildDueWithTime(due)!, "d MMM yyyy HH:mm", { locale: es })
+        ? format(buildDueWithTime(due)!, "d MMM yyyy HH:mm", { locale: dateFnsLocale })
         : ""}
     </span>
   );
@@ -90,7 +95,7 @@ export function TaskDatePicker({
         <PopoverTrigger render={
           <Button variant="outline">
             <CalendarDays size={15} />
-            <span>Fechas</span>
+            <span>{t("dates")}</span>
           </Button>
         } />
       )}
@@ -102,13 +107,13 @@ export function TaskDatePicker({
             onClick={() => setSelecting("start")}
             className={`px-3 py-1.5 rounded-md transition-colors ${selecting === "start" ? "bg-muted font-medium" : "text-muted-foreground hover:bg-muted"}`}
           >
-            Fecha inicio
+            {t("startDate")}
           </button>
           <button
             onClick={() => setSelecting("due")}
             className={`px-3 py-1.5 rounded-md transition-colors ${selecting === "due" ? "bg-muted font-medium" : "text-muted-foreground hover:bg-muted"}`}
           >
-            Fecha vencimiento
+            {t("dueDate")}
           </button>
         </div>
 
@@ -120,6 +125,7 @@ export function TaskDatePicker({
             if (selecting === "start") setStart(day);
             else setDue(day);
           }}
+          locale={dateFnsLocale}
           initialFocus
         />
 
@@ -132,10 +138,10 @@ export function TaskDatePicker({
               onChange={(e) => setStartEnabled(e.target.checked)}
               className="rounded"
             />
-            Incluir fecha de inicio
+            {t("includeStartDate")}
             {startEnabled && start && (
               <span className="text-muted-foreground ml-1">
-                ({format(start, "d MMM yyyy", { locale: es })})
+                ({format(start, "d MMM yyyy", { locale: dateFnsLocale })})
               </span>
             )}
           </label>
@@ -151,17 +157,17 @@ export function TaskDatePicker({
                 onChange={(e) => setDueEnabled(e.target.checked)}
                 className="rounded"
               />
-              Incluir fecha de vencimiento
+              {t("includeDueDate")}
               {dueEnabled && due && (
                 <span className="text-muted-foreground ml-1">
-                  ({format(due, "d MMM yyyy", { locale: es })})
+                  ({format(due, "d MMM yyyy", { locale: dateFnsLocale })})
                 </span>
               )}
             </label>
 
             {dueEnabled && (
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">Hora:</span>
+                <span className="text-muted-foreground">{t("time")}</span>
                 <input
                   type="time"
                   value={`${dueHour}:${dueMinute}`}
@@ -182,10 +188,10 @@ export function TaskDatePicker({
         {/* Actions */}
         <div className="flex gap-2 justify-end">
           <Button size="sm" variant="outline" onClick={() => setOpen(false)}>
-            Cancelar
+            {tCommon("cancel")}
           </Button>
           <Button size="sm" onClick={handleSave}>
-            Guardar
+            {tCommon("save")}
           </Button>
         </div>
       </PopoverContent>

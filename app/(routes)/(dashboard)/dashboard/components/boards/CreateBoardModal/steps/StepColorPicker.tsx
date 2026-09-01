@@ -1,13 +1,16 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 import { StepProps, PRESET_COLORS } from "../CreateBoardStepper.types";
 
 export function StepColorPicker({ data, onChange }: StepProps) {
+  const t = useTranslations("boards");
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">
-        Elige un color para tu board (opcional)
+        {t("colorHint")}
       </p>
       <div className="grid grid-cols-4 gap-3">
         {PRESET_COLORS.map((c) => (
@@ -30,7 +33,7 @@ export function StepColorPicker({ data, onChange }: StepProps) {
           onClick={() => onChange({ color: "" })}
           className="text-xs text-muted-foreground underline underline-offset-2 self-start"
         >
-          Sin color
+          {t("noColor")}
         </button>
       )}
     </div>

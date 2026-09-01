@@ -95,7 +95,8 @@ export async function POST(
     boardId,
     userId: user.id,
     type: "task_created",
-    message: `ha creado ${createdTasks.length} tareas mediante Brain Dump con IA`,
+    key: "activity.brainDump",
+    params: { actor: user.name ?? user.email, count: createdTasks.length },
   });
 
   return NextResponse.json({

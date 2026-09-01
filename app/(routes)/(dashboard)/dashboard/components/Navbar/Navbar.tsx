@@ -1,6 +1,7 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NotificationBell } from "../NotificationBell/NotificationBell";
 import { GlobalSearch } from "../GlobalSearch/GlobalSearch";
+import { LanguageSwitcher } from "@/components/Shared/LanguageSwitcher";
 
 export function Navbar() {
   return (
@@ -9,7 +10,11 @@ export function Navbar() {
       <div className="flex-1 flex justify-center">
         <GlobalSearch />
       </div>
-      <NotificationBell />
+      <div className="flex items-center gap-2 shrink-0">
+        <LanguageSwitcher />
+        <NotificationBell />
+      </div>
     </header>
   );
 }
+

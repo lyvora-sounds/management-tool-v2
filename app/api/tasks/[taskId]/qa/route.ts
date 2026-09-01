@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { hasBoardAccess, isBoardAdmin } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
+import { encodeLogMessage } from "@/lib/activityMessages";
 
 export async function POST(
   req: Request,
@@ -53,7 +54,10 @@ export async function POST(
       await db.notification.create({
         data: {
           type: "qa_assigned",
-          message: `${actorName} te asignó como QA en la tarea "${task.title}"`,
+          message: encodeLogMessage("notifications.assignedYouQa", {
+            actor: actorName,
+            ticket: task.title,
+          }),
           userId: targetQaId,
           boardId: task.list.board.id,
           taskId,
@@ -64,14 +68,16 @@ export async function POST(
     const qaName = updated.qa?.name ?? updated.qa?.email ?? targetQaId;
     await createActivity({
       type: "task_qa_assigned",
-      message: `${actorName} asignó a ${qaName} como QA de "${task.title}"`,
+      key: "activity.qaAssigned",
+      params: { actor: actorName, name: qaName, ticket: task.title },
       boardId: task.list.board.id,
       userId: user.id,
     });
   } else {
     await createActivity({
       type: "task_qa_unassigned",
-      message: `${actorName} removió al QA de la tarea "${task.title}"`,
+      key: "activity.qaRemoved",
+      params: { actor: actorName, ticket: task.title },
       boardId: task.list.board.id,
       userId: user.id,
     });

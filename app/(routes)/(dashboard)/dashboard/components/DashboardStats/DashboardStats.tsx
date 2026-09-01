@@ -4,6 +4,7 @@ import {
   AlertCircle,
   LayoutDashboard,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { DashboardStatsProps, StatCardProps } from "./DashboardStats.types";
 
 function StatCard({ icon, label, value, variant = "default" }: StatCardProps) {
@@ -34,35 +35,36 @@ function StatCard({ icon, label, value, variant = "default" }: StatCardProps) {
   );
 }
 
-export function DashboardStats({
+export async function DashboardStats({
   totalPending,
   overdue,
   completedThisWeek,
   totalBoards,
 }: DashboardStatsProps) {
+  const t = await getTranslations("dashboard");
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       <StatCard
         icon={<Clock size={20} />}
-        label="Tareas pendientes"
+        label={t("pendingTasks")}
         value={totalPending}
         variant="default"
       />
       <StatCard
         icon={<AlertCircle size={20} />}
-        label="Vencidas"
+        label={t("overdue")}
         value={overdue}
         variant={overdue > 0 ? "danger" : "muted"}
       />
       <StatCard
         icon={<CheckCircle2 size={20} />}
-        label="Completadas esta semana"
+        label={t("completedThisWeek")}
         value={completedThisWeek}
         variant="success"
       />
       <StatCard
         icon={<LayoutDashboard size={20} />}
-        label="Boards activos"
+        label={t("activeBoards")}
         value={totalBoards}
         variant="muted"
       />

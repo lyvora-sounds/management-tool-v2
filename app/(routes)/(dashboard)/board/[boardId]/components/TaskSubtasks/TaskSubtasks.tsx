@@ -9,8 +9,11 @@ import { cn } from "@/lib/utils";
 import { Subtask, TaskSubtasksProps } from "./TaskSubtasks.types";
 import { useBoardStore } from "../../store/useBoardStore";
 import { SubtasksSkeleton } from "@/components/skeletons";
+import { useTranslations } from "next-intl";
 
 export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
+  const t = useTranslations("task");
+  const tCommon = useTranslations("common");
   const updateTask = useBoardStore((s) => s.updateTask);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [fetching, setFetching] = useState(true); // true = loading until first fetch completes
@@ -122,7 +125,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <CheckSquare2 size={15} />
-        <span>Subtareas</span>
+        <span>{t("subtasks")}</span>
         {total > 0 && (
           <span className="ml-auto text-xs">
             {completed}/{total}
@@ -199,11 +202,11 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
                   setNewTitle("");
                 }
               }}
-              placeholder="Nueva subtarea..."
+              placeholder={t("newSubtask")}
               className="h-7 text-sm flex-1"
             />
             <Button size="sm" onClick={addSubtask} disabled={!newTitle.trim()}>
-              Añadir
+              {tCommon("add")}
             </Button>
             <Button
               size="icon"
@@ -223,7 +226,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
             className="flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
           >
             <Plus size={13} />
-            Añadir subtarea
+            {t("addSubtask")}
           </button>
         )}
       </div>

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { hasBoardAccess, isBoardAdmin } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
+import { encodeLogMessage } from "@/lib/activityMessages";
 
 export async function POST(
   req: Request,
@@ -50,7 +51,10 @@ export async function POST(
       await db.notification.create({
         data: {
           type: "assigned",
-          message: `${actorName} te asignó la tarea "${task.title}"`,
+          message: encodeLogMessage("notifications.assignedYou", {
+            actor: actorName,
+            ticket: task.title,
+          }),
           userId: targetAssigneeId,
           boardId: task.list.board.id,
           taskId,
@@ -61,7 +65,8 @@ export async function POST(
     const assigneeName = updated.assignee?.name ?? updated.assignee?.email ?? targetAssigneeId;
     await createActivity({
       type: "task_assigned",
-      message: `${actorName} asignó "${task.title}" a ${assigneeName}`,
+      key: "activity.ticketAssigned",
+      params: { actor: actorName, ticket: task.title, assignee: assigneeName },
       boardId: task.list.board.id,
       userId: user.id,
     });
@@ -70,7 +75,8 @@ export async function POST(
   } else {
     await createActivity({
       type: "task_unassigned",
-      message: `${actorName} desasignó la tarea "${task.title}"`,
+      key: "activity.ticketUnassigned",
+      params: { actor: actorName, ticket: task.title },
       boardId: task.list.board.id,
       userId: user.id,
     });

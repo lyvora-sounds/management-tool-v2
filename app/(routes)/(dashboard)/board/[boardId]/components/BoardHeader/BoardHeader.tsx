@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { useBoardsStore } from "@/store/useBoardsStore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { BoardHeaderProps } from "./BoardHeader.types";
 import { BoardMembers } from "../BoardMembers/BoardMembers";
 import { BoardActivity } from "../BoardActivity/BoardActivity";
@@ -37,6 +38,8 @@ import { AiBrainDumpModal } from "../AiBrainDumpModal/AiBrainDumpModal";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 
 export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAssign }: BoardHeaderProps) {
+  const t = useTranslations("board");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const renameBoard = useBoardsStore((s) => s.renameBoard);
   const removeBoard = useBoardsStore((s) => s.removeBoard);
@@ -82,11 +85,11 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
     if (res.ok) {
       renameBoard(boardId, trimmed);
       setSavedTitle(trimmed);
-      toast.success("Board renombrado");
+      toast.success(t("renamed"));
       router.refresh();
     } else {
       setValue(savedTitle);
-      toast.error("Error al renombrar el board");
+      toast.error(t("renameError"));
     }
     setIsEditing(false);
     setLoading(false);
@@ -99,7 +102,7 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
       removeBoard(boardId);
       router.push("/dashboard/boards");
     } else {
-      toast.error("Error al eliminar el board");
+      toast.error(t("deleteError"));
       setLoading(false);
     }
   };
@@ -108,9 +111,9 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
     <>
       <ConfirmModal
         open={confirmDelete}
-        title="Eliminar board"
-        description={`¿Eliminar "${savedTitle}"? Se perderán todas las listas y tareas. Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar"
+        title={t("deleteTitle")}
+        description={t("deleteDescription", { title: savedTitle })}
+        confirmLabel={tCommon("delete")}
         loading={loading}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
@@ -186,10 +189,10 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
           <Button
             size="sm"
             onClick={() => setBrainDumpOpen(true)}
-            className="gap-1.5 h-8 text-xs bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-primary-foreground shadow-sm"
+            className="gap-1.5 h-8 text-xs bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-primary-foreground shadow-sm cursor-pointer"
           >
             <Sparkles size={13} />
-            <span className="hidden sm:inline">Brain Dump (IA)</span>
+            <span className="hidden sm:inline">{t("aiBrainDump")}</span>
           </Button>
 
           {/* Epics Button */}
@@ -197,10 +200,10 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
             variant="outline"
             size="sm"
             onClick={() => setEpicsOpen(true)}
-            className="gap-1.5 h-8 text-xs"
+            className="gap-1.5 h-8 text-xs cursor-pointer"
           >
             <Layers size={13} />
-            <span className="hidden sm:inline">Epics</span>
+            <span className="hidden sm:inline">{t("epics")}</span>
           </Button>
 
           {/* Archive Button */}
@@ -208,10 +211,10 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
             variant="outline"
             size="sm"
             onClick={() => setArchiveOpen(true)}
-            className="gap-1.5 h-8 text-xs"
+            className="gap-1.5 h-8 text-xs cursor-pointer"
           >
             <Archive size={13} />
-            <span className="hidden sm:inline">Archivo</span>
+            <span className="hidden sm:inline">{t("archive")}</span>
           </Button>
 
           <BoardLinks boardId={boardId} isOwner={isOwner} initialLinks={initialLinks} />
@@ -221,10 +224,10 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
             size="sm"
             onClick={() => setActivityOpen(true)}
             disabled={loading}
-            className="h-8 text-xs"
+            className="h-8 text-xs cursor-pointer"
           >
             <Activity size={14} />
-            <span className="hidden md:inline">Actividad</span>
+            <span className="hidden md:inline">{t("activity")}</span>
           </Button>
 
           <Button
@@ -232,15 +235,15 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
             size="sm"
             onClick={() => setMembersOpen(true)}
             disabled={loading}
-            className="h-8 text-xs"
+            className="h-8 text-xs cursor-pointer"
           >
             <Users size={14} />
-            <span className="hidden md:inline">Miembros</span>
+            <span className="hidden md:inline">{t("members")}</span>
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition"
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition cursor-pointer"
               disabled={loading}
             >
               <MoreHorizontal size={18} />
@@ -248,16 +251,16 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={startEditing} className="cursor-pointer">
                 <Pencil size={14} />
-                Renombrar board
+                {t("renameBoard")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIntegrationsOpen(true)} className="cursor-pointer">
                 <Webhook size={14} />
-                Webhooks (Slack / Discord)
+                {t("webhooks")}
               </DropdownMenuItem>
               {isOwner && (
                 <DropdownMenuItem onClick={() => setPermissionsOpen(true)} className="cursor-pointer">
                   <ShieldCheck size={14} />
-                  Permisos
+                  {t("permissions")}
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
@@ -267,7 +270,7 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
                 disabled={loading}
               >
                 <Trash2 size={14} />
-                Eliminar board
+                {t("deleteBoard")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

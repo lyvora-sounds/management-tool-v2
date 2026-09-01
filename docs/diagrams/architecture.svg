@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 360" width="100%" height="100%">
+  <rect width="1080" height="360" fill="#F7F7F7"/>
+  <defs>
+    <marker id="archTipGold" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#D3A05B" fill-opacity="0.85"/>
+    </marker>
+  </defs>
+
+  <rect x="32" y="28" width="1" height="16" fill="#D3A05B"/>
+  <text x="42" y="41" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">ARCHITECTURE</text>
+  <text x="1048" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">Next.js 15 · Clerk · Prisma 7 · Neon</text>
+  <text x="32" y="76" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" letter-spacing="-0.025em">
+    <tspan fill="#13233C">Kikiboard </tspan><tspan fill="#D3A05B">system</tspan>
+  </text>
+  <rect x="32" y="90" width="40" height="2" fill="#D3A05B"/>
+
+  <rect x="32" y="120" width="200" height="200" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(52, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="4" width="28" height="22" rx="3"/>
+    <line x1="2" y1="11" x2="30" y2="11"/>
+    <circle cx="8" cy="7.5" r="1.1"/>
+    <circle cx="12" cy="7.5" r="1.1"/>
+    <circle cx="16" cy="7.5" r="1.1"/>
+  </g>
+  <text x="52" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">App UI</text>
+  <text x="52" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Dashboard, boards,</text>
+  <text x="52" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">calendar, search,</text>
+  <text x="52" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">settings, public share</text>
+
+  <line x1="232" y1="220" x2="296" y2="220" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#archTipGold)"/>
+  <text x="264" y="210" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">FETCH</text>
+
+  <rect x="304" y="120" width="200" height="200" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(324, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
+    <circle cx="16" cy="16" r="11"/>
+    <circle cx="16" cy="16" r="5"/>
+    <line x1="16" y1="3" x2="16" y2="29"/>
+    <line x1="3" y1="16" x2="29" y2="16"/>
+  </g>
+  <text x="324" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Route handlers</text>
+  <text x="324" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Clerk middleware,</text>
+  <text x="324" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">board roles, activity</text>
+  <text x="324" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">logs, notifications</text>
+
+  <line x1="504" y1="220" x2="568" y2="220" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#archTipGold)"/>
+  <text x="536" y="210" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">CRUD</text>
+
+  <rect x="576" y="120" width="200" height="200" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(596, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
+    <ellipse cx="16" cy="9" rx="11" ry="4"/>
+    <path d="M5 9 v14 c0 2.4 22 2.4 22 0 V9"/>
+    <path d="M5 16 c0 2.2 22 2.2 22 0"/>
+  </g>
+  <text x="596" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Neon + Blob</text>
+  <text x="596" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">PostgreSQL via Prisma,</text>
+  <text x="596" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">private file uploads,</text>
+  <text x="596" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">encrypted AI keys</text>
+
+  <line x1="776" y1="220" x2="840" y2="220" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#archTipGold)"/>
+  <text x="808" y="210" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">OUT</text>
+
+  <rect x="848" y="120" width="200" height="200" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(868, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round">
+    <path d="M8 18 h18 a8 8 0 0 0 0-16 10 10 0 0 0-18 4 7 7 0 0 0-2 12 z"/>
+  </g>
+  <text x="868" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Integrations</text>
+  <text x="868" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Resend · Slack</text>
+  <text x="868" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Discord · GCal</text>
+  <text x="868" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">User AI providers</text>
+</svg>

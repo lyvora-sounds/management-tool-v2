@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 type InviteInfo = {
@@ -16,6 +17,8 @@ export default function InvitePage() {
   const { token } = useParams<{ token: string }>();
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
+  const t = useTranslations("invite");
+  const tCommon = useTranslations("common");
 
   const [info, setInfo] = useState<InviteInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,9 +32,9 @@ export default function InvitePage() {
         if (data.error) setError(data.error);
         else setInfo(data);
       })
-      .catch(() => setError("Error al cargar la invitación"))
+      .catch(() => setError(t("loadError")))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, t]);
 
   const handleAccept = async () => {
     if (!isSignedIn) {
@@ -52,7 +55,7 @@ export default function InvitePage() {
   if (loading || !isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground text-sm">Cargando...</p>
+        <p className="text-muted-foreground text-sm">{tCommon("loading")}</p>
       </div>
     );
   }
@@ -62,43 +65,42 @@ export default function InvitePage() {
       <div className="w-full max-w-md rounded-xl border bg-card p-8 shadow-sm flex flex-col gap-4">
         {error ? (
           <>
-            <h1 className="text-xl font-bold">Invitación no válida</h1>
+            <h1 className="text-xl font-bold">{t("invalid")}</h1>
             <p className="text-muted-foreground text-sm">{error}</p>
             <Button onClick={() => router.push("/dashboard/boards")}>
-              Ir al inicio
+              {t("goHome")}
             </Button>
           </>
         ) : info?.expired ? (
           <>
-            <h1 className="text-xl font-bold">Invitación expirada</h1>
+            <h1 className="text-xl font-bold">{t("expired")}</h1>
             <p className="text-muted-foreground text-sm">
-              Esta invitación ha caducado. Pide al propietario del board que te envíe una nueva.
+              {t("expiredBody")}
             </p>
           </>
         ) : info?.status !== "pending" ? (
           <>
-            <h1 className="text-xl font-bold">Invitación ya usada</h1>
+            <h1 className="text-xl font-bold">{t("used")}</h1>
             <p className="text-muted-foreground text-sm">
-              Esta invitación ya fue aceptada o cancelada.
+              {t("usedBody")}
             </p>
             <Button onClick={() => router.push("/dashboard/boards")}>
-              Ir al inicio
+              {t("goHome")}
             </Button>
           </>
         ) : (
           <>
-            <h1 className="text-xl font-bold">Invitación a board</h1>
+            <h1 className="text-xl font-bold">{t("title")}</h1>
             <p className="text-sm text-muted-foreground">
-              Has sido invitado a colaborar en el board{" "}
-              <strong className="text-foreground">"{info?.boardTitle}"</strong>.
+              {t("invitedTo", { title: info?.boardTitle ?? "" })}
             </p>
             {!isSignedIn && (
               <p className="text-xs text-muted-foreground">
-                Necesitas iniciar sesión con <strong>{info?.email}</strong> para aceptar.
+                {t("needSignIn", { email: info?.email ?? "" })}
               </p>
             )}
             <Button onClick={handleAccept} disabled={accepting}>
-              {accepting ? "Aceptando..." : "Aceptar invitación"}
+              {accepting ? t("accepting") : t("accept")}
             </Button>
           </>
         )}
