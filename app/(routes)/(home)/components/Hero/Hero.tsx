@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text";
 import { cn } from "@/lib/utils";
+import { Highlighter } from "@/components/ui/highlighter";
 import { TextAnimate } from "@/components/ui/text-animate";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
@@ -40,8 +41,22 @@ export function Hero() {
         {t("heroTitle2")}
       </TextAnimate>
 
+      {/* Los trozos resaltados van marcados dentro de la propia traducción:
+          cada idioma coloca el subrayado sobre las palabras que le tocan, que
+          no caen en el mismo sitio si se parte la frase por fuera. */}
       <p className="text-lg text-muted-foreground max-w-xl">
-        {t("heroDescription")}
+        {t.rich("heroDescription", {
+          underline: (chunks) => (
+            <Highlighter action="underline" color="#FF9800">
+              {chunks}
+            </Highlighter>
+          ),
+          highlight: (chunks) => (
+            <Highlighter action="highlight" color="#87CEFA">
+              {chunks}
+            </Highlighter>
+          ),
+        })}
       </p>
 
       <div className="flex flex-col sm:flex-row items-center gap-3">
