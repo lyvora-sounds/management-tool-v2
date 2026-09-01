@@ -62,7 +62,7 @@
   </g>
   <text x="484" y="160" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Owner</text>
   <text x="484" y="182" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Everything an admin can do, plus delete the board. Cannot be removed</text>
-  <text x="484" y="202" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">via the members API. Exactly one per board. Only owner can remove another admin.</text>
+  <text x="484" y="202" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">via the members API. Exactly one per board. Only owner acts on another admin.</text>
 
   <line x1="372" y1="288" x2="408" y2="288" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#roleTipGold)"/>
   <rect x="416" y="232" width="632" height="96" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
@@ -73,8 +73,8 @@
     <line x1="27" y1="16" x2="27" y2="20"/>
   </g>
   <text x="484" y="272" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Admin</text>
-  <text x="484" y="294" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Invite, change member/admin roles, kick members, toggle memberCanAssign,</text>
-  <text x="484" y="314" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">custom fields, integrations. Cannot delete the board or kick another admin.</text>
+  <text x="484" y="294" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Invite, promote or demote members, kick members, toggle memberCanAssign,</text>
+  <text x="484" y="314" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">custom fields, integrations. Cannot delete the board or touch another admin.</text>
 
   <line x1="372" y1="400" x2="408" y2="400" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#roleTipGold)"/>
   <rect x="416" y="344" width="632" height="104" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
