@@ -99,7 +99,7 @@ function taskMatchesFilters(
 export function BoardContent({
   lists: initialLists,
   boardId,
-  isOwner,
+  canManage,
   boardUsers,
   memberCanAssign,
 }: BoardContentProps) {
@@ -359,7 +359,7 @@ export function BoardContent({
         <BoardListView
           lists={filteredLists}
           boardId={boardId}
-          isOwner={isOwner}
+          canManage={canManage}
           boardUsers={boardUsers}
           memberCanAssign={memberCanAssign}
         />
@@ -393,7 +393,7 @@ export function BoardContent({
                   key={list.id}
                   list={list}
                   boardId={boardId}
-                  isOwner={isOwner}
+                  canManage={canManage}
                   boardUsers={boardUsers}
                   memberCanAssign={memberCanAssign}
                 />
@@ -425,7 +425,7 @@ export function BoardContent({
           boardId={boardId}
           open={Boolean(urlTaskEntry)}
           onClose={handleCloseUrlModal}
-          isOwner={isOwner}
+          canManage={canManage}
           boardUsers={boardUsers}
           memberCanAssign={memberCanAssign}
         />

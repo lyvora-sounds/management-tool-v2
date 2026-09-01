@@ -54,7 +54,7 @@ function TaskRow({
   listId,
   listTitle,
   boardId,
-  isOwner,
+  canManage,
   boardUsers,
   memberCanAssign,
 }: TaskRowProps) {
@@ -213,7 +213,7 @@ function TaskRow({
         boardId={boardId}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        isOwner={isOwner}
+        canManage={canManage}
         boardUsers={boardUsers}
         memberCanAssign={memberCanAssign}
       />
@@ -224,13 +224,13 @@ function TaskRow({
 function ListGroup({
   list,
   boardId,
-  isOwner,
+  canManage,
   boardUsers,
   memberCanAssign,
 }: {
   list: ListWithTasks;
   boardId: string;
-  isOwner: boolean;
+  canManage: boolean;
   boardUsers: BoardUser[];
   memberCanAssign: boolean;
 }) {
@@ -269,7 +269,7 @@ function ListGroup({
                 listId={list.id}
                 listTitle={list.title}
                 boardId={boardId}
-                isOwner={isOwner}
+                canManage={canManage}
                 boardUsers={boardUsers}
                 memberCanAssign={memberCanAssign}
               />
@@ -284,7 +284,7 @@ function ListGroup({
 export function BoardListView({
   lists,
   boardId,
-  isOwner,
+  canManage,
   boardUsers,
   memberCanAssign,
 }: BoardListViewProps) {
@@ -295,7 +295,7 @@ export function BoardListView({
           key={list.id}
           list={list}
           boardId={boardId}
-          isOwner={isOwner}
+          canManage={canManage}
           boardUsers={boardUsers}
           memberCanAssign={memberCanAssign}
         />

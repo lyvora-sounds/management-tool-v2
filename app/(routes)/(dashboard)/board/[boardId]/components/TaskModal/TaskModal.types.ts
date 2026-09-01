@@ -8,7 +8,7 @@ export type TaskModalProps = {
   boardId: string;
   open: boolean;
   onClose: () => void;
-  isOwner: boolean;
+  canManage: boolean;
   boardUsers: BoardUser[];
   memberCanAssign: boolean;
 };
