@@ -71,7 +71,7 @@ export function TaskModal({
   boardId,
   open,
   onClose,
-  isOwner,
+  canManage,
   boardUsers,
   memberCanAssign,
 }: TaskModalProps) {
@@ -714,7 +714,7 @@ export function TaskModal({
                     taskId={currentTask.id}
                     boardUsers={boardUsers}
                     assignee={assignee}
-                    isOwner={isOwner}
+                    canManage={canManage}
                     memberCanAssign={memberCanAssign}
                     onAssigneeChange={(nextAssignee) => {
                       setAssignee(nextAssignee);
@@ -728,7 +728,7 @@ export function TaskModal({
                     taskId={currentTask.id}
                     boardUsers={boardUsers}
                     collaborators={collaborators}
-                    isOwner={isOwner}
+                    canManage={canManage}
                     memberCanAssign={memberCanAssign}
                     onCollaboratorsChange={(nextCollabs) => {
                       setCollaborators(nextCollabs);
@@ -741,7 +741,7 @@ export function TaskModal({
                     taskId={currentTask.id}
                     boardUsers={boardUsers}
                     qa={qa}
-                    isOwner={isOwner}
+                    canManage={canManage}
                     memberCanAssign={memberCanAssign}
                     onQaChange={(nextQa) => {
                       setQa(nextQa);

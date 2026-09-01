@@ -28,7 +28,7 @@ export function TaskQa({
   taskId,
   boardUsers,
   qa,
-  isOwner,
+  canManage,
   memberCanAssign,
   onQaChange,
 }: Props) {
@@ -48,7 +48,7 @@ export function TaskQa({
     });
   };
 
-  if (!isOwner && !memberCanAssign) {
+  if (!canManage && !memberCanAssign) {
     if (!qa) return null;
     return (
       <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 h-8 bg-muted/40 text-xs">

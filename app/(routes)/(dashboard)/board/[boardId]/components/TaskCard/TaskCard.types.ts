@@ -40,7 +40,7 @@ export type TaskCardProps = {
   listId: string;
   listTitle: string;
   boardId: string;
-  isOwner: boolean;
+  canManage: boolean;
   boardUsers: BoardUser[];
   memberCanAssign: boolean;
 };

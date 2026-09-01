@@ -5,7 +5,7 @@ import { ListContainerProps } from "./ListContainer.types";
 export function ListContainer({
   lists,
   boardId,
-  isOwner,
+  canManage,
   boardUsers,
   memberCanAssign,
 }: ListContainerProps) {
@@ -16,7 +16,7 @@ export function ListContainer({
           key={list.id}
           list={list}
           boardId={boardId}
-          isOwner={isOwner}
+          canManage={canManage}
           boardUsers={boardUsers}
           memberCanAssign={memberCanAssign}
         />

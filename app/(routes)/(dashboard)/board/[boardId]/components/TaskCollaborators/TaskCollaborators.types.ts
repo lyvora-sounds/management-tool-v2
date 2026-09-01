@@ -4,7 +4,7 @@ export type Props = {
   taskId: string;
   boardUsers: BoardUser[];
   collaborators: TaskCollaborator[];
-  isOwner: boolean;
+  canManage: boolean;
   memberCanAssign: boolean;
   onCollaboratorsChange: (collaborators: TaskCollaborator[]) => void;
 };

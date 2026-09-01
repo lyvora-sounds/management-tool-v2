@@ -29,7 +29,7 @@ export function TaskCollaborators({
   taskId,
   boardUsers,
   collaborators,
-  isOwner,
+  canManage,
   memberCanAssign,
   onCollaboratorsChange,
 }: Props) {
@@ -60,7 +60,7 @@ export function TaskCollaborators({
 
   const assigned = boardUsers.filter((u) => activeIds.has(u.id));
 
-  if (!isOwner && !memberCanAssign) {
+  if (!canManage && !memberCanAssign) {
     if (assigned.length === 0) return null;
     return (
       <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 h-8 bg-muted/40 text-xs">

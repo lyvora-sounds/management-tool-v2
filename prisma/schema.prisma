@@ -86,7 +86,8 @@ model Board {
   color       String?
   links       Json?
 
-  memberCanAssign Boolean @default(false)
+  // Los miembros pueden repartir trabajo salvo que un admin lo apague a mano.
+  memberCanAssign Boolean @default(true)
 
   // Webhooks & Integrations
   slackWebhookUrl       String?
