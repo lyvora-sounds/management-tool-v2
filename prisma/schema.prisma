@@ -43,6 +43,11 @@ model UserSettings {
   aiBaseUrl     String?
   voiceLanguage String  @default("es-ES") // "es-ES" | "en-US"
 
+  // Onboarding. Nulable a propósito: null = "todavía no ha pasado", que es el
+  // estado correcto para los usuarios que ya existían antes de esta columna.
+  onboardingDismissedAt DateTime? // el usuario cerró la tarjeta de primeros pasos
+  tourSeenAt            DateTime? // ya vio (o saltó) el tour del tablero
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

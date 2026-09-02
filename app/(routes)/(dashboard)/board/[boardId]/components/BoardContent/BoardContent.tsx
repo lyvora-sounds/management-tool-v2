@@ -325,7 +325,7 @@ export function BoardContent({
           availableQuarters={availableQuarters}
           availableMembers={boardUsers}
         />
-        <div className="flex items-center gap-1 ml-auto shrink-0">
+        <div data-tour="view-toggle" className="flex items-center gap-1 ml-auto shrink-0">
           <Button
             variant={view === "kanban" ? "secondary" : "ghost"}
             size="icon"
@@ -377,7 +377,7 @@ export function BoardContent({
             items={lists.map((l) => l.id)}
             strategy={horizontalListSortingStrategy}
           >
-            <div className="flex gap-4 overflow-x-auto pb-4 items-start">
+            <div data-tour="board-lists" className="flex gap-4 overflow-x-auto pb-4 items-start">
               {lists.length === 0 && (
                 <div className="flex flex-col items-center justify-center gap-2 w-64 py-10 rounded-xl border-2 border-dashed border-border/50 text-muted-foreground/60 shrink-0 select-none">
                   <Columns3 size={20} />

@@ -55,6 +55,7 @@ export function CreateListForm({ boardId }: CreateListFormProps) {
   if (!open) {
     return (
       <button
+        data-guide="add-list"
         onClick={handleOpen}
         className="flex items-center gap-2 bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl w-64 shrink-0 p-3 text-sm font-medium transition-colors cursor-pointer"
       >

@@ -187,6 +187,7 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-wrap">
           {/* AI Brain Dump Button */}
           <Button
+            data-tour="board-ai"
             size="sm"
             onClick={() => setBrainDumpOpen(true)}
             className="gap-1.5 h-8 text-xs bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-primary-foreground shadow-sm cursor-pointer"
@@ -231,6 +232,8 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
           </Button>
 
           <Button
+            data-tour="board-members"
+            data-guide="board-members"
             variant="outline"
             size="sm"
             onClick={() => setMembersOpen(true)}
