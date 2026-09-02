@@ -110,7 +110,8 @@
     "dashboard": "Dashboard",
     "myTasks": "My tickets",
     "calendar": "Calendar",
-    "settings": "Settings"
+    "settings": "Settings",
+    "howItWorks": "How it works"
   },
   "cookie": {
     "body": "We use cookies to improve your experience and keep your session active.",
@@ -210,71 +211,98 @@
     "subtasksProgress": "{done} / {total} completed"
   },
   "functions": {
+    "metaTitle": "Features",
+    "metaDescription": "Boards, tickets, roles, AI, custom fields, epics and integrations. Everything Kiki does, in one place.",
     "kicker": "Features",
-    "title": "Everything your team needs to be productive",
-    "subtitle": "Kiki brings essential project-management tools into a clean, fast interface. No distractions, no overload.",
+    "title": "Everything your team needs to stay productive",
+    "subtitle": "Kiki brings project management into a <underline>clean, fast interface</underline>. No distractions, no overload.",
     "detailHeading": "In detail",
     "detailSubtitle": "Every feature designed to reduce friction and increase focus.",
-    "kanbanTitle": "Kanban boards",
-    "kanbanDesc": "Organize any project on visual boards with fully customizable lists. Drag and drop tickets between columns, change priorities instantly and keep your team up to date.",
-    "kanbanP1": "Create multiple boards per project",
-    "kanbanP2": "Unlimited lists per board",
-    "kanbanP3": "Drag and drop between lists",
+    "seeHowItWorks": "See how it works, step by step",
+    "kanbanTitle": "Kanban and list view",
+    "kanbanDesc": "Organize any project on visual boards with the lists you want. Drag tickets between columns, or switch to the list view and move them from a menu.",
+    "kanbanP1": "Unlimited boards and lists",
+    "kanbanP2": "Drag and drop, plus move from the list view",
+    "kanbanP3": "Lists named done, hecho or finaliz close tickets automatically",
     "kanbanP4": "Custom color per board",
-    "collabTitle": "Team collaboration",
-    "collabDesc": "Invite your team with a simple link or email. Assign tickets to specific members, manage roles and keep everyone in sync.",
-    "collabP1": "Email invitations",
-    "collabP2": "Assign tickets per member",
-    "collabP3": "Role management (admin / member)",
-    "collabP4": "Real-time updates",
-    "notifTitle": "Smart notifications",
-    "notifDesc": "Get instant alerts when you are assigned a ticket, when someone comments, or when something important changes. Never lose the thread.",
-    "notifP1": "Real-time notifications",
-    "notifP2": "Ticket assignment alerts",
-    "notifP3": "New comment alerts",
-    "notifP4": "Unified notification center",
-    "metricsTitle": "Progress and metrics",
-    "metricsDesc": "See each project's progress with bars, weekly activity and per-board metrics. Make decisions from real data.",
-    "metricsP1": "Weekly activity chart",
-    "metricsP2": "Progress bars per board",
-    "metricsP3": "Completed ticket counter",
-    "metricsP4": "Dashboard statistics view",
+    "collabTitle": "Team and roles",
+    "collabDesc": "Invite by email and decide what each person can do. Owner, admin and member are real permissions enforced by the API, not just labels.",
+    "collabP1": "Email invitations with a join link",
+    "collabP2": "Owner, admin and member with distinct powers",
+    "collabP3": "Assignee, QA and collaborators per ticket",
+    "collabP4": "A switch to let members assign work",
+    "aiTitle": "Built-in AI",
+    "aiDesc": "Dump everything on your mind and get back a structured list of tickets. Or dictate it out loud. You bring your own key, so you stay in control of the cost.",
+    "aiP1": "Brain Dump: free text turns into tickets",
+    "aiP2": "Voice input with transcription",
+    "aiP3": "Improve a title or description in one click",
+    "aiP4": "Your own key: OpenAI, Claude, Gemini, Grok and more",
+    "fieldsTitle": "Custom fields",
+    "fieldsDesc": "Add the data your process needs: story points, environment, customer, or a link between a parent ticket and its children.",
+    "fieldsP1": "Text, number, list and ticket-reference fields",
+    "fieldsP2": "Story points ready out of the box",
+    "fieldsP3": "Parent and child relationships between tickets",
+    "fieldsP4": "Custom values shared across the board",
+    "epicsTitle": "Epics and quarters",
+    "epicsDesc": "Group related tickets under an epic and tag them by quarter. See the bigger picture without losing the day-to-day detail.",
+    "epicsP1": "Epics with their own name and color",
+    "epicsP2": "Quarter tagging per ticket",
+    "epicsP3": "Filter the board by epic or quarter",
+    "epicsP4": "Epic progress at a glance",
     "labelsTitle": "Labels and priorities",
-    "labelsDesc": "Classify tickets with custom color labels and priority levels. Filter and find what you need in seconds.",
+    "labelsDesc": "Classify tickets with color labels and four priority levels. Filter and find what you need in seconds.",
     "labelsP1": "Custom color labels",
-    "labelsP2": "Priorities: high, medium, low",
-    "labelsP3": "Multiple labels per ticket",
-    "labelsP4": "Labels per board",
-    "subtasksTitle": "Subtasks",
-    "subtasksDesc": "Break complex tickets into manageable steps. Track progress with a visual bar and check items off as you go.",
-    "subtasksP1": "Nested subtasks per ticket",
-    "subtasksP2": "Visual progress bar",
-    "subtasksP3": "Drag-and-drop reorder",
-    "subtasksP4": "Completed counter",
-    "calendarTitle": "Due-date calendar",
-    "calendarDesc": "See every ticket with a due date on a monthly calendar. Plan sprints, deliveries and deadlines clearly.",
-    "calendarP1": "Monthly ticket view",
-    "calendarP2": "Start and due dates",
-    "calendarP3": "Visual urgency indicators",
-    "calendarP4": "Fast month navigation",
-    "commentsTitle": "Ticket comments",
-    "commentsDesc": "Discuss, resolve questions and leave feedback directly on each ticket. Keep the whole project conversation in one place.",
-    "commentsP1": "Comments per ticket",
-    "commentsP2": "Conversation history",
-    "commentsP3": "Participant avatars",
-    "commentsP4": "Reply notifications",
-    "linksTitle": "Project links",
-    "linksDesc": "Add relevant links to the board: Git branches, deploys, Figma files or any external resource. Stay in context.",
-    "linksP1": "Quick links in the board header",
-    "linksP2": "Custom label per link",
-    "linksP3": "Instant access from any view",
-    "linksP4": "Only the owner can edit",
-    "attachmentsTitle": "Attachments",
-    "attachmentsDesc": "Upload files directly to tickets: images, documents, screenshots. Project material stays organized and at hand.",
-    "attachmentsP1": "Attachments per ticket",
-    "attachmentsP2": "Image preview",
-    "attachmentsP3": "Direct download",
-    "attachmentsP4": "File size control"
+    "labelsP2": "Urgent, high, medium and low priority",
+    "labelsP3": "Several labels on the same ticket",
+    "labelsP4": "Combined filters by label, person and priority",
+    "subtasksTitle": "Subtasks and QA",
+    "subtasksDesc": "Break a complex ticket into steps and hand it to someone for review. Progress is visible without opening anything.",
+    "subtasksP1": "Checklist of subtasks per ticket",
+    "subtasksP2": "Progress bar on the card",
+    "subtasksP3": "A dedicated QA reviewer",
+    "subtasksP4": "Reorder by dragging",
+    "calendarTitle": "Calendar and due dates",
+    "calendarDesc": "See every ticket with a date on a monthly calendar, and push them to Google Calendar if you live there.",
+    "calendarP1": "Monthly view of every board",
+    "calendarP2": "Start date and due date",
+    "calendarP3": "Overdue and due-soon indicators",
+    "calendarP4": "Optional Google Calendar sync",
+    "commentsTitle": "Comments",
+    "commentsDesc": "Discuss and settle questions on the ticket itself. Whoever is involved gets notified without being told to look.",
+    "commentsP1": "Full conversation per ticket",
+    "commentsP2": "Notifies assignee, QA and collaborators",
+    "commentsP3": "Rich text in descriptions",
+    "commentsP4": "Admins can moderate any comment",
+    "notifTitle": "Notifications",
+    "notifDesc": "Instant alerts when something concerns you: an assignment, a review, a comment. Everything in one bell.",
+    "notifP1": "In-app notification center",
+    "notifP2": "Assignment, QA and collaborator alerts",
+    "notifP3": "New comment alerts",
+    "notifP4": "Never notifies you about your own actions",
+    "metricsTitle": "Progress and metrics",
+    "metricsDesc": "Weekly activity, breakdown by priority and progress per board. Decisions from real data, not from a feeling.",
+    "metricsP1": "Weekly activity chart",
+    "metricsP2": "Priority breakdown of open work",
+    "metricsP3": "Progress bar per board",
+    "metricsP4": "Overdue and due-this-week counters",
+    "integrationsTitle": "Integrations",
+    "integrationsDesc": "Send board activity where your team already talks, and open the boards to your own tools.",
+    "integrationsP1": "Slack and Discord webhooks",
+    "integrationsP2": "Pick which events get sent",
+    "integrationsP3": "Google Calendar sync",
+    "integrationsP4": "MCP server to use Kiki from an AI assistant",
+    "attachmentsTitle": "Attachments and links",
+    "attachmentsDesc": "Upload files to a ticket and pin the links that matter to the board header: repo, deploy, designs.",
+    "attachmentsP1": "File attachments per ticket",
+    "attachmentsP2": "Image preview and direct download",
+    "attachmentsP3": "Board links with custom labels",
+    "attachmentsP4": "Private storage, access checked on every download",
+    "shareTitle": "Sharing and archive",
+    "shareDesc": "Show a ticket to someone outside the board with a read-only link, and get finished work out of the way without deleting it.",
+    "shareP1": "Public read-only ticket link",
+    "shareP2": "Revoke the link whenever you want",
+    "shareP3": "Archive instead of delete",
+    "shareP4": "Interface in English, Spanish and Tagalog"
   },
   "statsPage": {
     "kicker": "Statistics",
@@ -987,5 +1015,192 @@
     "stop": "Stop",
     "voice": "Voice",
     "changeLanguage": "Change language (current: {label})"
+  },
+  "onboarding": {
+    "title": "First steps",
+    "subtitle": "Five minutes to have your first board running.",
+    "doneTitle": "You are all set",
+    "doneSubtitle": "You have gone through everything. Enjoy Kiki.",
+    "dismiss": "Hide first steps",
+    "progress": "{done} of {total}",
+    "steps": {
+      "createBoard": {
+        "label": "Create your first board",
+        "action": "Create"
+      },
+      "addList": {
+        "label": "Add a list to organize the work",
+        "action": "Open"
+      },
+      "createTicket": {
+        "label": "Create your first ticket",
+        "action": "Open"
+      },
+      "inviteTeammate": {
+        "label": "Invite someone to the board",
+        "action": "Invite"
+      },
+      "connectAi": {
+        "label": "Connect your AI key",
+        "action": "Settings"
+      }
+    }
+  },
+  "tour": {
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip the tour",
+    "finish": "Got it",
+    "counter": "{current} of {total}",
+    "steps": {
+      "board-lists": {
+        "title": "Your lists",
+        "body": "Each column is a stage of the work. Drag a ticket from one to the next and it moves; drop it on a list named done and it closes on its own."
+      },
+      "create-task": {
+        "title": "Create a ticket",
+        "body": "A title is enough to start. Everything else — dates, labels, people, subtasks — you add later by opening the card."
+      },
+      "view-toggle": {
+        "title": "Kanban or list",
+        "body": "The same board, two ways of reading it. The list view is more comfortable when there are many tickets, and you can move them from there too."
+      },
+      "board-filters": {
+        "title": "Filters",
+        "body": "Narrow it down by label, person, priority, epic or quarter. They combine, so you can go from the whole board to one person's week."
+      },
+      "board-ai": {
+        "title": "Brain Dump",
+        "body": "Write or dictate everything on your mind and the AI turns it into separate tickets. You need your own key, which you set in Settings."
+      },
+      "board-members": {
+        "title": "Your team",
+        "body": "Invite people by email and give each one a role. Admins manage the board; members work on tickets."
+      }
+    }
+  },
+  "howItWorks": {
+    "metaTitle": "How it works",
+    "metaDescription": "From an empty board to a team that ships: the five steps of working in Kiki, explained end to end.",
+    "kicker": "How it works",
+    "title": "From an empty board to a team that ships",
+    "subtitle": "No manual and no setup call. This is the <underline>whole flow</underline>, in the order it actually happens.",
+    "stepLabel": "Step {number} of {total}",
+    "steps": {
+      "board": {
+        "title": "Create your board",
+        "body": "A board is one project. Give it a name, pick a color, and if you already know your stages, name them right there while you create it.",
+        "b1": "Starter lists on creation, or add them later",
+        "b2": "Story points and other useful fields, already set up",
+        "b3": "As many boards as projects you run"
+      },
+      "structure": {
+        "title": "Shape the work into lists and tickets",
+        "body": "Every column is a stage. Every card is a ticket. Move a card to the right and the work advances; drop it on a done column and it closes itself.",
+        "b1": "Drag and drop, or move from a menu in the list view",
+        "b2": "Labels, priority, dates, subtasks and attachments per ticket",
+        "b3": "Epics and quarters when a single board is not enough"
+      },
+      "team": {
+        "title": "Invite the team and share the load",
+        "body": "Invite by email and give each person a role. Then hand out the work: one owner per ticket, an optional reviewer, and whoever else needs to be there.",
+        "b1": "Owner, admin and member, enforced by the API",
+        "b2": "Assignee, QA reviewer and collaborators per ticket",
+        "b3": "Everyone involved gets notified, nobody has to chase"
+      },
+      "ai": {
+        "title": "Let the AI do the boring part",
+        "body": "The hardest part of a new project is turning what is in your head into separate tickets. Write it or say it out loud, and get the board filled for you.",
+        "b1": "Brain Dump: a paragraph becomes a list of tickets",
+        "b2": "Dictate by voice if typing gets in the way",
+        "b3": "Your own key, so nothing is charged to you by surprise"
+      },
+      "measure": {
+        "title": "Measure, close and clear",
+        "body": "The dashboard tells you what is overdue, what closed this week and how the load is spread. Finished work gets archived, not deleted.",
+        "b1": "Weekly activity and priority breakdown",
+        "b2": "Progress per board and per epic",
+        "b3": "Archive keeps history without cluttering the board"
+      }
+    },
+    "visuals": {
+      "boardA": "Website redesign",
+      "boardB": "Mobile app",
+      "boardC": "Q3 marketing",
+      "todo": "To do",
+      "doing": "In progress",
+      "done": "Done",
+      "ticket1": "Define the design system",
+      "ticket2": "Set up analytics",
+      "ticket3": "Home page layout",
+      "ticket4": "Migrate the database",
+      "roleOwner": "Owner",
+      "roleAdmin": "Admin",
+      "roleMember": "Member",
+      "brainDump": "Brain Dump",
+      "brainDumpText": "We need to redo the landing, fix login on mobile and prepare the launch newsletter before Friday.",
+      "aiOut1": "Redo the landing page",
+      "aiOut2": "Fix login on mobile",
+      "aiOut3": "Prepare the launch newsletter",
+      "metricDone": "Closed",
+      "metricOpen": "Open",
+      "metricOverdue": "Overdue"
+    },
+    "faqHeading": "Questions before you start",
+    "faqSubtitle": "The ones people actually ask.",
+    "faq": {
+      "price": {
+        "q": "How much does it cost?",
+        "a": "Nothing. Kiki is free to use, and the AI features run on your own provider key, so whatever you spend there you pay to them directly, not to us."
+      },
+      "data": {
+        "q": "Who can see my data?",
+        "a": "Only the people you invite to a board. Every endpoint checks membership before answering, and a ticket is only visible outside the board if you generate a share link yourself."
+      },
+      "team": {
+        "q": "How many people can join a board?",
+        "a": "There is no limit. You invite by email, and each person gets a role: admin if they should manage the board, member if they should just work on tickets."
+      },
+      "ai": {
+        "q": "Do I need an AI key?",
+        "a": "Only for the AI features. Everything else works without it. You can bring a key from OpenAI, Claude, Gemini, Grok, DeepSeek, Kimi or any compatible endpoint, and it is stored encrypted."
+      },
+      "languages": {
+        "q": "What languages is it in?",
+        "a": "English, Spanish and Tagalog. You switch from the globe in the top bar and the choice sticks, including the dates and the activity log."
+      },
+      "export": {
+        "q": "Can I connect it to my own tools?",
+        "a": "Yes. Board activity can go to Slack or Discord through a webhook, due dates can sync to Google Calendar, and there is an MCP server so an AI assistant can work on your boards directly."
+      }
+    },
+    "ctaTitle": "Your first board takes about a minute",
+    "ctaBody": "No credit card, no setup call, no demo to sit through.",
+    "ctaButton": "Start now",
+    "ctaSecondary": "See every feature",
+    "ctaFootnote": "Free · Setup in 2 minutes"
+  },
+  "guide": {
+    "gotIt": "Got it",
+    "createBoard": {
+      "title": "Start with a board",
+      "body": "Press here, give it a name and pick a color. A board is one project — everything else lives inside it."
+    },
+    "addList": {
+      "title": "Add your first list",
+      "body": "Each list is a stage of the work: To do, In progress, Done. Name a list “Done” and dropping a ticket there closes it on its own."
+    },
+    "createTicket": {
+      "title": "Create a ticket",
+      "body": "A title is enough to start. Dates, labels, people and subtasks come later, by opening the card."
+    },
+    "inviteTeammate": {
+      "title": "Bring your team in",
+      "body": "Open Members and invite by email. Give each person a role: admin to manage the board, member to work on tickets."
+    },
+    "connectAi": {
+      "title": "Paste your AI key",
+      "body": "With a key from your own provider you unlock Brain Dump, voice dictation and one-click rewriting. It is stored encrypted."
+    }
   }
 }

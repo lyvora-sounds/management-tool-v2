@@ -3,6 +3,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./dashboard/components/Sidebar";
 import { Navbar } from "./dashboard/components/Navbar/Navbar";
 import { BoardsStoreInitializer } from "./dashboard/components/BoardsStoreInitializer/BoardsStoreInitializer";
+import { OnboardingGuide } from "@/components/Shared/GuidePointer";
+import { Suspense } from "react";
 import db from "@/lib/db";
 
 export default async function LayoutDashboard({
@@ -36,6 +38,12 @@ export default async function LayoutDashboard({
         <Navbar />
         {children}
       </main>
+      {/* Señala el control del paso que traiga `?guide=` en la URL. Va aquí y
+          no en cada página porque los pasos apuntan a sitios distintos.
+          Suspense porque useSearchParams obliga a un límite de suspensión. */}
+      <Suspense fallback={null}>
+        <OnboardingGuide />
+      </Suspense>
     </SidebarProvider>
   );
 }

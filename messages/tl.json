@@ -110,7 +110,8 @@
     "dashboard": "Dashboard",
     "myTasks": "Mga tickets ko",
     "calendar": "Calendar",
-    "settings": "Settings"
+    "settings": "Settings",
+    "howItWorks": "Paano gumagana"
   },
   "cookie": {
     "body": "Gumagamit kami ng cookies para mapabuti ang experience mo at panatilihing aktibo ang session.",
@@ -210,71 +211,98 @@
     "subtasksProgress": "{done} / {total} natapos"
   },
   "functions": {
+    "metaTitle": "Mga feature",
+    "metaDescription": "Boards, tickets, roles, AI, custom fields, epics at integrations. Lahat ng ginagawa ng Kiki, sa isang lugar.",
     "kicker": "Mga feature",
-    "title": "Lahat ng kailangan ng team para maging productive",
-    "subtitle": "Pinagsasama-sama ng Kiki ang mahahalagang tool sa project management sa malinis at mabilis na interface. Walang abala, walang sobra.",
+    "title": "Lahat ng kailangan ng team mo para maging produktibo",
+    "subtitle": "Dinadala ng Kiki ang pamamahala ng proyekto sa isang <underline>malinis at mabilis na interface</underline>. Walang distraksyon, walang sobra.",
     "detailHeading": "Sa detalye",
-    "detailSubtitle": "Bawat feature ay para bawasan ang friction at dagdagan ang focus.",
-    "kanbanTitle": "Mga kanban boards",
-    "kanbanDesc": "Ayusin ang anumang proyekto sa visual boards na may fully customizable na lists. I-drag and drop ang tickets sa mga column, palitan agad ang priority, at panatilihing updated ang team.",
-    "kanbanP1": "Gumawa ng maraming boards bawat proyekto",
-    "kanbanP2": "Walang limitasyong lists bawat board",
-    "kanbanP3": "Drag and drop sa pagitan ng lists",
-    "kanbanP4": "Custom na kulay bawat board",
-    "collabTitle": "Kolaborasyon ng team",
-    "collabDesc": "Imbitahan ang team sa simpleng link o email. Mag-assign ng tickets sa mga member, i-manage ang roles, at panatilihing naka-sync ang lahat.",
-    "collabP1": "Mga imbitasyon sa email",
-    "collabP2": "Mag-assign ng tickets bawat member",
-    "collabP3": "Pamamahala ng role (admin / member)",
-    "collabP4": "Mga update nang real time",
-    "notifTitle": "Matalinong notifications",
-    "notifDesc": "Makatanggap agad ng alert kapag na-assign ka ng ticket, may nag-comment, o may mahalagang pagbabago. Hindi ka mawawala sa usapan.",
-    "notifP1": "Real-time na notifications",
-    "notifP2": "Mga alert sa assignment ng ticket",
-    "notifP3": "Mga alert sa bagong comment",
-    "notifP4": "Pinag-isang notification center",
-    "metricsTitle": "Progreso at metrics",
-    "metricsDesc": "Tingnan ang progreso ng bawat proyekto sa bars, lingguhang aktibidad, at metrics bawat board. Magdesisyon mula sa totoong data.",
-    "metricsP1": "Chart ng lingguhang aktibidad",
-    "metricsP2": "Mga progress bar bawat board",
-    "metricsP3": "Counter ng natapos na tickets",
-    "metricsP4": "View ng istatistika sa dashboard",
-    "labelsTitle": "Mga label at priority",
-    "labelsDesc": "Uriin ang tickets gamit ang custom na color labels at antas ng priority. Mag-filter at hanapin agad ang kailangan mo.",
-    "labelsP1": "Mga label na may custom na kulay",
-    "labelsP2": "Mga priority: high, medium, low",
-    "labelsP3": "Maraming labels bawat ticket",
-    "labelsP4": "Mga label bawat board",
-    "subtasksTitle": "Mga subtask",
-    "subtasksDesc": "Hatiin ang komplikadong tickets sa mga hakbang. Subaybayan ang progreso sa visual bar at i-check ang items habang tapos na.",
-    "subtasksP1": "Mga nested na subtask bawat ticket",
-    "subtasksP2": "Visual na progress bar",
-    "subtasksP3": "Drag-and-drop na pag-ayos",
-    "subtasksP4": "Counter ng natapos",
-    "calendarTitle": "Calendar ng due date",
-    "calendarDesc": "Tingnan ang bawat ticket na may due date sa buwanang calendar. Planuhin ang sprints, deliveries, at deadlines nang malinaw.",
-    "calendarP1": "Buwanang view ng tickets",
-    "calendarP2": "Start at due dates",
-    "calendarP3": "Mga visual na indicator ng urgency",
-    "calendarP4": "Mabilis na navigation ng buwan",
-    "commentsTitle": "Mga comment sa ticket",
-    "commentsDesc": "Mag-usap, magresolba ng tanong, at mag-iwan ng feedback direkta sa bawat ticket. Nasa iisang lugar ang buong usapan ng proyekto.",
-    "commentsP1": "Mga comment bawat ticket",
-    "commentsP2": "History ng usapan",
-    "commentsP3": "Mga avatar ng kalahok",
-    "commentsP4": "Mga notification sa sagot",
-    "linksTitle": "Mga link ng proyekto",
-    "linksDesc": "Magdagdag ng mga relevant na link sa board: Git branches, deploys, Figma files, o anumang external resource. Manatili sa context.",
-    "linksP1": "Mabilisang links sa header ng board",
-    "linksP2": "Custom na label bawat link",
-    "linksP3": "Instant na access mula sa anumang view",
-    "linksP4": "Tanging owner ang puwedeng mag-edit",
-    "attachmentsTitle": "Mga attachment",
-    "attachmentsDesc": "Mag-upload ng files direkta sa tickets: images, documents, screenshots. Organizado at palaging nasa kamay ang materials.",
-    "attachmentsP1": "Mga attachment bawat ticket",
-    "attachmentsP2": "Preview ng imahe",
-    "attachmentsP3": "Direktang download",
-    "attachmentsP4": "Kontrol sa laki ng file"
+    "detailSubtitle": "Bawat feature ay ginawa para bawasan ang alitan at dagdagan ang pokus.",
+    "seeHowItWorks": "Tingnan kung paano ito gumagana, hakbang-hakbang",
+    "kanbanTitle": "Kanban at list view",
+    "kanbanDesc": "Ayusin ang kahit anong proyekto sa boards na nakikita, gamit ang mga list na gusto mo. I-drag ang tickets sa pagitan ng mga column, o lumipat sa list view at ilipat sila mula sa isang menu.",
+    "kanbanP1": "Walang limitasyong boards at lists",
+    "kanbanP2": "Drag and drop, at paglipat mula sa list view",
+    "kanbanP3": "Ang mga list na done, hecho o finaliz ay kusang nagsasara ng tickets",
+    "kanbanP4": "Sariling kulay bawat board",
+    "collabTitle": "Team at mga papel",
+    "collabDesc": "Mag-imbita sa email at magpasya kung ano ang kayang gawin ng bawat isa. Ang may-ari, admin at miyembro ay tunay na pahintulot na ipinatutupad ng API, hindi basta label.",
+    "collabP1": "Imbitasyon sa email na may link para sumali",
+    "collabP2": "May-ari, admin at miyembro na may magkakaibang kapangyarihan",
+    "collabP3": "Assignee, QA at collaborators bawat ticket",
+    "collabP4": "Isang switch para payagan ang mga miyembro na mag-assign",
+    "aiTitle": "AI na nakapaloob",
+    "aiDesc": "Ilabas lahat ng nasa isip mo at makakuha ng nakaayos nang listahan ng tickets. O idikta ito nang malakas. Ikaw ang naglalagay ng sarili mong key, kaya ikaw ang may hawak ng gastos.",
+    "aiP1": "Brain Dump: nagiging tickets ang malayang teksto",
+    "aiP2": "Pagdidikta sa boses na may transcription",
+    "aiP3": "Pagandahin ang pamagat o paglalarawan sa isang click",
+    "aiP4": "Sarili mong key: OpenAI, Claude, Gemini, Grok at iba pa",
+    "fieldsTitle": "Custom fields",
+    "fieldsDesc": "Idagdag ang datos na hinihingi ng proseso mo: story points, environment, kliyente, o ang ugnayan ng magulang na ticket at mga anak nito.",
+    "fieldsP1": "Mga field na teksto, numero, listahan at sanggunian sa ticket",
+    "fieldsP2": "Handa na ang story points mula sa unang araw",
+    "fieldsP3": "Ugnayang magulang at anak sa pagitan ng tickets",
+    "fieldsP4": "Custom values na hati sa buong board",
+    "epicsTitle": "Epics at quarters",
+    "epicsDesc": "Pagsama-samahin ang magkakaugnay na tickets sa ilalim ng isang epic at tatakan sila ayon sa quarter. Nakikita mo ang kabuuan nang hindi nawawala ang detalye ng araw-araw.",
+    "epicsP1": "Epics na may sariling pangalan at kulay",
+    "epicsP2": "Pagtatak ayon sa quarter bawat ticket",
+    "epicsP3": "Salain ang board ayon sa epic o quarter",
+    "epicsP4": "Agad makikita ang usad ng epic",
+    "labelsTitle": "Mga label at prayoridad",
+    "labelsDesc": "Uriin ang tickets gamit ang may kulay na label at apat na antas ng prayoridad. Salain at hanapin ang kailangan mo sa ilang segundo.",
+    "labelsP1": "Mga label na may sariling kulay",
+    "labelsP2": "Prayoridad na urgent, mataas, katamtaman at mababa",
+    "labelsP3": "Ilang label sa iisang ticket",
+    "labelsP4": "Pinagsamang salain ayon sa label, tao at prayoridad",
+    "subtasksTitle": "Mga subtask at QA",
+    "subtasksDesc": "Hatiin ang masalimuot na ticket sa mga hakbang at ipasa ito sa iba para suriin. Kita ang usad nang hindi binubuksan ang kahit ano.",
+    "subtasksP1": "Checklist ng mga subtask bawat ticket",
+    "subtasksP2": "Progress bar sa card",
+    "subtasksP3": "Isang nakatalagang tagasuri ng QA",
+    "subtasksP4": "Ayusing muli sa pamamagitan ng pag-drag",
+    "calendarTitle": "Kalendaryo at mga petsa",
+    "calendarDesc": "Tingnan sa buwanang kalendaryo ang lahat ng tickets na may petsa, at dalhin sila sa Google Calendar kung doon ka nakatira.",
+    "calendarP1": "Buwanang tanaw ng lahat ng boards mo",
+    "calendarP2": "Petsa ng simula at ng pagsusumite",
+    "calendarP3": "Babala kung lampas na o malapit na",
+    "calendarP4": "Opsyonal na sync sa Google Calendar",
+    "commentsTitle": "Mga komento",
+    "commentsDesc": "Pag-usapan at lutasin ang mga tanong sa mismong ticket. Nalalaman ng dapat makaalam nang walang kailangang magsabi.",
+    "commentsP1": "Buong usapan bawat ticket",
+    "commentsP2": "Inaabisuhan ang assignee, QA at collaborators",
+    "commentsP3": "Mayamang teksto sa mga paglalarawan",
+    "commentsP4": "Kayang i-moderate ng mga admin ang kahit anong komento",
+    "notifTitle": "Mga abiso",
+    "notifDesc": "Agarang abiso kapag may kinalaman ka: isang assignment, isang pagsusuri, isang komento. Lahat sa isang kampana.",
+    "notifP1": "Sentro ng abiso sa loob ng app",
+    "notifP2": "Abiso sa assignment, QA at collaboration",
+    "notifP3": "Abiso sa bagong komento",
+    "notifP4": "Hindi ka kailanman inaabisuhan sa sarili mong ginawa",
+    "metricsTitle": "Usad at sukatan",
+    "metricsDesc": "Lingguhang aktibidad, hatian ayon sa prayoridad at usad bawat board. Pasya mula sa tunay na datos, hindi sa pakiramdam.",
+    "metricsP1": "Tsart ng lingguhang aktibidad",
+    "metricsP2": "Hatian ayon sa prayoridad ng nakabukas",
+    "metricsP3": "Progress bar bawat board",
+    "metricsP4": "Bilang ng lampas na at ng linggong ito",
+    "integrationsTitle": "Mga integration",
+    "integrationsDesc": "Ipadala ang aktibidad ng board kung saan na nag-uusap ang team mo, at ibukas ang boards sa sarili mong kasangkapan.",
+    "integrationsP1": "Webhooks ng Slack at Discord",
+    "integrationsP2": "Piliin kung anong pangyayari ang ipapadala",
+    "integrationsP3": "Sync sa Google Calendar",
+    "integrationsP4": "MCP server para gamitin ang Kiki mula sa isang AI assistant",
+    "attachmentsTitle": "Mga kalakip at link",
+    "attachmentsDesc": "Mag-upload ng file sa isang ticket at ilagay sa ulo ng board ang mga link na mahalaga: repo, deploy, disenyo.",
+    "attachmentsP1": "Mga nakalakip na file bawat ticket",
+    "attachmentsP2": "Preview ng larawan at tuwirang pag-download",
+    "attachmentsP3": "Mga link ng board na may sariling label",
+    "attachmentsP4": "Pribadong imbakan, may tsek ang pahintulot sa bawat download",
+    "shareTitle": "Pagbabahagi at archive",
+    "shareDesc": "Ipakita ang isang ticket sa taga-labas ng board gamit ang link na basahin lang, at alisin sa daan ang tapos na nang hindi binubura.",
+    "shareP1": "Pampublikong link na basahin lang bawat ticket",
+    "shareP2": "Bawiin ang link kahit kailan",
+    "shareP3": "Mag-archive sa halip na magbura",
+    "shareP4": "Interface sa Ingles, Espanyol at Tagalog"
   },
   "statsPage": {
     "kicker": "Istatistika",
@@ -987,5 +1015,192 @@
     "stop": "Itigil",
     "voice": "Boses",
     "changeLanguage": "Palitan ang wika (kasalukuyan: {label})"
+  },
+  "onboarding": {
+    "title": "Mga unang hakbang",
+    "subtitle": "Limang minuto para maandar ang unang board mo.",
+    "doneTitle": "Handa ka na",
+    "doneSubtitle": "Nadaanan mo na ang lahat. Mag-enjoy ka sa Kiki.",
+    "dismiss": "Itago ang mga unang hakbang",
+    "progress": "{done} sa {total}",
+    "steps": {
+      "createBoard": {
+        "label": "Gawin ang unang board mo",
+        "action": "Gumawa"
+      },
+      "addList": {
+        "label": "Magdagdag ng list para ayusin ang trabaho",
+        "action": "Buksan"
+      },
+      "createTicket": {
+        "label": "Gawin ang unang ticket mo",
+        "action": "Buksan"
+      },
+      "inviteTeammate": {
+        "label": "Mag-imbita ng isang tao sa board",
+        "action": "Imbitahan"
+      },
+      "connectAi": {
+        "label": "Ikabit ang AI key mo",
+        "action": "Mga setting"
+      }
+    }
+  },
+  "tour": {
+    "next": "Susunod",
+    "back": "Bumalik",
+    "skip": "Laktawan ang tour",
+    "finish": "Naintindihan",
+    "counter": "{current} sa {total}",
+    "steps": {
+      "board-lists": {
+        "title": "Ang mga list mo",
+        "body": "Bawat column ay isang yugto ng trabaho. I-drag ang ticket mula sa isa papunta sa kasunod at lilipat ito; ihulog sa list na tinatawag na done at kusa itong magsasara."
+      },
+      "create-task": {
+        "title": "Gumawa ng ticket",
+        "body": "Sapat na ang pamagat para magsimula. Ang iba pa — petsa, label, tao, subtask — idadagdag mo mamaya sa pagbukas ng card."
+      },
+      "view-toggle": {
+        "title": "Kanban o listahan",
+        "body": "Iisang board, dalawang paraan ng pagbasa. Mas maginhawa ang list view kapag maraming tickets, at mailillipat mo rin sila mula roon."
+      },
+      "board-filters": {
+        "title": "Mga salain",
+        "body": "Ipitin ayon sa label, tao, prayoridad, epic o quarter. Nagsasama sila, kaya kaya mong lumipat mula sa buong board papunta sa linggo ng isang tao."
+      },
+      "board-ai": {
+        "title": "Brain Dump",
+        "body": "Isulat o idikta ang lahat ng nasa isip mo at gagawin itong hiwa-hiwalay na tickets ng AI. Kailangan mo ng sarili mong key, na inilalagay sa Mga setting."
+      },
+      "board-members": {
+        "title": "Ang team mo",
+        "body": "Mag-imbita sa email at bigyan ng papel ang bawat isa. Ang mga admin ang namamahala ng board; ang mga miyembro ang gumagawa sa tickets."
+      }
+    }
+  },
+  "howItWorks": {
+    "metaTitle": "Paano ito gumagana",
+    "metaDescription": "Mula sa walang lamang board hanggang sa team na nakakapaghatid: ang limang hakbang ng paggawa sa Kiki, ipinaliwanag mula simula hanggang dulo.",
+    "kicker": "Paano ito gumagana",
+    "title": "Mula sa walang lamang board hanggang sa team na nakakapaghatid",
+    "subtitle": "Walang manwal at walang tawag para sa setup. Ito ang <underline>buong daloy</underline>, sa pagkakasunod na talagang nangyayari.",
+    "stepLabel": "Hakbang {number} sa {total}",
+    "steps": {
+      "board": {
+        "title": "Gawin ang board mo",
+        "body": "Ang board ay isang proyekto. Bigyan ito ng pangalan, pumili ng kulay, at kung alam mo na ang mga yugto mo, pangalanan sila habang ginagawa ito.",
+        "b1": "Panimulang lists sa paggawa, o idagdag mamaya",
+        "b2": "Story points at iba pang kapaki-pakinabang na field, nakahanda na",
+        "b3": "Kasindami ng boards ang proyektong hawak mo"
+      },
+      "structure": {
+        "title": "Hubugin ang trabaho sa lists at tickets",
+        "body": "Bawat column ay isang yugto. Bawat card ay isang ticket. Ilipat ang card pakanan at umuusad ang trabaho; ihulog sa column ng tapos at kusa itong magsasara.",
+        "b1": "Drag and drop, o ilipat mula sa isang menu sa list view",
+        "b2": "Mga label, prayoridad, petsa, subtask at kalakip bawat ticket",
+        "b3": "Epics at quarters kapag kulang na ang iisang board"
+      },
+      "team": {
+        "title": "Imbitahan ang team at hatiin ang pasanin",
+        "body": "Mag-imbita sa email at bigyan ng papel ang bawat isa. Pagkatapos hatiin ang trabaho: isang may hawak bawat ticket, isang tagasuri kung kailangan, at kung sino pa ang dapat naroon.",
+        "b1": "May-ari, admin at miyembro, ipinatutupad ng API",
+        "b2": "Assignee, tagasuri ng QA at collaborators bawat ticket",
+        "b3": "Naaabisuhan ang bawat kasangkot, walang kailangang habulin"
+      },
+      "ai": {
+        "title": "Hayaan ang AI sa nakakainip na bahagi",
+        "body": "Ang pinakamahirap sa bagong proyekto ay gawing hiwa-hiwalay na tickets ang nasa isip mo. Isulat o sabihin nang malakas, at mapupuno ang board para sa iyo.",
+        "b1": "Brain Dump: nagiging listahan ng tickets ang isang talata",
+        "b2": "Magdikta sa boses kung nakakaabala ang pagta-type",
+        "b3": "Sarili mong key, kaya walang biglaang singil sa iyo"
+      },
+      "measure": {
+        "title": "Sukatin, isara at linisin",
+        "body": "Sinasabi ng dashboard kung ano ang lampas na, ano ang nasara ngayong linggo at paano nakahati ang pasanin. Ina-archive ang tapos, hindi binubura.",
+        "b1": "Lingguhang aktibidad at hatian ayon sa prayoridad",
+        "b2": "Usad bawat board at bawat epic",
+        "b3": "Iniingatan ng archive ang kasaysayan nang hindi ginugulo ang board"
+      }
+    },
+    "visuals": {
+      "boardA": "Pagbabago ng website",
+      "boardB": "Mobile app",
+      "boardC": "Marketing sa Q3",
+      "todo": "Gagawin",
+      "doing": "Ginagawa",
+      "done": "Tapos",
+      "ticket1": "Tukuyin ang design system",
+      "ticket2": "Ilagay ang analytics",
+      "ticket3": "Ayusin ang home page",
+      "ticket4": "Ilipat ang database",
+      "roleOwner": "May-ari",
+      "roleAdmin": "Admin",
+      "roleMember": "Miyembro",
+      "brainDump": "Brain Dump",
+      "brainDumpText": "Kailangan nating gawing muli ang landing, ayusin ang login sa mobile at ihanda ang newsletter ng paglulunsad bago mag-Biyernes.",
+      "aiOut1": "Gawing muli ang landing",
+      "aiOut2": "Ayusin ang login sa mobile",
+      "aiOut3": "Ihanda ang newsletter ng paglulunsad",
+      "metricDone": "Nasara",
+      "metricOpen": "Bukas",
+      "metricOverdue": "Lampas na"
+    },
+    "faqHeading": "Mga tanong bago magsimula",
+    "faqSubtitle": "Ang mga talagang itinatanong ng tao.",
+    "faq": {
+      "price": {
+        "q": "Magkano ito?",
+        "a": "Wala. Libre ang Kiki, at ang mga feature ng AI ay tumatakbo sa sarili mong provider key, kaya ang gastos doon ay direktang binabayaran mo sa kanila, hindi sa amin."
+      },
+      "data": {
+        "q": "Sino ang nakakakita ng datos ko?",
+        "a": "Ang mga inimbitahan mo lang sa isang board. Tinitingnan ng bawat endpoint ang pagiging kasapi bago sumagot, at nakikita lang ang ticket sa labas ng board kung ikaw mismo ang gumawa ng share link."
+      },
+      "team": {
+        "q": "Ilang tao ang kasya sa isang board?",
+        "a": "Walang limitasyon. Nag-iimbita ka sa email at may papel ang bawat isa: admin kung siya ang mamamahala ng board, miyembro kung gagawa lang siya ng tickets."
+      },
+      "ai": {
+        "q": "Kailangan ko ba ng AI key?",
+        "a": "Para lang sa mga feature ng AI. Gumagana ang iba nang wala nito. Puwede kang magdala ng key mula sa OpenAI, Claude, Gemini, Grok, DeepSeek, Kimi o kahit anong tugmang endpoint, at naka-encrypt itong nakaimbak."
+      },
+      "languages": {
+        "q": "Anong mga wika ang meron?",
+        "a": "Ingles, Espanyol at Tagalog. Nagpapalit ka mula sa globo sa itaas na bar at nananatili ang pinili mo, pati na ang mga petsa at ang talaan ng aktibidad."
+      },
+      "export": {
+        "q": "Maikakabit ko ba ito sa sarili kong kasangkapan?",
+        "a": "Oo. Ang aktibidad ng board ay puwedeng dumaan sa Slack o Discord sa pamamagitan ng webhook, ang mga petsa ay puwedeng i-sync sa Google Calendar, at may MCP server para tuwirang makapagtrabaho ang isang AI assistant sa boards mo."
+      }
+    },
+    "ctaTitle": "Mga isang minuto lang ang unang board mo",
+    "ctaBody": "Walang credit card, walang tawag para sa setup, walang demo na pagtitiisan.",
+    "ctaButton": "Magsimula na",
+    "ctaSecondary": "Tingnan ang lahat ng feature",
+    "ctaFootnote": "Libre · Setup sa 2 minuto"
+  },
+  "guide": {
+    "gotIt": "Naintindihan",
+    "createBoard": {
+      "title": "Magsimula sa isang board",
+      "body": "Pindutin dito, bigyan ng pangalan at pumili ng kulay. Ang board ay isang proyekto: nasa loob nito ang lahat ng iba pa."
+    },
+    "addList": {
+      "title": "Idagdag ang unang list mo",
+      "body": "Bawat list ay isang yugto ng trabaho: Gagawin, Ginagawa, Tapos. Kapag tinawag mong “Tapos” ang isang list, kusang magsasara ang ticket na ihuhulog mo roon."
+    },
+    "createTicket": {
+      "title": "Gumawa ng ticket",
+      "body": "Sapat na ang pamagat para magsimula. Ang petsa, label, tao at subtask ay susunod, sa pagbukas ng card."
+    },
+    "inviteTeammate": {
+      "title": "Isama ang team mo",
+      "body": "Buksan ang Mga miyembro at mag-imbita sa email. Bigyan ng papel ang bawat isa: admin para mamahala ng board, miyembro para gumawa ng tickets."
+    },
+    "connectAi": {
+      "title": "I-paste ang AI key mo",
+      "body": "Sa key mula sa sarili mong provider bubukas ang Brain Dump, pagdidikta sa boses at ang pagpapaganda ng teksto. Naka-encrypt itong nakaimbak."
+    }
   }
 }

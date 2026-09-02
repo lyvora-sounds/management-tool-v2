@@ -14,6 +14,8 @@ import { GlobalProgress } from "./components/GlobalProgress/GlobalProgress";
 import { WeeklyActivity } from "./components/WeeklyActivity/WeeklyActivity";
 import { PriorityBreakdownChart } from "./components/PriorityBreakdownChart/PriorityBreakdownChart";
 import { Greeting } from "./components/Greeting/Greeting";
+import { OnboardingChecklist } from "./components/OnboardingChecklist/OnboardingChecklist";
+import { getOnboardingState } from "@/lib/onboardingState";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -241,9 +243,18 @@ export default async function DashboardPage() {
 
   const tBoards = await getTranslations("boards");
 
+  const onboarding = await getOnboardingState(user.id);
+  // Se deja de mostrar cuando el usuario la cierra y cuando ya no queda nada
+  // por hacer: enseñar cinco checks verdes para siempre no ayuda a nadie.
+  const showOnboarding = !onboarding.dismissed && !onboarding.isComplete;
+
   return (
     <div className="p-3 sm:p-6 flex flex-col gap-6">
       <Greeting name={user.name} />
+
+      {showOnboarding && (
+        <OnboardingChecklist state={onboarding} firstBoardId={boards[0]?.id} />
+      )}
 
       <DashboardStats
         totalPending={totalPending}

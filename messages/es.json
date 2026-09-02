@@ -110,7 +110,8 @@
     "dashboard": "Dashboard",
     "myTasks": "Mis tickets",
     "calendar": "Calendario",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "howItWorks": "Cómo funciona"
   },
   "cookie": {
     "body": "Usamos cookies para mejorar tu experiencia y mantener tu sesión activa.",
@@ -210,71 +211,98 @@
     "subtasksProgress": "{done} / {total} completadas"
   },
   "functions": {
+    "metaTitle": "Funciones",
+    "metaDescription": "Tableros, tickets, roles, IA, campos personalizados, épicas e integraciones. Todo lo que hace Kiki, en un sitio.",
     "kicker": "Funciones",
     "title": "Todo lo que tu equipo necesita para ser productivo",
-    "subtitle": "Kiki reúne las herramientas esenciales de gestión de proyectos en una interfaz limpia y rápida. Sin distracciones, sin sobrecarga.",
+    "subtitle": "Kiki trae la gestión de proyectos a una <underline>interfaz limpia y rápida</underline>. Sin distracciones ni sobrecarga.",
     "detailHeading": "En detalle",
-    "detailSubtitle": "Cada función diseñada para reducir fricción y aumentar foco.",
-    "kanbanTitle": "Tableros kanban",
-    "kanbanDesc": "Organiza cualquier proyecto en tableros visuales con listas totalmente personalizables. Arrastra y suelta tickets entre columnas, cambia prioridades al instante y mantén a tu equipo siempre al día.",
-    "kanbanP1": "Crea múltiples tableros por proyecto",
-    "kanbanP2": "Listas ilimitadas por tablero",
-    "kanbanP3": "Drag & drop entre listas",
-    "kanbanP4": "Color personalizado por tablero",
-    "collabTitle": "Colaboración en equipo",
-    "collabDesc": "Invita a tu equipo con un simple enlace o por email. Asigna tickets a miembros específicos, gestiona roles y mantén a todos sincronizados sin esfuerzo.",
-    "collabP1": "Invitaciones por email",
-    "collabP2": "Asignación de tickets por miembro",
-    "collabP3": "Gestión de roles (admin / miembro)",
-    "collabP4": "Actualizaciones en tiempo real",
-    "notifTitle": "Notificaciones inteligentes",
-    "notifDesc": "Recibe alertas inmediatas cuando te asignan un ticket, cuando alguien comenta en tu proyecto o cuando hay cambios importantes. Nunca pierdas el hilo.",
-    "notifP1": "Notificaciones en tiempo real",
-    "notifP2": "Alertas de asignación de tickets",
-    "notifP3": "Avisos de nuevos comentarios",
-    "notifP4": "Centro de notificaciones unificado",
-    "metricsTitle": "Progreso y métricas",
-    "metricsDesc": "Visualiza el avance de cada proyecto con barras de progreso, actividad semanal y métricas por tablero. Toma decisiones basadas en datos reales.",
-    "metricsP1": "Gráfico de actividad semanal",
-    "metricsP2": "Barras de progreso por tablero",
-    "metricsP3": "Contador de tickets completados",
-    "metricsP4": "Vista de estadísticas en dashboard",
+    "detailSubtitle": "Cada función pensada para quitar fricción y ganar foco.",
+    "seeHowItWorks": "Mira cómo funciona, paso a paso",
+    "kanbanTitle": "Kanban y vista de lista",
+    "kanbanDesc": "Organiza cualquier proyecto en tableros visuales con las listas que quieras. Arrastra tickets entre columnas, o cambia a la vista de lista y muévelos desde un menú.",
+    "kanbanP1": "Tableros y listas sin límite",
+    "kanbanP2": "Arrastrar y soltar, y mover desde la vista de lista",
+    "kanbanP3": "Las listas llamadas done, hecho o finaliz cierran tickets solas",
+    "kanbanP4": "Color propio por tablero",
+    "collabTitle": "Equipo y roles",
+    "collabDesc": "Invita por email y decide qué puede hacer cada persona. Propietario, administrador y miembro son permisos reales que aplica la API, no etiquetas.",
+    "collabP1": "Invitaciones por email con enlace para unirse",
+    "collabP2": "Propietario, administrador y miembro con poderes distintos",
+    "collabP3": "Responsable, QA y colaboradores por ticket",
+    "collabP4": "Un interruptor para dejar que los miembros asignen",
+    "aiTitle": "IA integrada",
+    "aiDesc": "Suelta todo lo que tienes en la cabeza y recibe una lista de tickets ya estructurada. O díctalo en voz alta. Pones tu propia clave, así que controlas el gasto.",
+    "aiP1": "Brain Dump: el texto libre se convierte en tickets",
+    "aiP2": "Dictado por voz con transcripción",
+    "aiP3": "Mejora un título o una descripción de un clic",
+    "aiP4": "Tu clave: OpenAI, Claude, Gemini, Grok y más",
+    "fieldsTitle": "Campos personalizados",
+    "fieldsDesc": "Añade los datos que pide tu proceso: story points, entorno, cliente, o el vínculo entre un ticket padre y sus hijos.",
+    "fieldsP1": "Campos de texto, número, lista y referencia a ticket",
+    "fieldsP2": "Story points listos desde el primer día",
+    "fieldsP3": "Relaciones padre e hijo entre tickets",
+    "fieldsP4": "Custom values compartidos en todo el tablero",
+    "epicsTitle": "Épicas y quarters",
+    "epicsDesc": "Agrupa tickets relacionados bajo una épica y etiquétalos por quarter. Ves el conjunto sin perder el detalle del día a día.",
+    "epicsP1": "Épicas con nombre y color propios",
+    "epicsP2": "Etiquetado por quarter en cada ticket",
+    "epicsP3": "Filtra el tablero por épica o quarter",
+    "epicsP4": "Progreso de la épica de un vistazo",
     "labelsTitle": "Etiquetas y prioridades",
-    "labelsDesc": "Clasifica tickets con etiquetas de colores personalizadas y niveles de prioridad. Filtra y encuentra lo que necesitas en segundos.",
-    "labelsP1": "Etiquetas con colores personalizados",
-    "labelsP2": "Prioridades: alta, media, baja",
-    "labelsP3": "Múltiples etiquetas por ticket",
-    "labelsP4": "Etiquetas por tablero",
-    "subtasksTitle": "Subtareas",
-    "subtasksDesc": "Divide tickets complejos en pasos manejables. Realiza un seguimiento del progreso con una barra visual y marca subtareas conforme las completas.",
-    "subtasksP1": "Subtareas anidadas por ticket",
-    "subtasksP2": "Barra de progreso visual",
-    "subtasksP3": "Reordenamiento por drag & drop",
-    "subtasksP4": "Contador de completadas",
-    "calendarTitle": "Calendario de vencimientos",
-    "calendarDesc": "Visualiza todos tus tickets con fecha de vencimiento en un calendario mensual. Planifica sprints, entregas y deadlines con claridad.",
-    "calendarP1": "Vista mensual de tickets",
-    "calendarP2": "Fechas de inicio y vencimiento",
-    "calendarP3": "Indicadores visuales de urgencia",
-    "calendarP4": "Navegación rápida por mes",
-    "commentsTitle": "Comentarios en tickets",
-    "commentsDesc": "Debate, resuelve dudas y deja feedback directamente en cada ticket. Mantén toda la conversación del proyecto en un solo lugar.",
-    "commentsP1": "Comentarios por ticket",
-    "commentsP2": "Historial de conversación",
-    "commentsP3": "Avatares de participantes",
-    "commentsP4": "Notificaciones de respuesta",
-    "linksTitle": "Links del proyecto",
-    "linksDesc": "Añade enlaces relevantes al tablero: ramas de Git, deploys, diseños en Figma o cualquier recurso externo. Accede a todo sin salir del contexto.",
-    "linksP1": "Links rápidos en el header del tablero",
-    "linksP2": "Etiqueta personalizable por enlace",
-    "linksP3": "Acceso instantáneo desde cualquier vista",
-    "linksP4": "Solo el propietario puede editar",
-    "attachmentsTitle": "Adjuntos",
-    "attachmentsDesc": "Sube archivos directamente a los tickets: imágenes, documentos, capturas. Todo el material del proyecto organizado y siempre a mano.",
-    "attachmentsP1": "Adjuntos por ticket",
-    "attachmentsP2": "Previsualización de imágenes",
-    "attachmentsP3": "Descarga directa",
-    "attachmentsP4": "Control de tamaño de archivo"
+    "labelsDesc": "Clasifica tickets con etiquetas de color y cuatro niveles de prioridad. Filtra y encuentra lo que buscas en segundos.",
+    "labelsP1": "Etiquetas de color personalizadas",
+    "labelsP2": "Prioridad urgente, alta, media y baja",
+    "labelsP3": "Varias etiquetas en un mismo ticket",
+    "labelsP4": "Filtros combinados por etiqueta, persona y prioridad",
+    "subtasksTitle": "Subtareas y QA",
+    "subtasksDesc": "Parte un ticket complejo en pasos y pásaselo a alguien para que lo revise. El avance se ve sin abrir nada.",
+    "subtasksP1": "Checklist de subtareas por ticket",
+    "subtasksP2": "Barra de progreso en la tarjeta",
+    "subtasksP3": "Un revisor de QA dedicado",
+    "subtasksP4": "Reordenar arrastrando",
+    "calendarTitle": "Calendario y fechas",
+    "calendarDesc": "Ve en un calendario mensual todos los tickets con fecha, y llévalos a Google Calendar si es donde vives.",
+    "calendarP1": "Vista mensual de todos tus tableros",
+    "calendarP2": "Fecha de inicio y de entrega",
+    "calendarP3": "Avisos de vencido y de próximo",
+    "calendarP4": "Sincronización opcional con Google Calendar",
+    "commentsTitle": "Comentarios",
+    "commentsDesc": "Discute y resuelve dudas en el propio ticket. A quien le toca se entera sin que nadie tenga que avisarle.",
+    "commentsP1": "Conversación completa por ticket",
+    "commentsP2": "Avisa al responsable, al QA y a los colaboradores",
+    "commentsP3": "Texto enriquecido en las descripciones",
+    "commentsP4": "Los administradores pueden moderar cualquier comentario",
+    "notifTitle": "Notificaciones",
+    "notifDesc": "Avisos al momento cuando algo te incumbe: una asignación, una revisión, un comentario. Todo en una campana.",
+    "notifP1": "Centro de notificaciones en la app",
+    "notifP2": "Avisos de asignación, QA y colaboración",
+    "notifP3": "Avisos de comentario nuevo",
+    "notifP4": "Nunca te notifica tus propias acciones",
+    "metricsTitle": "Progreso y métricas",
+    "metricsDesc": "Actividad semanal, reparto por prioridad y progreso por tablero. Decisiones con datos reales, no con sensaciones.",
+    "metricsP1": "Gráfica de actividad semanal",
+    "metricsP2": "Reparto por prioridad de lo abierto",
+    "metricsP3": "Barra de progreso por tablero",
+    "metricsP4": "Contadores de vencidos y de esta semana",
+    "integrationsTitle": "Integraciones",
+    "integrationsDesc": "Manda la actividad del tablero adonde ya habla tu equipo, y abre los tableros a tus propias herramientas.",
+    "integrationsP1": "Webhooks de Slack y Discord",
+    "integrationsP2": "Elige qué eventos se envían",
+    "integrationsP3": "Sincronización con Google Calendar",
+    "integrationsP4": "Servidor MCP para usar Kiki desde un asistente de IA",
+    "attachmentsTitle": "Adjuntos y enlaces",
+    "attachmentsDesc": "Sube archivos a un ticket y fija en la cabecera del tablero los enlaces que importan: repo, deploy, diseños.",
+    "attachmentsP1": "Archivos adjuntos por ticket",
+    "attachmentsP2": "Vista previa de imágenes y descarga directa",
+    "attachmentsP3": "Enlaces del tablero con etiqueta propia",
+    "attachmentsP4": "Almacenamiento privado, con permiso comprobado en cada descarga",
+    "shareTitle": "Compartir y archivo",
+    "shareDesc": "Enseña un ticket a alguien de fuera del tablero con un enlace de solo lectura, y quita de en medio lo terminado sin borrarlo.",
+    "shareP1": "Enlace público de solo lectura por ticket",
+    "shareP2": "Revoca el enlace cuando quieras",
+    "shareP3": "Archivar en lugar de borrar",
+    "shareP4": "Interfaz en español, inglés y tagalo"
   },
   "statsPage": {
     "kicker": "Estadísticas",
@@ -987,5 +1015,192 @@
     "stop": "Detener",
     "voice": "Voz",
     "changeLanguage": "Cambiar idioma (actual: {label})"
+  },
+  "onboarding": {
+    "title": "Primeros pasos",
+    "subtitle": "Cinco minutos para tener tu primer tablero en marcha.",
+    "doneTitle": "Ya lo tienes todo",
+    "doneSubtitle": "Has pasado por todo. Disfruta de Kiki.",
+    "dismiss": "Ocultar primeros pasos",
+    "progress": "{done} de {total}",
+    "steps": {
+      "createBoard": {
+        "label": "Crea tu primer tablero",
+        "action": "Crear"
+      },
+      "addList": {
+        "label": "Añade una lista para organizar el trabajo",
+        "action": "Abrir"
+      },
+      "createTicket": {
+        "label": "Crea tu primer ticket",
+        "action": "Abrir"
+      },
+      "inviteTeammate": {
+        "label": "Invita a alguien al tablero",
+        "action": "Invitar"
+      },
+      "connectAi": {
+        "label": "Conecta tu clave de IA",
+        "action": "Ajustes"
+      }
+    }
+  },
+  "tour": {
+    "next": "Siguiente",
+    "back": "Atrás",
+    "skip": "Saltar el tour",
+    "finish": "Entendido",
+    "counter": "{current} de {total}",
+    "steps": {
+      "board-lists": {
+        "title": "Tus listas",
+        "body": "Cada columna es una etapa del trabajo. Arrastra un ticket de una a otra y se mueve; suéltalo en una lista llamada hecho y se cierra solo."
+      },
+      "create-task": {
+        "title": "Crea un ticket",
+        "body": "Con un título basta para empezar. Todo lo demás —fechas, etiquetas, personas, subtareas— lo añades luego abriendo la tarjeta."
+      },
+      "view-toggle": {
+        "title": "Kanban o lista",
+        "body": "El mismo tablero, dos formas de leerlo. La vista de lista va mejor cuando hay muchos tickets, y desde ahí también puedes moverlos."
+      },
+      "board-filters": {
+        "title": "Filtros",
+        "body": "Acota por etiqueta, persona, prioridad, épica o quarter. Se combinan, así que puedes pasar del tablero entero a la semana de una sola persona."
+      },
+      "board-ai": {
+        "title": "Brain Dump",
+        "body": "Escribe o dicta todo lo que tienes en la cabeza y la IA lo convierte en tickets sueltos. Necesitas tu propia clave, que se pone en Ajustes."
+      },
+      "board-members": {
+        "title": "Tu equipo",
+        "body": "Invita por email y dale un rol a cada persona. Los administradores gestionan el tablero; los miembros trabajan los tickets."
+      }
+    }
+  },
+  "howItWorks": {
+    "metaTitle": "Cómo funciona",
+    "metaDescription": "De un tablero vacío a un equipo que entrega: los cinco pasos de trabajar en Kiki, explicados de principio a fin.",
+    "kicker": "Cómo funciona",
+    "title": "De un tablero vacío a un equipo que entrega",
+    "subtitle": "Sin manual ni llamada de configuración. Este es <underline>todo el flujo</underline>, en el orden en que ocurre de verdad.",
+    "stepLabel": "Paso {number} de {total}",
+    "steps": {
+      "board": {
+        "title": "Crea tu tablero",
+        "body": "Un tablero es un proyecto. Ponle nombre, elige color y, si ya sabes tus etapas, nómbralas ahí mismo mientras lo creas.",
+        "b1": "Listas iniciales al crearlo, o las añades después",
+        "b2": "Story points y otros campos útiles, ya configurados",
+        "b3": "Tantos tableros como proyectos lleves"
+      },
+      "structure": {
+        "title": "Da forma al trabajo en listas y tickets",
+        "body": "Cada columna es una etapa. Cada tarjeta es un ticket. Mueve una tarjeta a la derecha y el trabajo avanza; suéltala en una columna de hecho y se cierra sola.",
+        "b1": "Arrastrar y soltar, o mover desde un menú en la vista de lista",
+        "b2": "Etiquetas, prioridad, fechas, subtareas y adjuntos por ticket",
+        "b3": "Épicas y quarters cuando un solo tablero se queda corto"
+      },
+      "team": {
+        "title": "Invita al equipo y reparte la carga",
+        "body": "Invita por email y dale un rol a cada persona. Después reparte el trabajo: un responsable por ticket, un revisor si hace falta, y quien más tenga que estar.",
+        "b1": "Propietario, administrador y miembro, aplicados por la API",
+        "b2": "Responsable, revisor de QA y colaboradores por ticket",
+        "b3": "A cada implicado le llega el aviso, nadie tiene que perseguir a nadie"
+      },
+      "ai": {
+        "title": "Deja que la IA haga la parte aburrida",
+        "body": "Lo más costoso de un proyecto nuevo es convertir lo que tienes en la cabeza en tickets sueltos. Escríbelo o dilo en voz alta, y el tablero se llena por ti.",
+        "b1": "Brain Dump: un párrafo se convierte en una lista de tickets",
+        "b2": "Dicta por voz si escribir te estorba",
+        "b3": "Tu propia clave, así nada se te cobra por sorpresa"
+      },
+      "measure": {
+        "title": "Mide, cierra y despeja",
+        "body": "El dashboard te dice qué va vencido, qué se cerró esta semana y cómo está repartida la carga. Lo terminado se archiva, no se borra.",
+        "b1": "Actividad semanal y reparto por prioridad",
+        "b2": "Progreso por tablero y por épica",
+        "b3": "El archivo guarda el histórico sin ensuciar el tablero"
+      }
+    },
+    "visuals": {
+      "boardA": "Rediseño de la web",
+      "boardB": "App móvil",
+      "boardC": "Marketing Q3",
+      "todo": "Por hacer",
+      "doing": "En curso",
+      "done": "Hecho",
+      "ticket1": "Definir el sistema de diseño",
+      "ticket2": "Montar la analítica",
+      "ticket3": "Maquetar la home",
+      "ticket4": "Migrar la base de datos",
+      "roleOwner": "Propietario",
+      "roleAdmin": "Administrador",
+      "roleMember": "Miembro",
+      "brainDump": "Brain Dump",
+      "brainDumpText": "Hay que rehacer la landing, arreglar el login en móvil y preparar la newsletter del lanzamiento antes del viernes.",
+      "aiOut1": "Rehacer la landing",
+      "aiOut2": "Arreglar el login en móvil",
+      "aiOut3": "Preparar la newsletter del lanzamiento",
+      "metricDone": "Cerrados",
+      "metricOpen": "Abiertos",
+      "metricOverdue": "Vencidos"
+    },
+    "faqHeading": "Dudas antes de empezar",
+    "faqSubtitle": "Las que de verdad pregunta la gente.",
+    "faq": {
+      "price": {
+        "q": "¿Cuánto cuesta?",
+        "a": "Nada. Kiki es gratis, y las funciones de IA van con tu propia clave de proveedor, así que lo que gastes ahí se lo pagas a ellos directamente, no a nosotros."
+      },
+      "data": {
+        "q": "¿Quién puede ver mis datos?",
+        "a": "Solo la gente que invites a un tablero. Cada endpoint comprueba la pertenencia antes de responder, y un ticket solo se ve fuera del tablero si tú generas un enlace de compartir."
+      },
+      "team": {
+        "q": "¿Cuánta gente cabe en un tablero?",
+        "a": "No hay límite. Invitas por email y cada persona recibe un rol: administrador si tiene que gestionar el tablero, miembro si solo va a trabajar los tickets."
+      },
+      "ai": {
+        "q": "¿Necesito una clave de IA?",
+        "a": "Solo para las funciones de IA. Todo lo demás va sin ella. Puedes traer una clave de OpenAI, Claude, Gemini, Grok, DeepSeek, Kimi o cualquier endpoint compatible, y se guarda cifrada."
+      },
+      "languages": {
+        "q": "¿En qué idiomas está?",
+        "a": "Español, inglés y tagalo. Se cambia desde el globo de la barra superior y la elección se queda guardada, incluidas las fechas y el registro de actividad."
+      },
+      "export": {
+        "q": "¿Puedo conectarlo con mis herramientas?",
+        "a": "Sí. La actividad del tablero puede ir a Slack o Discord por webhook, las fechas de entrega se pueden sincronizar con Google Calendar, y hay un servidor MCP para que un asistente de IA trabaje tus tableros directamente."
+      }
+    },
+    "ctaTitle": "Tu primer tablero te lleva alrededor de un minuto",
+    "ctaBody": "Sin tarjeta, sin llamada de configuración y sin demo que aguantar.",
+    "ctaButton": "Empieza ahora",
+    "ctaSecondary": "Ver todas las funciones",
+    "ctaFootnote": "Gratis · Configuración en 2 minutos"
+  },
+  "guide": {
+    "gotIt": "Entendido",
+    "createBoard": {
+      "title": "Empieza por un tablero",
+      "body": "Pulsa aquí, ponle nombre y elige color. Un tablero es un proyecto: todo lo demás vive dentro."
+    },
+    "addList": {
+      "title": "Añade tu primera lista",
+      "body": "Cada lista es una etapa del trabajo: Por hacer, En curso, Hecho. Si llamas «Hecho» a una lista, soltar un ticket ahí lo cierra solo."
+    },
+    "createTicket": {
+      "title": "Crea un ticket",
+      "body": "Con un título basta para empezar. Fechas, etiquetas, personas y subtareas vienen después, abriendo la tarjeta."
+    },
+    "inviteTeammate": {
+      "title": "Trae a tu equipo",
+      "body": "Abre Miembros e invita por email. Dale un rol a cada persona: administrador para gestionar el tablero, miembro para trabajar los tickets."
+    },
+    "connectAi": {
+      "title": "Pega tu clave de IA",
+      "body": "Con una clave de tu propio proveedor se activan el Brain Dump, el dictado por voz y la mejora de textos. Se guarda cifrada."
+    }
   }
 }

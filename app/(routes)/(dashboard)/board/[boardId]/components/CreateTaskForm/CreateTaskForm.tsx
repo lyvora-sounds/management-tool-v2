@@ -56,6 +56,8 @@ export function CreateTaskForm({ listId }: CreateTaskFormProps) {
   if (!open) {
     return (
       <button
+        data-tour="create-task"
+        data-guide="create-task"
         onClick={handleOpen}
         className="flex items-center gap-1.5 w-full text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-lg px-2 py-1.5 text-xs transition-colors"
       >

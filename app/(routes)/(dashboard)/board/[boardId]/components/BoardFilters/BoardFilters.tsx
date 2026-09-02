@@ -89,7 +89,7 @@ export function BoardFilters({
     });
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div data-tour="board-filters" className="flex flex-wrap items-center gap-2">
       {/* Active vs Archived Toggle */}
       <ToggleGroup
         value={[filters.archiveStatus]}

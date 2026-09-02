@@ -19,7 +19,7 @@ export function CreateBoardModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger data-guide="create-board" render={<Button />}>
         <Plus className="mr-2 h-4 w-4" />
         {t("create")}
       </DialogTrigger>

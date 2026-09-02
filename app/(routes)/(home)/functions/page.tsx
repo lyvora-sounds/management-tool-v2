@@ -1,10 +1,19 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { ArrowRight } from "lucide-react";
 import { HomeNavbar } from "@/components/Shared/HomeNavbar/HomeNavbar";
 import { HomeFooter } from "@/components/Shared/HomeFooter/HomeFooter";
 import { BentoSection } from "../components/BentoSection/BentoSection";
 import { CTASection } from "../components/CTASection/CTASection";
 import { Reveal } from "@/components/Shared/Reveal/Reveal";
+import { Highlighter } from "@/components/ui/highlighter";
 import { details } from "./data";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("functions");
+  return { title: t("metaTitle"), description: t("metaDescription") };
+}
 
 export default async function FuncionesPage() {
   const t = await getTranslations("functions");
@@ -15,20 +24,32 @@ export default async function FuncionesPage() {
 
       <main className="flex flex-col flex-1 pt-16">
         {/* Hero */}
-        <Reveal
-          position="bottom"
-          className="px-4 sm:px-8 py-20 text-center max-w-3xl mx-auto"
-        >
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
-            {t("kicker")}
-          </p>
-          <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-4">
-            {t("title")}
-          </h1>
+        <div className="px-4 sm:px-8 py-20 text-center max-w-3xl mx-auto">
+          <Reveal position="bottom">
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
+              {t("kicker")}
+            </p>
+            <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-4">
+              {t("title")}
+            </h1>
+          </Reveal>
+
+          {/* El texto resaltado va fuera del Reveal, como en la home. Reveal
+              anima con transform, y una transform crea bloque contenedor para
+              los position:absolute; rough-notation deja su trazo clavado en
+              coordenadas absolutas, así que al retirarse la transform el trazo
+              se queda a ~336px del texto. Sin transform encima, no hay nada
+              que descoloque. */}
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            {t("subtitle")}
+            {t.rich("subtitle", {
+              underline: (chunks) => (
+                <Highlighter action="underline" color="#FF9800">
+                  {chunks}
+                </Highlighter>
+              ),
+            })}
           </p>
-        </Reveal>
+        </div>
 
         {/* Bento grid */}
         <BentoSection />
@@ -36,10 +57,20 @@ export default async function FuncionesPage() {
         {/* Feature detail list */}
         <section className="px-4 sm:px-8 py-20 max-w-4xl mx-auto w-full">
           <Reveal position="bottom" className="text-center mb-14">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3">{t("detailHeading")}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+              {t("detailHeading")}
+            </h2>
             <p className="text-muted-foreground">
               {t("detailSubtitle")}
             </p>
+            {/* El catálogo responde "qué trae"; el recorrido, "cómo se usa". */}
+            <Link
+              href="/how-it-works"
+              className="mt-4 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              {t("seeHowItWorks")}
+              <ArrowRight size={14} />
+            </Link>
           </Reveal>
 
           <div className="grid gap-10 sm:grid-cols-2">
