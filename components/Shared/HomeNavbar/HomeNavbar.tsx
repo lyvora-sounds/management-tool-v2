@@ -24,6 +24,12 @@ export async function HomeNavbar() {
         >
           {t("functions")}
         </Link>
+        <Link
+          href="/how-it-works"
+          className="hover:text-foreground transition-colors"
+        >
+          {t("howItWorks")}
+        </Link>
         <Link href="/stats" className="hover:text-foreground transition-colors">
           {t("stats")}
         </Link>

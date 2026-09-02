@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { UserProfile } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,10 +102,23 @@ const PROVIDERS: {
 
 type SettingsTab = "account" | "ai" | "custom-fields";
 
+const SETTINGS_TABS: SettingsTab[] = ["account", "ai", "custom-fields"];
+
+function isSettingsTab(value: string | null): value is SettingsTab {
+  return !!value && SETTINGS_TABS.includes(value as SettingsTab);
+}
+
 export default function SettingsPage() {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
-  const [activeTab, setActiveTab] = useState<SettingsTab>("account");
+  const searchParams = useSearchParams();
+  // `?tab=ai` permite enlazar directo a una pestaña. Lo usa el onboarding para
+  // dejar al usuario delante del campo de la clave y no en la pestaña de
+  // cuenta, donde no hay nada que hacer.
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    const requested = searchParams.get("tab");
+    return isSettingsTab(requested) ? requested : "account";
+  });
   const [provider, setProvider] = useState<AiProvider>("openai");
   const [apiKey, setApiKey] = useState("");
   const [maskedApiKey, setMaskedApiKey] = useState("");
@@ -327,6 +341,7 @@ export default function SettingsPage() {
               )}
             </div>
             <Input
+              data-guide="ai-key"
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}

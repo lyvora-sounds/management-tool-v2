@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { BoardContent } from "./components/BoardContent/BoardContent";
 import { BoardHeader } from "./components/BoardHeader/BoardHeader";
 import { BoardVisitTracker } from "./components/BoardVisitTracker/BoardVisitTracker";
+import { BoardTour } from "./components/BoardTour/BoardTour";
 import { normalizeRole } from "@/lib/boardRoles";
 
 interface BoardPageProps {
@@ -79,9 +80,18 @@ export default async function BoardPage({ params }: BoardPageProps) {
 
   const initialLinks = Array.isArray(board.links) ? (board.links as { id: string; label: string; url: string }[]) : [];
 
+  // El tour solo se plantea en un tablero que ya tiene algo que enseñar: en uno
+  // recién creado y vacío señalaría huecos.
+  const settings = await db.userSettings.findUnique({
+    where: { userId: user.id },
+    select: { tourSeenAt: true },
+  });
+  const tourSeen = Boolean(settings?.tourSeenAt) || board.list.length === 0;
+
   return (
     <div className="flex flex-col h-full p-3 sm:p-6 gap-4 sm:gap-6 min-w-0">
       <BoardVisitTracker boardId={board.id} />
+      <BoardTour tourSeen={tourSeen} />
       <BoardHeader boardId={board.id} title={board.title} isOwner={isOwner} canManage={canManage} initialLinks={initialLinks} memberCanAssign={board.memberCanAssign} />
       <Suspense fallback={null}>
         <BoardContent
