@@ -37,7 +37,7 @@ import { BoardIntegrationsModal } from "../BoardIntegrationsModal/BoardIntegrati
 import { AiBrainDumpModal } from "../AiBrainDumpModal/AiBrainDumpModal";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 
-export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAssign }: BoardHeaderProps) {
+export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, memberCanAssign }: BoardHeaderProps) {
   const t = useTranslations("board");
   const tCommon = useTranslations("common");
   const router = useRouter();
@@ -151,7 +151,9 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
         onClose={() => setBrainDumpOpen(false)}
         onSuccess={() => router.refresh()}
       />
-      {isOwner && (
+      {/* Los permisos del tablero los toca quien lo gestiona, no solo el
+          propietario: es lo que ya aceptaba PATCH /permissions. */}
+      {canManage && (
         <BoardPermissions
           boardId={boardId}
           open={permissionsOpen}
@@ -260,7 +262,7 @@ export function BoardHeader({ boardId, title, isOwner, initialLinks, memberCanAs
                 <Webhook size={14} />
                 {t("webhooks")}
               </DropdownMenuItem>
-              {isOwner && (
+              {canManage && (
                 <DropdownMenuItem onClick={() => setPermissionsOpen(true)} className="cursor-pointer">
                   <ShieldCheck size={14} />
                   {t("permissions")}

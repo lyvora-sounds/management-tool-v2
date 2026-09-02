@@ -14,8 +14,10 @@ export async function PATCH(
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const owner = await isBoardAdmin(user.id, boardId);
-  if (!owner) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // Apagar el interruptor es cosa de quien gestiona el tablero, propietario o
+  // administrador. La variable se llamaba `owner` y ya no era cierto.
+  const canManage = await isBoardAdmin(user.id, boardId);
+  if (!canManage) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { memberCanAssign } = await req.json();
 
