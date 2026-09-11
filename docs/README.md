@@ -16,6 +16,7 @@ Each page has an SVG diagram plus the route, permission, and side-effect details
 | [Collaboration](./collaboration.md) | Assignee, QA, comments, in-app notifications |
 | [AI](./ai.md) | BYO key, transcribe, parse, improve, batch create |
 | [Integrations](./integrations.md) | Slack, Discord, Google Calendar, public share, MCP |
+| [ISO 27001 Compliance](./iso-27001-compliance-plan.md) | Technical gap analysis, control mapping, and certification project plan |
 
 ## System at a glance
 
