@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Webhook,
   Save,
   Loader2,
   Bell,
   MessageSquare,
+  KeyRound,
+  Copy,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import {
   Dialog,
@@ -23,12 +27,23 @@ import { useTranslations } from "next-intl";
 
 interface BoardIntegrationsModalProps {
   boardId: string;
+  canManage: boolean;
   open: boolean;
   onClose: () => void;
 }
 
+type AccessTokenSummary = {
+  id: string;
+  name: string;
+  tokenPrefix: string;
+  environments: string[];
+  revokedAt: string | null;
+  lastUsedAt: string | null;
+};
+
 export function BoardIntegrationsModal({
   boardId,
+  canManage,
   open,
   onClose,
 }: BoardIntegrationsModalProps) {
@@ -42,14 +57,14 @@ export function BoardIntegrationsModal({
   const [notifyOnTaskCreated, setNotifyOnTaskCreated] = useState(true);
   const [notifyOnTaskCompleted, setNotifyOnTaskCompleted] = useState(true);
   const [notifyOnTaskMoved, setNotifyOnTaskMoved] = useState(false);
+  const [accessTokens, setAccessTokens] = useState<AccessTokenSummary[]>([]);
+  const [environmentOptions, setEnvironmentOptions] = useState<string[]>([]);
+  const [tokenName, setTokenName] = useState("");
+  const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>(["*"]);
+  const [createdToken, setCreatedToken] = useState("");
+  const [creatingToken, setCreatingToken] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      loadIntegrations();
-    }
-  }, [open, boardId]);
-
-  const loadIntegrations = async () => {
+  const loadIntegrations = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/boards/${boardId}/integrations`);
@@ -61,11 +76,81 @@ export function BoardIntegrationsModal({
         setNotifyOnTaskCompleted(data.notifyOnTaskCompleted ?? true);
         setNotifyOnTaskMoved(data.notifyOnTaskMoved ?? false);
       }
+      if (canManage) {
+        const [tokensRes, fieldsRes] = await Promise.all([
+          fetch(`/api/boards/${boardId}/external-access`),
+          fetch(`/api/settings/custom-fields?boardId=${boardId}`),
+        ]);
+        if (tokensRes.ok) setAccessTokens(await tokensRes.json());
+        if (fieldsRes.ok) {
+          const fieldsData = await fieldsRes.json();
+          const environmentField = fieldsData.customFields?.find(
+            (field: { defaultKey?: string }) => field.defaultKey === "environment",
+          );
+          setEnvironmentOptions(
+            Array.isArray(environmentField?.options) ? environmentField.options : [],
+          );
+        }
+      }
     } catch {
       toast.error(t("loadError"));
     } finally {
       setLoading(false);
     }
+  }, [boardId, canManage, t]);
+
+  useEffect(() => {
+    if (open) {
+      loadIntegrations();
+    }
+  }, [open, loadIntegrations]);
+
+  const createAccessToken = async () => {
+    if (!tokenName.trim()) return;
+    setCreatingToken(true);
+    try {
+      const res = await fetch(`/api/boards/${boardId}/external-access`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: tokenName, environments: selectedEnvironments }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setCreatedToken(data.token);
+      setTokenName("");
+      setAccessTokens((current) => [data, ...current]);
+      toast.success(t("tokenCreated"));
+    } catch {
+      toast.error(t("tokenCreateError"));
+    } finally {
+      setCreatingToken(false);
+    }
+  };
+
+  const revokeAccessToken = async (tokenId: string) => {
+    const res = await fetch(`/api/boards/${boardId}/external-access/${tokenId}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setAccessTokens((current) => current.filter((token) => token.id !== tokenId));
+      toast.success(t("tokenRevoked"));
+    } else {
+      toast.error(t("tokenRevokeError"));
+    }
+  };
+
+  const toggleEnvironment = (environment: string) => {
+    if (environment === "*") {
+      setSelectedEnvironments(["*"]);
+      return;
+    }
+    setSelectedEnvironments((current) => {
+      const withoutWildcard = current.filter((value) => value !== "*");
+      const next = withoutWildcard.includes(environment)
+        ? withoutWildcard.filter((value) => value !== environment)
+        : [...withoutWildcard, environment];
+      return next.length ? next : ["*"];
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -99,7 +184,7 @@ export function BoardIntegrationsModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Webhook size={18} className="text-primary" />
@@ -198,6 +283,93 @@ export function BoardIntegrationsModal({
                 </div>
               </div>
             </div>
+
+            {canManage && (
+              <div className="space-y-3 rounded-xl border p-4">
+                <div>
+                  <Label className="flex items-center gap-1.5 text-xs font-semibold">
+                    <KeyRound size={14} />
+                    {t("mcpTitle")}
+                  </Label>
+                  <p className="mt-1 text-[11px] text-muted-foreground">{t("mcpHint")}</p>
+                </div>
+
+                {createdToken && (
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 dark:bg-amber-950/20">
+                    <p className="mb-2 text-[11px] font-medium">{t("copyTokenNow")}</p>
+                    <div className="flex gap-2">
+                      <Input readOnly value={createdToken} className="h-8 font-mono text-xs" />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => navigator.clipboard.writeText(createdToken)}
+                        aria-label={t("copyToken")}
+                      >
+                        <Copy size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <Input
+                  value={tokenName}
+                  onChange={(event) => setTokenName(event.target.value)}
+                  placeholder={t("tokenNamePlaceholder")}
+                  className="h-8 text-xs"
+                  maxLength={80}
+                />
+                <div className="space-y-2">
+                  <p className="text-[11px] font-medium">{t("allowedEnvironments")}</p>
+                  <div className="flex flex-wrap gap-3">
+                    {["*", ...environmentOptions].map((environment) => (
+                      <label key={environment} className="flex items-center gap-1.5 text-xs">
+                        <Checkbox
+                          checked={selectedEnvironments.includes(environment)}
+                          onCheckedChange={() => toggleEnvironment(environment)}
+                        />
+                        {environment === "*" ? t("allEnvironments") : environment}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  disabled={creatingToken || !tokenName.trim()}
+                  onClick={createAccessToken}
+                >
+                  {creatingToken ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+                  {t("createToken")}
+                </Button>
+
+                {accessTokens.length > 0 && (
+                  <div className="space-y-2 border-t pt-3">
+                    {accessTokens.filter((token) => !token.revokedAt).map((token) => (
+                      <div key={token.id} className="flex items-center justify-between gap-2 text-xs">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{token.name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {token.tokenPrefix}… · {token.environments.join(", ")}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => revokeAccessToken(token.id)}
+                          aria-label={t("revokeToken")}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Footer */}
             <div className="flex justify-end gap-2 pt-2 border-t">

@@ -8,7 +8,7 @@ function environmentWhere(context: ExternalAccessContext) {
   return {
     customValues: {
       some: {
-        customField: { defaultKey: "environment" },
+        customField: { boardId: context.boardId, defaultKey: "environment" },
         value: { in: context.environments },
       },
     },
@@ -104,7 +104,9 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
           updatedAt: true,
           list: { select: { id: true, title: true } },
           customValues: {
-            where: { customField: { defaultKey: "environment" } },
+            where: {
+              customField: { boardId: context.boardId, defaultKey: "environment" },
+            },
             select: { value: true },
             take: 1,
           },

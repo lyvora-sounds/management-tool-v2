@@ -788,7 +788,20 @@
     "events": "Events that trigger notifications",
     "onCreate": "When a new ticket is created",
     "onComplete": "When a ticket is marked as completed",
-    "onMove": "When a ticket is moved between lists"
+    "onMove": "When a ticket is moved between lists",
+    "mcpTitle": "AI client access (MCP)",
+    "mcpHint": "Create a read-only token bound to this board and selected environments.",
+    "tokenNamePlaceholder": "Connection name, e.g. Claude for checkout",
+    "allowedEnvironments": "Allowed environments",
+    "allEnvironments": "All, including unclassified",
+    "createToken": "Create access token",
+    "tokenCreated": "Access token created",
+    "tokenCreateError": "Could not create access token",
+    "copyTokenNow": "Copy this token now. It will not be shown again.",
+    "copyToken": "Copy token",
+    "revokeToken": "Revoke token",
+    "tokenRevoked": "Access token revoked",
+    "tokenRevokeError": "Could not revoke access token"
   },
   "labels": {
     "create": "Create label",
