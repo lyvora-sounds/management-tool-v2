@@ -138,9 +138,10 @@ model Organization {
   createdById String?
   createdBy   User?   @relation("OrganizationCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
-  members OrganizationMember[]
-  teams   Team[]
-  boards  Board[]
+  members              OrganizationMember[]
+  teams                Team[]
+  boards               Board[]
+  externalAccessTokens ExternalAccessToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -207,22 +208,27 @@ model BoardTeamAccess {
   @@index([teamId])
 }
 
-/// A revocable machine credential for an MCP or API client. Every credential is
-/// deliberately pinned to one board so a client can never choose its own tenant.
+/// Read-only MCP credential bound to one organization.
+/// boardId null reads every board in that organization. A set boardId reads only
+/// that board, which must still belong to the same organization.
+/// allEnvironments and environments are stored for old rows and are not used.
 model ExternalAccessToken {
   id              String    @id @default(cuid())
   name            String
   tokenHash       String    @unique
   tokenPrefix     String
   scopes          String[]  @default(["tickets:read"])
-  allEnvironments Boolean   @default(false)
+  allEnvironments Boolean   @default(true)
   environments    String[]  @default([])
   expiresAt       DateTime?
   revokedAt       DateTime?
   lastUsedAt      DateTime?
 
-  boardId String
-  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  boardId String?
+  board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   createdById String?
   createdBy   User?   @relation("ExternalAccessTokenCreator", fields: [createdById], references: [id], onDelete: SetNull)
@@ -230,6 +236,7 @@ model ExternalAccessToken {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([organizationId])
   @@index([boardId])
   @@index([createdById])
 }

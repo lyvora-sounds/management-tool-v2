@@ -73,6 +73,48 @@ export async function POST(
   return NextResponse.json(membership, { status: existing ? 200 : 201 });
 }
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ organizationId: string }> },
+) {
+  const { organizationId } = await params;
+  const session = await auth();
+  const user = await actor(session.userId);
+  if (!user || !(await requireOrganizationManager(user.id, organizationId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  const body = await request.json().catch(() => null);
+  const targetUserId = typeof body?.userId === "string" ? body.userId : "";
+  const role = body?.role;
+  if (!targetUserId || !isOrganizationRole(role) || role === "owner") {
+    return NextResponse.json({ error: "A valid member and admin/member role are required" }, { status: 400 });
+  }
+
+  const [actorMembership, targetMembership] = await Promise.all([
+    db.organizationMember.findUnique({
+      where: { organizationId_userId: { organizationId, userId: user.id } },
+      select: { role: true },
+    }),
+    db.organizationMember.findUnique({
+      where: { organizationId_userId: { organizationId, userId: targetUserId } },
+      select: { role: true },
+    }),
+  ]);
+  if (!targetMembership) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (targetMembership.role === "owner") {
+    return NextResponse.json({ error: "The organization owner cannot be reassigned here" }, { status: 403 });
+  }
+  if (actorMembership?.role !== "owner" && targetMembership.role === "admin") {
+    return NextResponse.json({ error: "Only the owner can change an administrator" }, { status: 403 });
+  }
+
+  const membership = await db.organizationMember.update({
+    where: { organizationId_userId: { organizationId, userId: targetUserId } },
+    data: { role },
+  });
+  return NextResponse.json(membership);
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ organizationId: string }> },

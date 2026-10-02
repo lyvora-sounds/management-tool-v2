@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   UserCog,
   SlidersHorizontal,
+  Bot,
 } from "lucide-react";
 import { UserProfile } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
@@ -34,6 +35,7 @@ import {
   PROVIDER_DEFAULT_MODELS,
 } from "@/lib/ai/types";
 import { CustomFieldsSettings } from "./components/CustomFieldsSettings";
+import { McpSettings } from "./components/McpSettings";
 
 const PROVIDERS: {
   id: AiProvider;
@@ -100,9 +102,9 @@ const PROVIDERS: {
   },
 ];
 
-type SettingsTab = "account" | "ai" | "custom-fields";
+type SettingsTab = "account" | "ai" | "custom-fields" | "mcp";
 
-const SETTINGS_TABS: SettingsTab[] = ["account", "ai", "custom-fields"];
+const SETTINGS_TABS: SettingsTab[] = ["account", "ai", "custom-fields", "mcp"];
 
 function isSettingsTab(value: string | null): value is SettingsTab {
   return !!value && SETTINGS_TABS.includes(value as SettingsTab);
@@ -204,6 +206,7 @@ export default function SettingsPage() {
     { id: "account", label: t("tabAccount"), icon: UserCog },
     { id: "ai", label: t("tabAi"), icon: Sparkles },
     { id: "custom-fields", label: t("tabCustomFields"), icon: SlidersHorizontal },
+    { id: "mcp", label: t("tabMcp"), icon: Bot },
   ];
 
   return (
@@ -243,6 +246,10 @@ export default function SettingsPage() {
       {/* Custom Fields Settings */}
       {activeTab === "custom-fields" && (
         <CustomFieldsSettings />
+      )}
+
+      {activeTab === "mcp" && (
+        <McpSettings />
       )}
 
 

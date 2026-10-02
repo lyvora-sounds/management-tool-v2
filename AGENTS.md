@@ -33,6 +33,7 @@ Treat the implementation and schema as the source of truth when documentation di
 - Preserve the existing authorization model. Board ownership is `Board.userId`; it is not a `BoardMember` row. Use the helpers in `lib/boardAccess.ts` and `lib/boardRoles.ts` instead of recreating role logic.
 - Mutating API work should account for authentication, board access, validation, the database write, and documented side effects such as activity, notifications, and integrations.
 - Keep server-only credentials and decrypted provider keys out of client components, logs, fixtures, and committed files.
+- Honor `.agentignore`. Do not read or search those paths. Use `package.json` for dependencies, `prisma/schema.prisma` for the data model, and `.env.example` as the credential template.
 - Do not edit generated Prisma client files under `lib/generated/prisma/`. Change `prisma/schema.prisma`, then regenerate.
 - Add user-facing copy to every locale in `messages/` and run the locale check.
 - Follow nearby component and route conventions; avoid broad refactors unless the task requires one.

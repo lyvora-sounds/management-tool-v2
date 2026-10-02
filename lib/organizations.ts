@@ -23,12 +23,16 @@ export async function requireOrganizationManager(userId: string, organizationId:
   return canManageOrganization(await getOrganizationRole(userId, organizationId));
 }
 
+export async function requireOrganizationMember(userId: string, organizationId: string) {
+  return (await getOrganizationRole(userId, organizationId)) !== null;
+}
+
 export async function ensureOrganizationForBoard(
   userId: string,
   requestedOrganizationId?: string | null,
 ) {
   if (requestedOrganizationId) {
-    if (!(await requireOrganizationManager(userId, requestedOrganizationId))) return null;
+    if (!(await requireOrganizationMember(userId, requestedOrganizationId))) return null;
     return requestedOrganizationId;
   }
 

@@ -21,7 +21,22 @@ export async function GET() {
           description: true,
           boards: {
             orderBy: { createdAt: "asc" },
-            select: { id: true, title: true, color: true, userId: true },
+            select: {
+              id: true,
+              title: true,
+              color: true,
+              userId: true,
+              members: {
+                where: { userId: user.id, role: "admin" },
+                select: { role: true },
+                take: 1,
+              },
+              teamAccess: {
+                where: { role: "admin", team: { members: { some: { userId: user.id } } } },
+                select: { role: true },
+                take: 1,
+              },
+            },
           },
           _count: { select: { boards: true, members: true, teams: true } },
         },
@@ -30,9 +45,15 @@ export async function GET() {
   });
   return NextResponse.json(memberships.map(({ role, organization }) => ({
     ...organization,
-    boards: organization.boards.map(({ userId: ownerId, ...board }) => ({
+    boards: organization.boards.map(({ userId: ownerId, members, teamAccess, ...board }) => ({
       ...board,
       canMove: ownerId === user.id,
+      canIssueToken:
+        role === "owner" ||
+        role === "admin" ||
+        ownerId === user.id ||
+        members.length > 0 ||
+        teamAccess.length > 0,
     })),
     role,
   })));

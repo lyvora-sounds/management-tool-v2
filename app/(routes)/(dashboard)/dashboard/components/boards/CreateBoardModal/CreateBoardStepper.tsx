@@ -13,9 +13,10 @@ import { useBoardsStore } from "@/store/useBoardsStore";
 
 interface CreateBoardStepperProps {
   onSuccess: () => void;
+  organizationId?: string;
 }
 
-export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
+export function CreateBoardStepper({ onSuccess, organizationId = "" }: CreateBoardStepperProps) {
   const t = useTranslations("boards");
   const tCommon = useTranslations("common");
   const defaultLists = () => [t("defaultTodo"), t("defaultDoing"), t("defaultDone")];
@@ -27,7 +28,7 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
     description: "",
     color: "",
     lists: defaultLists(),
-    organizationId: "",
+    organizationId,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
         description: "",
         color: "",
         lists: defaultLists(),
-        organizationId: "",
+        organizationId,
       });
       onSuccess();
       router.refresh();

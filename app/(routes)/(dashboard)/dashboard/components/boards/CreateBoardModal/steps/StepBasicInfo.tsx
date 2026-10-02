@@ -13,10 +13,9 @@ export function StepBasicInfo({ data, onChange }: StepProps) {
   useEffect(() => {
     fetch("/api/organizations")
       .then((response) => response.ok ? response.json() : [])
-      .then((items) => {
-        const manageable = items.filter((item: { role: string }) => item.role === "owner" || item.role === "admin");
-        setOrganizations(manageable);
-        if (!data.organizationId && manageable[0]) onChange({ organizationId: manageable[0].id });
+      .then((items: { id: string; name: string; role: string }[]) => {
+        setOrganizations(items);
+        if (!data.organizationId && items[0]) onChange({ organizationId: items[0].id });
       });
   }, [data.organizationId, onChange]);
 

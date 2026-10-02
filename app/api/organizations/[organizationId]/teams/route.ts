@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { Prisma } from "@/lib/generated/prisma/client";
 import db from "@/lib/db";
-import { requireOrganizationManager } from "@/lib/organizations";
+import { requireOrganizationMember } from "@/lib/organizations";
 
 async function actorId() {
   const { userId } = await auth();
@@ -22,7 +22,10 @@ export async function GET(
   return NextResponse.json(await db.team.findMany({
     where: { organizationId },
     orderBy: { name: "asc" },
-    include: { members: { select: { user: { select: { id: true, name: true, email: true } } } } },
+    include: {
+      members: { select: { user: { select: { id: true, name: true, email: true } } } },
+      boardAccess: { select: { role: true, board: { select: { id: true, title: true } } } },
+    },
   }));
 }
 
@@ -32,7 +35,7 @@ export async function POST(
 ) {
   const { organizationId } = await params;
   const userId = await actorId();
-  if (!userId || !(await requireOrganizationManager(userId, organizationId))) {
+  if (!userId || !(await requireOrganizationMember(userId, organizationId))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   const body = await request.json().catch(() => null);
