@@ -142,6 +142,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, 
       />
       <BoardIntegrationsModal
         boardId={boardId}
+        canManage={canManage}
         open={integrationsOpen}
         onClose={() => setIntegrationsOpen(false)}
       />
@@ -284,4 +285,3 @@ export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, 
     </>
   );
 }
-

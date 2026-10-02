@@ -788,7 +788,22 @@
     "events": "Eventos que disparan notificaciones",
     "onCreate": "Al crear un nuevo ticket",
     "onComplete": "Al marcar un ticket como completado",
-    "onMove": "Al mover un ticket entre listas"
+    "onMove": "Al mover un ticket entre listas",
+    "mcpTitle": "Acceso para clientes de IA (MCP)",
+    "mcpHint": "Crea un token de solo lectura vinculado a este tablero y a los entornos seleccionados.",
+    "tokenNamePlaceholder": "Nombre de la conexión, p. ej. Claude para checkout",
+    "allowedEnvironments": "Entornos permitidos",
+    "allEnvironments": "Todos, incluidos los no clasificados",
+    "createToken": "Crear token de acceso",
+    "tokenCreated": "Token de acceso creado",
+    "tokenCreateError": "No se pudo crear el token de acceso",
+    "copyTokenNow": "Copia este token ahora. No volverá a mostrarse.",
+    "copyToken": "Copiar token",
+    "revokeToken": "Revocar token",
+    "tokenRevoked": "Token de acceso revocado",
+    "tokenRevokeError": "No se pudo revocar el token de acceso",
+    "lastUsed": "Último uso",
+    "neverUsed": "Aún no se ha usado"
   },
   "labels": {
     "create": "Crear etiqueta",
