@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 
 interface BatchTaskItem {
@@ -24,7 +24,7 @@ export async function POST(
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const hasAccess = await hasBoardAccess(userId, boardId);
+  const hasAccess = await canEditBoard(userId, boardId);
   if (!hasAccess) return NextResponse.json({ error: "Sin acceso" }, { status: 403 });
 
   const user = await db.user.findUnique({ where: { clerkId: userId } });

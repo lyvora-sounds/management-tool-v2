@@ -39,7 +39,10 @@ export async function POST(
   }
 
   // Check not already member
-  const board = await db.board.findUnique({ where: { id: invitation.boardId } });
+  const board = await db.board.findUnique({
+    where: { id: invitation.boardId },
+    select: { id: true, userId: true, organizationId: true },
+  });
   if (!board) {
     return NextResponse.json({ error: "Board not found" }, { status: 404 });
   }
@@ -51,6 +54,13 @@ export async function POST(
     db.boardMember.upsert({
       where: { boardId_userId: { boardId: invitation.boardId, userId: user.id } },
       create: { boardId: invitation.boardId, userId: user.id },
+      update: {},
+    }),
+    // Joining a board also joins its organization. Organization-mode boards
+    // are open to organization members, so this is the grant for those boards.
+    db.organizationMember.upsert({
+      where: { organizationId_userId: { organizationId: board.organizationId, userId: user.id } },
+      create: { organizationId: board.organizationId, userId: user.id, role: "member" },
       update: {},
     }),
     db.invitation.update({

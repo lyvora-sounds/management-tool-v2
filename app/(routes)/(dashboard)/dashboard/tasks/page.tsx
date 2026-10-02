@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
 import { MyTasksView } from "./components/MyTasksView";
+import { readableBoardWhere } from "@/lib/boardAccess";
 
 export default async function MyTasksPage() {
   const { userId } = await auth();
@@ -12,9 +13,7 @@ export default async function MyTasksPage() {
 
   // Get all boards user has access to (owned or member) with their lists
   const boards = await db.board.findMany({
-    where: {
-      OR: [{ userId: user.id }, { members: { some: { userId: user.id } } }],
-    },
+    where: readableBoardWhere(user.id),
     select: {
       id: true,
       title: true,

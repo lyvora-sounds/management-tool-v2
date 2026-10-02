@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { readableBoardWhere } from "@/lib/boardAccess";
 
 export async function GET(req: Request) {
   const { userId } = await auth();
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
   const [boards, tasks] = await Promise.all([
     db.board.findMany({
       where: {
-        OR: [{ userId: user.id }, { members: { some: { userId: user.id } } }],
+        ...readableBoardWhere(user.id),
         title: { contains: q, mode: "insensitive" },
       },
       select: { id: true, title: true, color: true },
@@ -27,12 +28,7 @@ export async function GET(req: Request) {
       where: {
         title: { contains: q, mode: "insensitive" },
         list: {
-          board: {
-            OR: [
-              { userId: user.id },
-              { members: { some: { userId: user.id } } },
-            ],
-          },
+          board: readableBoardWhere(user.id),
         },
       },
       select: {

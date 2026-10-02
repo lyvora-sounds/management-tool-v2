@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CalendarDays, CheckSquare, Home } from "lucide-react";
+import { Building2, CalendarDays, CheckSquare, Home } from "lucide-react";
 import { SidebarItem } from "./SidebarItem/SidebarItem";
 import { BoardsSection } from "./BoardsSection/BoardsSection";
 
@@ -23,6 +23,11 @@ export function SidebarRoutes() {
       label: t("calendar"),
       href: "/dashboard/calendar",
       icon: <CalendarDays size={18} />,
+    },
+    {
+      label: t("organizations"),
+      href: "/dashboard/organizations",
+      icon: <Building2 size={18} />,
     },
   ];
 

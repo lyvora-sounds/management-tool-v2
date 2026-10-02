@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import db from "@/lib/db";
-import { hasBoardAccess, getBoardRole } from "@/lib/boardAccess";
+import { canReadBoard, getBoardRole } from "@/lib/boardAccess";
 import { canManageBoard } from "@/lib/boardRoles";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -18,7 +18,7 @@ export async function GET(
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const allowed = await hasBoardAccess(user.id, boardId);
+  const allowed = await canReadBoard(user.id, boardId);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const board = await db.board.findUnique({

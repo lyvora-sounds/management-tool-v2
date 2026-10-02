@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,10 @@ import { useBoardsStore } from "@/store/useBoardsStore";
 
 interface CreateBoardStepperProps {
   onSuccess: () => void;
+  organizationId?: string;
 }
 
-export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
+export function CreateBoardStepper({ onSuccess, organizationId = "" }: CreateBoardStepperProps) {
   const t = useTranslations("boards");
   const tCommon = useTranslations("common");
   const defaultLists = () => [t("defaultTodo"), t("defaultDoing"), t("defaultDone")];
@@ -27,14 +28,15 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
     description: "",
     color: "",
     lists: defaultLists(),
+    organizationId,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const addBoard = useBoardsStore((s) => s.addBoard);
 
-  const patch = (partial: Partial<BoardFormData>) =>
-    setData((prev) => ({ ...prev, ...partial }));
+  const patch = useCallback((partial: Partial<BoardFormData>) =>
+    setData((prev) => ({ ...prev, ...partial })), []);
 
   const canAdvance = step === 0 ? data.title.trim().length > 0 : true;
 
@@ -50,6 +52,7 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
           description: data.description || undefined,
           color: data.color || undefined,
           lists: data.lists.filter((l) => l.trim()),
+          organizationId: data.organizationId || undefined,
         }),
       });
 
@@ -67,6 +70,7 @@ export function CreateBoardStepper({ onSuccess }: CreateBoardStepperProps) {
         description: "",
         color: "",
         lists: defaultLists(),
+        organizationId,
       });
       onSuccess();
       router.refresh();

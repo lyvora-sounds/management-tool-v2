@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canReadBoard } from "@/lib/boardAccess";
 
 export async function GET(
   req: Request,
@@ -18,7 +18,7 @@ export async function GET(
   }
 
   const { boardId } = await params;
-  const canAccess = await hasBoardAccess(user.id, boardId);
+  const canAccess = await canReadBoard(user.id, boardId);
   if (!canAccess) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

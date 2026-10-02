@@ -96,7 +96,9 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
       method: "DELETE",
     });
     if (res.ok) {
+      const data = await res.json().catch(() => ({}));
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
+      if (data.remainingRole) setError(t("organizationAccessRemains"));
     } else {
       setError(t("removeError"));
     }
@@ -183,19 +185,20 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
 
                   {canEditMember ? (
                     <select
-                      value={isAdmin ? "admin" : "member"}
+                      value={member.role === "admin" || member.role === "viewer" ? member.role : "member"}
                       onChange={(e) => changeRole(member.id, e.target.value)}
                       className="shrink-0 rounded-md border bg-transparent px-1.5 py-0.5 text-[11px] outline-none focus:ring-1 focus:ring-ring"
                       aria-label={t("roleLabel", {
                         name: member.user.name ?? member.user.email,
                       })}
                     >
+                      <option value="viewer">{t("viewer")}</option>
                       <option value="member">{t("member")}</option>
                       <option value="admin">{t("admin")}</option>
                     </select>
                   ) : (
                     <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
-                      {isAdmin ? t("admin") : t("member")}
+                      {isAdmin ? t("admin") : member.role === "viewer" ? t("viewer") : t("member")}
                     </Badge>
                   )}
 

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard } from "@/lib/boardAccess";
 
 export async function POST(
   req: Request,
@@ -22,7 +22,7 @@ export async function POST(
   });
   if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const allowed = await hasBoardAccess(user.id, task.list.board.id);
+  const allowed = await canEditBoard(user.id, task.list.board.id);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const existing = await db.taskLabel.findUnique({

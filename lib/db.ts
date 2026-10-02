@@ -1,6 +1,9 @@
 import { PrismaClient } from "./generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import { allowSlowIpv4Connect, withVerifyFullSsl } from "@/lib/pgSsl";
+
+allowSlowIpv4Connect();
 
 const globalForPrisma = global as unknown as {
   prisma?: PrismaClient;
@@ -10,7 +13,8 @@ const globalForPrisma = global as unknown as {
 const pool =
   globalForPrisma.pool ||
   new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: withVerifyFullSsl(process.env.DATABASE_URL),
+    connectionTimeoutMillis: 20_000,
   });
 
 const adapter = new PrismaPg(

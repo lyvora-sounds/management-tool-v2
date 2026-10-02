@@ -1,0 +1,39 @@
+# Hard blocks for secret and local-data paths listed in .agentignore.
+# Read rules also cover grep and shell commands that touch these paths.
+# .env.example stays readable. Other ignored paths are instructions in AGENTS.md.
+
+[permission]
+deny = [
+  "Read(**/.env)",
+  "Edit(**/.env)",
+  "Read(**/.env.local)",
+  "Edit(**/.env.local)",
+  "Read(**/.env.development)",
+  "Edit(**/.env.development)",
+  "Read(**/.env.development.local)",
+  "Edit(**/.env.development.local)",
+  "Read(**/.env.production)",
+  "Edit(**/.env.production)",
+  "Read(**/.env.production.local)",
+  "Edit(**/.env.production.local)",
+  "Read(**/.env.test)",
+  "Edit(**/.env.test)",
+  "Read(**/.env.test.local)",
+  "Edit(**/.env.test.local)",
+  "Read(**/*.pem)",
+  "Edit(**/*.pem)",
+  "Read(**/*.key)",
+  "Edit(**/*.key)",
+  "Read(**/*.p12)",
+  "Edit(**/*.p12)",
+  "Read(**/*.pfx)",
+  "Edit(**/*.pfx)",
+  "Read(**/credentials.json)",
+  "Edit(**/credentials.json)",
+  "Read(**/.clerk/**)",
+  "Edit(**/.clerk/**)",
+  "Read(**/.sentryclirc)",
+  "Edit(**/.sentryclirc)",
+  "Read(**/.backups/**)",
+  "Edit(**/.backups/**)",
+]

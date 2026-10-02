@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { useBoardStore } from "../../store/useBoardStore";
 import { TaskDatePickerProps } from "./TaskDatePicker.types";
+import { useBoardAccess } from "../BoardAccess";
 
 export function TaskDatePicker({
   taskId,
@@ -28,6 +29,7 @@ export function TaskDatePicker({
   const locale = useLocale();
   const dateFnsLocale = locale === "es" ? es : enUS;
   const updateTask = useBoardStore((s) => s.updateTask);
+  const { canEdit } = useBoardAccess();
 
   const [open, setOpen] = useState(false);
 
@@ -53,6 +55,7 @@ export function TaskDatePicker({
   };
 
   const handleSave = async () => {
+    if (!canEdit) return;
     const finalStart = startEnabled ? start : undefined;
     const finalDue = dueEnabled ? buildDueWithTime(due) : undefined;
 
@@ -81,6 +84,11 @@ export function TaskDatePicker({
         : ""}
     </span>
   );
+
+  if (!canEdit) {
+    if (!startEnabled && !dueEnabled) return null;
+    return <span className="flex items-center gap-1.5 text-sm text-muted-foreground px-1">{dateSummary}</span>;
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

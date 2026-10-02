@@ -1,102 +1,153 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { resolveBoardRole, type BoardAccessSnapshot } from "@/lib/boardAccess";
 
-// lib/db.ts construye un PrismaClient real al importarse, así que lo
-// sustituimos antes de que boardAccess lo cargue. vi.mock se iza al principio.
 const findFirstUser = vi.fn();
-const findFirstBoard = vi.fn();
+const findUniqueBoard = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   default: {
-    user: { findFirst: (...a: unknown[]) => findFirstUser(...a) },
-    board: { findFirst: (...a: unknown[]) => findFirstBoard(...a) },
+    user: { findFirst: (...args: unknown[]) => findFirstUser(...args) },
+    board: { findUnique: (...args: unknown[]) => findUniqueBoard(...args) },
   },
 }));
 
-const { hasBoardAccess, isBoardOwner, canAccessBoard } = await import(
-  "@/lib/boardAccess"
-);
+const {
+  canReadBoard,
+  canEditBoard,
+  getBoardRole,
+  readableBoardWhere,
+} = await import("@/lib/boardAccess");
+
+function snapshot(overrides: Partial<BoardAccessSnapshot> = {}): BoardAccessSnapshot {
+  return {
+    ownerId: "owner",
+    accessMode: "organization",
+    defaultRole: "member",
+    directRole: null,
+    organizationRole: null,
+    teamRoles: [],
+    ...overrides,
+  };
+}
+
+describe("resolveBoardRole", () => {
+  it("opens an organization board to ordinary members at the default role", () => {
+    const role = resolveBoardRole("user-1", snapshot({ organizationRole: "member" }));
+    expect(role).toBe("member");
+  });
+
+  it("can make that organization-wide access read-only", () => {
+    const role = resolveBoardRole("user-1", snapshot({
+      organizationRole: "member",
+      defaultRole: "viewer",
+    }));
+    expect(role).toBe("viewer");
+  });
+
+  it("does not turn an invalid default role into edit access", () => {
+    expect(resolveBoardRole("user-1", snapshot({
+      organizationRole: "member",
+      defaultRole: "admin",
+    }))).toBeNull();
+  });
+
+  it("keeps ordinary organization members out of restricted boards", () => {
+    expect(resolveBoardRole("user-1", snapshot({
+      accessMode: "restricted",
+      organizationRole: "member",
+    }))).toBeNull();
+  });
+
+  it("lets a team grant read access on a restricted board", () => {
+    const role = resolveBoardRole("user-1", snapshot({
+      accessMode: "restricted",
+      organizationRole: "member",
+      teamRoles: ["viewer"],
+    }));
+    expect(role).toBe("viewer");
+  });
+
+  it("ignores stale team membership after organization access is removed", () => {
+    expect(resolveBoardRole("user-1", snapshot({
+      accessMode: "restricted",
+      organizationRole: null,
+      teamRoles: ["admin"],
+    }))).toBeNull();
+  });
+
+  it("lets a direct role raise access above the organization default", () => {
+    expect(resolveBoardRole("user-1", snapshot({
+      organizationRole: "member",
+      defaultRole: "viewer",
+      directRole: "member",
+    }))).toBe("member");
+  });
+
+  it("gives organization admins admin access on restricted boards", () => {
+    expect(resolveBoardRole("user-1", snapshot({
+      accessMode: "restricted",
+      organizationRole: "admin",
+    }))).toBe("admin");
+  });
+
+  it("keeps the board owner as owner", () => {
+    expect(resolveBoardRole("owner", snapshot({ organizationRole: "admin" }))).toBe("owner");
+  });
+});
+
+function board(overrides: Record<string, unknown> = {}) {
+  return {
+    userId: "owner",
+    accessMode: "organization",
+    defaultRole: "member",
+    members: [],
+    organization: { members: [] },
+    teamAccess: [],
+    ...overrides,
+  };
+}
 
 beforeEach(() => {
   findFirstUser.mockReset();
-  findFirstBoard.mockReset();
+  findUniqueBoard.mockReset();
+  findFirstUser.mockResolvedValue({ id: "user-1" });
 });
 
-describe("hasBoardAccess", () => {
-  it("deniega el acceso si el usuario no existe", async () => {
-    findFirstUser.mockResolvedValue(null);
-    expect(await hasBoardAccess("desconocido", "board-1")).toBe(false);
-    // No debe llegar a consultar el board si no hay usuario.
-    expect(findFirstBoard).not.toHaveBeenCalled();
+describe("organization-aware board access", () => {
+  it("grants organization members the board default role", async () => {
+    findUniqueBoard.mockResolvedValue(board({ organization: { members: [{ role: "member" }] } }));
+    await expect(getBoardRole("user-1", "board-1")).resolves.toBe("member");
+    await expect(canEditBoard("user-1", "board-1")).resolves.toBe(true);
+    await expect(canReadBoard("user-1", "board-1")).resolves.toBe(true);
   });
 
-  it("concede el acceso si el board aparece para ese usuario", async () => {
-    findFirstUser.mockResolvedValue({ id: "user-db-1" });
-    findFirstBoard.mockResolvedValue({ id: "board-1" });
-    expect(await hasBoardAccess("user-db-1", "board-1")).toBe(true);
+  it("allows a team to grant read-only access without edit access", async () => {
+    findUniqueBoard.mockResolvedValue(board({
+      accessMode: "restricted",
+      organization: { members: [{ role: "member" }] },
+      teamAccess: [{ role: "viewer" }],
+    }));
+    await expect(canReadBoard("user-1", "board-1")).resolves.toBe(true);
+    await expect(canEditBoard("user-1", "board-1")).resolves.toBe(false);
   });
 
-  it("deniega el acceso si el board no aparece para ese usuario", async () => {
-    findFirstUser.mockResolvedValue({ id: "user-db-1" });
-    findFirstBoard.mockResolvedValue(null);
-    expect(await hasBoardAccess("user-db-1", "board-ajeno")).toBe(false);
-  });
-
-  it("acepta tanto el id de base como el clerkId", async () => {
-    findFirstUser.mockResolvedValue({ id: "user-db-1" });
-    findFirstBoard.mockResolvedValue({ id: "board-1" });
-
-    await hasBoardAccess("user_clerk_abc", "board-1");
-
-    const where = findFirstUser.mock.calls[0][0].where;
-    expect(where.OR).toEqual([
-      { id: "user_clerk_abc" },
-      { clerkId: "user_clerk_abc" },
-    ]);
-  });
-
-  it("filtra por propietario O miembro, nunca por board suelto", async () => {
-    // Es la comprobación de seguridad: si esta consulta perdiera el filtro de
-    // usuario, cualquiera podría abrir cualquier board.
-    findFirstUser.mockResolvedValue({ id: "user-db-1" });
-    findFirstBoard.mockResolvedValue({ id: "board-1" });
-
-    await hasBoardAccess("user-db-1", "board-1");
-
-    const where = findFirstBoard.mock.calls[0][0].where;
-    expect(where.id).toBe("board-1");
-    expect(where.OR).toEqual([
-      { userId: "user-db-1" },
-      { members: { some: { userId: "user-db-1" } } },
-    ]);
-  });
-
-  it("canAccessBoard es el mismo comprobante que hasBoardAccess", () => {
-    expect(canAccessBoard).toBe(hasBoardAccess);
-  });
-});
-
-describe("isBoardOwner", () => {
-  it("deniega si el usuario no existe", async () => {
-    findFirstUser.mockResolvedValue(null);
-    expect(await isBoardOwner("desconocido", "board-1")).toBe(false);
-    expect(findFirstBoard).not.toHaveBeenCalled();
-  });
-
-  it("solo mira propiedad, sin aceptar pertenencia como miembro", async () => {
-    findFirstUser.mockResolvedValue({ id: "user-db-1" });
-    findFirstBoard.mockResolvedValue({ id: "board-1" });
-
-    expect(await isBoardOwner("user-db-1", "board-1")).toBe(true);
-
-    const where = findFirstBoard.mock.calls[0][0].where;
-    expect(where).toEqual({ id: "board-1", userId: "user-db-1" });
-    // Un miembro no propietario no debe colarse por aquí.
-    expect(where.OR).toBeUndefined();
-  });
-
-  it("deniega si el board no es de ese usuario", async () => {
-    findFirstUser.mockResolvedValue({ id: "user-db-1" });
-    findFirstBoard.mockResolvedValue(null);
-    expect(await isBoardOwner("user-db-1", "board-ajeno")).toBe(false);
+  it("builds a read filter for owner, direct, organization, team, and organization managers", () => {
+    const filter = readableBoardWhere("user-1");
+    expect(filter.OR).toContainEqual({ userId: "user-1" });
+    expect(filter.OR).toContainEqual({ members: { some: { userId: "user-1" } } });
+    expect(filter.OR).toContainEqual({
+      accessMode: "organization",
+      defaultRole: { in: ["viewer", "member"] },
+      organization: { members: { some: { userId: "user-1" } } },
+    });
+    expect(filter.OR).toContainEqual({
+      organization: { members: { some: { userId: "user-1", role: { in: ["owner", "admin"] } } } },
+    });
+    expect(filter.OR).toContainEqual({
+      AND: [
+        { organization: { members: { some: { userId: "user-1" } } } },
+        { teamAccess: { some: { team: { members: { some: { userId: "user-1" } } } } } },
+      ],
+    });
   });
 });

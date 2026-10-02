@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess, isBoardAdmin } from "@/lib/boardAccess";
+import { canEditBoard, isBoardAdmin } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 import { encodeLogMessage } from "@/lib/activityMessages";
 
@@ -25,7 +25,7 @@ export async function POST(
   const boardId = task.list.board.id;
   // Los administradores asignan siempre; los miembros solo si el board lo permite.
   const canManage = await isBoardAdmin(user.id, boardId);
-  const hasAccess = await hasBoardAccess(user.id, boardId);
+  const hasAccess = await canEditBoard(user.id, boardId);
 
   if (!hasAccess) return NextResponse.json({ error: "Not found" }, { status: 404 });
 

@@ -17,6 +17,7 @@ import { BoardListViewProps, TaskRowProps } from "./BoardListView.types";
 import type { ListWithTasks, BoardUser } from "../TaskCard/TaskCard.types";
 import { useLocale, useTranslations } from "next-intl";
 import { dateLocale } from "@/i18n/routing";
+import { useBoardAccess } from "../BoardAccess";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -65,9 +66,11 @@ function TaskRow({
   const [completed, setCompleted] = useState(task.completed);
   const [modalOpen, setModalOpen] = useState(false);
   const priority = getPriority(task.priority);
+  const { canEdit } = useBoardAccess();
 
   const toggleCompleted = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!canEdit) return;
     const next = !completed;
     setCompleted(next);
     await fetch(`/api/tasks/updateTask/${task.id}`, {
@@ -88,8 +91,7 @@ function TaskRow({
         onClick={() => setModalOpen(true)}
         className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer border border-transparent hover:border-border"
       >
-        {/* Checkbox */}
-        <div
+        {canEdit && <div
           onClick={toggleCompleted}
           className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
         >
@@ -98,7 +100,7 @@ function TaskRow({
           ) : (
             <Circle size={16} />
           )}
-        </div>
+        </div>}
 
         {/* Priority dot */}
         {priority && (

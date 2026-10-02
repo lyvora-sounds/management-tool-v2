@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { useBoardAccess } from "../BoardAccess";
 import {
   PRIORITIES,
   getPriority,
@@ -22,9 +23,11 @@ export function TaskPriority({ taskId, priority, onSaved }: TaskPriorityProps) {
   const tPriority = useTranslations("priority");
   const tTask = useTranslations("task");
   const [open, setOpen] = useState(false);
+  const { canEdit } = useBoardAccess();
   const current = getPriority(priority);
 
   const select = async (value: Priority | null) => {
+    if (!canEdit) return;
     setOpen(false);
     const prev = priority;
     onSaved(value);
@@ -44,6 +47,15 @@ export function TaskPriority({ taskId, priority, onSaved }: TaskPriorityProps) {
       toast.error(tTask("priorityError"));
     }
   };
+
+  if (!canEdit) {
+    return (
+      <Button variant="outline" size="sm" disabled className={cn(current && current.bg, "gap-1.5")}>
+        <Flag size={13} />
+        {current ? tPriority(current.value) : tPriority("label")}
+      </Button>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

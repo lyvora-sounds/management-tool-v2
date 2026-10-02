@@ -13,21 +13,25 @@ datasource db {
 }
 
 model User {
-  id      String  @id @default(cuid())
-  clerkId String  @unique
-  email   String  @unique
-  name    String?
-  boards        Board[]
-  comments      Comment[]
-  boardMembers  BoardMember[]
-  assignedTasks Task[]        @relation("TaskAssignee")
-  qaTasks       Task[]        @relation("TaskQA")
-  taskCollaborators TaskCollaborator[]
-  notifications   Notification[]
-  activityLogs    ActivityLog[]
-  completedTasks  Task[]        @relation("CompletedTasks")
-  settings        UserSettings?
-  calendarSync    UserCalendarSync?
+  id                   String                @id @default(cuid())
+  clerkId              String                @unique
+  email                String                @unique
+  name                 String?
+  boards               Board[]
+  comments             Comment[]
+  boardMembers         BoardMember[]
+  assignedTasks        Task[]                @relation("TaskAssignee")
+  qaTasks              Task[]                @relation("TaskQA")
+  taskCollaborators    TaskCollaborator[]
+  notifications        Notification[]
+  activityLogs         ActivityLog[]
+  completedTasks       Task[]                @relation("CompletedTasks")
+  settings             UserSettings?
+  calendarSync         UserCalendarSync?
+  externalAccessTokens ExternalAccessToken[] @relation("ExternalAccessTokenCreator")
+  createdOrganizations Organization[]        @relation("OrganizationCreator")
+  organizationMembers  OrganizationMember[]
+  teamMembers          TeamMember[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,8 +60,8 @@ model UserCalendarSync {
   id           String    @id @default(cuid())
   userId       String    @unique
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken  String    // encrypted
-  refreshToken String?   // encrypted
+  accessToken  String // encrypted
+  refreshToken String? // encrypted
   expiryDate   DateTime?
   calendarId   String?
   enabled      Boolean   @default(true)
@@ -68,12 +72,12 @@ model UserCalendarSync {
 
 model Notification {
   id      String  @id @default(cuid())
-  type    String  // "assigned" | "comment"
+  type    String // "assigned" | "comment"
   message String
   read    Boolean @default(false)
 
-  userId  String
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   boardId String?
   taskId  String?
@@ -93,6 +97,8 @@ model Board {
 
   // Los miembros pueden repartir trabajo salvo que un admin lo apague a mano.
   memberCanAssign Boolean @default(true)
+  accessMode      String  @default("organization") // "organization" | "restricted"
+  defaultRole     String  @default("member") // "viewer" | "member"
 
   // Webhooks & Integrations
   slackWebhookUrl       String?
@@ -104,18 +110,135 @@ model Board {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  list         List[]
-  labels       Label[]
-  epics        Epic[]
-  members      BoardMember[]
-  invitations  Invitation[]
-  activityLogs ActivityLog[]
-  customFields CustomField[]
+  list                 List[]
+  labels               Label[]
+  epics                Epic[]
+  members              BoardMember[]
+  invitations          Invitation[]
+  activityLogs         ActivityLog[]
+  customFields         CustomField[]
+  externalAccessTokens ExternalAccessToken[]
+  teamAccess           BoardTeamAccess[]
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([organizationId])
+}
+
+model Organization {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+
+  createdById String?
+  createdBy   User?   @relation("OrganizationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  members              OrganizationMember[]
+  teams                Team[]
+  boards               Board[]
+  externalAccessTokens ExternalAccessToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
+}
+
+model OrganizationMember {
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role String @default("member") // "owner" | "admin" | "member"
+
+  createdAt DateTime @default(now())
+
+  @@id([organizationId, userId])
+  @@index([userId])
+}
+
+model Team {
+  id             String       @id @default(cuid())
+  name           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  members     TeamMember[]
+  boardAccess BoardTeamAccess[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model TeamMember {
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([teamId, userId])
+  @@index([userId])
+}
+
+model BoardTeamAccess {
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  role String @default("member") // "viewer" | "member" | "admin"
+
+  createdAt DateTime @default(now())
+
+  @@id([boardId, teamId])
+  @@index([teamId])
+}
+
+/// Read-only MCP credential bound to one organization.
+/// boardId null reads every board in that organization. A set boardId reads only
+/// that board, which must still belong to the same organization.
+/// allEnvironments and environments are stored for old rows and are not used.
+model ExternalAccessToken {
+  id              String    @id @default(cuid())
+  name            String
+  tokenHash       String    @unique
+  tokenPrefix     String
+  scopes          String[]  @default(["tickets:read"])
+  allEnvironments Boolean   @default(true)
+  environments    String[]  @default([])
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  lastUsedAt      DateTime?
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  boardId String?
+  board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  createdBy   User?   @relation("ExternalAccessTokenCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([boardId])
+  @@index([createdById])
 }
 
 model BoardMember {
@@ -151,13 +274,13 @@ model Invitation {
 }
 
 model Epic {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
-  color       String   @default("#3b82f6")
-  quarter     String?  // e.g. "2026-Q1", "2026-Q2"
-  status      String   @default("open") // "open" | "completed"
-  order       Int      @default(0)
+  color       String  @default("#3b82f6")
+  quarter     String? // e.g. "2026-Q1", "2026-Q2"
+  status      String  @default("open") // "open" | "completed"
+  order       Int     @default(0)
 
   boardId String
   board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
@@ -187,28 +310,28 @@ model List {
 }
 
 model Task {
-  id          String  @id @default(cuid())
-  title       String
-  description String?
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
   completed     Boolean   @default(false)
   completedAt   DateTime?
   completedById String?
   completedBy   User?     @relation("CompletedTasks", fields: [completedById], references: [id], onDelete: SetNull)
   priority      String?
-  startDate   DateTime?
-  dueDate     DateTime?
+  startDate     DateTime?
+  dueDate       DateTime?
 
   // Archive & Quarter & Epics
-  archived    Boolean   @default(false)
-  archivedAt  DateTime?
-  quarter     String?   // e.g. "2026-Q1", "2026-Q2"
-  
-  epicId      String?
-  epic        Epic?     @relation(fields: [epicId], references: [id], onDelete: SetNull)
+  archived   Boolean   @default(false)
+  archivedAt DateTime?
+  quarter    String? // e.g. "2026-Q1", "2026-Q2"
+
+  epicId String?
+  epic   Epic?   @relation(fields: [epicId], references: [id], onDelete: SetNull)
 
   // Public Share Link & Calendar Sync
-  shareToken     String? @unique
-  googleEventId  String?
+  shareToken    String? @unique
+  googleEventId String?
 
   order Int
 
@@ -267,9 +390,9 @@ model Comment {
 }
 
 model Label {
-  id      String @id @default(cuid())
-  title   String
-  color   String
+  id    String @id @default(cuid())
+  title String
+  color String
 
   boardId String
   board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
@@ -337,24 +460,24 @@ model ActivityLog {
 }
 
 model CustomField {
-  id         String   @id @default(cuid())
+  id         String  @id @default(cuid())
   boardId    String
-  board      Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board      Board   @relation(fields: [boardId], references: [id], onDelete: Cascade)
   name       String
-  type       String   // "NUMBER" | "TEXT" | "SELECT"
-  options    Json?    // e.g. ["dev", "integration", "uat", "production"]
-  enabled    Boolean  @default(true)
-  isDefault  Boolean  @default(false)
-  defaultKey String?  // "story_points" | "environment" | "parent" | "child" | "customer"
-  order      Int      @default(0)
+  type       String // "NUMBER" | "TEXT" | "SELECT"
+  options    Json? // e.g. ["dev", "integration", "uat", "production"]
+  enabled    Boolean @default(true)
+  isDefault  Boolean @default(false)
+  defaultKey String? // "story_points" | "environment" | "parent" | "child" | "customer"
+  order      Int     @default(0)
 
   values CustomFieldValue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([boardId])
   @@unique([boardId, defaultKey])
+  @@index([boardId])
 }
 
 model CustomFieldValue {

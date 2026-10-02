@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Webhook,
   Save,
@@ -8,6 +8,7 @@ import {
   Bell,
   MessageSquare,
 } from "lucide-react";
+import { ExternalAccessSection } from "./ExternalAccessSection";
 import {
   Dialog,
   DialogContent,
@@ -23,12 +24,14 @@ import { useTranslations } from "next-intl";
 
 interface BoardIntegrationsModalProps {
   boardId: string;
+  canManage: boolean;
   open: boolean;
   onClose: () => void;
 }
 
 export function BoardIntegrationsModal({
   boardId,
+  canManage,
   open,
   onClose,
 }: BoardIntegrationsModalProps) {
@@ -43,13 +46,7 @@ export function BoardIntegrationsModal({
   const [notifyOnTaskCompleted, setNotifyOnTaskCompleted] = useState(true);
   const [notifyOnTaskMoved, setNotifyOnTaskMoved] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      loadIntegrations();
-    }
-  }, [open, boardId]);
-
-  const loadIntegrations = async () => {
+  const loadIntegrations = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/boards/${boardId}/integrations`);
@@ -66,7 +63,13 @@ export function BoardIntegrationsModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [boardId, t]);
+
+  useEffect(() => {
+    if (open) {
+      loadIntegrations();
+    }
+  }, [open, loadIntegrations]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +102,7 @@ export function BoardIntegrationsModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Webhook size={18} className="text-primary" />
@@ -214,6 +217,11 @@ export function BoardIntegrationsModal({
               </Button>
             </div>
           </form>
+        )}
+        {canManage && (
+          <div className={loading ? "hidden" : "pt-4"}>
+            <ExternalAccessSection boardId={boardId} open={open} />
+          </div>
         )}
       </DialogContent>
     </Dialog>
