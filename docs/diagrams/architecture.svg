@@ -8,7 +8,7 @@
 
   <rect x="32" y="28" width="1" height="16" fill="#D3A05B"/>
   <text x="42" y="41" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">ARCHITECTURE</text>
-  <text x="1048" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">Next.js 15 · Clerk · Prisma 7 · Neon</text>
+  <text x="1048" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">Next.js 16 · Clerk · Prisma 7 · Neon</text>
   <text x="32" y="76" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" letter-spacing="-0.025em">
     <tspan fill="#13233C">Kikiboard </tspan><tspan fill="#D3A05B">system</tspan>
   </text>

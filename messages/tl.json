@@ -788,7 +788,22 @@
     "events": "Mga event na nagti-trigger ng notifications",
     "onCreate": "Kapag may bagong ticket na nagawa",
     "onComplete": "Kapag minarkahan ang ticket na natapos",
-    "onMove": "Kapag inilipat ang ticket sa ibang list"
+    "onMove": "Kapag inilipat ang ticket sa ibang list",
+    "mcpTitle": "Access para sa AI clients (MCP)",
+    "mcpHint": "Gumawa ng read-only token na nakatali sa board at napiling environments.",
+    "tokenNamePlaceholder": "Pangalan ng connection, hal. Claude para sa checkout",
+    "allowedEnvironments": "Mga pinapayagang environment",
+    "allEnvironments": "Lahat, kasama ang unclassified",
+    "createToken": "Gumawa ng access token",
+    "tokenCreated": "Nagawa ang access token",
+    "tokenCreateError": "Hindi magawa ang access token",
+    "copyTokenNow": "Kopyahin ang token ngayon. Hindi na ito muling ipapakita.",
+    "copyToken": "Kopyahin ang token",
+    "revokeToken": "Bawiin ang token",
+    "tokenRevoked": "Binawi ang access token",
+    "tokenRevokeError": "Hindi mabawi ang access token",
+    "lastUsed": "Huling ginamit",
+    "neverUsed": "Hindi pa nagamit"
   },
   "labels": {
     "create": "Gumawa ng label",

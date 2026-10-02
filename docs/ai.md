@@ -44,16 +44,22 @@ The client then sends that list to `POST /api/boards/[boardId]/batchTasks`, whic
 
 ## MCP
 
-`mcp/server.ts` is a Model Context Protocol server for Claude Desktop / Cursor / similar. It calls the same HTTP APIs:
+`POST /api/mcp` is a stateless Streamable HTTP MCP endpoint for ChatGPT,
+Claude, and other MCP-capable clients. It uses a bearer credential created by a
+board owner or admin at `/api/boards/{boardId}/external-access`.
 
-| Tool | Does |
-|---|---|
-| `list_boards` | Boards, lists, task counts |
-| `list_tasks` | Filter by board, status, priority, quarter, archive |
-| `create_task` | One card |
-| `update_task` | Fields + completion |
-| `parse_and_create_tasks` | Brain dump then batch create |
-| `bulk_archive_tasks` | Archive completed / old-quarter work |
-| `list_epics` | Epic progress |
+Every credential is pinned to one board. It sets `allEnvironments` or lists
+environment names. There is no wildcard sentinel and no implicit unrestricted
+default. MCP tools never accept a board id: `get_project`, `list_tickets`, and
+`get_ticket` derive it from the credential. A restricted credential only returns
+tickets whose default `environment` custom field has an allowed value;
+unclassified tickets are denied. `allEnvironments: true` grants every
+environment, including unclassified tickets.
 
-Env: `KIKIBOARD_API_URL` (see `mcp/README.md`). The server has **no Clerk cookies**, so those tools 401 against a protected local app unless something else injects a session. `list_tasks` is documented as calling `GET /api/tasks`, which does not exist as a route.
+Issuing a named list ensures the board's default custom fields exist, then
+checks the names against that `environment` field. Credentials currently expose
+only the `tickets:read` scope. Plaintext tokens are returned once, while only
+their SHA-256 hashes are stored. They can expire and can be revoked. A
+successful MCP call records `lastUsedAt`; authentication itself does not write.
+
+See `mcp/README.md` for provisioning and connection examples.

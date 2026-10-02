@@ -1,50 +1,74 @@
-# Kikiboard MCP Server
+# Kikiboard MCP
 
-El servidor MCP (Model Context Protocol) permite a asistentes de IA como **Claude Desktop**, **Cursor**, **OpenCode** y agentes autónomos conectarse a tu instancia de **Kikiboard** para gestionar tareas y proyectos mediante lenguaje natural.
+Kikiboard exposes a stateless Streamable HTTP MCP server at:
 
----
+```text
+https://YOUR_KIKIBOARD_HOST/api/mcp
+```
 
-## Herramientas disponibles
+It can be used by ChatGPT, Claude, or any other host that supports Streamable
+HTTP MCP with bearer authentication. Groq is a model provider rather than an
+MCP host; use it through an agent framework or client that can call MCP tools.
 
-| Herramienta | Descripción |
-|---|---|
-| `list_boards` | Lista todos los boards con sus IDs, listas y conteo de tareas |
-| `list_tasks` | Lista tareas filtradas por board, estado (pendientes/completadas), prioridad, trimestre o archivo |
-| `create_task` | Crea una nueva tarea en una lista específica |
-| `update_task` | Actualiza campos de una tarea (título, descripción, prioridad, fechas, estado) |
-| `parse_and_create_tasks` | Envía texto libre o actas de reunión a la IA y crea automáticamente múltiples tareas estructuradas en el board |
-| `bulk_archive_tasks` | Archiva tareas completadas o de trimestres anteriores masivamente |
-| `list_epics` | Consulta los Epics y su progreso por trimestre |
+## Security boundary
 
----
+An external-access token belongs to exactly one board (the current project
+boundary). The client cannot supply or switch a board id. A token also contains:
 
-## Configuración en Claude Desktop
+- scope: currently `tickets:read` only;
+- `allEnvironments: true`, or a list of environment names;
+- optional expiration and revocation timestamps;
+- last-used timestamp, written after a successful MCP call.
 
-Agrega la configuración a tu archivo `claude_desktop_config.json`:
+When an allowlist is used, tickets without an environment are not returned.
+This fail-closed behavior prevents unclassified tickets from leaking into a
+restricted client connection.
 
-```json
+## Create a connection token
+
+Board owners and admins can create and revoke tokens in the board's
+**Integrations** dialog. The same operations are available through the
+authenticated application API; the request uses the normal Clerk browser
+session:
+
+```http
+POST /api/boards/BOARD_ID/external-access
+Content-Type: application/json
+
 {
-  "mcpServers": {
-    "kikiboard": {
-      "command": "npx",
-      "args": ["-y", "tsx", "/RUTA/ABSOLUTA/A/management-tool-v2/mcp/server.ts"],
-      "env": {
-        "KIKIBOARD_API_URL": "http://localhost:3000"
-      }
-    }
-  }
+  "name": "Claude for checkout repository",
+  "environments": ["dev", "integration"],
+  "expiresAt": "2027-01-01T00:00:00.000Z"
 }
 ```
 
----
+Set `"allEnvironments": true` only when the client should see every environment
+and unclassified tickets. Do not send environment names together with that
+flag. Named values are validated against the board's `environment` custom-field
+options after the default fields are ensured. The API rejects a request that
+chooses neither `allEnvironments` nor a name list.
 
-## Ejemplos de uso con tu asistente de IA
+The response contains a `kiki_...` token once. Store it in the client's secret
+configuration. Kikiboard stores only its hash and cannot show it again.
 
-> **Tú:** "¿Cuáles son las tareas pendientes de alta prioridad en el board de Checkout?"  
-> **IA:** *llama a `list_tasks(status="pending", priority="high")`* y te muestra el resumen.
+List credentials with `GET /api/boards/BOARD_ID/external-access` and revoke one
+with `DELETE /api/boards/BOARD_ID/external-access/TOKEN_ID`.
 
-> **Tú:** "Añade una tarea para migrar la base de datos a Neon en el Q3 antes del 15 de octubre con prioridad urgente."  
-> **IA:** *llama a `create_task(...)`* creando la tarjeta con todas sus propiedades.
+## Connect a client
 
-> **Tú:** "Archiva todas las tareas completadas del Q1."  
-> **IA:** *llama a `bulk_archive_tasks(quarter="2026-Q1", completedOnly=true)`*.
+Configure the MCP URL and send the token as an HTTP bearer credential:
+
+```text
+URL: https://YOUR_KIKIBOARD_HOST/api/mcp
+Authorization: Bearer kiki_YOUR_ONE_TIME_TOKEN
+```
+
+The connection exposes three read-only tools:
+
+- `get_project` — board metadata and lists;
+- `list_tickets` — filtered ticket summaries;
+- `get_ticket` — details for one permitted ticket.
+
+Do not place tokens in source control, chat prompts, logs, or client-visible
+configuration files. Use the secret/environment facility provided by the MCP
+host and revoke a token immediately if it is disclosed.
