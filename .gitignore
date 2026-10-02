@@ -47,3 +47,6 @@ next-env.d.ts
 
 # backups locales de datos (NUNCA commitear)
 /.backups/
+
+# Agent working memory: task summaries, raw logs, and investigation traces
+/.agent-state/

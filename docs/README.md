@@ -4,19 +4,23 @@ Kikiboard is a collaborative project board (Kanban + list) built with Next.js 16
 
 Each page has an SVG diagram plus the route, permission, and side-effect details taken from the current code.
 
-## Map
+## Context map
 
-| Document | What it covers |
-|---|---|
-| [Architecture](./architecture.md) | Layers, public vs protected routes, request path, data model |
-| [Auth and identity](./auth.md) | Sign-in, `getOrCreateUser`, Clerk webhooks |
-| [Boards and roles](./boards-and-roles.md) | Create board, lists, owner / admin / member |
-| [Invitations](./invitations.md) | Email invite, token, accept, membership |
-| [Tasks](./tasks.md) | Create, move, complete, archive, custom fields, files |
-| [Collaboration](./collaboration.md) | Assignee, QA, comments, in-app notifications |
-| [AI](./ai.md) | BYO key, transcribe, parse, improve, batch create |
-| [Integrations](./integrations.md) | Slack, Discord, Google Calendar, public share, MCP |
-| [ISO 27001 Compliance](./iso-27001-compliance-plan.md) | Technical gap analysis, control mapping, and certification project plan |
+Use this page as a router. Read only the documents relevant to the change instead of loading the entire documentation set.
+
+| Read when changing | Document | Primary code areas |
+|---|---|---|
+| Service boundaries, request flow, route protection, data relationships | [Architecture](./architecture.md) | `middleware.ts`, `app/`, `lib/`, `prisma/schema.prisma` |
+| Sign-in, identity linking, Clerk webhooks | [Auth and identity](./auth.md) | `app/(auth)`, `app/api/webhooks`, `lib/getOrCreateUser.ts` |
+| Boards, lists, ownership, roles, permissions | [Boards and roles](./boards-and-roles.md) | `app/api/boards`, `app/api/lists`, `lib/boardAccess.ts`, `lib/boardRoles.ts` |
+| Invite delivery, tokens, acceptance, membership | [Invitations](./invitations.md) | `app/api/invite`, `app/api/boards/*/invitations`, `app/invite` |
+| Task CRUD, moves, completion, files, fields, archive, epics | [Tasks](./tasks.md) | `app/api/tasks`, board task components, `lib/statusTheme.ts` |
+| Assignment, QA, comments, activity, notifications | [Collaboration](./collaboration.md) | task people/comment routes, `app/api/notifications`, `lib/createActivity.ts` |
+| Provider credentials, transcription, parse/improve, brain dump | [AI](./ai.md) | `app/api/ai`, `lib/ai`, `lib/crypto.ts`, `mcp/` |
+| Slack, Discord, Google Calendar, sharing, email, MCP | [Integrations](./integrations.md) | integration routes and `lib/integrations` |
+| Security controls or certification planning | [ISO 27001 Compliance](./iso-27001-compliance-plan.md) | Cross-cutting; verify claims against current code and CI |
+
+The code and Prisma schema are authoritative. When behavior changes, update the matching flow document in the same change.
 
 ## System at a glance
 

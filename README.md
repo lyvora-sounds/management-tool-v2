@@ -10,7 +10,7 @@ Aplicación web full-stack de gestión de proyectos colaborativa, inspirada en T
 
 | Capa | Tecnología |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Lenguaje | TypeScript |
 | Estilos | Tailwind CSS v4 |
 | Componentes | shadcn/ui + Base UI |
