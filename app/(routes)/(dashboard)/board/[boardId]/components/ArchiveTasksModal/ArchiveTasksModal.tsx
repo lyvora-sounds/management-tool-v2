@@ -33,6 +33,7 @@ import { useBoardStore } from "../../store/useBoardStore";
 
 interface ArchiveTasksModalProps {
   boardId: string;
+  canEdit: boolean;
   open: boolean;
   onClose: () => void;
   onRefreshBoard: () => void;
@@ -40,6 +41,7 @@ interface ArchiveTasksModalProps {
 
 export function ArchiveTasksModal({
   boardId,
+  canEdit,
   open,
   onClose,
   onRefreshBoard,
@@ -48,7 +50,9 @@ export function ArchiveTasksModal({
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const lists = useBoardStore((s) => s.lists);
-  const [activeTab, setActiveTab] = useState<"bulk_archive" | "view_archived">("bulk_archive");
+  const [activeTab, setActiveTab] = useState<"bulk_archive" | "view_archived">(
+    canEdit ? "bulk_archive" : "view_archived",
+  );
   const [archivedTasks, setArchivedTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -184,7 +188,7 @@ export function ArchiveTasksModal({
 
         {/* Tab switcher */}
         <div className="flex border-b px-6 bg-muted/20">
-          <button
+          {canEdit && <button
             onClick={() => setActiveTab("bulk_archive")}
             className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors ${
               activeTab === "bulk_archive"
@@ -193,7 +197,7 @@ export function ArchiveTasksModal({
             }`}
           >
             {t("archiveActive", { count: eligibleTasks.length })}
-          </button>
+          </button>}
           <button
             onClick={() => setActiveTab("view_archived")}
             className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors ${
@@ -368,7 +372,7 @@ export function ArchiveTasksModal({
                     <span className="text-muted-foreground">
                       {t("archiveCount", { count: archivedTasks.length })}
                     </span>
-                    {selectedToRestore.length > 0 && (
+                    {canEdit && selectedToRestore.length > 0 && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -389,14 +393,14 @@ export function ArchiveTasksModal({
                         className="flex items-center justify-between p-3 rounded-lg border bg-card text-xs"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <Checkbox
+                          {canEdit && <Checkbox
                             checked={selectedToRestore.includes(task.id)}
                             onCheckedChange={(c) => {
                               setSelectedToRestore((prev) =>
                                 c ? [...prev, task.id] : prev.filter((id) => id !== task.id),
                               );
                             }}
-                          />
+                          />}
                           <div className="space-y-0.5 truncate">
                             <p className="font-semibold text-foreground truncate">
                               {task.title}
@@ -419,7 +423,7 @@ export function ArchiveTasksModal({
                           </div>
                         </div>
 
-                        <Button
+                        {canEdit && <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleRestore([task.id])}
@@ -428,7 +432,7 @@ export function ArchiveTasksModal({
                         >
                           <RotateCcw size={12} />
                           <span>{t("archiveRestore")}</span>
-                        </Button>
+                        </Button>}
                       </div>
                     ))}
                   </div>

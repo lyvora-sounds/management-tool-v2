@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard, canReadBoard } from "@/lib/boardAccess";
 
 export async function GET(
   req: Request,
@@ -11,7 +11,7 @@ export async function GET(
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const hasAccess = await hasBoardAccess(userId, boardId);
+  const hasAccess = await canReadBoard(userId, boardId);
   if (!hasAccess) return NextResponse.json({ error: "Sin acceso" }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
@@ -42,7 +42,7 @@ export async function POST(
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const hasAccess = await hasBoardAccess(userId, boardId);
+  const hasAccess = await canEditBoard(userId, boardId);
   if (!hasAccess) return NextResponse.json({ error: "Sin acceso" }, { status: 403 });
 
   const body = await req.json();
@@ -89,7 +89,7 @@ export async function PATCH(
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const hasAccess = await hasBoardAccess(userId, boardId);
+  const hasAccess = await canEditBoard(userId, boardId);
   if (!hasAccess) return NextResponse.json({ error: "Sin acceso" }, { status: 403 });
 
   const body = await req.json();

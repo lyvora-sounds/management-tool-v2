@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { Trash2, FileText, ImageIcon } from "lucide-react";
 import type { AttachmentModel } from "@/lib/generated/prisma/models/Attachment";
 import { AttachmentsSkeleton } from "@/components/skeletons";
+import { useBoardAccess } from "../BoardAccess";
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -30,9 +31,12 @@ export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: strin
     const [uploading, setUploading] = useState(false);
     const [fetching, setFetching] = useState(true); // true = loading until first fetch completes
     const inputRef = useRef<HTMLInputElement>(null);
+    const { canEdit } = useBoardAccess();
 
     useImperativeHandle(ref, () => ({
-      openFilePicker: () => inputRef.current?.click(),
+      openFilePicker: () => {
+        if (canEdit) inputRef.current?.click();
+      },
       uploading,
     }));
 
@@ -47,6 +51,7 @@ export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: strin
     }, [taskId]);
 
     const uploadFile = async (file: File) => {
+      if (!canEdit) return;
       setUploading(true);
       const formData = new FormData();
       formData.append("file", file);
@@ -67,6 +72,7 @@ export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: strin
     };
 
     const handleDelete = async (attachmentId: string) => {
+      if (!canEdit) return;
       const prev = attachments;
       setAttachments(prev.filter((a) => a.id !== attachmentId));
       const res = await fetch(`/api/tasks/${taskId}/attachments/${attachmentId}`, {
@@ -77,13 +83,13 @@ export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: strin
 
     return (
       <div className="flex flex-col gap-1">
-        <input
+        {canEdit && <input
           ref={inputRef}
           type="file"
           multiple
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}
-        />
+        />}
         {fetching && <AttachmentsSkeleton count={2} />}
         {!fetching && attachments.map((attachment) => (
           <div
@@ -102,12 +108,12 @@ export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: strin
             <span className="text-xs text-muted-foreground shrink-0">
               {formatBytes(attachment.size)}
             </span>
-            <button
+            {canEdit && <button
               onClick={() => handleDelete(attachment.id)}
               className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
             >
               <Trash2 size={13} />
-            </button>
+            </button>}
           </div>
         ))}
       </div>

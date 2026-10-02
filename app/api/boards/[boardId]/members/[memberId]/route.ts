@@ -39,7 +39,7 @@ export async function PATCH(
 
   if (!isAssignableRole(nextRole)) {
     return NextResponse.json(
-      { error: "El rol debe ser 'admin' o 'member'" },
+      { error: "El rol debe ser 'admin', 'member' o 'viewer'" },
       { status: 400 }
     );
   }
@@ -84,5 +84,9 @@ export async function DELETE(
 
   await db.boardMember.delete({ where: { id: memberId } });
 
-  return NextResponse.json({ success: true });
+  // Organization-mode boards stay open to organization members, and a team
+  // grant can outlive the direct row. Tell the caller when access remains.
+  const remainingRole = await getBoardRole(ctx.member.userId, boardId);
+
+  return NextResponse.json({ success: true, remainingRole });
 }

@@ -3,6 +3,7 @@ export interface BoardFormData {
   description: string;
   color: string;
   lists: string[];
+  organizationId: string;
 }
 
 export interface StepProps {

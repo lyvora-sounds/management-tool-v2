@@ -1,6 +1,6 @@
-import type { BoardModel } from "@/lib/generated/prisma/models/Board";
+import type { BoardWithOrganization } from "@/store/useBoardsStore";
 
 export type BoardsStoreInitializerProps = {
-  boards: BoardModel[];
+  boards: BoardWithOrganization[];
   ownUserId: string;
 };

@@ -13,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PRESET_COLORS } from "./TaskLabels.data";
 import { useTranslations } from "next-intl";
+import { useBoardAccess } from "../BoardAccess";
 
 export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: TaskLabelsProps) {
+  const { canEdit } = useBoardAccess();
   const t = useTranslations("labels");
   const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
@@ -90,6 +92,8 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
     }
     setShowForm(false);
   };
+
+  if (!canEdit) return null;
 
   const deleteLabel = async (labelId: string) => {
     const res = await fetch(`/api/labels/label/${labelId}`, { method: "DELETE" });

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
 import { isDoneList } from "@/lib/statusTheme";
@@ -44,7 +44,7 @@ export async function PATCH(
   });
   if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const allowed = await hasBoardAccess(user.id, task.list.board.id);
+  const allowed = await canEditBoard(user.id, task.list.board.id);
   if (!allowed)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
 

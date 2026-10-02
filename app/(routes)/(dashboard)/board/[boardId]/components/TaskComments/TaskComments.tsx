@@ -7,8 +7,10 @@ import { es, enUS } from "date-fns/locale";
 import { useLocale, useTranslations } from "next-intl";
 import { CommentItem, TaskCommentsProps } from "./TaskComments.types";
 import { CommentsSkeleton } from "@/components/skeletons";
+import { useBoardAccess } from "../BoardAccess";
 
 export function TaskComments({ taskId }: TaskCommentsProps) {
+  const { canEdit } = useBoardAccess();
   const t = useTranslations("task");
   const locale = useLocale();
   const dateFnsLocale = locale === "es" ? es : enUS;
@@ -34,6 +36,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
   }, [comments]);
 
   const submit = async () => {
+    if (!canEdit) return;
     const trimmed = value.trim();
     if (!trimmed) return;
     setLoading(true);
@@ -81,12 +84,12 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
                     locale: dateFnsLocale,
                   })}
                 </span>
-                <button
+                {canEdit && <button
                   onClick={() => deleteComment(c.id)}
                   className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-muted-foreground hover:text-destructive transition-all"
                 >
                   <Trash2 size={11} />
-                </button>
+                </button>}
               </div>
             </div>
             <p className="text-sm bg-muted rounded-lg px-3 py-2 whitespace-pre-wrap wrap-break-word min-w-0">{c.content}</p>
@@ -95,8 +98,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="mt-3 flex gap-2 items-end border rounded-xl px-3 py-2 focus-within:ring-1 focus-within:ring-ring">
+      {canEdit && <div className="mt-3 flex gap-2 items-end border rounded-xl px-3 py-2 focus-within:ring-1 focus-within:ring-ring">
         <textarea
           ref={textareaRef}
           value={value}
@@ -124,7 +126,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
         >
           <Send size={15} />
         </button>
-      </div>
+      </div>}
     </div>
   );
 }

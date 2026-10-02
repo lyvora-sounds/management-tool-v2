@@ -4,6 +4,7 @@ import db from "@/lib/db";
 import { CreateBoardModal } from "../components/boards/CreateBoardModal/CreateBoardModal";
 import { getTranslations } from "next-intl/server";
 import { BoardList } from "../components/boards/BoardList/BoardList";
+import { readableBoardWhere } from "@/lib/boardAccess";
 
 export default async function BoardsPage() {
   const { userId } = await auth();
@@ -13,12 +14,7 @@ export default async function BoardsPage() {
   if (!user) redirect("/sign-in");
 
   const rawBoards = await db.board.findMany({
-    where: {
-      OR: [
-        { userId: user.id },
-        { members: { some: { userId: user.id } } },
-      ],
-    },
+    where: readableBoardWhere(user.id),
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 
 type OrderItem = { id: string; order: number; listId: string };
@@ -46,7 +46,7 @@ export async function PATCH(req: Request) {
   }
 
   const [boardId] = boardIds;
-  const allowed = await hasBoardAccess(user.id, boardId);
+  const allowed = await canEditBoard(user.id, boardId);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   await Promise.all(
