@@ -1,11 +1,15 @@
 import { create } from "zustand";
 import type { BoardModel } from "@/lib/generated/prisma/models/Board";
 
+export type BoardWithOrganization = BoardModel & {
+  organization?: { id: string; name: string } | null;
+};
+
 type BoardsState = {
-  boards: BoardModel[];
+  boards: BoardWithOrganization[];
   ownUserId: string | null;
-  setBoards: (boards: BoardModel[], ownUserId: string) => void;
-  addBoard: (board: BoardModel) => void;
+  setBoards: (boards: BoardWithOrganization[], ownUserId: string) => void;
+  addBoard: (board: BoardWithOrganization) => void;
   removeBoard: (boardId: string) => void;
   renameBoard: (boardId: string, title: string) => void;
 };

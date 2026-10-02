@@ -1,7 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess, isBoardAdmin } from "@/lib/boardAccess";
+import { getBoardRole, isBoardAdmin } from "@/lib/boardAccess";
+import { canEditBoard as roleCanEdit, canReadBoard as roleCanRead } from "@/lib/boardRoles";
 import { isCustomFieldType } from "@/lib/customFieldsDefaults";
 import { ensureDefaultCustomFields } from "@/lib/ensureDefaultCustomFields";
 
@@ -23,14 +24,14 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "boardId is required" }, { status: 400 });
   }
 
-  const canAccess = await hasBoardAccess(user.id, boardId);
-  if (!canAccess) {
+  const role = await getBoardRole(user.id, boardId);
+  if (!roleCanRead(role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const isAdmin = await isBoardAdmin(user.id, boardId);
+  const isAdmin = role === "owner" || role === "admin";
 
-  await ensureDefaultCustomFields(boardId);
+  if (roleCanEdit(role)) await ensureDefaultCustomFields(boardId);
 
   const fields = await db.customField.findMany({
     where: { boardId },

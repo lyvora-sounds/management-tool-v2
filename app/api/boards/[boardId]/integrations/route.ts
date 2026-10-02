@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess, isBoardAdmin } from "@/lib/boardAccess";
+import { canEditBoard, isBoardAdmin } from "@/lib/boardAccess";
 
 export async function GET(
   req: Request,
@@ -11,7 +11,7 @@ export async function GET(
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const hasAccess = await hasBoardAccess(userId, boardId);
+  const hasAccess = await canEditBoard(userId, boardId);
   if (!hasAccess) return NextResponse.json({ error: "Sin acceso" }, { status: 403 });
 
   const board = await db.board.findUnique({

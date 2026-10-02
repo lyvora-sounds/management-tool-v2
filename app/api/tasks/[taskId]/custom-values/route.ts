@@ -1,7 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard, getBoardRole } from "@/lib/boardAccess";
+import { canEditBoard as roleCanEdit, canReadBoard as roleCanRead } from "@/lib/boardRoles";
 import { ensureDefaultCustomFields } from "@/lib/ensureDefaultCustomFields";
 import { syncParentChildRelationships } from "@/lib/customValuesSync";
 import { isParentFieldKey, isTicketRefKey } from "@/lib/customFieldsDefaults";
@@ -32,12 +33,12 @@ export async function GET(
   }
 
   const boardId = task.list.boardId;
-  const canAccess = await hasBoardAccess(user.id, boardId);
-  if (!canAccess) {
+  const role = await getBoardRole(user.id, boardId);
+  if (!roleCanRead(role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  await ensureDefaultCustomFields(boardId);
+  if (roleCanEdit(role)) await ensureDefaultCustomFields(boardId);
 
   const [fields, values] = await Promise.all([
     db.customField.findMany({
@@ -77,7 +78,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Tarea no encontrada" }, { status: 404 });
   }
 
-  const canAccess = await hasBoardAccess(user.id, task.list.boardId);
+  const canAccess = await canEditBoard(user.id, task.list.boardId);
   if (!canAccess) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

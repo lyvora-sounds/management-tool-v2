@@ -10,8 +10,10 @@ import { Subtask, TaskSubtasksProps } from "./TaskSubtasks.types";
 import { useBoardStore } from "../../store/useBoardStore";
 import { SubtasksSkeleton } from "@/components/skeletons";
 import { useTranslations } from "next-intl";
+import { useBoardAccess } from "../BoardAccess";
 
 export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
+  const { canEdit } = useBoardAccess();
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
   const updateTask = useBoardStore((s) => s.updateTask);
@@ -48,6 +50,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
   };
 
   const addSubtask = async () => {
+    if (!canEdit) return;
     if (!newTitle.trim()) {
       setAdding(false);
       return;
@@ -68,6 +71,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
   };
 
   const toggleCompleted = async (subtask: Subtask) => {
+    if (!canEdit) return;
     const next = !subtask.completed;
     const prev = subtasks;
     const updated = subtasks.map((s) =>
@@ -151,6 +155,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
           >
             <Checkbox
               checked={subtask.completed}
+              disabled={!canEdit}
               onCheckedChange={() => toggleCompleted(subtask)}
               className="shrink-0"
             />
@@ -169,9 +174,12 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
               />
             ) : (
               <span
-                onClick={() => startEdit(subtask)}
+                onClick={() => {
+                  if (canEdit) startEdit(subtask);
+                }}
                 className={cn(
-                  "flex-1 text-sm cursor-pointer",
+                  "flex-1 text-sm",
+                  canEdit && "cursor-pointer",
                   subtask.completed && "line-through text-muted-foreground",
                 )}
               >
@@ -179,12 +187,12 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
               </span>
             )}
 
-            <button
+            {canEdit && <button
               onClick={() => deleteSubtask(subtask.id)}
               className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
             >
               <Trash2 size={13} />
-            </button>
+            </button>}
           </div>
         ))}
 
@@ -220,7 +228,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
               <X size={13} />
             </Button>
           </div>
-        ) : (
+        ) : canEdit ? (
           <button
             onClick={() => setAdding(true)}
             className="flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
@@ -228,7 +236,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
             <Plus size={13} />
             {t("addSubtask")}
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   );

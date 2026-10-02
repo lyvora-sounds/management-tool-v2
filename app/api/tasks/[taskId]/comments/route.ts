@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard, canReadBoard } from "@/lib/boardAccess";
 import { encodeLogMessage } from "@/lib/activityMessages";
 
 export async function GET(
@@ -21,7 +21,7 @@ export async function GET(
   });
   if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const allowed = await hasBoardAccess(user.id, task.list.board.id);
+  const allowed = await canReadBoard(user.id, task.list.board.id);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const comments = await db.comment.findMany({
@@ -53,7 +53,7 @@ export async function POST(
   });
   if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const allowed = await hasBoardAccess(user.id, task.list.board.id);
+  const allowed = await canEditBoard(user.id, task.list.board.id);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const taskWithMembers = await db.task.findUnique({

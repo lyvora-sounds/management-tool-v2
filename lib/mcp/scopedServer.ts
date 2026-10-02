@@ -1,12 +1,18 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import db from "@/lib/db";
-import { environmentWhere, type ExternalAccessContext } from "@/lib/externalAccess";
+import type { ExternalAccessContext } from "@/lib/externalAccess";
 
 const PRIORITIES = new Set(["urgent", "high", "medium", "low"]);
 
 function text(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+}
+
+function ticketScope(context: ExternalAccessContext) {
+  return context.boardId
+    ? { list: { boardId: context.boardId } }
+    : { list: { board: { organizationId: context.organizationId } } };
 }
 
 function toTicketDetail(task: {
@@ -29,23 +35,31 @@ function toTicketDetail(task: {
   };
 }
 
+const listSelect = {
+  id: true,
+  title: true,
+  board: { select: { id: true, title: true } },
+} as const;
+
 export function createScopedMcpServer(context: ExternalAccessContext) {
   const server = new Server(
     { name: "kikiboard", version: "1.1.0" },
     { capabilities: { tools: {} } },
   );
-  const visibleTickets = environmentWhere(context);
+  const scopeDescription = context.boardId
+    ? "the single board bound to this connection"
+    : "every board in the organization bound to this connection";
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
       {
         name: "get_project",
-        description: "Get the single Kikiboard project bound to this connection.",
+        description: `Get ${scopeDescription}.`,
         inputSchema: { type: "object", additionalProperties: false, properties: {} },
       },
       {
         name: "list_tickets",
-        description: "List tickets in the bound project and permitted environments.",
+        description: `List tickets on ${scopeDescription}.`,
         inputSchema: {
           type: "object",
           additionalProperties: false,
@@ -60,7 +74,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       },
       {
         name: "get_ticket",
-        description: "Get one ticket by ID if it belongs to the bound project and permitted environment.",
+        description: `Get one ticket by ID when it belongs to ${scopeDescription}.`,
         inputSchema: {
           type: "object",
           additionalProperties: false,
@@ -75,22 +89,44 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
     const args = (params.arguments ?? {}) as Record<string, unknown>;
 
     if (params.name === "get_project") {
-      const board = await db.board.findUnique({
-        where: { id: context.boardId },
+      if (context.boardId) {
+        const board = await db.board.findUnique({
+          where: { id: context.boardId },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            organizationId: true,
+            list: { orderBy: { order: "asc" }, select: { id: true, title: true } },
+          },
+        });
+        if (!board || board.organizationId !== context.organizationId) {
+          return { isError: true, content: [{ type: "text", text: "Board not found" }] };
+        }
+        return text({ scope: "board", board });
+      }
+
+      const organization = await db.organization.findUnique({
+        where: { id: context.organizationId },
         select: {
           id: true,
-          title: true,
+          name: true,
           description: true,
-          list: { orderBy: { order: "asc" }, select: { id: true, title: true } },
+          boards: {
+            orderBy: { createdAt: "asc" },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              list: { orderBy: { order: "asc" }, select: { id: true, title: true } },
+            },
+          },
         },
       });
-      return text({
-        ...board,
-        access: {
-          allEnvironments: context.allEnvironments,
-          environments: context.environments,
-        },
-      });
+      if (!organization) {
+        return { isError: true, content: [{ type: "text", text: "Organization not found" }] };
+      }
+      return text({ scope: "organization", organization });
     }
 
     if (params.name === "list_tickets") {
@@ -101,7 +137,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         : undefined;
       const tasks = await db.task.findMany({
         where: {
-          list: { boardId: context.boardId },
+          ...ticketScope(context),
           archived: args.archived === true,
           ...(status === "pending" ? { completed: false } : {}),
           ...(status === "completed" ? { completed: true } : {}),
@@ -109,7 +145,6 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
           ...(typeof args.query === "string" && args.query.trim()
             ? { title: { contains: args.query.trim(), mode: "insensitive" as const } }
             : {}),
-          ...visibleTickets,
         },
         orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
         take: limit,
@@ -122,19 +157,13 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
           dueDate: true,
           quarter: true,
           updatedAt: true,
-          list: { select: { id: true, title: true } },
-          customValues: {
-            where: {
-              customField: { boardId: context.boardId, defaultKey: "environment" },
-            },
-            select: { value: true },
-            take: 1,
-          },
+          list: { select: listSelect },
         },
       });
-      return text(tasks.map(({ customValues, ...task }) => ({
+      return text(tasks.map(({ list, ...task }) => ({
         ...task,
-        environment: customValues[0]?.value ?? null,
+        board: list.board,
+        list: { id: list.id, title: list.title },
       })));
     }
 
@@ -145,8 +174,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       const task = await db.task.findFirst({
         where: {
           id: args.ticketId,
-          list: { boardId: context.boardId },
-          ...visibleTickets,
+          ...ticketScope(context),
         },
         select: {
           id: true,
@@ -160,7 +188,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
           quarter: true,
           createdAt: true,
           updatedAt: true,
-          list: { select: { id: true, title: true } },
+          list: { select: listSelect },
           epic: { select: { id: true, title: true } },
           labels: { select: { label: { select: { id: true, title: true, color: true } } } },
           customValues: {
@@ -174,7 +202,12 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       if (!task) {
         return { isError: true, content: [{ type: "text", text: "Ticket not found" }] };
       }
-      return text(toTicketDetail(task));
+      const { list, ...ticket } = task;
+      return text({
+        ...toTicketDetail(ticket),
+        board: list.board,
+        list: { id: list.id, title: list.title },
+      });
     }
 
     return { isError: true, content: [{ type: "text", text: "Unknown tool" }] };

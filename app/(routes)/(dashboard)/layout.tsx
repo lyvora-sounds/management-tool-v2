@@ -6,6 +6,7 @@ import { BoardsStoreInitializer } from "./dashboard/components/BoardsStoreInitia
 import { OnboardingGuide } from "@/components/Shared/GuidePointer";
 import { Suspense } from "react";
 import db from "@/lib/db";
+import { readableBoardWhere } from "@/lib/boardAccess";
 
 export default async function LayoutDashboard({
   children,
@@ -19,13 +20,9 @@ export default async function LayoutDashboard({
     const user = await db.user.findUnique({ where: { clerkId: userId } });
     if (!user) return { boards: [], dbUserId: "" };
     const boards = await db.board.findMany({
-      where: {
-        OR: [
-          { userId: user.id },
-          { members: { some: { userId: user.id } } },
-        ],
-      },
+      where: readableBoardWhere(user.id),
       orderBy: { createdAt: "desc" },
+      include: { organization: { select: { id: true, name: true } } },
     });
     return { boards, dbUserId: user.id };
   })();

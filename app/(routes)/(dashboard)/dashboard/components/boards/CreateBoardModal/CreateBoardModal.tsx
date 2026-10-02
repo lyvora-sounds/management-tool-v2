@@ -13,7 +13,13 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { CreateBoardStepper } from "./CreateBoardStepper";
 
-export function CreateBoardModal() {
+export function CreateBoardModal({
+  organizationId,
+  onCreated,
+}: {
+  organizationId?: string;
+  onCreated?: () => void | Promise<void>;
+} = {}) {
   const t = useTranslations("boards");
   const [open, setOpen] = useState(false);
 
@@ -27,7 +33,13 @@ export function CreateBoardModal() {
         <DialogHeader>
           <DialogTitle>{t("createNew")}</DialogTitle>
         </DialogHeader>
-        <CreateBoardStepper onSuccess={() => setOpen(false)} />
+        <CreateBoardStepper
+          organizationId={organizationId}
+          onSuccess={() => {
+            setOpen(false);
+            void onCreated?.();
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

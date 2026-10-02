@@ -46,7 +46,11 @@ Invites are the Resend integration (`app/api/boards/[boardId]/invitations/route.
 ## MCP
 
 See [AI](./ai.md#mcp) and `mcp/README.md`. The MCP server is the Streamable HTTP
-route `/api/mcp`. Authentication does not use a browser session: board admins
-issue revocable, board-bound bearer credentials. Each credential either lists
-environment names or sets `allEnvironments`. The route is public in Clerk
-middleware only because it performs this machine authentication itself.
+route `/api/mcp`. Authentication does not use a browser session. Organization
+owners and admins issue a credential for one organization. Board owners and
+admins issue a credential for one board inside that organization. Tickets are
+not filtered by environment. The same token cannot read a second organization.
+Settings → MCP (`/dashboard/settings?tab=mcp`) creates either token and shows
+it once in a selectable field. The board Integrations dialog creates the board
+token. The route is public in Clerk middleware only because it performs this
+machine authentication itself.

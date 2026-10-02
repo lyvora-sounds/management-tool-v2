@@ -1,20 +1,20 @@
 import { createHash, randomBytes } from "node:crypto";
 import db from "@/lib/db";
-import { ensureDefaultCustomFields } from "@/lib/ensureDefaultCustomFields";
 
 export const TICKETS_READ_SCOPE = "tickets:read";
 const TOKEN_PREFIX = "kiki_";
 
-export type EnvironmentGrant = {
-  allEnvironments: boolean;
-  environments: string[];
+export type ExternalAccessContext = {
+  tokenId: string;
+  organizationId: string;
+  boardId: string | null;
+  boardTitle: string | null;
+  scopes: string[];
 };
 
-export type ExternalAccessContext = EnvironmentGrant & {
-  tokenId: string;
-  boardId: string;
-  boardTitle: string;
-  scopes: string[];
+export type TokenRequest = {
+  name: string;
+  expiresAt: Date | null;
 };
 
 export function hashExternalAccessToken(token: string): string {
@@ -38,56 +38,23 @@ export function readBearerToken(request: Request): string | null {
   return token;
 }
 
-export function parseEnvironmentGrant(body: unknown): EnvironmentGrant | { error: string } {
-  const record = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
-  const allEnvironments = record.allEnvironments === true;
-  const requested = Array.isArray(record.environments)
-    ? record.environments
-        .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-        .map((value) => value.trim())
-    : [];
-  const environments = [...new Set(requested)];
-
-  if (environments.some((environment) => environment === "*")) {
-    return { error: "List environment names, or set allEnvironments to true" };
+export function readTokenRequest(body: unknown): TokenRequest | { error: string } {
+  const record = body && typeof body === "object" && !Array.isArray(body)
+    ? (body as Record<string, unknown>)
+    : {};
+  const name = typeof record.name === "string" ? record.name.trim() : "";
+  if (!name || name.length > 80) {
+    return { error: "Name must contain 1 to 80 characters" };
   }
-  if (allEnvironments && environments.length > 0) {
-    return { error: "Use either allEnvironments or an explicit environment list" };
+
+  if (record.expiresAt == null || record.expiresAt === "") {
+    return { name, expiresAt: null };
   }
-  if (!allEnvironments && environments.length === 0) {
-    return { error: "Environments are required; set allEnvironments or an explicit environment list" };
+  const expiresAt = new Date(String(record.expiresAt));
+  if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+    return { error: "Expiration must be a future date" };
   }
-  return allEnvironments
-    ? { allEnvironments: true, environments: [] }
-    : { allEnvironments: false, environments };
-}
-
-export function allowsEnvironment(grant: EnvironmentGrant, environment: string | null): boolean {
-  if (grant.allEnvironments) return true;
-  return environment !== null && grant.environments.includes(environment);
-}
-
-export function environmentWhere(grant: EnvironmentGrant & { boardId: string }) {
-  if (grant.allEnvironments) return {};
-  return {
-    customValues: {
-      some: {
-        customField: { boardId: grant.boardId, defaultKey: "environment" },
-        value: { in: grant.environments },
-      },
-    },
-  };
-}
-
-export async function configuredEnvironments(boardId: string): Promise<string[]> {
-  await ensureDefaultCustomFields(boardId);
-  const environmentField = await db.customField.findUnique({
-    where: { boardId_defaultKey: { boardId, defaultKey: "environment" } },
-    select: { options: true },
-  });
-  return Array.isArray(environmentField?.options)
-    ? environmentField.options.filter((value): value is string => typeof value === "string")
-    : [];
+  return { name, expiresAt };
 }
 
 export async function authenticateExternalAccess(
@@ -101,13 +68,12 @@ export async function authenticateExternalAccess(
     where: { tokenHash: hashExternalAccessToken(rawToken) },
     select: {
       id: true,
+      organizationId: true,
       boardId: true,
       scopes: true,
-      allEnvironments: true,
-      environments: true,
       expiresAt: true,
       revokedAt: true,
-      board: { select: { title: true } },
+      board: { select: { title: true, organizationId: true } },
     },
   });
 
@@ -115,19 +81,23 @@ export async function authenticateExternalAccess(
     !credential ||
     credential.revokedAt ||
     (credential.expiresAt && credential.expiresAt <= new Date()) ||
-    !credential.scopes.includes(requiredScope) ||
-    (!credential.allEnvironments && credential.environments.length === 0)
+    !credential.scopes.includes(requiredScope)
   ) {
     return null;
   }
 
+  if (credential.boardId) {
+    if (!credential.board || credential.board.organizationId !== credential.organizationId) {
+      return null;
+    }
+  }
+
   return {
     tokenId: credential.id,
+    organizationId: credential.organizationId,
     boardId: credential.boardId,
-    boardTitle: credential.board.title,
+    boardTitle: credential.board?.title ?? null,
     scopes: credential.scopes,
-    allEnvironments: credential.allEnvironments,
-    environments: credential.allEnvironments ? [] : credential.environments,
   };
 }
 

@@ -37,7 +37,7 @@ import { BoardIntegrationsModal } from "../BoardIntegrationsModal/BoardIntegrati
 import { AiBrainDumpModal } from "../AiBrainDumpModal/AiBrainDumpModal";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 
-export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, memberCanAssign }: BoardHeaderProps) {
+export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initialLinks, memberCanAssign }: BoardHeaderProps) {
   const t = useTranslations("board");
   const tCommon = useTranslations("common");
   const router = useRouter();
@@ -130,12 +130,14 @@ export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, 
       />
       <BoardEpicsModal
         boardId={boardId}
+        canEdit={canEdit}
         open={epicsOpen}
         onClose={() => setEpicsOpen(false)}
         onEpicsChange={() => router.refresh()}
       />
       <ArchiveTasksModal
         boardId={boardId}
+        canEdit={canEdit}
         open={archiveOpen}
         onClose={() => setArchiveOpen(false)}
         onRefreshBoard={() => router.refresh()}
@@ -180,8 +182,10 @@ export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, 
           />
         ) : (
           <h1
-            className="text-xl sm:text-2xl font-bold cursor-pointer hover:opacity-75 transition-opacity truncate"
-            onClick={startEditing}
+            className={`text-xl sm:text-2xl font-bold truncate ${isOwner ? "cursor-pointer hover:opacity-75 transition-opacity" : ""}`}
+            onClick={() => {
+              if (isOwner) startEditing();
+            }}
           >
             {value}
           </h1>
@@ -189,7 +193,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, 
 
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-wrap">
           {/* AI Brain Dump Button */}
-          <Button
+          {canEdit && <Button
             data-tour="board-ai"
             size="sm"
             onClick={() => setBrainDumpOpen(true)}
@@ -197,7 +201,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, 
           >
             <Sparkles size={13} />
             <span className="hidden sm:inline">{t("aiBrainDump")}</span>
-          </Button>
+          </Button>}
 
           {/* Epics Button */}
           <Button
@@ -247,7 +251,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, 
             <span className="hidden md:inline">{t("members")}</span>
           </Button>
 
-          <DropdownMenu>
+          {(isOwner || canManage) && <DropdownMenu>
             <DropdownMenuTrigger
               className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition cursor-pointer"
               disabled={loading}
@@ -255,31 +259,37 @@ export function BoardHeader({ boardId, title, isOwner, canManage, initialLinks, 
               <MoreHorizontal size={18} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={startEditing} className="cursor-pointer">
-                <Pencil size={14} />
-                {t("renameBoard")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIntegrationsOpen(true)} className="cursor-pointer">
-                <Webhook size={14} />
-                {t("webhooks")}
-              </DropdownMenuItem>
+              {isOwner && (
+                <DropdownMenuItem onClick={startEditing} className="cursor-pointer">
+                  <Pencil size={14} />
+                  {t("renameBoard")}
+                </DropdownMenuItem>
+              )}
+              {canManage && (
+                <DropdownMenuItem onClick={() => setIntegrationsOpen(true)} className="cursor-pointer">
+                  <Webhook size={14} />
+                {t("integrations")}
+                </DropdownMenuItem>
+              )}
               {canManage && (
                 <DropdownMenuItem onClick={() => setPermissionsOpen(true)} className="cursor-pointer">
                   <ShieldCheck size={14} />
                   {t("permissions")}
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => setConfirmDelete(true)}
-                disabled={loading}
-              >
-                <Trash2 size={14} />
-                {t("deleteBoard")}
-              </DropdownMenuItem>
+              {isOwner && <DropdownMenuSeparator />}
+              {isOwner && (
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={loading}
+                >
+                  <Trash2 size={14} />
+                  {t("deleteBoard")}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu>}
         </div>
       </div>
     </>

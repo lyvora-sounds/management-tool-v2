@@ -7,6 +7,7 @@ export type BoardHeaderProps = {
   isOwner: boolean;
   /** Propietario o administrador: gestionar permisos del tablero. */
   canManage: boolean;
+  canEdit: boolean;
   initialLinks: BoardLink[];
   memberCanAssign: boolean;
 };

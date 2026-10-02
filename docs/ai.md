@@ -45,21 +45,28 @@ The client then sends that list to `POST /api/boards/[boardId]/batchTasks`, whic
 ## MCP
 
 `POST /api/mcp` is a stateless Streamable HTTP MCP endpoint for ChatGPT,
-Claude, and other MCP-capable clients. It uses a bearer credential created by a
-board owner or admin at `/api/boards/{boardId}/external-access`.
+Claude, and other MCP-capable clients. An organization owner or admin creates
+an organization credential at
+`POST /api/organizations/{organizationId}/external-access`. A board owner or
+admin, including an organization owner or admin, creates a board credential at
+`POST /api/boards/{boardId}/external-access`. The body is a name and an optional
+expiration. Environment fields are ignored.
 
-Every credential is pinned to one board. It sets `allEnvironments` or lists
-environment names. There is no wildcard sentinel and no implicit unrestricted
-default. MCP tools never accept a board id: `get_project`, `list_tickets`, and
-`get_ticket` derive it from the credential. A restricted credential only returns
-tickets whose default `environment` custom field has an allowed value;
-unclassified tickets are denied. `allEnvironments: true` grants every
-environment, including unclassified tickets.
+Every credential belongs to one organization. A null `boardId` reads every
+board in that organization. A set `boardId` reads only that board, and
+authentication rejects the credential if the board no longer belongs to the
+same organization. One credential cannot read a second organization. MCP tools
+never accept a board id: `get_project`, `list_tickets`, and `get_ticket` derive
+the organization and board from the credential. Tickets are not filtered by
+environment.
 
-Issuing a named list ensures the board's default custom fields exist, then
-checks the names against that `environment` field. Credentials currently expose
-only the `tickets:read` scope. Plaintext tokens are returned once, while only
-their SHA-256 hashes are stored. They can expire and can be revoked. A
-successful MCP call records `lastUsedAt`; authentication itself does not write.
+Credentials expose only the `tickets:read` scope. Plaintext tokens are returned
+once, while only their SHA-256 hashes are stored. They can expire and can be
+revoked. A successful MCP call records `lastUsedAt`; authentication itself does
+not write.
 
 See `mcp/README.md` for provisioning and connection examples.
+
+`/dashboard/settings?tab=mcp` creates either credential and shows it once in a
+field that can be selected or copied. The board Integrations dialog creates the
+board credential.

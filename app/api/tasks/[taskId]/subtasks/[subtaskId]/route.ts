@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard } from "@/lib/boardAccess";
 
 async function checkAccess(subtaskId: string, userId: string) {
   const subtask = await db.subtask.findUnique({
@@ -9,7 +9,7 @@ async function checkAccess(subtaskId: string, userId: string) {
     include: { task: { include: { list: { include: { board: true } } } } },
   });
   if (!subtask) return null;
-  const allowed = await hasBoardAccess(userId, subtask.task.list.board.id);
+  const allowed = await canEditBoard(userId, subtask.task.list.board.id);
   if (!allowed) return null;
   return subtask;
 }

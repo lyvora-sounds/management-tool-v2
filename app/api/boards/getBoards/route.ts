@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { readableBoardWhere } from "@/lib/boardAccess";
 
 export async function GET() {
   const { userId } = await auth();
@@ -16,12 +17,7 @@ export async function GET() {
   }
 
   const boards = await db.board.findMany({
-    where: {
-      OR: [
-        { userId: user.id },
-        { members: { some: { userId: user.id } } },
-      ],
-    },
+    where: readableBoardWhere(user.id),
     orderBy: { createdAt: "desc" },
   });
 

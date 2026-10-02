@@ -1,0 +1,74 @@
+# Paths a coding agent should skip. Gitignore syntax.
+# Secrets, installed dependencies, build output, and generated files.
+# AGENTS.md tells the agent to honor this file. .grok/config.toml denies
+# reads and edits of the secret and backup paths. Permission rules apply
+# on the next Grok session.
+# Product source stays visible: app/, components/, lib/ (except generated),
+# prisma/schema.prisma, prisma/migrations/, messages/, docs/, and tests/.
+
+# Secrets and local credentials. .env.example is the safe template.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+credentials.json
+**/service-account*.json
+**/*-credentials.json
+.clerk/
+.sentryclirc
+
+# Dependencies and package-manager caches
+node_modules/
+.pnp
+.pnp.*
+.pnpm-store/
+.yarn/
+.npm/
+
+# Declared dependencies live in package.json. Regenerate with pnpm.
+pnpm-lock.yaml
+
+# Build, cache, and framework output
+.next/
+out/
+build/
+dist/
+.turbo/
+.vercel/
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+blob-report/
+storybook-static/
+*.tsbuildinfo
+next-env.d.ts
+
+# Generated Prisma client. Edit prisma/schema.prisma, then regenerate.
+lib/generated/
+
+# Local data dumps, investigation logs, and scratch space
+.backups/
+.agent-state/
+scratch/
+*.dump
+*.sqlite
+*.sqlite3
+*.sql.gz
+*.bak
+
+# Logs and OS junk
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.DS_Store
+Thumbs.db
+*.swp
+*~

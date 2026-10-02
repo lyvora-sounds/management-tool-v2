@@ -16,6 +16,7 @@ import { PriorityBreakdownChart } from "./components/PriorityBreakdownChart/Prio
 import { Greeting } from "./components/Greeting/Greeting";
 import { OnboardingChecklist } from "./components/OnboardingChecklist/OnboardingChecklist";
 import { getOnboardingState } from "@/lib/onboardingState";
+import { readableBoardWhere } from "@/lib/boardAccess";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -37,12 +38,7 @@ export default async function DashboardPage() {
   }
 
   const rawBoards = await db.board.findMany({
-    where: {
-      OR: [
-        { userId: user.id },
-        { members: { some: { userId: user.id } } },
-      ],
-    },
+    where: readableBoardWhere(user.id),
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

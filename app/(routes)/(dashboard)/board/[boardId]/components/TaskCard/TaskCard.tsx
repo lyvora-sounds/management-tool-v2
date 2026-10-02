@@ -18,6 +18,7 @@ import { TaskModal } from "../TaskModal/TaskModal";
 import { useBoardStore } from "../../store/useBoardStore";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
 import { targetListForCompletion } from "@/lib/statusTheme";
+import { useBoardAccess } from "../BoardAccess";
 import { displayCustomFieldValue } from "@/lib/customValueUtils";
 import { useLocale, useTranslations } from "next-intl";
 import { dateLocale } from "@/i18n/routing";
@@ -50,6 +51,7 @@ export function TaskCard({
   const lists = useBoardStore((s) => s.lists);
   const [modalOpen, setModalOpen] = useState(false);
   const [completed, setCompleted] = useState(task.completed);
+  const { canEdit } = useBoardAccess();
 
   const {
     attributes,
@@ -61,7 +63,7 @@ export function TaskCard({
   } = useSortable({
     id: task.id,
     data: { type: "task", task, listId },
-    disabled: modalOpen,
+    disabled: modalOpen || !canEdit,
   });
 
   const style = {
@@ -81,6 +83,7 @@ export function TaskCard({
   }, [lists]);
 
   const toggleCompleted = async () => {
+    if (!canEdit) return;
     const next = !completed;
     const boardLists = useBoardStore.getState().lists;
     const targetList = targetListForCompletion(boardLists, listId, next);
@@ -141,13 +144,16 @@ export function TaskCard({
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="group bg-background rounded-lg px-3 py-2 shadow-sm border text-sm cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors flex flex-col gap-1.5"
+      {...(canEdit ? attributes : {})}
+      {...(canEdit ? listeners : {})}
+      className={cn(
+        "group bg-background rounded-lg px-3 py-2 shadow-sm border text-sm hover:border-primary/50 transition-colors flex flex-col gap-1.5",
+        canEdit && "cursor-grab active:cursor-grabbing",
+      )}
     >
       {/* Top row: checkbox + title + priority + actions */}
       <div className="flex items-center gap-2">
-        <div
+        {canEdit && <div
           onPointerDown={(e) => e.stopPropagation()}
           onClick={toggleCompleted}
           className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-primary transition-all cursor-pointer"
@@ -157,7 +163,7 @@ export function TaskCard({
           ) : (
             <Circle size={15} />
           )}
-        </div>
+        </div>}
 
         <span
           className={cn(

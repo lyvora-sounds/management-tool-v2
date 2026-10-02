@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useBoardStore } from "../../store/useBoardStore";
 import { ListHeaderProps } from "./ListHeader.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
+import { useBoardAccess } from "../BoardAccess";
 
 export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
   const t = useTranslations("list");
@@ -27,6 +28,7 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
   const [loading, setLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { canEdit } = useBoardAccess();
 
   const startEditing = () => {
     setIsEditing(true);
@@ -91,8 +93,10 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
         />
       ) : (
         <h3
-          className="font-semibold text-sm cursor-pointer hover:opacity-75 transition-opacity truncate"
-          onClick={startEditing}
+          className={`font-semibold text-sm truncate ${canEdit ? "cursor-pointer hover:opacity-75 transition-opacity" : ""}`}
+          onClick={() => {
+            if (canEdit) startEditing();
+          }}
         >
           {value}
         </h3>
@@ -103,7 +107,7 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
         onPointerDown={(e) => e.stopPropagation()}
       >
         <span className="text-xs text-muted-foreground ml-2">{taskCount}</span>
-        <DropdownMenu>
+        {canEdit && <DropdownMenu>
           <DropdownMenuTrigger
             className="p-1 rounded-md text-muted-foreground hover:bg-background transition"
             disabled={loading}
@@ -124,7 +128,7 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
               {t("deleteList")}
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>}
       </div>
       <ConfirmModal
         open={confirmDelete}
