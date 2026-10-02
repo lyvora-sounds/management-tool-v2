@@ -1,15 +1,17 @@
+-- CreateTable
 CREATE TABLE "ExternalAccessToken" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "tokenHash" TEXT NOT NULL,
     "tokenPrefix" TEXT NOT NULL,
     "scopes" TEXT[] NOT NULL DEFAULT ARRAY['tickets:read']::TEXT[],
-    "environments" TEXT[] NOT NULL DEFAULT ARRAY['*']::TEXT[],
+    "allEnvironments" BOOLEAN NOT NULL DEFAULT false,
+    "environments" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     "expiresAt" TIMESTAMP(3),
     "revokedAt" TIMESTAMP(3),
     "lastUsedAt" TIMESTAMP(3),
     "boardId" TEXT NOT NULL,
-    "createdById" TEXT NOT NULL,
+    "createdById" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -23,4 +25,4 @@ CREATE INDEX "ExternalAccessToken_createdById_idx" ON "ExternalAccessToken"("cre
 ALTER TABLE "ExternalAccessToken" ADD CONSTRAINT "ExternalAccessToken_boardId_fkey"
   FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ExternalAccessToken" ADD CONSTRAINT "ExternalAccessToken_createdById_fkey"
-  FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

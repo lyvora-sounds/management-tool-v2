@@ -1,84 +1,63 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { isBoardAdmin } from "@/lib/boardAccess";
+import { requireExternalAccessAdmin } from "@/lib/externalAccessAdmin";
 import {
+  configuredEnvironments,
   createExternalAccessToken,
+  parseEnvironmentGrant,
   TICKETS_READ_SCOPE,
 } from "@/lib/externalAccess";
 
 type RouteContext = { params: Promise<{ boardId: string }> };
 
-async function requireAdmin(boardId: string) {
-  const { userId } = await auth();
-  if (!userId || !(await isBoardAdmin(userId, boardId))) return null;
-  return db.user.findUnique({ where: { clerkId: userId }, select: { id: true } });
-}
+const tokenSelect = {
+  id: true,
+  name: true,
+  tokenPrefix: true,
+  scopes: true,
+  allEnvironments: true,
+  environments: true,
+  expiresAt: true,
+  lastUsedAt: true,
+  createdAt: true,
+} as const;
 
 export async function GET(_request: Request, { params }: RouteContext) {
   const { boardId } = await params;
-  if (!(await requireAdmin(boardId))) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+  const admin = await requireExternalAccessAdmin(boardId);
+  if ("response" in admin) return admin.response;
 
   const tokens = await db.externalAccessToken.findMany({
-    where: { boardId },
+    where: { boardId, revokedAt: null },
     orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      tokenPrefix: true,
-      scopes: true,
-      environments: true,
-      expiresAt: true,
-      revokedAt: true,
-      lastUsedAt: true,
-      createdAt: true,
-    },
+    select: tokenSelect,
   });
   return NextResponse.json(tokens);
 }
 
 export async function POST(request: Request, { params }: RouteContext) {
   const { boardId } = await params;
-  const user = await requireAdmin(boardId);
-  if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const admin = await requireExternalAccessAdmin(boardId);
+  if ("response" in admin) return admin.response;
 
   const body = await request.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
-  const requestedEnvironments: string[] = Array.isArray(body?.environments)
-    ? body.environments
-        .filter(
-          (value: unknown): value is string =>
-            typeof value === "string" && value.trim().length > 0,
-        )
-        .map((value: string) => value.trim())
-    : ["*"];
-  const environments: string[] = [...new Set(requestedEnvironments)];
   const expiresAt = body?.expiresAt ? new Date(body.expiresAt) : null;
+  const grant = parseEnvironmentGrant(body);
 
   if (!name || name.length > 80) {
     return NextResponse.json({ error: "Name must contain 1 to 80 characters" }, { status: 400 });
   }
-  if (!environments.length || (environments.includes("*") && environments.length > 1)) {
-    return NextResponse.json(
-      { error: "Use either all environments (*) or an explicit environment list" },
-      { status: 400 },
-    );
+  if ("error" in grant) {
+    return NextResponse.json({ error: grant.error }, { status: 400 });
   }
   if (expiresAt && (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date())) {
     return NextResponse.json({ error: "Expiration must be a future date" }, { status: 400 });
   }
 
-  if (!environments.includes("*")) {
-    const environmentField = await db.customField.findUnique({
-      where: { boardId_defaultKey: { boardId, defaultKey: "environment" } },
-      select: { options: true },
-    });
-    const configured = Array.isArray(environmentField?.options)
-      ? environmentField.options.filter((value): value is string => typeof value === "string")
-      : [];
-    const invalid = environments.filter((environment) => !configured.includes(environment));
+  if (!grant.allEnvironments) {
+    const configured = await configuredEnvironments(boardId);
+    const invalid = grant.environments.filter((environment) => !configured.includes(environment));
     if (invalid.length) {
       return NextResponse.json(
         { error: "Unknown environment", invalidEnvironments: invalid },
@@ -94,20 +73,13 @@ export async function POST(request: Request, { params }: RouteContext) {
       tokenHash: generated.hash,
       tokenPrefix: generated.prefix,
       scopes: [TICKETS_READ_SCOPE],
-      environments,
+      allEnvironments: grant.allEnvironments,
+      environments: grant.environments,
       expiresAt,
       boardId,
-      createdById: user.id,
+      createdById: admin.user.id,
     },
-    select: {
-      id: true,
-      name: true,
-      tokenPrefix: true,
-      scopes: true,
-      environments: true,
-      expiresAt: true,
-      createdAt: true,
-    },
+    select: tokenSelect,
   });
 
   // The plaintext token is intentionally returned once and is never stored.

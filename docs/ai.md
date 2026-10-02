@@ -48,17 +48,18 @@ The client then sends that list to `POST /api/boards/[boardId]/batchTasks`, whic
 Claude, and other MCP-capable clients. It uses a bearer credential created by a
 board owner or admin at `/api/boards/{boardId}/external-access`.
 
-Every credential is pinned to one board and has an environment allowlist. MCP
-tools never accept a board id: `get_project`, `list_tickets`, and `get_ticket`
-derive it from the credential. A restricted credential only returns tickets
-whose default `environment` custom field has an allowed value; unclassified
-tickets are denied. `*` explicitly grants all environments, including
-unclassified tickets.
+Every credential is pinned to one board. It sets `allEnvironments` or lists
+environment names. There is no wildcard sentinel and no implicit unrestricted
+default. MCP tools never accept a board id: `get_project`, `list_tickets`, and
+`get_ticket` derive it from the credential. A restricted credential only returns
+tickets whose default `environment` custom field has an allowed value;
+unclassified tickets are denied. `allEnvironments: true` grants every
+environment, including unclassified tickets.
 
-Credentials currently expose only the `tickets:read` scope. Plaintext tokens
-are returned once, while only their SHA-256 hashes are stored. They can expire
-and can be revoked; use and revocation timestamps are retained for audit.
+Issuing a named list ensures the board's default custom fields exist, then
+checks the names against that `environment` field. Credentials currently expose
+only the `tickets:read` scope. Plaintext tokens are returned once, while only
+their SHA-256 hashes are stored. They can expire and can be revoked. A
+successful MCP call records `lastUsedAt`; authentication itself does not write.
 
-The old `mcp/server.ts` stdio proxy is legacy and should not be used for new
-connections because it relies on Clerk-protected browser endpoints. See
-`mcp/README.md` for provisioning and connection examples.
+See `mcp/README.md` for provisioning and connection examples.

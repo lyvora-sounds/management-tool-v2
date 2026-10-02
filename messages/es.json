@@ -801,7 +801,9 @@
     "copyToken": "Copiar token",
     "revokeToken": "Revocar token",
     "tokenRevoked": "Token de acceso revocado",
-    "tokenRevokeError": "No se pudo revocar el token de acceso"
+    "tokenRevokeError": "No se pudo revocar el token de acceso",
+    "lastUsed": "Último uso",
+    "neverUsed": "Aún no se ha usado"
   },
   "labels": {
     "create": "Crear etiqueta",

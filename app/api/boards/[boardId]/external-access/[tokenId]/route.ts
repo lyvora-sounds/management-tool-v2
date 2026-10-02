@@ -1,17 +1,14 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { isBoardAdmin } from "@/lib/boardAccess";
+import { requireExternalAccessAdmin } from "@/lib/externalAccessAdmin";
 
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ boardId: string; tokenId: string }> },
 ) {
   const { boardId, tokenId } = await params;
-  const { userId } = await auth();
-  if (!userId || !(await isBoardAdmin(userId, boardId))) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+  const admin = await requireExternalAccessAdmin(boardId);
+  if ("response" in admin) return admin.response;
 
   const result = await db.externalAccessToken.updateMany({
     where: { id: tokenId, boardId, revokedAt: null },

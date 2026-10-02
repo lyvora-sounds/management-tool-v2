@@ -16,7 +16,7 @@ Use this page as a router. Read only the documents relevant to the change instea
 | Invite delivery, tokens, acceptance, membership | [Invitations](./invitations.md) | `app/api/invite`, `app/api/boards/*/invitations`, `app/invite` |
 | Task CRUD, moves, completion, files, fields, archive, epics | [Tasks](./tasks.md) | `app/api/tasks`, board task components, `lib/statusTheme.ts` |
 | Assignment, QA, comments, activity, notifications | [Collaboration](./collaboration.md) | task people/comment routes, `app/api/notifications`, `lib/createActivity.ts` |
-| Provider credentials, transcription, parse/improve, brain dump | [AI](./ai.md) | `app/api/ai`, `lib/ai`, `lib/crypto.ts`, `mcp/` |
+| Provider credentials, transcription, parse/improve, brain dump, MCP | [AI](./ai.md) | `app/api/ai`, `app/api/mcp`, `lib/ai`, `lib/externalAccess.ts`, `lib/mcp` |
 | Slack, Discord, Google Calendar, sharing, email, MCP | [Integrations](./integrations.md) | integration routes and `lib/integrations` |
 | Security controls or certification planning | [ISO 27001 Compliance](./iso-27001-compliance-plan.md) | Cross-cutting; verify claims against current code and CI |
 

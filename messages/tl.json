@@ -801,7 +801,9 @@
     "copyToken": "Kopyahin ang token",
     "revokeToken": "Bawiin ang token",
     "tokenRevoked": "Binawi ang access token",
-    "tokenRevokeError": "Hindi mabawi ang access token"
+    "tokenRevokeError": "Hindi mabawi ang access token",
+    "lastUsed": "Huling ginamit",
+    "neverUsed": "Hindi pa nagamit"
   },
   "labels": {
     "create": "Gumawa ng label",

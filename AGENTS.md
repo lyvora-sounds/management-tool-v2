@@ -7,7 +7,7 @@ This file is the always-on repository contract. Keep it short. Load detailed con
 - Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4.
 - Clerk authentication, Prisma 7, PostgreSQL on Neon.
 - Product code lives in `app/`, shared UI in `components/`, domain helpers in `lib/`, client state in `store/`, and the data model in `prisma/schema.prisma`.
-- `mcp/` is a separate MCP sidecar that calls the application over HTTP.
+- MCP clients call `/api/mcp`. Connection notes live in `mcp/README.md`.
 - Use `pnpm`; the pinned package manager is in `package.json`.
 
 ## Load context on demand

@@ -186,15 +186,15 @@ flowchart TD
 
 ---
 
-### 3.7 MCP (Model Context Protocol) Sidecar Server
+### 3.7 MCP access
 
-* **Architecture**: Independent TypeScript server (`mcp/server.ts`) exposing board tools to local AI assistants (Claude Desktop, Cursor).
+* **Architecture**: Stateless Streamable HTTP route `POST /api/mcp`. Board admins issue a revocable bearer credential pinned to one board and one environment grant. The plaintext token is returned once; the database stores its SHA-256 hash.
 * **ISO Control Ref**: A.8.5 (*Secure Authentication*), A.8.26 (*Application Security*).
 
 | Aspect | Current Status | Audit Finding & Gap | Required Remediation |
 |---|---|---|---|
-| **Authentication Model** | HTTP calls without session management | Cannot authenticate with production Clerk-protected routes without manual cookie injection (`docs/ai.md:59`). | Implement hashed Personal Access Tokens (PATs) or API keys for programmatic/headless MCP access. |
-| **Route Alignment** | Calls `/api/tasks` directly | Route does not exist in the Next.js API, causing 404s. | Implement the missing scoped endpoints or align MCP tool definitions. |
+| **Authentication Model** | Board-scoped bearer token. Issuance uses the Clerk session and `isBoardAdmin`. MCP calls authenticate the hash. | Tokens are not bound to a network address. Usage is `lastUsedAt` on a successful call, not a security audit event with actor and IP. | Keep issuance admin-only. Add a security audit event if certification requires actor, IP, and timestamp beyond `lastUsedAt`. |
+| **Scope** | Read-only `tickets:read` tools. The credential chooses the board and environments. Clients cannot pass a board id. | Write tools are not on this route. | Keep any new tool on `environmentWhere` and the same credential check. |
 
 ---
 

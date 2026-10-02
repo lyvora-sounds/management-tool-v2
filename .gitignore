@@ -50,3 +50,6 @@ next-env.d.ts
 
 # Agent working memory: task summaries, raw logs, and investigation traces
 /.agent-state/
+
+# Local pnpm cache (the lockfile is the only package-manager state we commit)
+/.pnpm-store/

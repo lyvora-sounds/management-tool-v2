@@ -801,7 +801,9 @@
     "copyToken": "Copy token",
     "revokeToken": "Revoke token",
     "tokenRevoked": "Access token revoked",
-    "tokenRevokeError": "Could not revoke access token"
+    "tokenRevokeError": "Could not revoke access token",
+    "lastUsed": "Last used",
+    "neverUsed": "Not used yet"
   },
   "labels": {
     "create": "Create label",

@@ -1,22 +1,32 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import db from "@/lib/db";
-import type { ExternalAccessContext } from "@/lib/externalAccess";
+import { environmentWhere, type ExternalAccessContext } from "@/lib/externalAccess";
 
-function environmentWhere(context: ExternalAccessContext) {
-  if (context.environments.includes("*")) return {};
-  return {
-    customValues: {
-      some: {
-        customField: { boardId: context.boardId, defaultKey: "environment" },
-        value: { in: context.environments },
-      },
-    },
-  };
-}
+const PRIORITIES = new Set(["urgent", "high", "medium", "low"]);
 
 function text(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+}
+
+function toTicketDetail(task: {
+  labels: { label: { id: string; title: string; color: string } }[];
+  customValues: {
+    value: string | null;
+    customField: { name: string; defaultKey: string | null; type: string };
+  }[];
+}) {
+  const { labels, customValues, ...ticket } = task;
+  return {
+    ...ticket,
+    labels: labels.map((row) => row.label),
+    customFields: customValues.map((row) => ({
+      name: row.customField.name,
+      key: row.customField.defaultKey,
+      type: row.customField.type,
+      value: row.value,
+    })),
+  };
 }
 
 export function createScopedMcpServer(context: ExternalAccessContext) {
@@ -24,6 +34,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
     { name: "kikiboard", version: "1.1.0" },
     { capabilities: { tools: {} } },
   );
+  const visibleTickets = environmentWhere(context);
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
@@ -73,23 +84,32 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
           list: { orderBy: { order: "asc" }, select: { id: true, title: true } },
         },
       });
-      return text({ ...board, permittedEnvironments: context.environments });
+      return text({
+        ...board,
+        access: {
+          allEnvironments: context.allEnvironments,
+          environments: context.environments,
+        },
+      });
     }
 
     if (params.name === "list_tickets") {
-      const status = typeof args.status === "string" ? args.status : "all";
+      const status = args.status === "pending" || args.status === "completed" ? args.status : "all";
       const limit = typeof args.limit === "number" ? Math.max(1, Math.min(100, args.limit)) : 50;
+      const priority = typeof args.priority === "string" && PRIORITIES.has(args.priority)
+        ? args.priority
+        : undefined;
       const tasks = await db.task.findMany({
         where: {
           list: { boardId: context.boardId },
           archived: args.archived === true,
           ...(status === "pending" ? { completed: false } : {}),
           ...(status === "completed" ? { completed: true } : {}),
-          ...(typeof args.priority === "string" ? { priority: args.priority } : {}),
+          ...(priority ? { priority } : {}),
           ...(typeof args.query === "string" && args.query.trim()
             ? { title: { contains: args.query.trim(), mode: "insensitive" as const } }
             : {}),
-          ...environmentWhere(context),
+          ...visibleTickets,
         },
         orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
         take: limit,
@@ -126,7 +146,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         where: {
           id: args.ticketId,
           list: { boardId: context.boardId },
-          ...environmentWhere(context),
+          ...visibleTickets,
         },
         select: {
           id: true,
@@ -154,7 +174,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       if (!task) {
         return { isError: true, content: [{ type: "text", text: "Ticket not found" }] };
       }
-      return text(task);
+      return text(toTicketDetail(task));
     }
 
     return { isError: true, content: [{ type: "text", text: "Unknown tool" }] };

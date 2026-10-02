@@ -1,5 +1,5 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { authenticateExternalAccess } from "@/lib/externalAccess";
+import { authenticateExternalAccess, recordExternalAccessUse } from "@/lib/externalAccess";
 import { createScopedMcpServer } from "@/lib/mcp/scopedServer";
 
 export const runtime = "nodejs";
@@ -26,7 +26,9 @@ export async function POST(request: Request) {
   });
   await server.connect(transport);
   try {
-    return await transport.handleRequest(request);
+    const response = await transport.handleRequest(request);
+    if (response.ok) await recordExternalAccessUse(context.tokenId);
+    return response;
   } finally {
     await transport.close();
     await server.close();
