@@ -8,9 +8,11 @@ import { CreateTaskForm } from "../CreateTaskForm/CreateTaskForm";
 import { ListHeader } from "../ListHeader/ListHeader";
 import { ArrowDownToLine } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useBoardAccess } from "../BoardAccess";
 
 export function ListItem({ list, boardId, canManage, boardUsers, memberCanAssign }: ListItemProps) {
   const t = useTranslations("board");
+  const { canEdit } = useBoardAccess();
   const {
     attributes,
     listeners,
@@ -21,6 +23,7 @@ export function ListItem({ list, boardId, canManage, boardUsers, memberCanAssign
   } = useSortable({
     id: list.id,
     data: { type: "list", list },
+    disabled: !canEdit,
   });
 
   const style = {
@@ -36,9 +39,9 @@ export function ListItem({ list, boardId, canManage, boardUsers, memberCanAssign
       className="flex flex-col bg-muted rounded-xl w-64 shrink-0 p-3 gap-2"
     >
       <div
-        className="cursor-grab active:cursor-grabbing"
-        {...attributes}
-        {...listeners}
+        className={canEdit ? "cursor-grab active:cursor-grabbing" : undefined}
+        {...(canEdit ? attributes : {})}
+        {...(canEdit ? listeners : {})}
       >
         <ListHeader listId={list.id} title={list.title} taskCount={list.tasks.length} />
       </div>
@@ -59,7 +62,7 @@ export function ListItem({ list, boardId, canManage, boardUsers, memberCanAssign
           )}
         </div>
       </SortableContext>
-      <CreateTaskForm listId={list.id} />
+      {canEdit && <CreateTaskForm listId={list.id} />}
     </div>
   );
 }

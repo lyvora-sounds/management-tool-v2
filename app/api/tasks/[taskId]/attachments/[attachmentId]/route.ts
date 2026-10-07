@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { del } from "@vercel/blob";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard } from "@/lib/boardAccess";
 
 export async function DELETE(
   _req: Request,
@@ -24,7 +24,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const allowed = await hasBoardAccess(user.id, attachment.task.list.board.id);
+  const allowed = await canEditBoard(user.id, attachment.task.list.board.id);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   try {

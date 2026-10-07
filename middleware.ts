@@ -10,6 +10,8 @@ const isPublicRoute = createRouteMatcher([
   "/privacy",
   "/share/task(.*)",
   "/api/webhooks(.*)",
+  // MCP authenticates machine clients with board-scoped bearer credentials.
+  "/api/mcp(.*)",
   "/api/integrations/google-calendar/callback(.*)",
 ]);
 

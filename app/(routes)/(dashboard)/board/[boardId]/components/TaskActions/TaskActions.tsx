@@ -17,8 +17,10 @@ import { useTranslations } from "next-intl";
 import { useBoardStore } from "../../store/useBoardStore";
 import { TaskActionsProps } from "./TaskActions.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
+import { useBoardAccess } from "../BoardAccess";
 
 export function TaskActions({ taskId, listId }: TaskActionsProps) {
+  const { canEdit } = useBoardAccess();
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
   const removeTask = useBoardStore((s) => s.removeTask);
@@ -28,6 +30,7 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const otherLists = lists.filter((l) => l.id !== listId);
+  if (!canEdit) return null;
 
   const handleMove = async (toListId: string) => {
     const fromList = lists.find((l) => l.id === listId);

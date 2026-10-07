@@ -27,6 +27,7 @@ import { ListItem } from "../ListItem/ListItem";
 import { CreateListForm } from "../CreateListForm/CreateListForm";
 import { TaskModal } from "../TaskModal/TaskModal";
 import { BoardContentProps } from "./BoardContent.types";
+import { BoardAccessProvider } from "../BoardAccess";
 import { BoardFilters } from "../BoardFilters/BoardFilters";
 import { BoardFiltersState } from "../BoardFilters/BoardFilters.types";
 import { BoardListView } from "../BoardListView/BoardListView";
@@ -100,6 +101,7 @@ export function BoardContent({
   lists: initialLists,
   boardId,
   canManage,
+  canEdit,
   boardUsers,
   memberCanAssign,
 }: BoardContentProps) {
@@ -185,6 +187,7 @@ export function BoardContent({
   const listIds = useMemo(() => lists.map((l) => l.id), [lists]);
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (!canEdit) return;
     const { active } = event;
     const type = active.data.current?.type;
     if (type === "list") {
@@ -199,6 +202,7 @@ export function BoardContent({
   };
 
   const handleDragOver = (event: DragOverEvent) => {
+    if (!canEdit) return;
     const { active, over } = event;
     if (!over) return;
     const activeType = active.data.current?.type;
@@ -245,6 +249,7 @@ export function BoardContent({
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    if (!canEdit) return;
     const { active, over } = event;
     const fromListId = dragOriginListId;
     setActiveTask(null);
@@ -315,6 +320,7 @@ export function BoardContent({
     totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
 
   return (
+    <BoardAccessProvider canEdit={canEdit}>
     <div className="flex flex-col gap-4 h-full">
       <div className="flex items-center gap-2">
         <BoardFilters
@@ -398,7 +404,7 @@ export function BoardContent({
                   memberCanAssign={memberCanAssign}
                 />
               ))}
-              <CreateListForm boardId={boardId} />
+              {canEdit && <CreateListForm boardId={boardId} />}
             </div>
           </SortableContext>
 
@@ -431,5 +437,6 @@ export function BoardContent({
         />
       )}
     </div>
+    </BoardAccessProvider>
   );
 }

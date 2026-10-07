@@ -13,10 +13,12 @@ export function BoardsSection() {
   const [open, setOpen] = useState(true);
   const pathname = usePathname();
   const boards = useBoardsStore((s) => s.boards);
-  const ownUserId = useBoardsStore((s) => s.ownUserId);
-
-  const ownBoards = boards.filter((b) => b.userId === ownUserId);
-  const memberBoards = boards.filter((b) => b.userId !== ownUserId);
+  const groupedBoards = boards.reduce<Record<string, { id: string; name: string; boards: typeof boards }>>((groups, board) => {
+    const id = board.organization?.id ?? "unassigned";
+    groups[id] ??= { id, name: board.organization?.name ?? t("unassignedOrganization"), boards: [] };
+    groups[id].boards.push(board);
+    return groups;
+  }, {});
 
   const renderBoard = (board: (typeof boards)[0]) => {
     const isActive = pathname === `/board/${board.id}`;
@@ -71,23 +73,12 @@ export function BoardsSection() {
             </p>
           )}
 
-          {ownBoards.length > 0 && (
-            <>
-              <p className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider px-3 pt-1 pb-0.5">
-                {t("myBoards")}
-              </p>
-              {ownBoards.map(renderBoard)}
-            </>
-          )}
-
-          {memberBoards.length > 0 && (
-            <>
-              <p className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider px-3 pt-2 pb-0.5">
-                {t("shared")}
-              </p>
-              {memberBoards.map(renderBoard)}
-            </>
-          )}
+          {Object.values(groupedBoards).map((group) => (
+            <div key={group.id} className="pt-1">
+              <Link href="/dashboard/organizations" className="block truncate px-3 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 hover:text-foreground" title={group.name}>{group.name}</Link>
+              {group.boards.map(renderBoard)}
+            </div>
+          ))}
         </div>
       )}
     </div>

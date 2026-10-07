@@ -38,6 +38,7 @@ interface EpicItem {
 
 interface BoardEpicsModalProps {
   boardId: string;
+  canEdit: boolean;
   open: boolean;
   onClose: () => void;
   onEpicsChange?: () => void;
@@ -56,6 +57,7 @@ const PRESET_COLORS = [
 
 export function BoardEpicsModal({
   boardId,
+  canEdit,
   open,
   onClose,
   onEpicsChange,
@@ -189,7 +191,7 @@ export function BoardEpicsModal({
               {t("manageTitle")}
             </DialogTitle>
           </div>
-          {!creating && (
+          {canEdit && !creating && (
             <Button
               size="sm"
               onClick={() => setCreating(true)}
@@ -203,7 +205,7 @@ export function BoardEpicsModal({
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Create Form */}
-          {creating && (
+          {canEdit && creating && (
             <form
               onSubmit={handleCreate}
               className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-4"
@@ -311,10 +313,10 @@ export function BoardEpicsModal({
               <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                 {t("emptyHint")}
               </p>
-              <Button size="sm" onClick={() => setCreating(true)} className="gap-1 mt-2">
+              {canEdit && <Button size="sm" onClick={() => setCreating(true)} className="gap-1 mt-2">
                 <Plus size={13} />
                 <span>{t("createFirst")}</span>
-              </Button>
+              </Button>}
             </div>
           ) : (
             <div className="space-y-3">
@@ -391,7 +393,7 @@ export function BoardEpicsModal({
                               </Badge>
                             )}
                           </div>
-                          <div className="flex items-center gap-1">
+                          {canEdit && <div className="flex items-center gap-1">
                             <Button
                               size="icon"
                               variant="ghost"
@@ -413,7 +415,7 @@ export function BoardEpicsModal({
                             >
                               <Trash2 size={13} />
                             </Button>
-                          </div>
+                          </div>}
                         </div>
 
                         {epic.description && (

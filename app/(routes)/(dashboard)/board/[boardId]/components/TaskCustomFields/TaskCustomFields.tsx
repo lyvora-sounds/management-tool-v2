@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { TicketSelectCombobox } from "./TicketSelectCombobox";
 import { isChildFieldKey, isTicketRefKey } from "@/lib/customFieldsDefaults";
+import { useBoardAccess } from "../BoardAccess";
 
 interface CustomField {
   id: string;
@@ -38,6 +39,7 @@ interface TaskCustomFieldsProps {
 export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
+  const { canEdit } = useBoardAccess();
   const [fields, setFields] = useState<CustomField[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   // Último valor confirmado por el servidor. `values` refleja lo que se está
@@ -76,6 +78,7 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
   }, [taskId]);
 
   const handleSaveValue = async (customFieldId: string, newValue: string) => {
+    if (!canEdit) return;
     const previous = savedValues[customFieldId] ?? "";
     if (newValue === previous) return;
 
@@ -147,7 +150,9 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
                 ) : null}
               </div>
 
-              {isTicketRef ? (
+              {!canEdit ? (
+                <p className="text-xs text-foreground min-h-8 flex items-center">{val || t("unspecified")}</p>
+              ) : isTicketRef ? (
                 <TicketSelectCombobox
                   value={val}
                   onSelect={(newVal) => handleSaveValue(field.id, newVal)}

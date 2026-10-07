@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { getOrCreateUser } from "@/lib/getOrCreateUser";
 import { defaultCustomFieldRows } from "@/lib/ensureDefaultCustomFields";
+import { ensureOrganizationForBoard } from "@/lib/organizations";
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -11,7 +12,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { title, description, color, lists } = await req.json();
+  const { title, description, color, lists, organizationId: requestedOrganizationId } = await req.json();
 
   if (!title || typeof title !== "string" || !title.trim()) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -19,6 +20,14 @@ export async function POST(req: Request) {
 
   const user = await getOrCreateUser(userId);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const organizationId = await ensureOrganizationForBoard(
+    user.id,
+    typeof requestedOrganizationId === "string" ? requestedOrganizationId : null,
+  );
+  if (!organizationId) {
+    return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+  }
 
   const validLists: string[] = Array.isArray(lists)
     ? lists.filter((l: unknown) => typeof l === "string" && l.trim())
@@ -28,6 +37,9 @@ export async function POST(req: Request) {
     data: {
       title: title.trim(),
       userId: user.id,
+      organizationId,
+      accessMode: "organization",
+      defaultRole: "member",
       description: typeof description === "string" && description.trim() ? description.trim() : null,
       color: typeof color === "string" && color ? color : null,
       list: validLists.length > 0

@@ -1,15 +1,17 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard, canReadBoard } from "@/lib/boardAccess";
 
-async function getTaskAndCheck(taskId: string, userId: string) {
+async function getTaskAndCheck(taskId: string, userId: string, write: boolean) {
   const task = await db.task.findUnique({
     where: { id: taskId },
     include: { list: { include: { board: true } } },
   });
   if (!task) return null;
-  const allowed = await hasBoardAccess(userId, task.list.board.id);
+  const allowed = write
+    ? await canEditBoard(userId, task.list.board.id)
+    : await canReadBoard(userId, task.list.board.id);
   if (!allowed) return null;
   return task;
 }
@@ -25,7 +27,7 @@ export async function GET(
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const task = await getTaskAndCheck(taskId, user.id);
+  const task = await getTaskAndCheck(taskId, user.id, false);
   if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const subtasks = await db.subtask.findMany({
@@ -47,7 +49,7 @@ export async function POST(
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const task = await getTaskAndCheck(taskId, user.id);
+  const task = await getTaskAndCheck(taskId, user.id, true);
   if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const { title } = await req.json();

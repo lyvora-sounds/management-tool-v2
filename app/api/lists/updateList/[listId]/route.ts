@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { hasBoardAccess } from "@/lib/boardAccess";
+import { canEditBoard } from "@/lib/boardAccess";
 
 export async function PATCH(
   req: Request,
@@ -25,7 +25,7 @@ export async function PATCH(
   });
   if (!list) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const allowed = await hasBoardAccess(user.id, list.board.id);
+  const allowed = await canEditBoard(user.id, list.board.id);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const updated = await db.list.update({

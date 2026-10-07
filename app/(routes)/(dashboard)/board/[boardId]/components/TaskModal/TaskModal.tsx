@@ -63,6 +63,7 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { getStatusTheme, isDoneList, targetListForCompletion } from "@/lib/statusTheme";
+import { useBoardAccess } from "../BoardAccess";
 
 export function TaskModal({
   task,
@@ -75,6 +76,7 @@ export function TaskModal({
   boardUsers,
   memberCanAssign,
 }: TaskModalProps) {
+  const { canEdit } = useBoardAccess();
   const t = useTranslations("task");
   const tBoard = useTranslations("board");
   const lists = useBoardStore((s) => s.lists);
@@ -225,6 +227,7 @@ export function TaskModal({
   ]);
 
   const handleMoveToList = async (targetListId: string) => {
+    if (!canEdit) return;
     if (targetListId === currentListId) return;
     const targetList = lists.find((l) => l.id === targetListId);
     if (!targetList) return;
@@ -260,6 +263,7 @@ export function TaskModal({
   };
 
   const toggleCompleted = async () => {
+    if (!canEdit) return;
     const next = !completed;
     const targetList = targetListForCompletion(lists, currentListId, next);
 
@@ -302,6 +306,7 @@ export function TaskModal({
   };
 
   const saveTitle = async () => {
+    if (!canEdit) return;
     const trimmed = title.trim();
     if (!trimmed || trimmed === savedTitle) {
       setTitle(savedTitle);
@@ -325,6 +330,7 @@ export function TaskModal({
   };
 
   const saveDescription = async (html: string) => {
+    if (!canEdit) return;
     if (html === savedDescription) {
       setEditingDescription(false);
       return;
@@ -347,6 +353,7 @@ export function TaskModal({
   };
 
   const saveEpic = async (epicId: string | null) => {
+    if (!canEdit) return;
     setCurrentEpicId(epicId);
     await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
       method: "PATCH",
@@ -357,6 +364,7 @@ export function TaskModal({
   };
 
   const saveQuarter = async (quarterVal: string) => {
+    if (!canEdit) return;
     setCurrentQuarter(quarterVal);
     await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
       method: "PATCH",
@@ -371,6 +379,7 @@ export function TaskModal({
     newDescription: string,
     acceptedSubtasks: string[],
   ) => {
+    if (!canEdit) return;
     // 1. Update title & description
     if (newTitle && newTitle !== savedTitle) {
       setTitle(newTitle);
@@ -464,7 +473,7 @@ export function TaskModal({
 
             {/* Actions: Share + Task navigation */}
             <div className="flex items-center gap-2 shrink-0 mr-10">
-              <Button
+              {canEdit && <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShareModalOpen(true)}
@@ -473,7 +482,7 @@ export function TaskModal({
               >
                 <Share2 size={13} />
                 <span className="hidden sm:inline">{t("share")}</span>
-              </Button>
+              </Button>}
 
               <div className="flex items-center gap-1 border-l pl-2">
                 <Button
@@ -541,7 +550,8 @@ export function TaskModal({
               <div className="flex items-start gap-2">
                 <button
                   onClick={toggleCompleted}
-                  className="mt-4 shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                  disabled={!canEdit}
+                  className="mt-4 shrink-0 text-muted-foreground hover:text-primary transition-colors disabled:hover:text-muted-foreground disabled:cursor-default"
                 >
                   {completed ? (
                     <CheckCircle2 size={20} className="text-primary" />
@@ -576,8 +586,12 @@ export function TaskModal({
                   />
                 ) : (
                   <h2
-                    onClick={() => setEditingTitle(true)}
-                    className={`flex-1 text-2xl font-bold px-2 py-2 cursor-pointer hover:bg-muted/50 rounded-md transition-colors ${
+                    onClick={() => {
+                      if (canEdit) setEditingTitle(true);
+                    }}
+                    className={`flex-1 text-2xl font-bold px-2 py-2 rounded-md transition-colors ${
+                      canEdit ? "cursor-pointer hover:bg-muted/50" : ""
+                    } ${
                       completed ? "line-through text-muted-foreground" : ""
                     }`}
                   >
@@ -587,12 +601,12 @@ export function TaskModal({
               </div>
 
               {/* AI Improve Suggestion Trigger Panel */}
-              <TaskAiImprove
+              {canEdit && <TaskAiImprove
                 taskId={currentTask.id}
                 currentTitle={savedTitle}
                 currentDescription={savedDescription}
                 onApply={handleAiApply}
-              />
+              />}
 
               {/* Labels + Dates + Priority + Epic + Quarter + Attachments row */}
               <div className="flex flex-col gap-2">
@@ -600,6 +614,7 @@ export function TaskModal({
                   {/* Selector de Estado / Lista */}
                   <Select
                     value={currentListId}
+                    disabled={!canEdit}
                     onValueChange={(targetListId) => {
                       if (targetListId) handleMoveToList(targetListId);
                     }}
@@ -667,6 +682,7 @@ export function TaskModal({
                   {/* Epic Selector */}
                   {epics.length > 0 && (
                     <Select
+                      disabled={!canEdit}
                       value={currentEpicId || "none"}
                       onValueChange={(v) => saveEpic(v === "none" ? null : v)}
                     >
@@ -697,19 +713,20 @@ export function TaskModal({
                     <input
                       placeholder={t("quarterPlaceholder")}
                       value={currentQuarter}
+                      readOnly={!canEdit}
                       onChange={(e) => setCurrentQuarter(e.target.value)}
                       onBlur={() => saveQuarter(currentQuarter)}
                       className="text-xs bg-transparent border-0 outline-none w-20"
                     />
                   </div>
 
-                  <Button
+                  {canEdit && <Button
                     variant="outline"
                     onClick={() => attachmentsRef.current?.openFilePicker()}
                   >
                     <Paperclip size={15} />
                     <span>{t("attach")}</span>
-                  </Button>
+                  </Button>}
                   <TaskAssignee
                     taskId={currentTask.id}
                     boardUsers={boardUsers}
@@ -802,8 +819,12 @@ export function TaskModal({
                   />
                 ) : (
                   <div
-                    onClick={() => setEditingDescription(true)}
-                    className="min-h-16 w-full rounded-md px-3 py-2 text-sm cursor-pointer hover:bg-muted transition-colors"
+                    onClick={() => {
+                      if (canEdit) setEditingDescription(true);
+                    }}
+                    className={`min-h-16 w-full rounded-md px-3 py-2 text-sm transition-colors ${
+                      canEdit ? "cursor-pointer hover:bg-muted" : ""
+                    }`}
                   >
                     {savedDescription ? (
                       <div

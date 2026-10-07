@@ -45,4 +45,12 @@ Invites are the Resend integration (`app/api/boards/[boardId]/invitations/route.
 
 ## MCP
 
-See [AI](./ai.md#mcp) and `mcp/README.md`. The MCP process is a sidecar that talks HTTP to the Next app; it is not a Vercel route.
+See [AI](./ai.md#mcp) and `mcp/README.md`. The MCP server is the Streamable HTTP
+route `/api/mcp`. Authentication does not use a browser session. Organization
+owners and admins issue a credential for one organization. Board owners and
+admins issue a credential for one board inside that organization. Tickets are
+not filtered by environment. The same token cannot read a second organization.
+Settings → MCP (`/dashboard/settings?tab=mcp`) creates either token and shows
+it once in a selectable field. The board Integrations dialog creates the board
+token. The route is public in Clerk middleware only because it performs this
+machine authentication itself.

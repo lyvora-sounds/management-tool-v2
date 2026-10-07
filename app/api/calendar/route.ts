@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { readableBoardWhere } from "@/lib/boardAccess";
 
 export async function GET(req: Request) {
   const { userId } = await auth();
@@ -25,9 +26,7 @@ export async function GET(req: Request) {
     where: {
       dueDate: { gte: from, lte: to },
       list: {
-        board: {
-          OR: [{ userId: user.id }, { members: { some: { userId: user.id } } }],
-        },
+        board: readableBoardWhere(user.id),
       },
     },
     select: {
