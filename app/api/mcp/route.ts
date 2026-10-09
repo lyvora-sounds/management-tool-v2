@@ -1,7 +1,7 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { authenticateExternalAccess, recordExternalAccessUse } from "@/lib/externalAccess";
 import { createScopedMcpServer } from "@/lib/mcp/scopedServer";
-import { oauthConfig, OAUTH_SCOPE } from "@/lib/mcp/oauthConfig";
+import { oauthServerConfig, OAUTH_SCOPE } from "@/lib/mcp/oauthConfig";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 function unauthorized() {
   let challenge = "Bearer";
   try {
-    challenge = `Bearer resource_metadata="${oauthConfig().issuer}/.well-known/oauth-protected-resource", scope="${OAUTH_SCOPE}"`;
+    challenge = `Bearer resource_metadata="${oauthServerConfig().issuer}/.well-known/oauth-protected-resource", scope="${OAUTH_SCOPE}"`;
   } catch {
     // Existing bearer clients still work when OAuth has not been configured.
   }

@@ -1,10 +1,11 @@
+import { validateAuthorizationRequest } from "@/lib/mcp/oauthClients";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import db from "@/lib/db";
 import { isBoardAdmin, readableBoardWhere } from "@/lib/boardAccess";
 import { issueAuthorizationCode } from "@/lib/mcp/oauth";
-import { authorizationCallback, parseAuthorizationRequest } from "@/lib/mcp/oauthConfig";
+import { authorizationCallback } from "@/lib/mcp/oauthConfig";
 
 export const dynamic = "force-dynamic";
 export const metadata = { referrer: "no-referrer" as const, robots: { index: false, follow: false } };
@@ -18,7 +19,8 @@ export default async function McpAuthorizePage({ searchParams }: {
     if (Array.isArray(value)) return <p className="p-6">{t("invalidRequest")}</p>;
     if (value !== undefined) query.set(key, value);
   }
-  try { parseAuthorizationRequest(query); }
+  let authorization;
+  try { authorization = await validateAuthorizationRequest(query); }
   catch { return <p className="p-6">{t("invalidRequest")}</p>; }
   const serialized = query.toString();
   const { userId } = await auth();
@@ -41,16 +43,17 @@ export default async function McpAuthorizePage({ searchParams }: {
     "use server";
     // Next.js server actions enforce same-origin POSTs. Revalidate the bound
     // OAuth request and current Clerk identity; never trust posted privileges.
-    const validated = parseAuthorizationRequest(new URLSearchParams(serialized));
+    const validated = await validateAuthorizationRequest(new URLSearchParams(serialized));
     const { userId: clerkId } = await auth();
     if (!clerkId) redirect("/sign-in");
     const actor = await db.user.findUnique({ where: { clerkId }, select: { id: true } });
     if (!actor) redirect("/sign-in");
+    if (validated.ownerId && validated.ownerId !== actor.id) redirect(authorizationCallback(validated, { error: "access_denied" }));
     if (form.get("decision") === "deny") redirect(authorizationCallback(validated, { error: "access_denied" }));
     if (form.get("decision") !== "allow") throw new Error("Invalid consent");
     const selection = form.get("selection");
     if (typeof selection !== "string") throw new Error("Select a scope");
-    const code = await issueAuthorizationCode(actor.id, validated, selection);
+    const code = await issueAuthorizationCode(actor.id, validated, selection, form.get("writeAccess") === "on");
     redirect(authorizationCallback(validated, { code }));
   }
 
@@ -75,6 +78,7 @@ export default async function McpAuthorizePage({ searchParams }: {
             </select>
           </> : <p className="text-sm">{t("noScopes")}</p>}
           <p className="text-sm text-muted-foreground">{t("revoke")}</p>
+          {authorization.writeRequested && <label className="flex gap-2 text-sm"><input type="checkbox" name="writeAccess" />{t("writeAccess")}</label>}
           <div className="flex gap-3">
             <button name="decision" value="allow" disabled={!hasOptions} className="rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50">{t("allow")}</button>
             <button name="decision" value="deny" formNoValidate className="rounded-md border px-4 py-2">{t("deny")}</button>

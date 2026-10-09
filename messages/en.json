@@ -1014,7 +1014,7 @@
     "optionsHint": "Enter comma-separated values that will appear in the list.",
     "enableOnTickets": "Enable on tickets",
     "mcpTitle": "MCP connections",
-    "mcpIntro": "Connect ChatGPT, Claude, or another MCP client. Each connection is read-only and belongs to one organization.",
+    "mcpIntro": "Connect ChatGPT, Claude, Grok, Gemini CLI or another MCP client. Choose read-only or read/write access within one organization.",
     "mcpOneOrgRule": "One connection cannot open two organizations. Create a separate token for each organization.",
     "mcpScopeOrganization": "One organization",
     "mcpScopeBoard": "One board",
@@ -1056,7 +1056,10 @@
     "mcpToolGet": "get_ticket — one ticket on this connection.",
     "mcpChatGptTitle": "ChatGPT connection",
     "mcpChatGptInstructions": "In ChatGPT on the web, add a custom MCP server with the endpoint below and choose OAuth. Sign in to Kikiboard, select an organization or board, and allow read-only access.",
-    "mcpChatGptSetup": "Your administrator must configure the OAuth client ID, secret and callback URL first. The JSON below is for clients that support bearer headers; ChatGPT uses OAuth instead."
+    "mcpChatGptSetup": "Your administrator must configure the OAuth client ID, secret and callback URL first. The JSON below is for clients that support bearer headers; ChatGPT uses OAuth instead.",
+    "mcpWriteAccess": "Allow task edits, creation, completion and archiving",
+    "mcpReadWrite": "Read/write",
+    "mcpReadOnly": "Read-only"
   },
   "calendar": {
     "title": "Calendar",
@@ -1117,7 +1120,10 @@
     "qaAssigned": "{actor} assigned {name} as QA of \"{ticket}\"",
     "qaRemoved": "{actor} removed QA from the ticket \"{ticket}\"",
     "brainDump": "{actor} created {count, plural, one {# ticket} other {# tickets}} with AI Brain Dump",
-    "brainDumpCount": "Created {count, plural, one {# ticket} other {# tickets}} with AI Brain Dump"
+    "brainDumpCount": "Created {count, plural, one {# ticket} other {# tickets}} with AI Brain Dump",
+    "mcpCreated": "{actor} created {count} tickets through MCP",
+    "mcpUpdated": "{actor} updated {count} tickets through MCP",
+    "mcpReverted": "{actor} reverted changes to {count} tickets through MCP"
   },
   "notifications": {
     "title": "Notifications",
@@ -1353,7 +1359,7 @@
   "mcpOAuth": {
     "title": "Connect ChatGPT to Kikiboard",
     "description": "Choose the organization or board ChatGPT may read. This connection lasts up to 30 days.",
-    "permissions": "ChatGPT can read project information and tickets in the selected scope. It cannot edit them.",
+    "permissions": "This connection can read project information and tickets. Task changes are allowed only when you explicitly enable write access.",
     "selection": "Connection scope",
     "choose": "Choose an organization or board",
     "organization": "Organization: {name} (all boards)",
@@ -1362,6 +1368,96 @@
     "revoke": "Revoke this connection in Settings → MCP by selecting its scope and removing the ChatGPT credential.",
     "allow": "Allow access",
     "deny": "Cancel",
-    "invalidRequest": "This connection request is invalid or ChatGPT OAuth has not been configured."
+    "invalidRequest": "This connection request is invalid or ChatGPT OAuth has not been configured.",
+    "writeAccess": "Allow task creation, editing and archiving with reversible change history"
+  },
+  "mcpGuide": {
+    "title": "Connect your AI assistant",
+    "intro": "Choose your assistant for setup instructions. Connections stay within one organization or board. Read-only is the default; task writes require explicit permission.",
+    "provider": "AI assistant",
+    "endpoint": "MCP URL",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyError": "Could not copy. Select and copy the value manually.",
+    "callback": "ChatGPT callback URL",
+    "callbackHint": "Copy the exact OAuth callback URL shown when creating your custom MCP connection in ChatGPT. Only ChatGPT callback URLs are accepted.",
+    "generate": "Generate ChatGPT credentials",
+    "secretOnce": "Copy this secret now. It is shown only once.",
+    "clientId": "OAuth client ID",
+    "clientSecret": "OAuth client secret",
+    "credentialsHint": "Paste these two values into ChatGPT’s OAuth fields. This secret is different from the bearer token below. If you lose it, revoke this setup and create another.",
+    "clients": "Your ChatGPT setups",
+    "revoke": "Revoke",
+    "revokeHint": "Revoking a setup stops its ChatGPT connections and token refreshes.",
+    "revoked": "ChatGPT setup revoked",
+    "createError": "Could not create credentials. Check the ChatGPT callback URL and try again.",
+    "loadError": "Could not load ChatGPT setups.",
+    "revokeError": "Could not revoke the setup.",
+    "loading": "Loading ChatGPT setups…",
+    "tokenHint": "Create and copy a scoped token below. Replace kiki_YOUR_TOKEN with that value, or securely set KIKIBOARD_TOKEN when using a shell command. Keep credentials in private configuration, never in chat prompts.",
+    "test": "Test with: “Use Kikiboard to list my pending tickets.”",
+    "officialDocs": "Official {provider} instructions",
+    "chatgpt": {
+      "intro": "ChatGPT uses OAuth. Generate your own credentials here; no deployment secret is needed.",
+      "step1": "In ChatGPT on the web, open Plugins → + → Add custom MCP server. Enter the MCP URL and select OAuth.",
+      "step2": "Copy ChatGPT’s callback URL into the field below and generate credentials. Paste the client ID and secret into ChatGPT.",
+      "step3": "Create and install the plugin. In a Work chat, type @ and select Kikiboard.",
+      "step4": "Sign in to Kikiboard with this same account, choose the organization or board you administer, and approve read-only or explicitly requested read/write access."
+    },
+    "claude": {
+      "intro": "Claude custom connectors can send your Kikiboard bearer token as a request header.",
+      "step1": "Choose an organization or board below, name the connection, and create a token. Copy it when it appears.",
+      "step2": "In Claude, open Customize → Connectors → Add custom connector. Enter the MCP URL.",
+      "step3": "Select No sign in and add a request header named Authorization with value Bearer followed by a space and your token.",
+      "step4": "Add the connector, then enable it in your conversation using + → Connectors."
+    },
+    "grok": {
+      "intro": "Use a bearer token with Grok CLI or xAI’s Remote MCP API. These steps configure Grok CLI.",
+      "step1": "Choose an organization or board below and create a scoped token.",
+      "step2": "Securely set KIKIBOARD_TOKEN in your shell environment to the token you copied.",
+      "step3": "Run the command below. Use grok mcp list or grok mcp doctor kikiboard to check the connection.",
+      "step4": "Start Grok CLI and ask it to use Kikiboard. For the xAI API, supply the MCP URL and Authorization header in a remote MCP tool."
+    },
+    "gemini": {
+      "intro": "Use Gemini CLI with the Streamable HTTP configuration below. These steps are for the CLI, not the Gemini chat website.",
+      "step1": "Choose an organization or board below and create a scoped token.",
+      "step2": "Add the configuration below to your private ~/.gemini/settings.json, preserving your existing settings.",
+      "step3": "Replace kiki_YOUR_TOKEN with your copied token. Use httpUrl for this Streamable HTTP endpoint.",
+      "step4": "Restart Gemini CLI, run /mcp to check Kikiboard, and ask it to list your pending tickets."
+    },
+    "allowWrite": "Request read/write access (you must also approve it during sign-in)",
+    "troubleshootingTitle": "Connection failed or returned 401?",
+    "troubleshooting": "Use the public MCP URL shown here. A Vercel sign-in or deployment-protection response happens before Kikiboard checks your token. For a protected preview, an administrator can configure Vercel’s automation bypass header in clients that support it. A Kikiboard invalid-token response means you should check the copied token, expiry, revocation and selected scope.",
+    "vercelDocs": "Vercel deployment protection instructions"
+  },
+  "mcpHistory": {
+    "title": "AI change history",
+    "description": "The latest 50 MCP task operations in this scope. Each batch is saved with its previous state. Reverting does not undo messages already sent to Slack or Discord.",
+    "refresh": "Refresh",
+    "loading": "Loading changes…",
+    "loadError": "Could not load change history. Check your permissions or retry.",
+    "empty": "No AI task changes have been recorded here yet.",
+    "preview": "Preview revert",
+    "previewTitle": "Review the changes to revert",
+    "previewHint": "This restores the previous task fields only if nobody has edited the affected tasks since. A conflict cancels the entire revert.",
+    "archiveCreated": "This newly created task will be archived. Its comments, attachments and other content will be preserved.",
+    "confirmRevert": "Confirm revert",
+    "cancel": "Cancel",
+    "reverted": "Changes reverted",
+    "revertedLabel": "Reverted",
+    "conflict": "Could not revert. A task may have changed, the original list may be missing, or your permissions may have changed. Refresh the history before retrying.",
+    "yes": "Yes",
+    "no": "No",
+    "missingList": "List unavailable",
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "priority": "Priority",
+      "listId": "List",
+      "completed": "Completed",
+      "archived": "Archived",
+      "startDate": "Start date",
+      "dueDate": "Due date"
+    }
   }
 }

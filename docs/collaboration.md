@@ -51,3 +51,16 @@ Rows store `boardId` and `taskId` so the UI can deep-link.
 `createActivity` writes `ActivityLog { type, message, boardId, userId }`. The board activity panel loads `/api/boards/[boardId]/activity` (capped at 100). Types include created, moved, completed, reopened, renamed, assigned, deleted, list changes, brain dump.
 
 Activity is a board timeline. Notifications are personal.
+
+### MCP task writes and history
+
+MCP read/write credentials support task creation, edits, moves, completion and
+archiving within their organization/board scope. The creator must still have
+board edit permission. Read-only credentials remain unchanged. OAuth write
+access is approved explicitly during consent. Each operation stores before/after
+state in `McpChange` and board activity in the same serializable transaction;
+completion sends the existing board webhooks after commit. Settings → MCP
+provides administrator-only history preview and confirmed revert, independently
+of whether the original credential remains active. Reverts reject later edits
+and missing original lists, and undo creation by archiving. Sent integration
+messages are not recalled. See `mcp/README.md` for scope and supported fields.

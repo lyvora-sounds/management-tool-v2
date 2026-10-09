@@ -59,3 +59,20 @@ ChatGPT connects through the OAuth flow described in `mcp/README.md`. Settings
 → MCP includes ChatGPT instructions alongside the bearer configuration for other
 clients. OAuth-created ChatGPT credentials appear in the same scope's token
 list and use the existing revocation endpoints.
+
+Settings → MCP now offers ChatGPT, Claude, Grok CLI/API and Gemini CLI guides.
+ChatGPT clients are created per account in the app with an exact callback URL
+and a one-time secret, eliminating deployment-secret setup for end users.
+
+### MCP task writes and history
+
+MCP read/write credentials support task creation, edits, moves, completion and
+archiving within their organization/board scope. The creator must still have
+board edit permission. Read-only credentials remain unchanged. OAuth write
+access is approved explicitly during consent. Each operation stores before/after
+state in `McpChange` and board activity in the same serializable transaction;
+completion sends the existing board webhooks after commit. Settings → MCP
+provides administrator-only history preview and confirmed revert, independently
+of whether the original credential remains active. Reverts reject later edits
+and missing original lists, and undo creation by archiving. Sent integration
+messages are not recalled. See `mcp/README.md` for scope and supported fields.

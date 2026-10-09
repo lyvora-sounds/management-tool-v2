@@ -5,6 +5,7 @@ import {
   createExternalAccessToken,
   readTokenRequest,
   TICKETS_READ_SCOPE,
+  TICKETS_WRITE_SCOPE,
 } from "@/lib/externalAccess";
 import { requireOrganizationManager } from "@/lib/organizations";
 
@@ -63,7 +64,7 @@ export async function POST(
       name: parsed.name,
       tokenHash: generated.hash,
       tokenPrefix: generated.prefix,
-      scopes: [TICKETS_READ_SCOPE],
+      scopes: parsed.access === "write" ? [TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE] : [TICKETS_READ_SCOPE],
       allEnvironments: true,
       environments: [],
       expiresAt: parsed.expiresAt,

@@ -1014,7 +1014,7 @@
     "optionsHint": "Escribe los valores separados por comas que aparecerán en la lista.",
     "enableOnTickets": "Habilitar en tickets",
     "mcpTitle": "Conexiones MCP",
-    "mcpIntro": "Conecta ChatGPT, Claude u otro cliente MCP. Cada conexión es de solo lectura y pertenece a una organización.",
+    "mcpIntro": "Conecta ChatGPT, Claude, Grok, Gemini CLI u otro cliente MCP. Elige acceso de lectura o lectura/escritura dentro de una organización.",
     "mcpOneOrgRule": "Una conexión no puede abrir dos organizaciones. Crea un token distinto para cada organización.",
     "mcpScopeOrganization": "Una organización",
     "mcpScopeBoard": "Un tablero",
@@ -1056,7 +1056,10 @@
     "mcpToolGet": "get_ticket — un ticket de esta conexión.",
     "mcpChatGptTitle": "Conexión con ChatGPT",
     "mcpChatGptInstructions": "En ChatGPT en la web, añade un servidor MCP con la URL de abajo y selecciona OAuth. Inicia sesión en Kikiboard, elige una organización o un tablero y permite el acceso de lectura.",
-    "mcpChatGptSetup": "El administrador debe configurar primero el ID del cliente OAuth, su secreto y la URL de retorno. El JSON de abajo es para clientes con cabeceras bearer; ChatGPT utiliza OAuth."
+    "mcpChatGptSetup": "El administrador debe configurar primero el ID del cliente OAuth, su secreto y la URL de retorno. El JSON de abajo es para clientes con cabeceras bearer; ChatGPT utiliza OAuth.",
+    "mcpWriteAccess": "Permitir editar, crear, completar y archivar tareas",
+    "mcpReadWrite": "Lectura/escritura",
+    "mcpReadOnly": "Solo lectura"
   },
   "calendar": {
     "title": "Calendario",
@@ -1117,7 +1120,10 @@
     "qaAssigned": "{actor} asignó a {name} como QA de \"{ticket}\"",
     "qaRemoved": "{actor} removió al QA del ticket \"{ticket}\"",
     "brainDump": "{actor} creó {count, plural, one {# ticket} other {# tickets}} con AI Brain Dump",
-    "brainDumpCount": "Se crearon {count, plural, one {# ticket} other {# tickets}} con AI Brain Dump"
+    "brainDumpCount": "Se crearon {count, plural, one {# ticket} other {# tickets}} con AI Brain Dump",
+    "mcpCreated": "{actor} creó {count} tickets mediante MCP",
+    "mcpUpdated": "{actor} actualizó {count} tickets mediante MCP",
+    "mcpReverted": "{actor} revirtió cambios en {count} tickets mediante MCP"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -1353,7 +1359,7 @@
   "mcpOAuth": {
     "title": "Conectar ChatGPT a Kikiboard",
     "description": "Elige la organización o el tablero que ChatGPT puede leer. La conexión dura hasta 30 días.",
-    "permissions": "ChatGPT puede leer información del proyecto y tickets del ámbito seleccionado. No puede editarlas.",
+    "permissions": "La conexión puede leer información del proyecto y tickets. Los cambios de tareas solo se permiten si activas expresamente el acceso de escritura.",
     "selection": "Ámbito de la conexión",
     "choose": "Elige una organización o un tablero",
     "organization": "Organización: {name} (todos los tableros)",
@@ -1362,6 +1368,96 @@
     "revoke": "Revoca la conexión en Ajustes → MCP seleccionando su ámbito y eliminando la credencial de ChatGPT.",
     "allow": "Permitir acceso",
     "deny": "Cancelar",
-    "invalidRequest": "La solicitud no es válida o no se ha configurado OAuth para ChatGPT."
+    "invalidRequest": "La solicitud no es válida o no se ha configurado OAuth para ChatGPT.",
+    "writeAccess": "Permitir crear, editar y archivar tareas con historial reversible"
+  },
+  "mcpGuide": {
+    "title": "Conecta tu asistente de IA",
+    "intro": "Elige tu asistente para ver las instrucciones. Las conexiones se limitan a una organización o un tablero. Solo lectura por defecto; los cambios requieren permiso explícito.",
+    "provider": "Asistente de IA",
+    "endpoint": "URL de MCP",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copyError": "No se pudo copiar. Selecciona y copia el valor manualmente.",
+    "callback": "URL de retorno de ChatGPT",
+    "callbackHint": "Copia la URL exacta de retorno OAuth que muestra ChatGPT al crear la conexión MCP. Solo se aceptan URLs de retorno de ChatGPT.",
+    "generate": "Generar credenciales de ChatGPT",
+    "secretOnce": "Copia este secreto ahora. Solo se muestra una vez.",
+    "clientId": "ID del cliente OAuth",
+    "clientSecret": "Secreto del cliente OAuth",
+    "credentialsHint": "Pega estos dos valores en los campos OAuth de ChatGPT. Este secreto es distinto del token bearer de abajo. Si lo pierdes, revoca la configuración y crea otra.",
+    "clients": "Tus configuraciones de ChatGPT",
+    "revoke": "Revocar",
+    "revokeHint": "Revocar una configuración detiene sus conexiones de ChatGPT y la renovación de tokens.",
+    "revoked": "Configuración de ChatGPT revocada",
+    "createError": "No se pudieron crear las credenciales. Revisa la URL de retorno de ChatGPT e inténtalo de nuevo.",
+    "loadError": "No se pudieron cargar las configuraciones de ChatGPT.",
+    "revokeError": "No se pudo revocar la configuración.",
+    "loading": "Cargando configuraciones de ChatGPT…",
+    "tokenHint": "Crea y copia un token del ámbito seleccionado abajo. Sustituye kiki_YOUR_TOKEN por ese valor o configura KIKIBOARD_TOKEN de forma segura para un comando de terminal. Guarda las credenciales en una configuración privada, nunca en mensajes del chat.",
+    "test": "Prueba con: «Usa Kikiboard para listar mis tickets pendientes».",
+    "officialDocs": "Instrucciones oficiales de {provider}",
+    "chatgpt": {
+      "intro": "ChatGPT utiliza OAuth. Genera aquí tus propias credenciales; no necesitas un secreto de despliegue.",
+      "step1": "En ChatGPT en la web, abre Plugins → + → Add custom MCP server. Introduce la URL MCP y selecciona OAuth.",
+      "step2": "Copia la URL de retorno de ChatGPT en el campo de abajo y genera las credenciales. Pega el ID y el secreto en ChatGPT.",
+      "step3": "Crea e instala el plugin. En un chat Work, escribe @ y selecciona Kikiboard.",
+      "step4": "Inicia sesión con esta misma cuenta, elige la organización o el tablero que administras y aprueba lectura o lectura/escritura solicitada explícitamente."
+    },
+    "claude": {
+      "intro": "Los conectores personalizados de Claude pueden enviar el token bearer de Kikiboard en una cabecera.",
+      "step1": "Elige una organización o un tablero abajo, nombra la conexión y crea un token. Cópialo cuando aparezca.",
+      "step2": "En Claude, abre Personalizar → Conectores → Añadir conector personalizado. Introduce la URL MCP.",
+      "step3": "Selecciona Sin iniciar sesión y añade la cabecera Authorization con el valor Bearer, un espacio y tu token.",
+      "step4": "Añade el conector y actívalo en la conversación mediante + → Conectores."
+    },
+    "grok": {
+      "intro": "Utiliza un token bearer con Grok CLI o la API Remote MCP de xAI. Estos pasos configuran Grok CLI.",
+      "step1": "Elige una organización o un tablero abajo y crea un token con ese ámbito.",
+      "step2": "Configura KIKIBOARD_TOKEN de forma segura en el entorno de la terminal con el token que copiaste.",
+      "step3": "Ejecuta el comando de abajo. Comprueba la conexión con grok mcp list o grok mcp doctor kikiboard.",
+      "step4": "Inicia Grok CLI y pídele que utilice Kikiboard. Para la API de xAI, configura la URL MCP y la cabecera Authorization en una herramienta MCP remota."
+    },
+    "gemini": {
+      "intro": "Utiliza Gemini CLI con la configuración Streamable HTTP de abajo. Estos pasos son para la CLI, no para la web de chat de Gemini.",
+      "step1": "Elige una organización o un tablero abajo y crea un token con ese ámbito.",
+      "step2": "Añade la configuración de abajo a tu archivo privado ~/.gemini/settings.json conservando los ajustes existentes.",
+      "step3": "Sustituye kiki_YOUR_TOKEN por el token copiado. Utiliza httpUrl para este endpoint Streamable HTTP.",
+      "step4": "Reinicia Gemini CLI, ejecuta /mcp para comprobar Kikiboard y pídele que liste tus tickets pendientes."
+    },
+    "allowWrite": "Solicitar lectura/escritura (también debes aprobarla al iniciar sesión)",
+    "troubleshootingTitle": "¿Falló la conexión o devolvió 401?",
+    "troubleshooting": "Utiliza la URL MCP pública que aparece aquí. Una respuesta de inicio de sesión o protección de Vercel ocurre antes de comprobar el token en Kikiboard. En un preview protegido, un administrador puede configurar la cabecera de bypass de automatización de Vercel en clientes compatibles. Si Kikiboard indica que el token no es válido, revisa el token copiado, su caducidad, revocación y ámbito.",
+    "vercelDocs": "Instrucciones de protección de Vercel"
+  },
+  "mcpHistory": {
+    "title": "Historial de cambios de IA",
+    "description": "Las últimas 50 operaciones MCP de tareas de este ámbito. Cada lote guarda el estado anterior. Revertir no deshace los mensajes ya enviados a Slack o Discord.",
+    "refresh": "Actualizar",
+    "loading": "Cargando cambios…",
+    "loadError": "No se pudo cargar el historial. Revisa tus permisos o inténtalo de nuevo.",
+    "empty": "Todavía no hay cambios de tareas de IA registrados aquí.",
+    "preview": "Vista previa de reversión",
+    "previewTitle": "Revisa los cambios que se revertirán",
+    "previewHint": "Restaura los campos anteriores solo si nadie ha editado las tareas afectadas después. Un conflicto cancela toda la reversión.",
+    "archiveCreated": "Esta tarea recién creada se archivará. Se conservarán sus comentarios, archivos adjuntos y demás contenido.",
+    "confirmRevert": "Confirmar reversión",
+    "cancel": "Cancelar",
+    "reverted": "Cambios revertidos",
+    "revertedLabel": "Revertido",
+    "conflict": "No se pudo revertir. Puede haber cambios posteriores, faltar la lista original o haber cambiado tus permisos. Actualiza el historial antes de reintentar.",
+    "yes": "Sí",
+    "no": "No",
+    "missingList": "Lista no disponible",
+    "fields": {
+      "title": "Título",
+      "description": "Descripción",
+      "priority": "Prioridad",
+      "listId": "Lista",
+      "completed": "Completado",
+      "archived": "Archivado",
+      "startDate": "Fecha de inicio",
+      "dueDate": "Fecha de vencimiento"
+    }
   }
 }
