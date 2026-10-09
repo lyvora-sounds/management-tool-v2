@@ -260,3 +260,71 @@ Existing write-enabled credentials keep their scopes; this expansion needs no
 database migration. Local tests do not deploy the endpoint or refresh a remote
 plugin. Verify `tools/list`, QA assignment, custom values and person search in
 the deployed connector before relying on the new contract.
+
+## Markdown and SVG information responses
+
+`get_project`, `list_tickets`, `get_ticket` and `get_change_history` can return
+Markdown by default, with complete original data in `structuredContent.data`.
+Ticket tables group by board, put pending tickets first, and distinguish workflow
+with colored emoji plus readable labels: ⚪ Draft, 🔵 In progress, 🟣 In review,
+🟡 Pending and 🟢 Done. Priorities use 🔴 Urgent, 🟠 High, 🟡 Medium,
+🔵 Low and ⚪ Not set. Completed tickets always show Done regardless of list.
+Markdown escapes untrusted content and uses canonical ticket links. Colors come
+from emoji, because Markdown hosts do not reliably allow custom CSS or HTML.
+Each response offers the optional SVG format.
+
+Use `presentation.format: "markdown"` explicitly, or omit presentation for the
+default. Use `presentation.format: "text"` for the previous raw JSON text format.
+SVG is opt-in through `presentation.format: "svg"`, even for SVG-capable clients;
+capabilities alone never change the default. SVG responses use an embedded MCP
+resource with MIME type `image/svg+xml`. SVG support is never inferred from a
+client name, HTTP Accept header or generic MCP resource support.
+
+A compatible client can explicitly request a presentation on each tool call:
+
+```json
+{
+  "name": "list_tickets",
+  "arguments": {
+    "person": "Daniel Alvarez",
+    "presentation": { "format": "svg", "interactive": true }
+  }
+}
+```
+
+Request SVG only when the client renders embedded SVG resources. Set
+`interactive: true` only when it supports SVG hyperlinks. Clients may declare
+the custom capability below under client `capabilities.experimental` during
+initialization. Because the HTTP endpoint creates a fresh server per request,
+repeat capabilities in tool-call `_meta["io.modelcontextprotocol/clientCapabilities"]`
+and explicitly request SVG with `presentation.format: "svg"` on every call. Initialization alone
+does not persist preferences across HTTP requests.
+
+```json
+{ "experimental": { "xyz.kikiboard/svg": { "supported": true, "links": true } } }
+```
+
+Markdown remains the default regardless of capabilities, and
+`presentation.interactive: false` disables links. The server advertises the same
+custom capability. This is a Kikiboard extension, not a standard MCP SVG
+capability. Clients supporting only static SVG receive the same complete data
+without links. Every SVG response also includes the original JSON text block,
+so requested fields and IDs remain available to agents and accessible text
+renderers. Attachments remain base64 file responses; mutations and errors retain
+their existing text contract.
+
+SVG uses escaped, wrapped text, without scripts, event handlers, embedded HTML
+or external assets. When SVG links are supported and `NEXT_PUBLIC_APP_URL` is a
+valid HTTP(S) origin, ticket and board links open the normal authenticated app;
+no public share is created and no mutation runs from the SVG. A client that
+renders SVG as an image may disable links and should request static SVG.
+No database migration is required. Deploy the endpoint and refresh cached tool
+definitions to use the new argument; live rendering depends on the host client.
+
+Ticket-list SVGs use a table grouped by board, list and completion, with ticket
+links, status badges, priority, assignee, QA and due date. Completed tickets are
+classified as done even when their board list is Draft or To Review. Rows sort
+by priority and title within each group. The table represents the current
+filtered page (up to 100 tickets), not the entire organization automatically;
+use cursor pagination for further results. All original summary fields remain
+in the accompanying JSON text block.

@@ -149,9 +149,8 @@ describe("scoped MCP server", () => {
       }],
     });
 
-    const result = await client.callTool({ name: "get_ticket", arguments: { ticketId: "ticket-1" } });
-    const content = result.content as { text: string }[];
-    const body = JSON.parse(content[0].text);
+    const result = await client.callTool({ name: "get_ticket", arguments: { ticketId: "ticket-1", presentation: { format: "text" } } });
+    const body = JSON.parse((result.content as { text: string }[])[0].text);
     expect(body.board).toEqual({ id: "board-allowed", title: "Checkout" });
     expect(body.list).toEqual({ id: "list-1", title: "Doing" });
     expect(body.labels).toEqual([{ id: "label-1", title: "bug", color: "#f00" }]);
@@ -171,7 +170,7 @@ describe("scoped MCP server", () => {
   it("exposes unset field definitions and options on ticket reads", async () => {
     findTask.mockResolvedValue({ id: "ticket", list: { id: "list", title: "Draft", board: { id: "board-allowed", title: "Board" } }, labels: [], customValues: [] });
     findFields.mockResolvedValue([{ id: "env", name: "Environment", defaultKey: "environment", type: "SELECT", options: ["production"], enabled: true }]);
-    const result = await client.callTool({ name: "get_ticket", arguments: { ticketId: "ticket" } });
+    const result = await client.callTool({ name: "get_ticket", arguments: { ticketId: "ticket", presentation: { format: "text" } } });
     const body = JSON.parse((result.content as { text: string }[])[0].text);
     expect(body.customFields[0]).toMatchObject({ id: "env", value: null, options: ["production"] });
     expect(findFields.mock.calls[0][0].where).toEqual({ boardId: "board-allowed" });
@@ -180,6 +179,21 @@ describe("scoped MCP server", () => {
   it("filters assignments by name/email and paginates inside the credential scope", async () => {
     await client.callTool({ name: "list_tickets", arguments: { person: "Daniel Alvarez", qaId: "mario", cursor: "last-ticket", limit: 10 } });
     expect(findTasks.mock.calls[0][0]).toMatchObject({ where: { list: { boardId: "board-allowed" }, qaId: "mario", assignee: { OR: [{ name: { contains: "Daniel Alvarez", mode: "insensitive" } }, { email: { contains: "Daniel Alvarez", mode: "insensitive" } }] } }, cursor: { id: "last-ticket" }, skip: 1, take: 10 });
+  });
+
+  it("exposes SVG preferences only for information tools and preserves ticket scope", async () => {
+    const tools = (await client.listTools()).tools;
+    expect(tools.find(tool => tool.name === "list_tickets")?.inputSchema.properties).toHaveProperty("presentation");
+    expect(tools.find(tool => tool.name === "get_attachment")?.inputSchema.properties).not.toHaveProperty("presentation");
+    findTasks.mockResolvedValue([{ id: "ticket", title: "Test", list: { id: "list", title: "Draft", board: { id: "board-allowed", title: "Board" } } }]);
+    const result = await client.callTool({ name: "list_tickets", arguments: { presentation: { format: "svg" } } });
+    expect(result.content).toEqual(expect.arrayContaining([expect.objectContaining({ type: "resource", resource: expect.objectContaining({ mimeType: "image/svg+xml" }) })]));
+    expect(findTasks.mock.calls[0][0].where.list).toEqual({ boardId: "board-allowed" });
+  });
+
+  it("keeps Markdown as default when per-request SVG capability is advertised", async () => {
+    const result = await client.callTool({ name: "list_tickets", arguments: {}, _meta: { "io.modelcontextprotocol/clientCapabilities": { experimental: { "xyz.kikiboard/svg": { supported: true } } } } });
+    expect((result.content as { type: string }[])[0].type).toBe("text");
   });
 
   it("scopes attachment reads by both ticket and connection", async () => {
@@ -213,9 +227,8 @@ describe("scoped MCP server", () => {
     });
     const extra = await connect(organizationContext);
     try {
-      const result = await extra.client.callTool({ name: "get_project", arguments: {} });
-      const content = result.content as { text: string }[];
-      const body = JSON.parse(content[0].text);
+      const result = await extra.client.callTool({ name: "get_project", arguments: { presentation: { format: "text" } } });
+      const body = JSON.parse((result.content as { text: string }[])[0].text);
       expect(body.scope).toBe("organization");
       expect(body.organization.boards).toHaveLength(1);
       expect(findOrganization).toHaveBeenCalledWith(expect.objectContaining({
