@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1580 520" width="100%" height="100%">
+  <rect width="1580" height="520" fill="#F7F7F7"/>
+  <path d="M188 254 H1392" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linecap="round"/>
+
+  <rect x="40" y="28" width="1" height="16" fill="#D3A05B"/>
+  <text x="50" y="41" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">SCHEMA</text>
+  <text x="1540" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">28 models · Neon Postgres</text>
+  <text x="40" y="78" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" letter-spacing="-0.025em">
+    <tspan fill="#13233C">Postgres tables by </tspan><tspan fill="#D3A05B">domain</tspan>
+  </text>
+  <rect x="40" y="92" width="40" height="2" fill="#D3A05B"/>
+
+  <rect x="40" y="120" width="268" height="300" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(64, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 22c1.4-5 4.4-7.5 8-7.5s6.6 2.5 8 7.5"/>
+  </g>
+  <text x="64" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Identity</text>
+  <text x="64" y="228" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">User</text>
+  <text x="64" y="252" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">UserSettings</text>
+  <text x="64" y="276" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">UserCalendarSync</text>
+  <text x="64" y="300" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Notification</text>
+  <text x="64" y="348" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#13233C">clerkId is the login key</text>
+  <text x="64" y="392" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">4 TABLES</text>
+
+  <rect x="348" y="120" width="268" height="300" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(372, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+    <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+    <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+    <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+  </g>
+  <text x="372" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Organization</text>
+  <text x="372" y="228" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Organization</text>
+  <text x="372" y="252" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">OrganizationMember</text>
+  <text x="372" y="276" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Team</text>
+  <text x="372" y="300" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">TeamMember</text>
+  <text x="372" y="348" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#13233C">Join tables hold the roles</text>
+  <text x="372" y="392" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">4 TABLES</text>
+
+  <rect x="656" y="120" width="268" height="300" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(680, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="7" height="16" rx="1.5"/>
+    <rect x="14" y="4" width="7" height="16" rx="1.5"/>
+  </g>
+  <text x="680" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Board access</text>
+  <text x="680" y="228" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Board</text>
+  <text x="680" y="252" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">BoardMember</text>
+  <text x="680" y="276" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">BoardTeamAccess</text>
+  <text x="680" y="300" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Invitation</text>
+  <text x="680" y="348" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#13233C">Owner is Board.userId</text>
+  <text x="680" y="392" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">4 TABLES</text>
+
+  <rect x="964" y="120" width="268" height="300" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(988, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="3" width="14" height="18" rx="2"/>
+    <path d="M8 10h8"/>
+    <path d="M8 14h5"/>
+  </g>
+  <text x="988" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Work items</text>
+  <text x="988" y="228" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">List · Epic · Task</text>
+  <text x="988" y="252" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Label · TaskLabel</text>
+  <text x="988" y="276" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">CustomField · Value</text>
+  <text x="988" y="300" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Subtask · Comment</text>
+  <text x="988" y="324" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Attachment · Collaborator</text>
+  <text x="988" y="360" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#13233C">A task belongs to one list</text>
+  <text x="988" y="392" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">11 TABLES</text>
+
+  <rect x="1272" y="120" width="268" height="300" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <g transform="translate(1296, 144)" fill="none" stroke="#13233C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l8 3v6c0 4.6-3.2 7.6-8 8.8C7.2 19.6 4 16.6 4 12V6l8-3z"/>
+  </g>
+  <text x="1296" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Audit and MCP</text>
+  <text x="1296" y="228" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">ActivityLog</text>
+  <text x="1296" y="252" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">ExternalAccessToken</text>
+  <text x="1296" y="276" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">McpOAuthGrant</text>
+  <text x="1296" y="300" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">McpOAuthClient</text>
+  <text x="1296" y="324" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">McpChange</text>
+  <text x="1296" y="360" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#13233C">Hashes or ciphertext only</text>
+  <text x="1296" y="392" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">5 TABLES</text>
+
+  <text x="40" y="492" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">SELKET.AI</text>
+</svg>

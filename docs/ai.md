@@ -109,3 +109,15 @@ journaled across all affected tickets; reverts check nested state for later
 edits. System IDs/timestamps and calendar integration IDs remain read-only.
 See `mcp/README.md` for request shapes, upload limits, retained blobs and client
 tool refresh after deployment.
+
+MCP information tools default to Markdown with colored emoji status/priority
+labels, canonical ticket links, and full data in `structuredContent.data`.
+Clients can explicitly request `presentation.format: "svg"` for SVG resources
+with JSON text fallback, or `"text"` for legacy JSON text. SVG capabilities never
+override the Markdown default; link capabilities apply on each stateless call.
+Clients supporting SVG links can navigate tickets and boards in the authenticated
+app. Unknown clients receive Markdown; files, mutations and errors keep their
+existing formats. See `mcp/README.md#svg-information-responses` for the contract.
+Ticket-list SVGs present a table grouped by board, list and completion, with
+priority, people, dates and supported ticket links. Tables respect the filters
+and cursor pagination of the request; original fields remain in the text block.

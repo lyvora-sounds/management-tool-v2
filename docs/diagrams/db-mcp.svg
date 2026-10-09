@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1460 860" width="100%" height="100%">
+  <rect width="1460" height="860" fill="#F7F7F7"/>
+  <defs>
+    <marker id="mcpTip" orient="auto" markerWidth="8" markerHeight="8" refX="7" refY="4">
+      <polygon points="0,0 8,4 0,8" fill="#D3A05B" fill-opacity="0.85"/>
+    </marker>
+  </defs>
+
+  <rect x="40" y="28" width="1" height="16" fill="#D3A05B"/>
+  <text x="50" y="41" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">AUDIT</text>
+  <text x="1420" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">Arrow marks the referenced row</text>
+  <text x="40" y="78" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" letter-spacing="-0.025em">
+    <tspan fill="#13233C">Credentials, audit, and </tspan><tspan fill="#D3A05B">MCP</tspan>
+  </text>
+  <rect x="40" y="92" width="40" height="2" fill="#D3A05B"/>
+
+  <!-- Notification → User -->
+  <path d="M190 280 V360" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linecap="round" marker-end="url(#mcpTip)"/>
+  <text x="202" y="328" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">N : 1</text>
+
+  <!-- McpOAuthClient → User -->
+  <path d="M190 620 V516" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linecap="round" marker-end="url(#mcpTip)"/>
+  <text x="202" y="576" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">N : 1</text>
+
+  <!-- ActivityLog → Board -->
+  <path d="M910 280 V360" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linecap="round" marker-end="url(#mcpTip)"/>
+  <text x="922" y="328" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">N : 1</text>
+
+  <!-- ActivityLog → User, across the empty cell -->
+  <path d="M760 202 H370 V438 H340" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#mcpTip)"/>
+  <text x="560" y="192" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">userId</text>
+
+  <!-- McpChange → Organization and Board -->
+  <path d="M1270 280 V308 H550 V360" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#mcpTip)"/>
+  <path d="M910 308 V360" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linecap="round"/>
+  <text x="1080" y="300" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">org and board</text>
+
+  <!-- ExternalAccessToken → Board -->
+  <path d="M1120 438 H1060" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linecap="round" marker-end="url(#mcpTip)"/>
+  <text x="1090" y="426" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">0..1</text>
+
+  <!-- ExternalAccessToken → Organization, under the anchor row -->
+  <path d="M1270 516 V568 H550 V516" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#mcpTip)"/>
+  <text x="900" y="558" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">organizationId</text>
+
+  <!-- McpOAuthGrant → ExternalAccessToken -->
+  <path d="M1270 620 V516" fill="none" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" stroke-linecap="round" marker-end="url(#mcpTip)"/>
+  <text x="1282" y="576" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#8A5F24">1 : 1</text>
+
+  <!-- Row 1 -->
+  <rect x="40" y="124" width="300" height="156" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="60" y="164" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Notification</text>
+  <text x="60" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">userId, on delete cascade</text>
+  <text x="60" y="220" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">boardId and taskId</text>
+  <text x="60" y="244" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Those two are not keys</text>
+
+  <rect x="760" y="124" width="300" height="156" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="780" y="164" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">ActivityLog</text>
+  <text x="780" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">userId cascade</text>
+  <text x="780" y="220" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">boardId cascade</text>
+  <text x="780" y="244" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">type and message</text>
+
+  <rect x="1120" y="124" width="300" height="156" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="1140" y="164" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">McpChange</text>
+  <text x="1140" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">org and board cascade</text>
+  <text x="1140" y="220" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">tokenId, actorId, no key</text>
+  <text x="1140" y="244" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">before and after JSON</text>
+
+  <!-- Row 2 anchors -->
+  <rect x="40" y="360" width="300" height="156" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="60" y="400" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">User</text>
+  <text x="60" y="432" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">clerkId unique</text>
+  <text x="60" y="456" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Creates OAuth clients</text>
+  <text x="60" y="480" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Receives notifications</text>
+
+  <rect x="400" y="360" width="300" height="156" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="420" y="400" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Organization</text>
+  <text x="420" y="432" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Parent of each token</text>
+  <text x="420" y="456" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Parent of each change</text>
+  <text x="420" y="480" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Delete cascades both</text>
+
+  <rect x="760" y="360" width="300" height="156" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="780" y="400" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Board</text>
+  <text x="780" y="432" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Activity cascades</text>
+  <text x="780" y="456" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Changes cascade</text>
+  <text x="780" y="480" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Token board is optional</text>
+
+  <rect x="1120" y="360" width="300" height="156" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="1140" y="400" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">ExternalAccessToken</text>
+  <text x="1140" y="432" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">tokenHash unique</text>
+  <text x="1140" y="456" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">createdById set null</text>
+  <text x="1140" y="480" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">scopes, expiry, revokedAt</text>
+
+  <!-- Row 3 -->
+  <rect x="40" y="620" width="300" height="156" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="60" y="660" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">McpOAuthClient</text>
+  <text x="60" y="692" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">createdById cascade</text>
+  <text x="60" y="716" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">secretHash only</text>
+  <text x="60" y="740" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">allowWrite, redirect URIs</text>
+
+  <rect x="1120" y="620" width="300" height="156" rx="16" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
+  <text x="1140" y="660" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">McpOAuthGrant</text>
+  <text x="1140" y="692" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">One grant per token</text>
+  <text x="1140" y="716" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Code and token hashes</text>
+  <text x="1140" y="740" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">On delete cascade</text>
+
+  <text x="40" y="828" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">SELKET.AI</text>
+</svg>
