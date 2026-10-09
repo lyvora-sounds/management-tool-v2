@@ -107,8 +107,9 @@ export function GlobalSearch() {
   return (
     <>
       <Button
+        variant="outline"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 h-8 px-15 rounded-full border-muted-foreground/20 bg-muted/50 text-sm text-muted-foreground hover:bg-muted transition-colors"
+        className="flex items-center gap-2 h-8 px-15 rounded-full border-muted-foreground/20 bg-card text-sm text-foreground hover:bg-muted transition-colors"
       >
         <Search size={14} />
         <span>{t("searchButton")}</span>

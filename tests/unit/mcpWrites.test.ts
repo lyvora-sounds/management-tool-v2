@@ -10,22 +10,27 @@ const credential = vi.fn();
 const list = vi.fn();
 const logs = vi.fn();
 const history = vi.fn();
-const tx = { task: { findFirst: lookup, updateMany: update, findUniqueOrThrow: lookup }, list: { findFirst: list }, externalAccessToken: { findUnique: credential }, mcpChange: { create: journal, updateMany: marked }, activityLog: { create: logs } };
-vi.mock("@/lib/boardAccess", () => ({ canEditBoard: (...args: unknown[]) => editable(...args) }));
+const notification = vi.fn();
+const customWrite = vi.fn();
+const create = vi.fn();
+const tx = { board: { findUnique: async () => ({ memberCanAssign: true }) }, notification: { create: notification }, customField: { findFirst: async () => ({ id: "env", type: "SELECT", defaultKey: "environment", options: ["production"] }) }, customFieldValue: { findUnique: async () => null, upsert: customWrite }, task: { create, findFirst: lookup, updateMany: update, findUniqueOrThrow: lookup }, list: { findFirst: list }, externalAccessToken: { findUnique: credential }, mcpChange: { create: journal, updateMany: marked }, activityLog: { create: logs } };
+vi.mock("@/lib/boardAccess", () => ({ canEditBoard: (...args: unknown[]) => editable(...args), canReadBoard: async () => true, isBoardAdmin: async () => true }));
 vi.mock("@/lib/notifications/webhooks", () => ({ sendBoardWebhookNotification: vi.fn() }));
 vi.mock("@/lib/db", () => ({ default: {
+  list: { findFirst: (...args: unknown[]) => list(...args) },
   task: { findFirst: async () => ({ list: { boardId: "board-1" } }) },
   user: { findUnique: async () => ({ id: "user-1", name: "Owner", email: "owner@test.invalid" }) },
   externalAccessToken: { findUnique: async () => ({ createdById: "user-1" }) },
   mcpChange: { findFirst: (...args: unknown[]) => history(...args) },
   $transaction: (callback: (client: unknown) => unknown) => callback(tx),
 } }));
-const { updateMcpTickets, revertMcpChange, taskSnapshot, snapshotsMatch, parseTaskPatch } = await import("@/lib/mcp/writes");
+const { createMcpTicket, updateMcpTickets, revertMcpChange, taskSnapshot, snapshotsMatch, parseTaskPatch } = await import("@/lib/mcp/writes");
 const context: ExternalAccessContext = { tokenId: "token-1", organizationId: "org-1", boardId: "board-1", boardTitle: "Board", scopes: ["tickets:read", "tickets:write"] };
-const task = { id: "task-1", title: "Original", description: null, listId: "list-1", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, startDate: null, dueDate: null, updatedAt: new Date("2026-10-09T10:00:00.000Z") };
+const task = { id: "task-1", title: "Original", description: null, listId: "list-1", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, assigneeId: null, qaId: null, epicId: null, quarter: null, shareToken: null, collaborators: [], labels: [], customValues: [], subtasks: [], comments: [], attachments: [], startDate: null, dueDate: null, updatedAt: new Date("2026-10-09T10:00:00.000Z") };
 beforeEach(() => {
   vi.clearAllMocks(); editable.mockResolvedValue(true);
   credential.mockResolvedValue({ scopes: context.scopes, organizationId: context.organizationId, boardId: context.boardId });
+  create.mockResolvedValue(task);
   lookup.mockResolvedValue(task); update.mockResolvedValue({ count: 1 });
   list.mockResolvedValue({ id: "list-1", boardId: "board-1", title: "Todo" });
   journal.mockResolvedValue({ id: "change-1" }); marked.mockResolvedValue({ count: 1 });
@@ -49,6 +54,22 @@ describe("MCP task writes and revert guards", () => {
     expect(update.mock.calls[0][0]).toMatchObject({ where: { id: task.id, updatedAt: task.updatedAt }, data: { archived: true, archivedAt: expect.any(Date) } });
     expect(journal.mock.calls[0][0].data).toMatchObject({ organizationId: "org-1", boardId: "board-1", before: [taskSnapshot(task)], kind: "update" });
     expect(logs).toHaveBeenCalledOnce();
+  });
+  it("updates QA and Environment atomically and journals both fields", async () => {
+    const updated = { ...task, qaId: "mario", customValues: [{ customFieldId: "env", value: "production" }] };
+    lookup.mockResolvedValueOnce(task).mockResolvedValueOnce(task).mockResolvedValueOnce(updated);
+    const result = await updateMcpTickets(context, { updates: [{ ticketId: task.id, changes: { qaId: "mario", customFields: [{ customFieldId: "env", value: "production" }] } }] });
+    expect(update.mock.calls[0][0].data).toMatchObject({ qaId: "mario" });
+    expect(update.mock.calls[0][0].data).not.toHaveProperty("customFields");
+    expect(customWrite).toHaveBeenCalledOnce(); expect(notification).toHaveBeenCalledOnce();
+    expect(result.tickets[0]).toMatchObject({ qaId: "mario", customValues: [{ customFieldId: "env", value: "production" }] });
+    expect(journal.mock.calls[0][0].data).toMatchObject({ before: [taskSnapshot(task)], after: [taskSnapshot(updated)] });
+  });
+  it("notifies newly assigned QA when creating a ticket", async () => {
+    create.mockResolvedValue({ ...task, qaId: "mario" });
+    await createMcpTicket(context, { title: "New ticket", listId: "list-1", qaId: "mario" });
+    expect(create.mock.calls[0][0].data).toMatchObject({ title: "New ticket", qaId: "mario" });
+    expect(notification.mock.calls[0][0].data).toMatchObject({ userId: "mario", type: "qa_assigned" });
   });
   it("rejects lists outside the current board and concurrent edits before journaling", async () => {
     list.mockResolvedValue(null);

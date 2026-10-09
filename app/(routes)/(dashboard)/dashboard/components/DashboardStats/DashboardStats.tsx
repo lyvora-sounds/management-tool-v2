@@ -23,7 +23,7 @@ function StatCard({ icon, label, value, variant = "default" }: StatCardProps) {
   }[variant];
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border bg-card p-4">
+    <div data-tone={variant} className="workspace-stat flex items-center gap-4 rounded-xl border bg-card p-4">
       <div className={`rounded-lg p-2.5 shrink-0 ${bgColor}`}>
         <span className={iconColor}>{icon}</span>
       </div>

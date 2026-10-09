@@ -1372,6 +1372,33 @@
     "writeAccess": "Allow task creation, editing and archiving with reversible change history"
   },
   "mcpGuide": {
+    "accessTitle": "Access & permissions",
+    "stepTitles": {
+        "chatgpt": {
+            "1": "Open connector settings",
+            "2": "Create OAuth credentials",
+            "3": "Install your connector",
+            "4": "Approve access"
+        },
+        "claude": {
+            "1": "Create a scoped token",
+            "2": "Add your connector",
+            "3": "Configure authentication",
+            "4": "Enable in a conversation"
+        },
+        "grok": {
+            "1": "Create a scoped token",
+            "2": "Set your token",
+            "3": "Add the MCP server",
+            "4": "Start using Kikiboard"
+        },
+        "gemini": {
+            "1": "Create a scoped token",
+            "2": "Add the configuration",
+            "3": "Set your token",
+            "4": "Check the connection"
+        }
+    },
     "title": "Connect your AI assistant",
     "intro": "Choose your assistant for setup instructions. Connections stay within one organization or board. Read-only is the default; task writes require explicit permission.",
     "provider": "AI assistant",
@@ -1457,7 +1484,29 @@
       "completed": "Completed",
       "archived": "Archived",
       "startDate": "Start date",
-      "dueDate": "Due date"
-    }
+      "dueDate": "Due date",
+      "assigneeId": "Assignee",
+      "qaId": "QA reviewer",
+      "epicId": "Epic",
+      "quarter": "Quarter",
+      "order": "Position",
+      "shareToken": "Public sharing",
+      "collaborators": "Collaborators",
+      "labels": "Labels",
+      "customValues": "Custom fields",
+      "subtasks": "Checklist",
+      "comments": "Comments",
+      "attachments": "Attachments",
+      "completedAt": "Completion date",
+      "completedById": "Completed by",
+      "archivedAt": "Archive date"
+    },
+    "currentValue": "Current",
+    "restoredValue": "After revert",
+    "sharingEnabled": "Enabled",
+    "sharingDisabled": "Disabled",
+    "sharingLinkChanged": "Reverting restores the previous public link and replaces the current one.",
+    "bytes": "bytes",
+    "relationImpact": "Revert removes {removed}, restores {restored}, and changes {changed} entries."
   }
 }

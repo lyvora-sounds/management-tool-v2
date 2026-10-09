@@ -5,7 +5,7 @@ import { LanguageSwitcher } from "@/components/Shared/LanguageSwitcher";
 
 export function Navbar() {
   return (
-    <header className="flex items-center h-14 px-3 sm:px-4 border-b shrink-0 gap-2">
+    <header className="workspace-navbar flex items-center h-14 px-3 sm:px-4 border-b shrink-0 gap-2">
       <SidebarTrigger className="shrink-0" />
       <div className="flex-1 flex justify-center">
         <GlobalSearch />

@@ -159,3 +159,79 @@
   pointer-events: none;
   height: 0;
 }
+/* Quiet color for the authenticated workspace; public pages keep their theme. */
+.workspace-theme {
+  --primary: oklch(0.46 0.10 275);
+  --primary-foreground: oklch(0.99 0.005 275);
+  --ring: oklch(0.58 0.10 275);
+  --background: oklch(0.985 0.006 270);
+  --foreground: oklch(0.25 0.025 270);
+  --muted: oklch(0.96 0.012 270);
+  --muted-foreground: oklch(0.50 0.025 270);
+  --accent: oklch(0.94 0.025 275);
+  --accent-foreground: oklch(0.36 0.075 275);
+  --border: oklch(0.91 0.014 270);
+  --sidebar: oklch(0.975 0.012 270);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --workspace-sage: oklch(0.94 0.025 165);
+  --workspace-lavender: oklch(0.94 0.025 285);
+}
+.dark .workspace-theme {
+  --primary: oklch(0.78 0.09 275);
+  --primary-foreground: oklch(0.22 0.035 275);
+  --ring: var(--primary);
+  --background: oklch(0.18 0.018 270);
+  --foreground: oklch(0.95 0.01 270);
+  --muted: oklch(0.27 0.022 270);
+  --muted-foreground: oklch(0.73 0.025 270);
+  --accent: oklch(0.31 0.04 275);
+  --accent-foreground: oklch(0.90 0.04 275);
+  --border: oklch(0.36 0.025 270);
+  --sidebar: oklch(0.21 0.025 270);
+  --workspace-sage: oklch(0.27 0.028 165);
+  --workspace-lavender: oklch(0.28 0.035 285);
+}
+.workspace-background {
+  background: radial-gradient(ellipse at 100% 0%, var(--workspace-lavender), transparent 48%), var(--background);
+}
+.workspace-navbar {
+  background: color-mix(in oklch, var(--card) 88%, var(--workspace-lavender));
+}
+.workspace-nav-active {
+  background: linear-gradient(110deg, var(--accent), color-mix(in oklch, var(--accent) 45%, var(--sidebar)));
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+.workspace-feature {
+  background: linear-gradient(115deg, var(--card) 25%, var(--workspace-lavender) 75%, var(--workspace-sage));
+}
+.workspace-progress,
+.workspace-theme [data-slot="progress-indicator"],
+.workspace-theme .workspace-primary-button,
+.workspace-selected-day {
+  background: linear-gradient(125deg, var(--primary), color-mix(in oklch, var(--primary) 80%, #4d887f));
+}
+.workspace-stat {
+  background: linear-gradient(125deg, var(--card) 35%, var(--workspace-lavender));
+}
+.workspace-stat[data-tone="success"] {
+  background: linear-gradient(125deg, var(--card) 35%, var(--workspace-sage));
+}
+.workspace-stat[data-tone="danger"] {
+  background: linear-gradient(125deg, var(--card) 35%, color-mix(in oklch, var(--destructive) 8%, var(--card)));
+}
+.workspace-organization-header {
+  background: linear-gradient(110deg, color-mix(in oklch, var(--organization-color, var(--primary)) 9%, var(--card)), var(--card) 85%);
+}
+.workspace-calendar {
+  background: linear-gradient(180deg, color-mix(in oklch, var(--workspace-lavender) 30%, var(--card)), var(--card) 28%);
+}
+
+.workspace-theme .workspace-primary-button:not(:disabled):not([aria-disabled="true"]):hover {
+  background-image: linear-gradient(125deg,
+    color-mix(in oklch, var(--primary) 92%, var(--foreground)),
+    color-mix(in oklch, var(--primary) 72%, #4d887f));
+}

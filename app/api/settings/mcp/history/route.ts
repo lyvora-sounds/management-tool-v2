@@ -4,6 +4,7 @@ import { isBoardAdmin } from "@/lib/boardAccess";
 import { requireOrganizationManager } from "@/lib/organizations";
 import { type ExternalAccessContext, TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE } from "@/lib/externalAccess";
 import { changeScope, listMcpChanges, revertMcpChange, McpWriteError } from "@/lib/mcp/writes";
+import { historyUserIds, type HistorySnapshot } from "@/lib/mcp/historyPreview";
 import { oauthServerConfig } from "@/lib/mcp/oauthConfig";
 
 const headers = { "cache-control": "no-store" };
@@ -31,8 +32,22 @@ export async function GET(request: Request) {
   if (!id) return Response.json(await listMcpChanges(actor.context), { headers });
   const change = await db.mcpChange.findFirst({ where: { id, ...changeScope(actor.context) }, select: { id: true, kind: true, summary: true, before: true, after: true, revertedAt: true, boardId: true } });
   if (!change) return Response.json({ error: "Not found" }, { status: 404, headers });
-  const lists = await db.list.findMany({ where: { boardId: change.boardId }, select: { id: true, title: true } });
-  return Response.json({ ...change, listNames: Object.fromEntries(lists.map((list) => [list.id, list.title])) }, { headers });
+  const snapshots = [...change.before as unknown as HistorySnapshot[], ...change.after as unknown as HistorySnapshot[]];
+  const [lists, users, labels, epics, customFields] = await Promise.all([
+    db.list.findMany({ where: { boardId: change.boardId }, select: { id: true, title: true } }),
+    db.user.findMany({ where: { id: { in: historyUserIds(snapshots) } }, select: { id: true, name: true, email: true } }),
+    db.label.findMany({ where: { boardId: change.boardId }, select: { id: true, title: true } }),
+    db.epic.findMany({ where: { boardId: change.boardId }, select: { id: true, title: true } }),
+    db.customField.findMany({ where: { boardId: change.boardId }, select: { id: true, name: true } }),
+  ]);
+  return Response.json({
+    ...change,
+    listNames: Object.fromEntries(lists.map(row => [row.id, row.title])),
+    userNames: Object.fromEntries(users.map(row => [row.id, row.name ?? row.email])),
+    labelNames: Object.fromEntries(labels.map(row => [row.id, row.title])),
+    epicNames: Object.fromEntries(epics.map(row => [row.id, row.title])),
+    customFieldNames: Object.fromEntries(customFields.map(row => [row.id, row.name])),
+  }, { headers });
 }
 
 export async function POST(request: Request) {
