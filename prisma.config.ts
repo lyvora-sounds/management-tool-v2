@@ -3,6 +3,13 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+// Prisma's schema engine stops after 5 seconds. Waking a suspended Neon
+// compute on this network takes longer, and that abort is reported as P1001.
+function withConnectTimeout(url: string | undefined) {
+  if (!url || /[?&]connect_timeout=\d+/.test(url)) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}connect_timeout=30`;
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
@@ -14,6 +21,6 @@ export default defineConfig({
     // el advisory lock de `migrate deploy` se queda colgado y falla con P1002.
     // La app sí usa el pooler (DATABASE_URL en lib/db.ts), que es lo correcto
     // en serverless. `directUrl` se eliminó en Prisma 7; el reemplazo es esto.
-    url: process.env["DATABASE_URL_UNPOOLED"] ?? process.env["DATABASE_URL"],
+    url: withConnectTimeout(process.env["DATABASE_URL_UNPOOLED"] ?? process.env["DATABASE_URL"]),
   },
 });

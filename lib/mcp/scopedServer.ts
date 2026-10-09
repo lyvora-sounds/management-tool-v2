@@ -2,8 +2,20 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import db from "@/lib/db";
 import type { ExternalAccessContext } from "@/lib/externalAccess";
+import { createMcpTicket, updateMcpTickets, listMcpChanges, revertMcpChange, McpWriteError } from "./writes";
 
 const PRIORITIES = new Set(["urgent", "high", "medium", "low"]);
+const taskChangesSchema = { type: "object", additionalProperties: false, properties: {
+  title: { type: "string", maxLength: 500 }, description: { type: ["string", "null"], maxLength: 50000 },
+  priority: { type: ["string", "null"], enum: ["urgent", "high", "medium", "low", null] },
+  listId: { type: "string" }, completed: { type: "boolean" }, archived: { type: "boolean" },
+  startDate: { type: ["string", "null"] }, dueDate: { type: ["string", "null"] },
+} };
+const writeMetadata = {
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
+  securitySchemes: [{ type: "oauth2", scopes: ["tickets:read", "tickets:write"] }],
+  _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read", "tickets:write"] }] },
+};
 
 function text(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
@@ -54,11 +66,17 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
     tools: [
       {
         name: "get_project",
+        securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
         description: `Get ${scopeDescription}.`,
         inputSchema: { type: "object", additionalProperties: false, properties: {} },
       },
       {
         name: "list_tickets",
+        securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
         description: `List tickets on ${scopeDescription}.`,
         inputSchema: {
           type: "object",
@@ -74,6 +92,9 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       },
       {
         name: "get_ticket",
+        securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
         description: `Get one ticket by ID when it belongs to ${scopeDescription}.`,
         inputSchema: {
           type: "object",
@@ -82,11 +103,38 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
           properties: { ticketId: { type: "string" } },
         },
       },
+      {
+        name: "get_change_history", description: "List the latest 50 MCP task operations in this connection, including change IDs and revert status.",
+        securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
+        _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
+        inputSchema: { type: "object", properties: {}, additionalProperties: false },
+        annotations: { readOnlyHint: true },
+      },
+      ...(context.scopes.includes("tickets:write") ? [
+        { name: "create_ticket", description: "Create a ticket in a list in this connection. Returns a change ID; reverting creation archives the ticket and preserves its content.", ...writeMetadata,
+          inputSchema: { type: "object", additionalProperties: false, required: ["title", "listId"], properties: { title: { type: "string", maxLength: 500 }, listId: { type: "string" }, description: { type: "string", maxLength: 50000 }, priority: { type: "string", enum: ["urgent", "high", "medium", "low"] }, summary: { type: "string", maxLength: 500 } } } },
+        { name: "update_tickets", description: "Edit, move, complete or archive up to 50 tickets on one board atomically. Every batch has a change ID and before/after history. Assignment and permanent deletion are not supported.", ...writeMetadata,
+          inputSchema: { type: "object", additionalProperties: false, required: ["updates"], properties: { updates: { type: "array", minItems: 1, maxItems: 50, items: { type: "object", required: ["ticketId", "changes"], additionalProperties: false, properties: { ticketId: { type: "string" }, changes: taskChangesSchema } } }, summary: { type: "string", maxLength: 500 } } } },
+        { name: "revert_change", description: "Preview undo with confirm=false first. After user approval, set confirm=true to revert an entire MCP change. Conflicts with later task edits reject the whole revert. Creation is undone by archiving.", ...writeMetadata,
+          inputSchema: { type: "object", additionalProperties: false, required: ["changeId"], properties: { changeId: { type: "string" }, confirm: { type: "boolean", default: false } } } },
+      ] : []),
     ],
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
     const args = (params.arguments ?? {}) as Record<string, unknown>;
+    if (["create_ticket", "update_tickets", "get_change_history", "revert_change"].includes(params.name)) {
+      try {
+        if (params.name === "get_change_history") return text(await listMcpChanges(context));
+        if (!context.scopes.includes("tickets:write")) throw new McpWriteError("This connection is read-only");
+        if (params.name === "create_ticket") return text(await createMcpTicket(context, args));
+        if (params.name === "update_tickets") return text(await updateMcpTickets(context, args));
+        if (typeof args.changeId !== "string" || !args.changeId) throw new McpWriteError("changeId is required");
+        return text(await revertMcpChange(context, args.changeId, args.confirm === true));
+      } catch (error) {
+        return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "The operation could not be completed. Refresh ticket data before retrying." }] };
+      }
+    }
 
     if (params.name === "get_project") {
       if (context.boardId) {

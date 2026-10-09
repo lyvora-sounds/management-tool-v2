@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { copyToClipboard } from "@/lib/copyText";
+import { McpConnectionGuide } from "./McpConnectionGuide";
+import { McpChangeHistory } from "./McpChangeHistory";
 
 type McpScope = "organization" | "board";
 
@@ -37,6 +39,7 @@ type AccessTokenSummary = {
   name: string;
   tokenPrefix: string;
   lastUsedAt: string | null;
+  scopes: string[];
 };
 
 const SCOPES: { id: McpScope; labelKey: "mcpScopeOrganization" | "mcpScopeBoard" }[] = [
@@ -73,13 +76,15 @@ export function McpSettings() {
   const [endpoint, setEndpoint] = useState("/api/mcp");
   const [copied, setCopied] = useState<"url" | "config" | "token" | null>(null);
   const [tokenName, setTokenName] = useState("");
+  const [access, setAccess] = useState<"read" | "write">("read");
   const [createdToken, setCreatedToken] = useState("");
   const [creating, setCreating] = useState(false);
   const [tokens, setTokens] = useState<AccessTokenSummary[]>([]);
   const tokenListRequest = useRef(0);
 
   useEffect(() => {
-    setEndpoint(`${window.location.origin}/api/mcp`);
+    const configured = process.env.NEXT_PUBLIC_APP_URL;
+    setEndpoint(`${configured ? new URL(configured).origin : window.location.origin}/api/mcp`);
   }, []);
 
   useEffect(() => {
@@ -181,7 +186,7 @@ export function McpSettings() {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: tokenName.trim() }),
+        body: JSON.stringify({ name: tokenName.trim(), access }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(typeof data?.error === "string" ? data.error : t("mcpTokenCreateError"));
@@ -249,6 +254,7 @@ export function McpSettings() {
       </div>
 
       <div className="space-y-3">
+        <McpConnectionGuide endpoint={endpoint} />
         <div className="grid gap-2 sm:grid-cols-2">
           {SCOPES.map((item) => (
             <button
@@ -379,6 +385,7 @@ export function McpSettings() {
                 />
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={access === "write"} onChange={(event) => setAccess(event.target.checked ? "write" : "read")} />{t("mcpWriteAccess")}</label>
                 <Button type="submit" disabled={!canCreate || creating}>
                   {creating && <Loader2 size={14} className="animate-spin" />}
                   {t("mcpCreateToken")}
@@ -394,6 +401,7 @@ export function McpSettings() {
                   <div key={token.id} className="flex items-center justify-between gap-2 text-sm">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{token.name}</p>
+                      <p className="text-xs text-muted-foreground">{t(token.scopes?.includes("tickets:write") ? "mcpReadWrite" : "mcpReadOnly")}</p>
                       <p className="text-xs text-muted-foreground">
                         {token.tokenPrefix}…
                         {" · "}
@@ -452,6 +460,7 @@ export function McpSettings() {
               </p>
             </div>
           </div>
+          {allowed && <McpChangeHistory key={`${organization.id}:${scope}:${board?.id ?? ""}`} organizationId={organization.id} boardId={scope === "board" ? board?.id ?? null : null} />}
         </>
       )}
     </div>

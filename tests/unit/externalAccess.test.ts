@@ -7,6 +7,11 @@ import {
 } from "@/lib/externalAccess";
 
 describe("external access tokens", () => {
+  it("keeps read-only as the default and accepts write access only explicitly", () => {
+    expect(readTokenRequest({ name: "Claude" })).toEqual({ name: "Claude", expiresAt: null });
+    expect(readTokenRequest({ name: "Claude", access: "write" })).toEqual({ name: "Claude", expiresAt: null, access: "write" });
+    expect(readTokenRequest({ name: "Claude", access: "admin" })).toHaveProperty("error");
+  });
   it("creates opaque tokens and only exposes a hash for storage", () => {
     const first = createExternalAccessToken();
     const second = createExternalAccessToken();

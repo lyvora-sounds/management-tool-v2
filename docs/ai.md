@@ -60,13 +60,37 @@ never accept a board id: `get_project`, `list_tickets`, and `get_ticket` derive
 the organization and board from the credential. Tickets are not filtered by
 environment.
 
-Credentials expose only the `tickets:read` scope. Plaintext tokens are returned
+Credentials always expose `tickets:read`; Settings can opt into `tickets:write`. Plaintext tokens are returned
 once, while only their SHA-256 hashes are stored. They can expire and can be
 revoked. A successful MCP call records `lastUsedAt`; authentication itself does
 not write.
 
 See `mcp/README.md` for provisioning and connection examples.
 
+ChatGPT uses OAuth rather than pasted bearer-header JSON. Public discovery at
+`/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server`
+advertises a user-created or legacy predefined confidential client, PKCE S256, and read/optional write scopes.
+`/api/mcp/oauth/authorize` validates the request and redirects to the protected
+`/dashboard/mcp-authorize` consent page. The user selects an organization or
+board they may administer; consent creates a revocable external-access
+credential and a hashed, five-minute authorization code. `/api/mcp/oauth/token`
+exchanges it once for a resource-bound one-hour access token and a rotating
+refresh token. The connection expires after 30 days. Revocation and board
+transfers invalidate access and refresh. Required deployment configuration and
+the manual ChatGPT linking check are documented in `mcp/README.md`.
+
 `/dashboard/settings?tab=mcp` creates either credential and shows it once in a
 field that can be selected or copied. The board Integrations dialog creates the
 board credential.
+
+Users generate account-owned ChatGPT client credentials in Settings → MCP.
+The callback is allowlisted exactly, the secret is shown once and stored only
+as a hash, and client revocation invalidates its grants. The legacy deployment
+client remains optional. See `mcp/README.md` for provider-specific guides.
+
+Writable MCP connections add task creation and batches of up to 50 task updates
+on one board, plus conflict-safe revert. Each write checks the creator's current
+board edit permission and saves task state, a `McpChange` journal and board
+activity atomically. Read-only tokens do not expose mutation tools. OAuth write
+access requires a write-enabled client and explicit consent. See `mcp/README.md`
+for supported fields, history access and rollback limitations.

@@ -32,6 +32,7 @@ model User {
   createdOrganizations Organization[]        @relation("OrganizationCreator")
   organizationMembers  OrganizationMember[]
   teamMembers          TeamMember[]
+  mcpOAuthClients      McpOAuthClient[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -119,6 +120,7 @@ model Board {
   customFields         CustomField[]
   externalAccessTokens ExternalAccessToken[]
   teamAccess           BoardTeamAccess[]
+  mcpChanges           McpChange[]
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -142,6 +144,7 @@ model Organization {
   teams                Team[]
   boards               Board[]
   externalAccessTokens ExternalAccessToken[]
+  mcpChanges           McpChange[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -236,9 +239,62 @@ model ExternalAccessToken {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  oauthGrant McpOAuthGrant?
+
   @@index([organizationId])
   @@index([boardId])
   @@index([createdById])
+}
+
+/// OAuth authorization code and rotating tokens. Only hashes are persisted.
+model McpOAuthGrant {
+  id String @id @default(cuid())
+  externalAccessTokenId String @unique
+  externalAccessToken ExternalAccessToken @relation(fields: [externalAccessTokenId], references: [id], onDelete: Cascade)
+  clientId String
+  redirectUri String
+  resource String
+  codeHash String? @unique
+  codeChallenge String
+  codeExpiresAt DateTime
+  accessTokenHash String? @unique
+  accessExpiresAt DateTime?
+  refreshTokenHash String? @unique
+  refreshExpiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+/// User-created ChatGPT OAuth client; plaintext secret is returned once.
+model McpOAuthClient {
+  id String @id
+  secretHash String
+  allowWrite Boolean @default(false)
+  redirectUris String[]
+  createdById String
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([createdById])
+}
+
+/// Atomic MCP task batches and their before/after snapshots for safe revert.
+model McpChange {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  boardId String
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tokenId String?
+  actorId String
+  kind String
+  summary String
+  before Json
+  after Json
+  revertsChangeId String? @unique
+  revertedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([organizationId, createdAt])
+  @@index([boardId, createdAt])
 }
 
 model BoardMember {
