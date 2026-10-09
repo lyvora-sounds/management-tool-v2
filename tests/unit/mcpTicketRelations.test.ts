@@ -4,7 +4,7 @@ vi.mock("@/lib/boardAccess", () => ({ canReadBoard: (...args: unknown[]) => read
 vi.mock("@/lib/db", () => ({ default: {} }));
 vi.mock("@vercel/blob", () => ({ put: (...args: unknown[]) => put(...args), del: (...args: unknown[]) => del(...args) }));
 vi.mock("@/lib/notifications/webhooks", () => ({ sendBoardWebhookNotification: vi.fn() }));
-const { parseRelationPatch, validateTicketRelations, applyTicketRelations, cleanupTicketUploads } = await import("@/lib/mcp/ticketRelations");
+const { parseRelationPatch, validateTicketRelations, applyTicketRelations, restoreTicketRelations, cleanupTicketUploads } = await import("@/lib/mcp/ticketRelations");
 const { parseTaskPatch, snapshotsMatch, taskSnapshot } = await import("@/lib/mcp/writes");
 const actor = { id: "actor", name: "Daniel" };
 const task = { id: "ticket", title: "Ticket to test", assigneeId: null, qaId: null, shareToken: null, collaborators: [], labels: [], customValues: [], subtasks: [], comments: [], attachments: [] };
@@ -15,7 +15,7 @@ function transaction() {
     epic: { findFirst: vi.fn().mockResolvedValue({ id: "epic" }) }, label: { count: vi.fn().mockResolvedValue(1) },
     task: { ...model(), count: vi.fn().mockResolvedValue(0), findFirst: vi.fn() },
     customField: { findFirst: vi.fn().mockResolvedValue({ id: "environment", type: "SELECT", defaultKey: "environment", options: ["dev", "production"] }) },
-    customFieldValue: { upsert: vi.fn(), findUnique: vi.fn().mockResolvedValue(null) },
+    customFieldValue: { ...model(), upsert: vi.fn(), findUnique: vi.fn().mockResolvedValue(null) },
     notification: model(), taskCollaborator: model(), taskLabel: model(), subtask: model(), comment: model(), attachment: model(),
   };
 }
@@ -87,6 +87,38 @@ describe("expanded MCP ticket fields", () => {
     expect(tx.attachment.create).toHaveBeenCalledWith({ data: { taskId: "ticket", filename: "test.txt", size: 5, url: uploaded[0] } });
     await cleanupTicketUploads(uploaded); expect(del).toHaveBeenCalledWith(uploaded[0]);
     for (const row of [{ filename: "../test", contentBase64: "" }, { filename: "test", contentBase64: "invalid?" }, { id: "existing", filename: "test", contentBase64: "" }]) expect(() => parseRelationPatch({ attachments: [row] })).toThrow();
+  });
+  it("allows scalar reverts without assignment permission when assignments are unchanged", async () => {
+    const tx = transaction(); tx.board.findUnique.mockResolvedValue({ memberCanAssign: false }); tx.label.count.mockResolvedValue(0);
+    const full = { ...task, description: null, listId: "list", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, startDate: null, dueDate: null, updatedAt: new Date(), epicId: null, quarter: null };
+    await restoreTicketRelations(tx as unknown as Tx, "board", actor, full, taskSnapshot({ ...full, title: "Original title" }));
+    expect(tx.board.findUnique).not.toHaveBeenCalled();
+    expect(tx.taskCollaborator.deleteMany).not.toHaveBeenCalled();
+    expect(tx.notification.create).not.toHaveBeenCalled();
+  });
+  it("does not revalidate or rewrite unchanged people, including reordered collaborators", async () => {
+    const tx = transaction(); tx.board.findUnique.mockResolvedValue({ memberCanAssign: false }); tx.label.count.mockResolvedValue(0); readable.mockResolvedValue(false);
+    const full = { ...task, assigneeId: "former-member", qaId: "qa", collaborators: [{ userId: "one" }, { userId: "two" }], description: null, listId: "list", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, startDate: null, dueDate: null, updatedAt: new Date(), epicId: null, quarter: null };
+    await restoreTicketRelations(tx as unknown as Tx, "board", actor, full, taskSnapshot({ ...full, collaborators: [...full.collaborators].reverse() }));
+    expect(readable).not.toHaveBeenCalled(); expect(tx.board.findUnique).not.toHaveBeenCalled();
+    expect(tx.taskCollaborator.deleteMany).not.toHaveBeenCalled(); expect(tx.notification.create).not.toHaveBeenCalled();
+  });
+  it("still enforces assignment permission when a revert changes or clears people", async () => {
+    const full = { ...task, description: null, listId: "list", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, startDate: null, dueDate: null, updatedAt: new Date(), epicId: null, quarter: null };
+    for (const current of [{ ...full, assigneeId: "mario" }, { ...full, qaId: "mario" }, { ...full, collaborators: [{ userId: "mario" }] }]) {
+      const tx = transaction(); tx.board.findUnique.mockResolvedValue({ memberCanAssign: false }); tx.label.count.mockResolvedValue(0);
+      await expect(restoreTicketRelations(tx as unknown as Tx, "board", actor, current, taskSnapshot(full))).rejects.toThrow("permission");
+      expect(tx.taskCollaborator.deleteMany).not.toHaveBeenCalled();
+    }
+  });
+  it("validates and notifies newly restored people when assignment permission is available", async () => {
+    const tx = transaction(); tx.label.count.mockResolvedValue(0);
+    const full = { ...task, description: null, listId: "list", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, startDate: null, dueDate: null, updatedAt: new Date(), epicId: null, quarter: null };
+    const previous = taskSnapshot({ ...full, qaId: "mario", collaborators: [{ userId: "watcher" }] });
+    await restoreTicketRelations(tx as unknown as Tx, "board", actor, full, previous);
+    expect(readable).toHaveBeenCalledWith("mario", "board"); expect(readable).toHaveBeenCalledWith("watcher", "board");
+    expect(tx.taskCollaborator.createMany).toHaveBeenCalledWith({ data: [{ taskId: "ticket", userId: "watcher" }] });
+    expect(tx.notification.create).toHaveBeenCalledTimes(2);
   });
   it("detects later nested relation edits in revert snapshots", () => {
     const snapshot = taskSnapshot({ ...task, description: null, listId: "list", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, startDate: null, dueDate: null, updatedAt: new Date(), epicId: null, quarter: null });

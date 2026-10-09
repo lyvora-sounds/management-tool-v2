@@ -229,6 +229,14 @@ lets an administrator inspect and confirm a revert. The session-protected
 access; MCP history remains bounded to its credential's organization/board.
 
 `revert_change` previews by default; use `confirm: true` only after approval.
+The Settings history preview shows current and restored values for every
+journaled field, including assignments, custom values, comments, checklist,
+attachments and sharing. It resolves names where available and counts entries
+that will be removed, restored or changed. Created tickets are explicitly shown
+as being archived while retaining their content. Legacy journals retain their
+original scalar previews. Assignment permissions are checked during revert only
+when assignee, QA or collaborator membership changes; scalar-only reverts do
+not require assignment permission or revalidate unchanged recipients.
 The entire revert is rejected if any affected task changed afterward or its
 original list disappeared. Relation snapshots also detect later comment,
 attachment, checklist and custom-value edits, even when the task timestamp did

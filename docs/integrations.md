@@ -60,7 +60,10 @@ ChatGPT connects through the OAuth flow described in `mcp/README.md`. Settings
 clients. OAuth-created ChatGPT credentials appear in the same scope's token
 list and use the existing revocation endpoints.
 
-Settings → MCP now offers ChatGPT, Claude, Grok CLI/API and Gemini CLI guides.
+Settings → MCP offers ChatGPT, Claude, Grok CLI/API and Gemini CLI guides.
+The guide pairs expandable numbered instructions with a connection panel, keeps
+access guidance and troubleshooting available on demand, and collapses existing
+ChatGPT setups beneath the credential form.
 ChatGPT clients are created per account in the app with an exact callback URL
 and a one-time secret, eliminating deployment-secret setup for end users.
 

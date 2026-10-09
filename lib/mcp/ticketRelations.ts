@@ -185,7 +185,15 @@ export async function applyTicketRelations(tx: Prisma.TransactionClient, boardId
 
 export async function restoreTicketRelations(tx: Prisma.TransactionClient, boardId: string, actor: Actor, current: State, previous: Snapshot) {
   if (previous.assigneeId === undefined) return; // Journal from the original MCP version.
-  await validateTicketRelations(tx, boardId, actor, { assigneeId: previous.assigneeId, qaId: previous.qaId, epicId: previous.epicId, collaboratorIds: previous.collaborators.map(row => row.userId), labelIds: previous.labels.map(row => row.labelId) });
+  const collaboratorIds = previous.collaborators.map(row => row.userId);
+  const collaboratorsChanged = collaboratorIds.length !== current.collaborators.length ||
+    current.collaborators.some(row => !collaboratorIds.includes(row.userId));
+  await validateTicketRelations(tx, boardId, actor, {
+    ...(previous.assigneeId !== current.assigneeId ? { assigneeId: previous.assigneeId } : {}),
+    ...(previous.qaId !== current.qaId ? { qaId: previous.qaId } : {}),
+    ...(collaboratorsChanged ? { collaboratorIds } : {}),
+    epicId: previous.epicId, labelIds: previous.labels.map(row => row.labelId),
+  });
   for (const comment of previous.comments) {
     const now = current.comments.find(row => row.id === comment.id);
     if ((!now || now.content !== comment.content) && comment.userId !== actor.id && !(await isBoardAdmin(actor.id, boardId))) throw new McpWriteError("No permission to restore another author's comment");
@@ -194,9 +202,11 @@ export async function restoreTicketRelations(tx: Prisma.TransactionClient, board
     const old = previous.comments.find(row => row.id === comment.id);
     if ((!old || old.content !== comment.content) && comment.userId !== actor.id && !(await isBoardAdmin(actor.id, boardId))) throw new McpWriteError("No permission to revert another author's comment");
   }
-  for (const row of previous.collaborators) if (!current.collaborators.some(now => now.userId === row.userId)) await notify(tx, boardId, actor, current, row.userId, "collaborator_added", "notifications.addedYouCollaborator");
-  await tx.taskCollaborator.deleteMany({ where: { taskId: current.id } });
-  await tx.taskCollaborator.createMany({ data: previous.collaborators.map(row => ({ ...row, taskId: current.id })) });
+  if (collaboratorsChanged) {
+    for (const row of previous.collaborators) if (!current.collaborators.some(now => now.userId === row.userId)) await notify(tx, boardId, actor, current, row.userId, "collaborator_added", "notifications.addedYouCollaborator");
+    await tx.taskCollaborator.deleteMany({ where: { taskId: current.id } });
+    await tx.taskCollaborator.createMany({ data: previous.collaborators.map(row => ({ ...row, taskId: current.id })) });
+  }
   await tx.taskLabel.deleteMany({ where: { taskId: current.id } });
   await tx.taskLabel.createMany({ data: previous.labels.map(row => ({ ...row, taskId: current.id })) });
   await tx.customFieldValue.deleteMany({ where: { taskId: current.id } });

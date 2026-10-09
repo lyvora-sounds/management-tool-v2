@@ -19,7 +19,7 @@ export function SidebarItem({ item }: Props) {
       className={cn(
         "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition",
         isActive
-          ? "bg-muted font-medium"
+          ? "workspace-nav-active font-medium text-primary"
           : "text-muted-foreground hover:bg-muted"
       )}
     >

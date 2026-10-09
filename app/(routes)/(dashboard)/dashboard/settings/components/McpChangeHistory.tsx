@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { changedHistoryFields, formatHistoryValue, historyRelationImpact, type HistoryNames, type HistorySnapshot } from "@/lib/mcp/historyPreview";
 import { Button } from "@/components/ui/button";
 
 type Change = { id: string; kind: string; summary: string; createdAt: string; revertedAt: string | null };
-type Snapshot = { id: string; title: string; [key: string]: string | number | boolean | null };
-type Detail = { id: string; kind: string; summary: string; before: Snapshot[]; after: Snapshot[]; listNames: Record<string, string> };
-const fields = ["title", "description", "priority", "listId", "completed", "archived", "startDate", "dueDate"] as const;
+type Detail = HistoryNames & { id: string; kind: string; summary: string; before: HistorySnapshot[]; after: HistorySnapshot[] };
 
 export function McpChangeHistory({ organizationId, boardId }: { organizationId: string; boardId: string | null }) {
   const t = useTranslations("mcpHistory");
@@ -59,11 +58,9 @@ export function McpChangeHistory({ organizationId, boardId }: { organizationId: 
     finally { setBusy(false); }
   }
 
-  function value(raw: Snapshot[string], field: string) {
-    if (raw === null || raw === undefined) return "—";
-    if (typeof raw === "boolean") return t(raw ? "yes" : "no");
-    if (field === "listId") return detail?.listNames[String(raw)] ?? t("missingList");
-    return String(raw);
+  function fieldLabel(field: string) {
+    const key = `fields.${field}` as Parameters<typeof t>[0];
+    return t.has(key) ? t(key) : field;
   }
 
   return <section className="rounded-xl border bg-card p-5 space-y-4">
@@ -76,7 +73,18 @@ export function McpChangeHistory({ organizationId, boardId }: { organizationId: 
       <h4 className="font-semibold">{t("previewTitle")}</h4><p className="text-sm text-muted-foreground">{t("previewHint")}</p>
       {detail.after.map((after) => {
         const before = detail.before.find((item) => item.id === after.id);
-        return <div key={after.id} className="rounded border p-3 space-y-2"><p className="text-sm font-medium">{after.title}</p>{!before ? <p className="text-sm">{t("archiveCreated")}</p> : fields.filter((field) => before[field] !== after[field]).map((field) => <div key={field} className="text-sm"><p className="font-medium">{t(`fields.${field}`)}</p><p className="max-h-32 overflow-auto whitespace-pre-wrap break-words text-muted-foreground">{value(after[field], field)} → {value(before[field], field)}</p></div>)}</div>;
+        return <div key={after.id} className="rounded border p-3 space-y-2">
+          <p className="text-sm font-medium">{after.title}</p>
+          {!before ? <p className="text-sm">{t("archiveCreated")}</p> : changedHistoryFields(before, after).map(field => <div key={field} className="text-sm space-y-1">
+            <p className="font-medium">{fieldLabel(field)}</p>
+            {field === "shareToken" && before[field] && after[field] ? <p className="text-muted-foreground">{t("sharingLinkChanged")}</p> : null}
+            {Array.isArray(before[field]) && Array.isArray(after[field]) ? <p className="text-xs text-muted-foreground">{t("relationImpact", historyRelationImpact(field, before[field], after[field]))}</p> : null}
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div><p className="text-xs font-medium">{t("currentValue")}</p><p className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-muted-foreground">{formatHistoryValue(field, after[field], detail, key => t(key))}</p></div>
+              <div><p className="text-xs font-medium">{t("restoredValue")}</p><p className="max-h-48 overflow-auto whitespace-pre-wrap break-words text-muted-foreground">{formatHistoryValue(field, before[field], detail, key => t(key))}</p></div>
+            </div>
+          </div>)}
+        </div>;
       })}
       <div className="flex flex-wrap gap-2"><Button type="button" disabled={busy} onClick={revert}>{t("confirmRevert")}</Button><Button type="button" disabled={busy} variant="outline" onClick={() => setDetail(null)}>{t("cancel")}</Button></div>
     </div>}

@@ -247,7 +247,16 @@ export async function revertMcpChange(context: ExternalAccessContext, changeId: 
       else {
         const target = await tx.list.findFirst({ where: { id: previous.listId, boardId: change.boardId } });
         if (!target) throw new McpWriteError("The original list no longer exists. Nothing was reverted.");
-        const fields = { title: previous.title, description: previous.description, listId: previous.listId, order: previous.order, completed: previous.completed, completedById: previous.completedById, archived: previous.archived, priority: previous.priority, ...(previous.assigneeId !== undefined ? { assigneeId: previous.assigneeId, qaId: previous.qaId, epicId: previous.epicId, quarter: previous.quarter, shareToken: previous.shareToken } : {}) };
+        const fields = {
+          title: previous.title, description: previous.description, listId: previous.listId,
+          order: previous.order, completed: previous.completed, completedById: previous.completedById,
+          archived: previous.archived, priority: previous.priority,
+          ...(previous.assigneeId !== undefined ? {
+            ...(previous.assigneeId !== current.assigneeId ? { assigneeId: previous.assigneeId } : {}),
+            ...(previous.qaId !== current.qaId ? { qaId: previous.qaId } : {}),
+            epicId: previous.epicId, quarter: previous.quarter, shareToken: previous.shareToken,
+          } : {}),
+        };
         data = { ...fields, completedAt: previous.completedAt ? new Date(previous.completedAt) : null, archivedAt: previous.archivedAt ? new Date(previous.archivedAt) : null,
           startDate: previous.startDate ? new Date(previous.startDate) : null, dueDate: previous.dueDate ? new Date(previous.dueDate) : null };
       }
