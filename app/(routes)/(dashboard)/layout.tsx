@@ -28,10 +28,10 @@ export default async function LayoutDashboard({
   })();
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="workspace-theme">
       <BoardsStoreInitializer boards={boards} ownUserId={dbUserId} />
       <AppSidebar />
-      <main className="flex flex-col flex-1 min-h-svh w-full overflow-auto min-w-0">
+      <main className="workspace-background flex flex-col flex-1 min-h-svh w-full overflow-auto min-w-0">
         <Navbar />
         {children}
       </main>

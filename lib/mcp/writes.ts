@@ -4,6 +4,7 @@ import { canEditBoard } from "@/lib/boardAccess";
 import { type ExternalAccessContext, TICKETS_WRITE_SCOPE } from "@/lib/externalAccess";
 import { encodeLogMessage } from "@/lib/activityMessages";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
+import { cleanupTicketUploads, applyTicketRelations, parseRelationPatch, relationSelect, restoreTicketRelations, validateTicketRelations } from "./ticketRelations";
 import { isDoneList } from "@/lib/statusTheme";
 
 export class McpWriteError extends Error {}
@@ -13,31 +14,45 @@ const select = {
   completed: true, completedAt: true, completedById: true,
   archived: true, archivedAt: true, priority: true,
   startDate: true, dueDate: true, updatedAt: true,
+  assigneeId: true, qaId: true, epicId: true, quarter: true, shareToken: true,
+  ...relationSelect,
 } as const;
 type TaskState = Prisma.TaskGetPayload<{ select: typeof select }>;
-type Snapshot = Omit<TaskState, "completedAt" | "archivedAt" | "startDate" | "dueDate" | "updatedAt"> & {
+export type Snapshot = Omit<TaskState, "completedAt" | "archivedAt" | "startDate" | "dueDate" | "updatedAt" | "comments" | "attachments" | "subtasks"> & {
+  subtasks: { id: string; title: string; completed: boolean; order: number; createdAt: string }[];
+  comments: { id: string; content: string; userId: string; createdAt: string; updatedAt: string }[];
+  attachments: { id: string; filename: string; url: string; size: number; createdAt: string }[];
   completedAt: string | null; archivedAt: string | null;
   startDate: string | null; dueDate: string | null; updatedAt: string;
 };
-type Patch = Partial<Pick<TaskState, "title" | "description" | "listId" | "completed" | "archived" | "priority" | "startDate" | "dueDate">>;
+type Patch = Partial<Pick<TaskState, "title" | "description" | "listId" | "completed" | "archived" | "priority" | "startDate" | "dueDate" | "assigneeId" | "qaId" | "epicId" | "quarter" | "order">> & ReturnType<typeof parseRelationPatch>;
 
 export function taskSnapshot(task: TaskState): Snapshot {
-  return { ...task, completedAt: task.completedAt?.toISOString() ?? null, archivedAt: task.archivedAt?.toISOString() ?? null,
+  return { ...task, subtasks: (task.subtasks ?? []).map(row => ({ ...row, createdAt: row.createdAt.toISOString() })), comments: (task.comments ?? []).map(row => ({ ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() })), attachments: (task.attachments ?? []).map(row => ({ ...row, createdAt: row.createdAt.toISOString() })), completedAt: task.completedAt?.toISOString() ?? null, archivedAt: task.archivedAt?.toISOString() ?? null,
     startDate: task.startDate?.toISOString() ?? null, dueDate: task.dueDate?.toISOString() ?? null, updatedAt: task.updatedAt.toISOString() };
 }
 
 export function snapshotsMatch(current: Snapshot, expected: Snapshot) {
-  return Object.keys(current).every((key) => current[key as keyof Snapshot] === expected[key as keyof Snapshot]);
+  const canonical = (value: unknown): string => JSON.stringify(value, (_key, item) => item && typeof item === "object" && !Array.isArray(item) ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b))) : item);
+  // Older journals contain only the original scalar fields.
+  return Object.keys(expected).every(key => canonical(current[key as keyof Snapshot]) === canonical(expected[key as keyof Snapshot]));
 }
 
 export function parseTaskPatch(value: unknown): Patch {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new McpWriteError("Changes must be an object");
-  const fields = new Set(["title", "description", "listId", "completed", "archived", "priority", "startDate", "dueDate"]);
+  const fields = new Set(["title", "description", "listId", "completed", "archived", "priority", "startDate", "dueDate", "assigneeId", "qaId", "epicId", "quarter", "order", "collaboratorIds", "labelIds", "customFields", "subtasks", "comments", "attachments", "shared"]);
   const entries = Object.entries(value);
   if (!entries.length || entries.some(([key]) => !fields.has(key))) throw new McpWriteError("Unsupported or empty task changes");
-  const patch: Patch = {};
+  const patch: Patch = parseRelationPatch(value as Record<string, unknown>);
   for (const [key, raw] of entries) {
-    if (key === "title" || key === "listId") {
+    if (["assigneeId", "qaId", "epicId", "quarter"].includes(key)) {
+      if (raw !== null && (typeof raw !== "string" || !raw.trim() || raw.length > 200)) throw new McpWriteError(`Invalid ${key}`);
+      if (key === "quarter" && raw !== null && !/^\d{4}-Q[1-4]$/.test(raw as string)) throw new McpWriteError("Invalid quarter");
+      Object.assign(patch, { [key]: raw });
+    } else if (key === "order") {
+      if (!Number.isSafeInteger(raw) || (raw as number) < 0) throw new McpWriteError("Invalid order");
+      patch.order = raw as number;
+    } else if (key === "title" || key === "listId") {
       if (typeof raw !== "string" || !raw.trim() || raw.length > (key === "title" ? 500 : 200)) throw new McpWriteError(`Invalid ${key}`);
       patch[key] = raw.trim();
     } else if (key === "description") {
@@ -106,20 +121,41 @@ async function completionNotification(boardId: string, actorName: string, before
 }
 
 export async function createMcpTicket(context: ExternalAccessContext, args: Record<string, unknown>) {
-  const patch = parseTaskPatch({ title: args.title, listId: args.listId, ...(args.description !== undefined ? { description: args.description } : {}), ...(args.priority !== undefined ? { priority: args.priority } : {}) });
+  const input = Object.fromEntries(Object.entries(args).filter(([key]) => key !== "summary"));
+  const patch = parseTaskPatch(input);
+  if ((patch.attachments ?? []).reduce((size, attachment) => size + (attachment.contentBase64 ? Buffer.byteLength(attachment.contentBase64, "base64") : 0), 0) > 5 * 1024 * 1024) throw new McpWriteError("Total upload size must not exceed 5 MiB");
+  if (!patch.title || !patch.listId) throw new McpWriteError("title and listId are required");
   const list = await db.list.findFirst({ where: { id: patch.listId!, board: boardScope(context) }, select: { boardId: true } });
   if (!list) throw new McpWriteError("List not found in this connection");
   const actor = await writeActor(context, list.boardId);
-  return db.$transaction(async (tx) => {
-    await validateCredential(tx, context);
-    const scopedList = await tx.list.findFirst({ where: { id: patch.listId!, boardId: list.boardId, board: boardScope(context) } });
-    if (!scopedList) throw new McpWriteError("List left this connection");
-    const last = await tx.task.findFirst({ where: { listId: scopedList.id }, orderBy: { order: "desc" }, select: { order: true } });
-    const task = await tx.task.create({ data: { title: patch.title!, description: patch.description, priority: patch.priority, listId: scopedList.id, order: (last?.order ?? -1) + 1 }, select });
-    const change = await tx.mcpChange.create({ data: { ...changeScope(context), boardId: list.boardId, tokenId: context.tokenId, actorId: actor.id, kind: "create", summary: summary(args.summary, `Create: ${task.title}`), before: [], after: [taskSnapshot(task)] } });
-    await activity(tx, list.boardId, actor, "activity.mcpCreated", 1);
-    return { changeId: change.id, ticket: taskSnapshot(task) };
-  }, { isolationLevel: "Serializable" });
+  const uploaded: string[] = [];
+  let result;
+  try {
+    result = await db.$transaction(async (tx) => {
+      await validateCredential(tx, context);
+      const scopedList = await tx.list.findFirst({ where: { id: patch.listId!, boardId: list.boardId, board: boardScope(context) } });
+      if (!scopedList) throw new McpWriteError("List left this connection");
+      const last = await tx.task.findFirst({ where: { listId: scopedList.id }, orderBy: { order: "desc" }, select: { order: true } });
+      if (patch.completed === undefined && isDoneList(scopedList.title)) patch.completed = true;
+      const scalar = await validateTicketRelations(tx, list.boardId, actor, patch);
+      const task = await tx.task.create({ data: { ...scalar, title: patch.title!, listId: scopedList.id, order: patch.order ?? (last?.order ?? -1) + 1, completedAt: patch.completed ? new Date() : null, completedById: patch.completed ? actor.id : null, archivedAt: patch.archived ? new Date() : null }, select });
+      const relatedBefore = new Map<string, Snapshot>();
+      const capture = async (id: string) => {
+        if (id === task.id || relatedBefore.has(id)) return;
+        const row = await tx.task.findFirst({ where: { id, list: { boardId: list.boardId } }, select });
+        if (!row) throw new McpWriteError("Related ticket must belong to the same board");
+        relatedBefore.set(id, taskSnapshot(row));
+      };
+      await applyTicketRelations(tx, list.boardId, actor, { ...task, assigneeId: null, qaId: null }, patch, capture, uploaded);
+      const created = await tx.task.findUniqueOrThrow({ where: { id: task.id }, select });
+      const relatedAfter = await Promise.all([...relatedBefore.keys()].map(id => tx.task.findUniqueOrThrow({ where: { id }, select })));
+      const change = await tx.mcpChange.create({ data: { ...changeScope(context), boardId: list.boardId, tokenId: context.tokenId, actorId: actor.id, kind: "create", summary: summary(args.summary, `Create: ${task.title}`), before: [...relatedBefore.values()], after: [taskSnapshot(created), ...relatedAfter.map(taskSnapshot)] } });
+      await activity(tx, list.boardId, actor, "activity.mcpCreated", 1);
+      return { changeId: change.id, ticket: taskSnapshot(created) };
+    }, { isolationLevel: "Serializable", timeout: 60000 });
+  } catch (error) { await cleanupTicketUploads(uploaded); throw error; }
+  if (result.ticket.completed) await sendBoardWebhookNotification({ boardId: list.boardId, eventType: "task_completed", taskTitle: result.ticket.title, priority: result.ticket.priority, userName: actor.name });
+  return result;
 }
 
 export async function updateMcpTickets(context: ExternalAccessContext, args: Record<string, unknown>) {
@@ -130,37 +166,52 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
     if (typeof item.ticketId !== "string" || !item.ticketId || item.ticketId.length > 200) throw new McpWriteError("Invalid ticketId");
     return { id: item.ticketId, patch: parseTaskPatch(item.changes) };
   });
+  const uploadBytes = updates.reduce((total, row) => total + (row.patch.attachments ?? []).reduce((size, attachment) => size + (attachment.contentBase64 ? Buffer.byteLength(attachment.contentBase64, "base64") : 0), 0), 0);
+  if (uploadBytes > 5 * 1024 * 1024) throw new McpWriteError("Total upload size must not exceed 5 MiB per batch");
   if (new Set(updates.map((item) => item.id)).size !== updates.length) throw new McpWriteError("Duplicate ticket IDs");
   const board = await db.task.findFirst({ where: { id: updates[0].id, list: { board: boardScope(context) } }, select: { list: { select: { boardId: true } } } });
   if (!board) throw new McpWriteError("Ticket not found in this connection");
   const boardId = board.list.boardId;
   const actor = await writeActor(context, boardId);
-  const result = await db.$transaction(async (tx) => {
-    await validateCredential(tx, context);
-    const before: Snapshot[] = []; const after: TaskState[] = [];
-    for (const update of updates) {
-      const task = await tx.task.findFirst({ where: { id: update.id, list: { boardId, board: boardScope(context) } }, select });
-      if (!task) throw new McpWriteError("All updates must belong to one board in this connection");
-      const patch = { ...update.patch };
-      if (patch.listId && patch.listId !== task.listId) {
-        const target = await tx.list.findFirst({ where: { id: patch.listId, boardId } });
-        if (!target) throw new McpWriteError("Target list must belong to the same board");
-        if (patch.completed === undefined) patch.completed = isDoneList(target.title) ? true : task.completed ? false : undefined;
-      }
-      const now = new Date();
-      const data = { ...patch,
-        ...(patch.completed !== undefined && patch.completed !== task.completed ? { completedAt: patch.completed ? now : null, completedById: patch.completed ? actor.id : null } : {}),
-        ...(patch.archived !== undefined && patch.archived !== task.archived ? { archivedAt: patch.archived ? now : null } : {}),
+  const uploaded: string[] = [];
+  let result;
+  try {
+    result = await db.$transaction(async (tx) => {
+      await validateCredential(tx, context);
+      const captured = new Map<string, Snapshot>();
+      const capture = async (id: string) => {
+        if (captured.has(id)) return;
+        const row = await tx.task.findFirst({ where: { id, list: { boardId, board: boardScope(context) } }, select });
+        if (!row) throw new McpWriteError("Related ticket must belong to the same board");
+        captured.set(id, taskSnapshot(row));
       };
-      const changed = await tx.task.updateMany({ where: { id: task.id, updatedAt: task.updatedAt }, data });
-      if (changed.count !== 1) throw new McpWriteError("A ticket changed concurrently. Retry with fresh ticket data.");
-      const updated = await tx.task.findUniqueOrThrow({ where: { id: task.id }, select });
-      before.push(taskSnapshot(task)); after.push(updated);
-    }
-    const change = await tx.mcpChange.create({ data: { ...changeScope(context), boardId, tokenId: context.tokenId, actorId: actor.id, kind: "update", summary: summary(args.summary, `Update ${updates.length} tickets`), before, after: after.map(taskSnapshot) } });
-    await activity(tx, boardId, actor, "activity.mcpUpdated", updates.length);
-    return { changeId: change.id, before, after };
-  }, { isolationLevel: "Serializable" });
+      for (const update of updates) {
+        const task = await tx.task.findFirst({ where: { id: update.id, list: { boardId, board: boardScope(context) } }, select });
+        if (!task) throw new McpWriteError("All updates must belong to one board in this connection");
+        const patch = { ...update.patch };
+        if (patch.listId && patch.listId !== task.listId) {
+          const target = await tx.list.findFirst({ where: { id: patch.listId, boardId } });
+          if (!target) throw new McpWriteError("Target list must belong to the same board");
+          if (patch.completed === undefined) patch.completed = isDoneList(target.title) ? true : task.completed ? false : undefined;
+        }
+        const now = new Date();
+        await capture(task.id);
+        const scalar = await validateTicketRelations(tx, boardId, actor, patch);
+        const data = { ...scalar, updatedAt: now,
+          ...(patch.completed !== undefined && patch.completed !== task.completed ? { completedAt: patch.completed ? now : null, completedById: patch.completed ? actor.id : null } : {}),
+          ...(patch.archived !== undefined && patch.archived !== task.archived ? { archivedAt: patch.archived ? now : null } : {}),
+        };
+        const changed = await tx.task.updateMany({ where: { id: task.id, updatedAt: task.updatedAt }, data });
+        if (changed.count !== 1) throw new McpWriteError("A ticket changed concurrently. Retry with fresh ticket data.");
+        await applyTicketRelations(tx, boardId, actor, task, patch, capture, uploaded);
+      }
+      const before = [...captured.values()];
+      const after = await Promise.all(before.map(row => tx.task.findUniqueOrThrow({ where: { id: row.id }, select })));
+      const change = await tx.mcpChange.create({ data: { ...changeScope(context), boardId, tokenId: context.tokenId, actorId: actor.id, kind: "update", summary: summary(args.summary, `Update ${updates.length} tickets`), before, after: after.map(taskSnapshot) } });
+      await activity(tx, boardId, actor, "activity.mcpUpdated", updates.length);
+      return { changeId: change.id, before, after };
+    }, { isolationLevel: "Serializable", timeout: 60000 });
+  } catch (error) { await cleanupTicketUploads(uploaded); throw error; }
   await completionNotification(boardId, actor.name, result.before, result.after);
   return { changeId: result.changeId, tickets: result.after.map(taskSnapshot) };
 }
@@ -182,6 +233,10 @@ export async function revertMcpChange(context: ExternalAccessContext, changeId: 
     await validateCredential(tx, context, sessionActorId);
     const marked = await tx.mcpChange.updateMany({ where: { id: change.id, revertedAt: null }, data: { revertedAt: new Date() } });
     if (marked.count !== 1) throw new McpWriteError("This change has already been reverted");
+    for (const expected of after) {
+      const current = await tx.task.findFirst({ where: { id: expected.id, list: { boardId: change.boardId, board: boardScope(context) } }, select });
+      if (!current || !snapshotsMatch(taskSnapshot(current), expected)) throw new McpWriteError("Revert conflict: a ticket has changed since this operation. Nothing was reverted.");
+    }
     const restored: TaskState[] = [];
     for (const expected of after) {
       const current = await tx.task.findFirst({ where: { id: expected.id, list: { boardId: change.boardId, board: boardScope(context) } }, select });
@@ -192,12 +247,22 @@ export async function revertMcpChange(context: ExternalAccessContext, changeId: 
       else {
         const target = await tx.list.findFirst({ where: { id: previous.listId, boardId: change.boardId } });
         if (!target) throw new McpWriteError("The original list no longer exists. Nothing was reverted.");
-        const fields = { title: previous.title, description: previous.description, listId: previous.listId, order: previous.order, completed: previous.completed, completedById: previous.completedById, archived: previous.archived, priority: previous.priority };
+        const fields = {
+          title: previous.title, description: previous.description, listId: previous.listId,
+          order: previous.order, completed: previous.completed, completedById: previous.completedById,
+          archived: previous.archived, priority: previous.priority,
+          ...(previous.assigneeId !== undefined ? {
+            ...(previous.assigneeId !== current.assigneeId ? { assigneeId: previous.assigneeId } : {}),
+            ...(previous.qaId !== current.qaId ? { qaId: previous.qaId } : {}),
+            epicId: previous.epicId, quarter: previous.quarter, shareToken: previous.shareToken,
+          } : {}),
+        };
         data = { ...fields, completedAt: previous.completedAt ? new Date(previous.completedAt) : null, archivedAt: previous.archivedAt ? new Date(previous.archivedAt) : null,
           startDate: previous.startDate ? new Date(previous.startDate) : null, dueDate: previous.dueDate ? new Date(previous.dueDate) : null };
       }
       const updated = await tx.task.updateMany({ where: { id: expected.id, updatedAt: current.updatedAt }, data });
       if (updated.count !== 1) throw new McpWriteError("Revert conflict: a ticket changed concurrently. Nothing was reverted.");
+      if (previous) await restoreTicketRelations(tx, change.boardId, actor, current, previous);
       restored.push(await tx.task.findUniqueOrThrow({ where: { id: expected.id }, select }));
     }
     const undo = await tx.mcpChange.create({ data: { ...changeScope(context), boardId: change.boardId, tokenId: context.tokenId || null, actorId: actor.id, kind: "revert", summary: `Revert ${change.id}`, before: after, after: restored.map(taskSnapshot), revertsChangeId: change.id } });

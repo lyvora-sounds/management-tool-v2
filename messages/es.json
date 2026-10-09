@@ -1372,6 +1372,33 @@
     "writeAccess": "Permitir crear, editar y archivar tareas con historial reversible"
   },
   "mcpGuide": {
+    "accessTitle": "Acceso y permisos",
+    "stepTitles": {
+        "chatgpt": {
+            "1": "Abre la configuración",
+            "2": "Crea credenciales OAuth",
+            "3": "Instala el conector",
+            "4": "Autoriza el acceso"
+        },
+        "claude": {
+            "1": "Crea un token con alcance",
+            "2": "Añade el conector",
+            "3": "Configura la autenticación",
+            "4": "Actívalo en una conversación"
+        },
+        "grok": {
+            "1": "Crea un token con alcance",
+            "2": "Configura tu token",
+            "3": "Añade el servidor MCP",
+            "4": "Empieza a usar Kikiboard"
+        },
+        "gemini": {
+            "1": "Crea un token con alcance",
+            "2": "Añade la configuración",
+            "3": "Configura tu token",
+            "4": "Comprueba la conexión"
+        }
+    },
     "title": "Conecta tu asistente de IA",
     "intro": "Elige tu asistente para ver las instrucciones. Las conexiones se limitan a una organización o un tablero. Solo lectura por defecto; los cambios requieren permiso explícito.",
     "provider": "Asistente de IA",
@@ -1457,7 +1484,29 @@
       "completed": "Completado",
       "archived": "Archivado",
       "startDate": "Fecha de inicio",
-      "dueDate": "Fecha de vencimiento"
-    }
+      "dueDate": "Fecha de vencimiento",
+      "assigneeId": "Responsable",
+      "qaId": "Revisor de QA",
+      "epicId": "Épica",
+      "quarter": "Trimestre",
+      "order": "Posición",
+      "shareToken": "Enlace público",
+      "collaborators": "Colaboradores",
+      "labels": "Etiquetas",
+      "customValues": "Campos personalizados",
+      "subtasks": "Lista de comprobación",
+      "comments": "Comentarios",
+      "attachments": "Archivos adjuntos",
+      "completedAt": "Fecha de finalización",
+      "completedById": "Completado por",
+      "archivedAt": "Fecha de archivo"
+    },
+    "currentValue": "Actual",
+    "restoredValue": "Después de revertir",
+    "sharingEnabled": "Activado",
+    "sharingDisabled": "Desactivado",
+    "sharingLinkChanged": "Al revertir, se restaura el enlace público anterior y se reemplaza el actual.",
+    "bytes": "bytes",
+    "relationImpact": "Al revertir, se eliminan {removed}, se restauran {restored} y se modifican {changed} elementos."
   }
 }

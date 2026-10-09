@@ -118,7 +118,7 @@ export default function CalendarPage() {
 
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 flex-1 min-h-0">
         {/* Calendar grid  */}
-        <div className="flex-1 min-w-0 flex flex-col gap-3">
+        <div className="workspace-calendar flex-1 min-w-0 flex flex-col gap-3 rounded-2xl border bg-card p-3 sm:p-4">
           {/* Month nav */}
           <div className="flex items-center justify-between">
             <Button variant="outline" size="icon" onClick={prevMonth}>
@@ -163,9 +163,9 @@ export default function CalendarPage() {
                   className={cn(
                     "flex flex-col items-center rounded-lg border p-1 sm:p-1.5 min-h-10 sm:min-h-16 transition-colors text-left",
                     isSelected
-                      ? "bg-primary text-primary-foreground border-primary"
+                      ? "workspace-selected-day bg-primary text-primary-foreground border-primary"
                       : isToday
-                        ? "bg-muted border-primary/50"
+                        ? "bg-primary/5 border-primary/30"
                         : "hover:bg-muted border-transparent hover:border-border",
                   )}
                 >
@@ -221,7 +221,7 @@ export default function CalendarPage() {
         <Separator className="sm:hidden" />
         <Separator orientation="vertical" className="hidden sm:block" />
         {/* Day detail panel */}
-        <div className="sm:w-72 sm:shrink-0 flex flex-col gap-3">
+        <div className="workspace-feature sm:w-72 sm:shrink-0 flex flex-col gap-3 rounded-2xl border p-4">
           {selected ? (
             <>
               <div className="flex items-center justify-between">

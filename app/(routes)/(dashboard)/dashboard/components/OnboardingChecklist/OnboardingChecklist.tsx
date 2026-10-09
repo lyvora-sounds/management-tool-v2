@@ -57,7 +57,7 @@ export function OnboardingChecklist({ state, firstBoardId }: OnboardingChecklist
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, height: 0, marginBottom: -24 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
-          className="relative overflow-hidden rounded-2xl border bg-card"
+          className="workspace-feature relative overflow-hidden rounded-2xl border bg-card"
           aria-label={t("title")}
         >
           {/* Halo de color: el mismo gesto del Hero, sin robar atención a los
@@ -95,7 +95,7 @@ export function OnboardingChecklist({ state, firstBoardId }: OnboardingChecklist
             <div className="flex items-center gap-3">
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                 <motion.div
-                  className="h-full rounded-full bg-primary"
+                  className="workspace-progress h-full rounded-full bg-primary"
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
                   transition={{ duration: 0.6, ease: "easeOut" }}

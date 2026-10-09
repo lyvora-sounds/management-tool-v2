@@ -237,17 +237,16 @@ export function McpSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
+      <div className="rounded-xl border bg-card p-5 sm:p-6 shadow-sm space-y-4">
         <div className="flex items-start gap-3">
           <div className="p-2 rounded-lg bg-primary/10 text-primary">
             <Bot size={20} />
           </div>
           <div className="space-y-1">
             <h2 className="text-lg font-semibold">{t("mcpTitle")}</h2>
-            <p className="text-sm text-muted-foreground">{t("mcpIntro")}</p>
           </div>
         </div>
-        <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 text-sm">
+        <div className="flex items-start gap-2 text-xs text-muted-foreground">
           <ShieldCheck size={16} className="mt-0.5 shrink-0 text-primary" />
           <p>{t("mcpOneOrgRule")}</p>
         </div>

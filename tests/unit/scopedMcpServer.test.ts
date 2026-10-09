@@ -7,9 +7,14 @@ const findBoard = vi.fn();
 const findOrganization = vi.fn();
 const findTasks = vi.fn();
 const findTask = vi.fn();
+const findFields = vi.fn();
+const findAttachment = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   default: {
+    customField: { findMany: (...args: unknown[]) => findFields(...args) },
+    attachment: { findFirst: (...args: unknown[]) => findAttachment(...args) },
+    user: { findMany: async () => [] },
     board: { findUnique: (...args: unknown[]) => findBoard(...args) },
     organization: { findUnique: (...args: unknown[]) => findOrganization(...args) },
     task: {
@@ -55,6 +60,8 @@ beforeEach(async () => {
   findTasks.mockReset();
   findTask.mockReset();
   findTasks.mockResolvedValue([]);
+  findFields.mockReset().mockResolvedValue([]);
+  findAttachment.mockReset().mockResolvedValue(null);
   ({ client, server } = await connect(boardContext));
 });
 
@@ -70,6 +77,7 @@ describe("scoped MCP server", () => {
       "get_project",
       "list_tickets",
       "get_ticket",
+      "get_attachment",
       "get_change_history",
     ]);
     for (const tool of result.tools) {
@@ -128,6 +136,11 @@ describe("scoped MCP server", () => {
     findTask.mockResolvedValue({
       id: "ticket-1",
       title: "Pay",
+      qaId: "mario", qa: { id: "mario", name: "Mario Ruby", email: "mario@test.invalid" },
+      assigneeId: "daniel", assignee: { id: "daniel", name: "Daniel Alvarez", email: "daniel@test.invalid" },
+      collaborators: [{ user: { id: "watcher", name: "Watcher", email: "watcher@test.invalid" } }],
+      subtasks: [{ id: "subtask", title: "Verify", completed: false, order: 0 }],
+      comments: [], attachments: [],
       list: { id: "list-1", title: "Doing", board: { id: "board-allowed", title: "Checkout" } },
       labels: [{ label: { id: "label-1", title: "bug", color: "#f00" } }],
       customValues: [{
@@ -149,6 +162,30 @@ describe("scoped MCP server", () => {
       value: "production",
     }]);
     expect(body.customValues).toBeUndefined();
+    expect(body.qa.name).toBe("Mario Ruby");
+    expect(body.assignee.name).toBe("Daniel Alvarez");
+    expect(body.collaborators[0].id).toBe("watcher");
+    expect(body.subtasks[0].id).toBe("subtask");
+  });
+
+  it("exposes unset field definitions and options on ticket reads", async () => {
+    findTask.mockResolvedValue({ id: "ticket", list: { id: "list", title: "Draft", board: { id: "board-allowed", title: "Board" } }, labels: [], customValues: [] });
+    findFields.mockResolvedValue([{ id: "env", name: "Environment", defaultKey: "environment", type: "SELECT", options: ["production"], enabled: true }]);
+    const result = await client.callTool({ name: "get_ticket", arguments: { ticketId: "ticket" } });
+    const body = JSON.parse((result.content as { text: string }[])[0].text);
+    expect(body.customFields[0]).toMatchObject({ id: "env", value: null, options: ["production"] });
+    expect(findFields.mock.calls[0][0].where).toEqual({ boardId: "board-allowed" });
+  });
+
+  it("filters assignments by name/email and paginates inside the credential scope", async () => {
+    await client.callTool({ name: "list_tickets", arguments: { person: "Daniel Alvarez", qaId: "mario", cursor: "last-ticket", limit: 10 } });
+    expect(findTasks.mock.calls[0][0]).toMatchObject({ where: { list: { boardId: "board-allowed" }, qaId: "mario", assignee: { OR: [{ name: { contains: "Daniel Alvarez", mode: "insensitive" } }, { email: { contains: "Daniel Alvarez", mode: "insensitive" } }] } }, cursor: { id: "last-ticket" }, skip: 1, take: 10 });
+  });
+
+  it("scopes attachment reads by both ticket and connection", async () => {
+    const result = await client.callTool({ name: "get_attachment", arguments: { ticketId: "ticket", attachmentId: "foreign" } });
+    expect(result.isError).toBe(true);
+    expect(findAttachment.mock.calls[0][0].where).toEqual({ id: "foreign", taskId: "ticket", task: { list: { boardId: "board-allowed" } } });
   });
 
   it("reads the bound board for get_project and refuses a board that left the organization", async () => {

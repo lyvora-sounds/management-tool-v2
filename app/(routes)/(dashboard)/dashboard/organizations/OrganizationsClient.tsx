@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { CSSProperties, FormEvent, useCallback, useEffect, useState } from "react";
 import { AlertTriangle, ArrowRightLeft, Building2, Check, ChevronDown, ChevronRight, ChevronsUpDown, FolderKanban, Loader2, Plus, Search, Trash2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -291,8 +291,8 @@ export function OrganizationsClient() {
             const canManage = organization.role === "owner" || organization.role === "admin";
             const open = expanded === organization.id;
             return (
-              <section key={organization.id} className="overflow-hidden rounded-xl border-l-4 border-y border-r bg-card shadow-sm" style={{ borderLeftColor: organization.boards[0]?.color ?? "var(--primary)" }}>
-                <button type="button" onClick={() => void toggle(organization.id)} className="flex w-full items-center gap-3 p-4 text-left hover:bg-muted/40">
+              <section key={organization.id} className="workspace-organization overflow-hidden rounded-xl border-l-4 border-y border-r bg-card shadow-sm" style={{ "--organization-color": organization.boards[0]?.color ?? "var(--primary)", borderLeftColor: "var(--organization-color)" } as CSSProperties}>
+                <button type="button" onClick={() => void toggle(organization.id)} className="workspace-organization-header flex w-full items-center gap-3 p-4 text-left hover:bg-muted/40">
                   {open ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                   <Building2 size={20} className="text-primary" />
                   <div className="min-w-0 flex-1">

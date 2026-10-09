@@ -1372,6 +1372,33 @@
     "writeAccess": "Payagan ang paggawa, pag-edit at pag-archive ng tasks na may nababaligtad na history"
   },
   "mcpGuide": {
+    "accessTitle": "Access at mga pahintulot",
+    "stepTitles": {
+        "chatgpt": {
+            "1": "Buksan ang connector settings",
+            "2": "Gumawa ng OAuth credentials",
+            "3": "I-install ang connector",
+            "4": "Aprubahan ang access"
+        },
+        "claude": {
+            "1": "Gumawa ng scoped token",
+            "2": "Idagdag ang connector",
+            "3": "I-configure ang authentication",
+            "4": "I-enable sa usapan"
+        },
+        "grok": {
+            "1": "Gumawa ng scoped token",
+            "2": "Itakda ang token",
+            "3": "Idagdag ang MCP server",
+            "4": "Simulang gamitin ang Kikiboard"
+        },
+        "gemini": {
+            "1": "Gumawa ng scoped token",
+            "2": "Idagdag ang configuration",
+            "3": "Itakda ang token",
+            "4": "Suriin ang koneksyon"
+        }
+    },
     "title": "Ikonekta ang iyong AI assistant",
     "intro": "Piliin ang assistant para sa mga tagubilin. Limitado ang koneksyon sa isang organisasyon o board. Read-only ang default; kailangan ng tahasang pahintulot para sa pagbabago.",
     "provider": "AI assistant",
@@ -1457,7 +1484,29 @@
       "completed": "Nakumpleto",
       "archived": "Naka-archive",
       "startDate": "Start date",
-      "dueDate": "Due date"
-    }
+      "dueDate": "Due date",
+      "assigneeId": "Nakatalagang tao",
+      "qaId": "Tagasuri ng QA",
+      "epicId": "Epic",
+      "quarter": "Quarter",
+      "order": "Posisyon",
+      "shareToken": "Pampublikong pagbabahagi",
+      "collaborators": "Mga collaborator",
+      "labels": "Mga label",
+      "customValues": "Mga custom fields",
+      "subtasks": "Checklist",
+      "comments": "Mga komento",
+      "attachments": "Mga attachment",
+      "completedAt": "Petsa ng pagkumpleto",
+      "completedById": "Kinumpleto ni",
+      "archivedAt": "Petsa ng pag-archive"
+    },
+    "currentValue": "Kasalukuyan",
+    "restoredValue": "Pagkatapos ibalik",
+    "sharingEnabled": "Naka-enable",
+    "sharingDisabled": "Naka-disable",
+    "sharingLinkChanged": "Ibabalik ang dating pampublikong link at papalitan ang kasalukuyan.",
+    "bytes": "bytes",
+    "relationImpact": "Aalisin ang {removed}, ibabalik ang {restored}, at babaguhin ang {changed} entry."
   }
 }
