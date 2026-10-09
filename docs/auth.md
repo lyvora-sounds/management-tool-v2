@@ -21,6 +21,13 @@ Identity has two stores: **Clerk** (session, OAuth, password) and **Neon `User`*
 
 Defined in `middleware.ts`:
 
+MCP routes `/api/mcp(.*)` and the two OAuth well-known discovery endpoints are
+public to Clerk. MCP enforces bearer authentication itself. OAuth authorization
+redirects to `/dashboard/mcp-authorize`, which requires a Clerk session; its
+consent action checks current board/organization admin access. Token exchanges
+require the predefined confidential client credentials and S256 PKCE for codes.
+See `mcp/README.md` for configuration and token lifetimes.
+
 | Public | Protected |
 |---|---|
 | `/`, `/functions`, `/stats`, `/privacy` | `/dashboard/*`, `/board/*` |

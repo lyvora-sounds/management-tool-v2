@@ -72,6 +72,7 @@ describe("scoped MCP server", () => {
       "get_ticket",
     ]);
     for (const tool of result.tools) {
+      expect(tool.annotations?.readOnlyHint).toBe(true);
       expect(tool.inputSchema.properties).not.toHaveProperty("boardId");
       expect(JSON.stringify(tool.inputSchema)).not.toContain("environment");
     }

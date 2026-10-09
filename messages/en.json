@@ -1053,7 +1053,10 @@
     "mcpToolsTitle": "Tools on this connection",
     "mcpToolProject": "get_project — the organization and its boards, or one board and its lists.",
     "mcpToolList": "list_tickets — tickets on this connection.",
-    "mcpToolGet": "get_ticket — one ticket on this connection."
+    "mcpToolGet": "get_ticket — one ticket on this connection.",
+    "mcpChatGptTitle": "ChatGPT connection",
+    "mcpChatGptInstructions": "In ChatGPT on the web, add a custom MCP server with the endpoint below and choose OAuth. Sign in to Kikiboard, select an organization or board, and allow read-only access.",
+    "mcpChatGptSetup": "Your administrator must configure the OAuth client ID, secret and callback URL first. The JSON below is for clients that support bearer headers; ChatGPT uses OAuth instead."
   },
   "calendar": {
     "title": "Calendar",
@@ -1346,5 +1349,19 @@
       "title": "Paste your AI key",
       "body": "With a key from your own provider you unlock Brain Dump, voice dictation and one-click rewriting. It is stored encrypted."
     }
+  },
+  "mcpOAuth": {
+    "title": "Connect ChatGPT to Kikiboard",
+    "description": "Choose the organization or board ChatGPT may read. This connection lasts up to 30 days.",
+    "permissions": "ChatGPT can read project information and tickets in the selected scope. It cannot edit them.",
+    "selection": "Connection scope",
+    "choose": "Choose an organization or board",
+    "organization": "Organization: {name} (all boards)",
+    "board": "Board: {name} ({organization})",
+    "noScopes": "You need organization or board admin access to create a connection.",
+    "revoke": "Revoke this connection in Settings → MCP by selecting its scope and removing the ChatGPT credential.",
+    "allow": "Allow access",
+    "deny": "Cancel",
+    "invalidRequest": "This connection request is invalid or ChatGPT OAuth has not been configured."
   }
 }

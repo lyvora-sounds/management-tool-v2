@@ -54,11 +54,17 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
     tools: [
       {
         name: "get_project",
+        securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
         description: `Get ${scopeDescription}.`,
         inputSchema: { type: "object", additionalProperties: false, properties: {} },
       },
       {
         name: "list_tickets",
+        securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
         description: `List tickets on ${scopeDescription}.`,
         inputSchema: {
           type: "object",
@@ -74,6 +80,9 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       },
       {
         name: "get_ticket",
+        securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
         description: `Get one ticket by ID when it belongs to ${scopeDescription}.`,
         inputSchema: {
           type: "object",
