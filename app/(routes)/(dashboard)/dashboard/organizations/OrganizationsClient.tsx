@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreateBoardModal } from "../components/boards/CreateBoardModal/CreateBoardModal";
+import { useBoardPolling } from "@/hooks/use-board-polling";
 
 type Board = { id: string; title: string; color: string | null; canMove: boolean };
 type Organization = {
@@ -57,7 +58,7 @@ export function OrganizationsClient() {
   const [moving, setMoving] = useState(false);
 
   const loadOrganizations = useCallback(async () => {
-    const response = await fetch("/api/organizations");
+    const response = await fetch("/api/organizations", { cache: "no-store" });
     if (!response.ok) throw new Error();
     setOrganizations(await response.json());
   }, []);
@@ -84,24 +85,36 @@ export function OrganizationsClient() {
     return () => window.clearTimeout(timer);
   }, [expanded, memberSearch]);
 
-  const loadDetails = async (organizationId: string) => {
+  const loadDetails = useCallback(async (organizationId: string, search = "") => {
     const [membersResponse, teamsResponse, peopleResponse] = await Promise.all([
-      fetch(`/api/organizations/${organizationId}/members`),
-      fetch(`/api/organizations/${organizationId}/teams`),
-      fetch(`/api/organizations/${organizationId}/available-members`),
+      fetch(`/api/organizations/${organizationId}/members`, { cache: "no-store" }),
+      fetch(`/api/organizations/${organizationId}/teams`, { cache: "no-store" }),
+      fetch(`/api/organizations/${organizationId}/available-members?q=${encodeURIComponent(search)}`, { cache: "no-store" }),
     ]);
+    if ([membersResponse, teamsResponse, peopleResponse].some((response) => response.status >= 500)) {
+      throw new Error("Unable to load organization details");
+    }
     const memberData = membersResponse.ok ? await membersResponse.json() : [];
     const teamData = teamsResponse.ok ? await teamsResponse.json() : [];
     const peopleData = peopleResponse.ok ? await peopleResponse.json() : [];
     setMembers((value) => ({ ...value, [organizationId]: memberData }));
     setTeams((value) => ({ ...value, [organizationId]: teamData }));
     setAvailablePeople((value) => ({ ...value, [organizationId]: peopleData }));
-  };
+  }, []);
+
+  const refreshOrganizations = useCallback(async () => {
+    await Promise.all([
+      loadOrganizations(),
+      ...(expanded ? [loadDetails(expanded, memberSearch)] : []),
+    ]);
+  }, [expanded, memberSearch, loadDetails, loadOrganizations]);
+
+  useBoardPolling(refreshOrganizations);
 
   const toggle = async (organizationId: string) => {
     const next = expanded === organizationId ? null : organizationId;
     setExpanded(next);
-    if (next && !members[next]) await loadDetails(next);
+    if (next) await loadDetails(next);
   };
 
   const createOrganization = async (event: FormEvent) => {
@@ -149,7 +162,7 @@ export function OrganizationsClient() {
       body: JSON.stringify({ userId, role }),
     });
     if (response.ok) {
-      await loadDetails(organizationId);
+      await Promise.all([loadDetails(organizationId), loadOrganizations()]);
       toast.success(t("memberRoleUpdated"));
     } else {
       const data = await response.json().catch(() => null);

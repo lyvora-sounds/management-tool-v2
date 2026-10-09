@@ -67,3 +67,16 @@ Attachments are private blobs. Download goes through `/api/tasks/[taskId]/attach
 - Dashboard aggregates pending, overdue, completed-this-week, assigned-to-me.
 - `/api/calendar` feeds the month view with due-dated tasks.
 - Cmd+K hits `/api/search`.
+
+### MCP task writes and history
+
+MCP read/write credentials support task creation, edits, moves, completion and
+archiving within their organization/board scope. The creator must still have
+board edit permission. Read-only credentials remain unchanged. OAuth write
+access is approved explicitly during consent. Each operation stores before/after
+state in `McpChange` and board activity in the same serializable transaction;
+completion sends the existing board webhooks after commit. Settings → MCP
+provides administrator-only history preview and confirmed revert, independently
+of whether the original credential remains active. Reverts reject later edits
+and missing original lists, and undo creation by archiving. Sent integration
+messages are not recalled. See `mcp/README.md` for scope and supported fields.

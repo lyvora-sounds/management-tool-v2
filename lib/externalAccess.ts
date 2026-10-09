@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import db from "@/lib/db";
 
 export const TICKETS_READ_SCOPE = "tickets:read";
+export const TICKETS_WRITE_SCOPE = "tickets:write";
 const TOKEN_PREFIX = "kiki_";
 
 export type ExternalAccessContext = {
@@ -15,6 +16,7 @@ export type ExternalAccessContext = {
 export type TokenRequest = {
   name: string;
   expiresAt: Date | null;
+  access?: "read" | "write";
 };
 
 export function hashExternalAccessToken(token: string): string {
@@ -43,18 +45,20 @@ export function readTokenRequest(body: unknown): TokenRequest | { error: string 
     ? (body as Record<string, unknown>)
     : {};
   const name = typeof record.name === "string" ? record.name.trim() : "";
+  if (record.access !== undefined && record.access !== "read" && record.access !== "write") return { error: "Access must be read or write" };
+  const access = record.access === "write" ? { access: "write" as const } : {};
   if (!name || name.length > 80) {
     return { error: "Name must contain 1 to 80 characters" };
   }
 
   if (record.expiresAt == null || record.expiresAt === "") {
-    return { name, expiresAt: null };
+    return { name, expiresAt: null, ...access };
   }
   const expiresAt = new Date(String(record.expiresAt));
   if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
     return { error: "Expiration must be a future date" };
   }
-  return { name, expiresAt };
+  return { name, expiresAt, ...access };
 }
 
 export async function authenticateExternalAccess(
@@ -73,11 +77,15 @@ export async function authenticateExternalAccess(
   if (rawToken.startsWith("kiki_oauth_")) {
     const grant = await db.mcpOAuthGrant.findUnique({
       where: { accessTokenHash: hashExternalAccessToken(rawToken) },
-      select: { resource: true, accessExpiresAt: true, externalAccessToken: { select: credentialSelect } },
+      select: { clientId: true, resource: true, accessExpiresAt: true, externalAccessToken: { select: credentialSelect } },
     });
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (!appUrl || !grant?.accessExpiresAt || grant.accessExpiresAt <= new Date() ||
       grant.resource !== `${new URL(appUrl).origin}/api/mcp`) return null;
+    if (grant.clientId?.startsWith("kiki_client_")) {
+      const client = await db.mcpOAuthClient.findUnique({ where: { id: grant.clientId }, select: { revokedAt: true } });
+      if (!client || client.revokedAt) return null;
+    }
     credential = grant.externalAccessToken;
   } else {
     credential = await db.externalAccessToken.findUnique({

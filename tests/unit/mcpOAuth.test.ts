@@ -46,6 +46,26 @@ beforeEach(() => {
 });
 
 describe("ChatGPT OAuth boundaries", () => {
+  it("grants writes only after explicit consent and rejects cross-account clients", async () => {
+    organizationManager.mockResolvedValue(true);
+    const params = authorization(); params.set("scope", "tickets:read tickets:write");
+    const request = parseAuthorizationRequest(params);
+    await issueAuthorizationCode("user-1", request, "organization:org-1");
+    expect(createCredential.mock.calls[0][0].data.scopes).toEqual(["tickets:read"]);
+    await issueAuthorizationCode("user-1", request, "organization:org-1", true);
+    expect(createCredential.mock.calls[1][0].data.scopes).toEqual(["tickets:read", "tickets:write"]);
+    await expect(issueAuthorizationCode("user-1", { ...request, ownerId: "other-user" }, "organization:org-1", true)).rejects.toThrow("another user");
+    await expect(issueAuthorizationCode("user-1", parseAuthorizationRequest(authorization()), "organization:org-1", true)).rejects.toThrow("not requested");
+  });
+  it("preserves granted read/write scope through exchange and rejects scope escalation or narrowing", async () => {
+    const writable = grant({ externalAccessToken: { ...grant().externalAccessToken, scopes: ["tickets:read", "tickets:write"] } });
+    findGrant.mockResolvedValue(writable);
+    expect((await exchangeOAuthToken(exchange()))?.scope).toBe("tickets:read tickets:write");
+    const params = exchange(); params.set("scope", "tickets:read");
+    expect(await exchangeOAuthToken(params)).toBeNull();
+    findGrant.mockResolvedValue(grant()); params.set("scope", "tickets:read tickets:write");
+    expect(await exchangeOAuthToken(params)).toBeNull();
+  });
   it("requires explicit client configuration", () => {
     vi.stubEnv("MCP_OAUTH_CLIENT_SECRET", "");
     expect(() => oauthConfig()).toThrow();

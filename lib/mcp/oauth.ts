@@ -3,11 +3,13 @@ import { isBoardAdmin } from "@/lib/boardAccess";
 import { requireOrganizationManager } from "@/lib/organizations";
 import { createExternalAccessToken } from "@/lib/externalAccess";
 import {
-  ACCESS_TOKEN_SECONDS, REFRESH_TOKEN_SECONDS, OAUTH_SCOPE,
-  oauthConfig, oauthHash, oauthToken, verifyPkce, type AuthorizationRequest,
+  ACCESS_TOKEN_SECONDS, REFRESH_TOKEN_SECONDS, OAUTH_SCOPE, OAUTH_WRITE_SCOPE,
+  oauthConfig, oauthServerConfig, oauthHash, oauthToken, verifyPkce, type AuthorizationRequest,
 } from "./oauthConfig";
 
-export async function issueAuthorizationCode(userId: string, request: AuthorizationRequest, selection: string) {
+export async function issueAuthorizationCode(userId: string, request: AuthorizationRequest, selection: string, allowWrite = false) {
+  if (request.ownerId && request.ownerId !== userId) throw new Error("OAuth client belongs to another user");
+  if (allowWrite && !request.writeRequested) throw new Error("Write scope was not requested by the OAuth client");
   let organizationId: string;
   let boardId: string | null = null;
   if (selection.startsWith("board:")) {
@@ -28,7 +30,7 @@ export async function issueAuthorizationCode(userId: string, request: Authorizat
   await db.externalAccessToken.create({
     data: {
       name: "ChatGPT", tokenHash: credential.hash, tokenPrefix: "OAuth",
-      scopes: [OAUTH_SCOPE], organizationId, boardId, createdById: userId, expiresAt,
+      scopes: allowWrite ? [OAUTH_SCOPE, OAUTH_WRITE_SCOPE] : [OAUTH_SCOPE], organizationId, boardId, createdById: userId, expiresAt,
       oauthGrant: { create: {
         clientId: request.clientId, redirectUri: request.redirectUri, resource: request.resource,
         codeHash: oauthHash(code), codeChallenge: request.challenge,
@@ -39,27 +41,33 @@ export async function issueAuthorizationCode(userId: string, request: Authorizat
   return code;
 }
 
-export async function exchangeOAuthToken(params: URLSearchParams) {
-  const config = oauthConfig();
+export async function exchangeOAuthToken(params: URLSearchParams, clientId = oauthConfig().clientId) {
+  const config = oauthServerConfig();
   const grantType = params.get("grant_type");
   const isCode = grantType === "authorization_code";
   if (!isCode && grantType !== "refresh_token") return null;
   const rawToken = params.get(isCode ? "code" : "refresh_token");
   if (!rawToken || rawToken.length > 512 || params.get("resource") !== config.resource) return null;
-  if (params.get("scope") && params.get("scope") !== OAUTH_SCOPE) return null;
+  const requestedScopes = params.get("scope")?.split(/\s+/);
+  if (requestedScopes?.some((scope) => scope !== OAUTH_SCOPE && scope !== OAUTH_WRITE_SCOPE)) return null;
   const hash = oauthHash(rawToken);
   const now = new Date();
   const accessToken = oauthToken("kiki_oauth_");
   const refreshToken = oauthToken("refresh_");
   // The conditional update consumes the code/refresh token exactly once, even
   // when concurrent requests both read the same grant.
+  let grantedScopes = OAUTH_SCOPE;
   const updated = await db.$transaction(async (tx) => {
     const grant = await tx.mcpOAuthGrant.findUnique({
       where: isCode ? { codeHash: hash } : { refreshTokenHash: hash },
       include: { externalAccessToken: { include: { board: { select: { organizationId: true } } } } },
     });
-    if (!grant || grant.clientId !== config.clientId || grant.resource !== config.resource || grant.refreshExpiresAt <= now) return false;
+    if (!grant || grant.clientId !== clientId || grant.resource !== config.resource || grant.refreshExpiresAt <= now) return false;
     const credential = grant.externalAccessToken;
+    // Downscoped access tokens need their own persisted scope set. Until then,
+    // reject narrowing rather than silently returning a more powerful token.
+    if (requestedScopes && (requestedScopes.some((scope) => !credential.scopes.includes(scope)) || credential.scopes.some((scope) => !requestedScopes.includes(scope)))) return false;
+    grantedScopes = credential.scopes.join(" ");
     if (credential.revokedAt || (credential.expiresAt && credential.expiresAt <= now) || !credential.scopes.includes(OAUTH_SCOPE)) return false;
     if (credential.boardId && credential.board?.organizationId !== credential.organizationId) return false;
     if (isCode && (grant.codeExpiresAt <= now || params.get("redirect_uri") !== grant.redirectUri || !verifyPkce(params.get("code_verifier") ?? "", grant.codeChallenge))) return false;
@@ -75,5 +83,5 @@ export async function exchangeOAuthToken(params: URLSearchParams) {
     return result.count === 1 ? Math.floor((accessExpiresAt.getTime() - now.getTime()) / 1000) : false;
   });
   if (!updated) return null;
-  return { access_token: accessToken, token_type: "Bearer", expires_in: updated, refresh_token: refreshToken, scope: OAUTH_SCOPE };
+  return { access_token: accessToken, token_type: "Bearer", expires_in: updated, refresh_token: refreshToken, scope: grantedScopes };
 }

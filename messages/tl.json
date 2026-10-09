@@ -1014,7 +1014,7 @@
     "optionsHint": "Maglagay ng values na hiwalay ng kuwit na lalabas sa list.",
     "enableOnTickets": "I-enable sa tickets",
     "mcpTitle": "Mga MCP connection",
-    "mcpIntro": "Ikonekta ang ChatGPT, Claude, o ibang MCP client. Read-only ang bawat connection at kabilang sa isang organization.",
+    "mcpIntro": "Ikonekta ang ChatGPT, Claude, Grok, Gemini CLI o ibang MCP client. Pumili ng read-only o read/write access sa isang organisasyon.",
     "mcpOneOrgRule": "Hindi kayang buksan ng isang connection ang dalawang organization. Gumawa ng hiwalay na token para sa bawat organization.",
     "mcpScopeOrganization": "Isang organization",
     "mcpScopeBoard": "Isang board",
@@ -1056,7 +1056,10 @@
     "mcpToolGet": "get_ticket — isang ticket sa connection na ito.",
     "mcpChatGptTitle": "Koneksyon sa ChatGPT",
     "mcpChatGptInstructions": "Sa ChatGPT sa web, magdagdag ng custom MCP server gamit ang endpoint sa ibaba at piliin ang OAuth. Mag-sign in sa Kikiboard, pumili ng organisasyon o board, at payagan ang read-only access.",
-    "mcpChatGptSetup": "Dapat munang i-configure ng administrator ang OAuth client ID, secret, at callback URL. Ang JSON sa ibaba ay para sa mga client na sumusuporta sa bearer headers; gumagamit ng OAuth ang ChatGPT."
+    "mcpChatGptSetup": "Dapat munang i-configure ng administrator ang OAuth client ID, secret, at callback URL. Ang JSON sa ibaba ay para sa mga client na sumusuporta sa bearer headers; gumagamit ng OAuth ang ChatGPT.",
+    "mcpWriteAccess": "Payagan ang pag-edit, paggawa, pagkumpleto at pag-archive ng tasks",
+    "mcpReadWrite": "Read/write",
+    "mcpReadOnly": "Read-only"
   },
   "calendar": {
     "title": "Calendar",
@@ -1117,7 +1120,10 @@
     "qaAssigned": "Ini-assign ni {actor} si {name} bilang QA ng \"{ticket}\"",
     "qaRemoved": "Inalis ni {actor} ang QA sa ticket na \"{ticket}\"",
     "brainDump": "Gumawa si {actor} ng {count, plural, one {# ticket} other {# tickets}} gamit ang AI Brain Dump",
-    "brainDumpCount": "Gumawa ng {count, plural, one {# ticket} other {# tickets}} gamit ang AI Brain Dump"
+    "brainDumpCount": "Gumawa ng {count, plural, one {# ticket} other {# tickets}} gamit ang AI Brain Dump",
+    "mcpCreated": "Gumawa si {actor} ng {count} tickets sa pamamagitan ng MCP",
+    "mcpUpdated": "Nag-update si {actor} ng {count} tickets sa pamamagitan ng MCP",
+    "mcpReverted": "Ibinalik ni {actor} ang changes sa {count} tickets sa pamamagitan ng MCP"
   },
   "notifications": {
     "title": "Mga notification",
@@ -1353,7 +1359,7 @@
   "mcpOAuth": {
     "title": "Ikonekta ang ChatGPT sa Kikiboard",
     "description": "Piliin ang organisasyon o board na maaaring basahin ng ChatGPT. Tumatagal ang koneksyon nang hanggang 30 araw.",
-    "permissions": "Maaaring basahin ng ChatGPT ang impormasyon ng proyekto at mga tickets sa napiling saklaw. Hindi nito maaaring baguhin ang mga ito.",
+    "permissions": "Maaaring basahin ng koneksyon ang impormasyon ng proyekto at mga tickets. Pinapayagan lang ang pagbabago ng tasks kung tahasang i-enable mo ang write access.",
     "selection": "Saklaw ng koneksyon",
     "choose": "Pumili ng organisasyon o board",
     "organization": "Organisasyon: {name} (lahat ng boards)",
@@ -1362,6 +1368,96 @@
     "revoke": "Bawiin ang koneksyon sa Settings → MCP sa pamamagitan ng pagpili ng saklaw nito at pag-alis ng kredensyal ng ChatGPT.",
     "allow": "Payagan ang access",
     "deny": "Kanselahin",
-    "invalidRequest": "Hindi wasto ang kahilingan o hindi pa naka-configure ang OAuth para sa ChatGPT."
+    "invalidRequest": "Hindi wasto ang kahilingan o hindi pa naka-configure ang OAuth para sa ChatGPT.",
+    "writeAccess": "Payagan ang paggawa, pag-edit at pag-archive ng tasks na may nababaligtad na history"
+  },
+  "mcpGuide": {
+    "title": "Ikonekta ang iyong AI assistant",
+    "intro": "Piliin ang assistant para sa mga tagubilin. Limitado ang koneksyon sa isang organisasyon o board. Read-only ang default; kailangan ng tahasang pahintulot para sa pagbabago.",
+    "provider": "AI assistant",
+    "endpoint": "MCP URL",
+    "copy": "Kopyahin",
+    "copied": "Nakopya",
+    "copyError": "Hindi makopya. Piliin at kopyahin nang manu-mano ang halaga.",
+    "callback": "ChatGPT callback URL",
+    "callbackHint": "Kopyahin ang eksaktong OAuth callback URL na ipinapakita ng ChatGPT kapag gumagawa ng custom MCP connection. Mga ChatGPT callback URL lamang ang tinatanggap.",
+    "generate": "Gumawa ng ChatGPT credentials",
+    "secretOnce": "Kopyahin ang secret ngayon. Isang beses lang ito ipinapakita.",
+    "clientId": "OAuth client ID",
+    "clientSecret": "OAuth client secret",
+    "credentialsHint": "I-paste ang dalawang halaga sa OAuth fields ng ChatGPT. Iba ang secret na ito sa bearer token sa ibaba. Kung mawala ito, bawiin ang setup at gumawa ng bago.",
+    "clients": "Iyong mga ChatGPT setup",
+    "revoke": "Bawiin",
+    "revokeHint": "Ang pagbawi ng setup ay humihinto sa mga koneksyon ng ChatGPT at pag-refresh ng token nito.",
+    "revoked": "Nabawi ang ChatGPT setup",
+    "createError": "Hindi magawa ang credentials. Suriin ang ChatGPT callback URL at subukang muli.",
+    "loadError": "Hindi ma-load ang mga ChatGPT setup.",
+    "revokeError": "Hindi mabawi ang setup.",
+    "loading": "Nilo-load ang mga ChatGPT setup…",
+    "tokenHint": "Gumawa at kopyahin ang scoped token sa ibaba. Palitan ang kiki_YOUR_TOKEN ng halagang iyon o ligtas na itakda ang KIKIBOARD_TOKEN para sa shell command. Itago ang credentials sa pribadong configuration, hindi sa chat prompts.",
+    "test": "Subukan: “Gamitin ang Kikiboard upang ilista ang aking mga pending tickets.”",
+    "officialDocs": "Opisyal na mga tagubilin ng {provider}",
+    "chatgpt": {
+      "intro": "Gumagamit ang ChatGPT ng OAuth. Gumawa ng sarili mong credentials dito; hindi kailangan ng deployment secret.",
+      "step1": "Sa ChatGPT sa web, buksan ang Plugins → + → Add custom MCP server. Ilagay ang MCP URL at piliin ang OAuth.",
+      "step2": "Kopyahin ang ChatGPT callback URL sa field sa ibaba at gumawa ng credentials. I-paste ang client ID at secret sa ChatGPT.",
+      "step3": "Gumawa at i-install ang plugin. Sa Work chat, mag-type ng @ at piliin ang Kikiboard.",
+      "step4": "Mag-sign in gamit ang parehong account, piliin ang organisasyon o board na pinamamahalaan mo, at aprubahan ang read-only o tahasang hiniling na read/write access."
+    },
+    "claude": {
+      "intro": "Maaaring ipadala ng Claude custom connectors ang Kikiboard bearer token bilang request header.",
+      "step1": "Pumili ng organisasyon o board sa ibaba, pangalanan ang koneksyon, at gumawa ng token. Kopyahin ito kapag lumabas.",
+      "step2": "Sa Claude, buksan ang Customize → Connectors → Add custom connector. Ilagay ang MCP URL.",
+      "step3": "Piliin ang No sign in at magdagdag ng request header na Authorization na may value na Bearer, isang space, at iyong token.",
+      "step4": "Idagdag ang connector at i-enable ito sa conversation gamit ang + → Connectors."
+    },
+    "grok": {
+      "intro": "Gumamit ng bearer token sa Grok CLI o xAI Remote MCP API. Para sa Grok CLI ang mga hakbang na ito.",
+      "step1": "Pumili ng organisasyon o board sa ibaba at gumawa ng scoped token.",
+      "step2": "Ligtas na itakda ang KIKIBOARD_TOKEN sa shell environment gamit ang nakopyang token.",
+      "step3": "Patakbuhin ang command sa ibaba. Suriin ang koneksyon gamit ang grok mcp list o grok mcp doctor kikiboard.",
+      "step4": "Simulan ang Grok CLI at hilinging gamitin ang Kikiboard. Para sa xAI API, ilagay ang MCP URL at Authorization header sa remote MCP tool."
+    },
+    "gemini": {
+      "intro": "Gumamit ng Gemini CLI sa Streamable HTTP configuration sa ibaba. Para sa CLI ang mga hakbang na ito, hindi sa Gemini chat website.",
+      "step1": "Pumili ng organisasyon o board sa ibaba at gumawa ng scoped token.",
+      "step2": "Idagdag ang configuration sa iyong pribadong ~/.gemini/settings.json nang pinapanatili ang kasalukuyang settings.",
+      "step3": "Palitan ang kiki_YOUR_TOKEN ng nakopyang token. Gumamit ng httpUrl para sa Streamable HTTP endpoint na ito.",
+      "step4": "I-restart ang Gemini CLI, patakbuhin ang /mcp upang suriin ang Kikiboard, at hilinging ilista ang iyong mga pending tickets."
+    },
+    "allowWrite": "Humiling ng read/write access (kailangan mo ring aprubahan ito sa sign-in)",
+    "troubleshootingTitle": "Nabigo ang koneksyon o nagbalik ng 401?",
+    "troubleshooting": "Gamitin ang pampublikong MCP URL na ipinapakita rito. Ang Vercel sign-in o deployment-protection response ay nangyayari bago suriin ng Kikiboard ang token. Para sa protected preview, maaaring i-configure ng admin ang Vercel automation bypass header sa mga client na sumusuporta rito. Kung invalid-token response ng Kikiboard, suriin ang token, expiry, revocation at napiling saklaw.",
+    "vercelDocs": "Mga tagubilin sa Vercel deployment protection"
+  },
+  "mcpHistory": {
+    "title": "AI change history",
+    "description": "Ang pinakabagong 50 MCP task operations sa saklaw na ito. Naka-save ang dating estado ng bawat batch. Hindi binabawi ng revert ang mga mensaheng naipadala na sa Slack o Discord.",
+    "refresh": "I-refresh",
+    "loading": "Nilo-load ang changes…",
+    "loadError": "Hindi ma-load ang change history. Suriin ang permissions o subukang muli.",
+    "empty": "Wala pang naitalang AI task changes dito.",
+    "preview": "Preview ng revert",
+    "previewTitle": "Suriin ang changes na ibabalik",
+    "previewHint": "Ibabalik ang dating task fields kung walang nag-edit ng mga apektadong tasks pagkatapos. Kinakansela ng conflict ang buong revert.",
+    "archiveCreated": "Ia-archive ang bagong task na ito. Pananatilihin ang comments, attachments at iba pang nilalaman nito.",
+    "confirmRevert": "Kumpirmahin ang revert",
+    "cancel": "Kanselahin",
+    "reverted": "Naibalik ang changes",
+    "revertedLabel": "Na-revert",
+    "conflict": "Hindi ma-revert. Maaaring nabago ang task, wala na ang dating list, o nabago ang permissions. I-refresh ang history bago subukang muli.",
+    "yes": "Oo",
+    "no": "Hindi",
+    "missingList": "Hindi available ang list",
+    "fields": {
+      "title": "Pamagat",
+      "description": "Paglalarawan",
+      "priority": "Priority",
+      "listId": "List",
+      "completed": "Nakumpleto",
+      "archived": "Naka-archive",
+      "startDate": "Start date",
+      "dueDate": "Due date"
+    }
   }
 }

@@ -49,6 +49,8 @@ Views on `/board/[boardId]`: Kanban (dnd-kit) and a list toggle.
 
 ## Organizations
 
+The Organizations page reloads memberships, role labels, and expanded member/team details every 25 seconds while visible, and on window focus or return to the tab. Role changes made in another session therefore update the management controls without a manual reload. Board pages also refresh every 25 seconds and on focus/return to recalculate effective permissions.
+
 A board belongs to one organization. New boards are created in organization mode: every organization member can open them at `defaultRole` (`member` by default, or `viewer` when the board should be read-only for the organization).
 
 The dashboard exposes `/dashboard/organizations` for creating organizations and viewing the organization → board hierarchy. Organization owners and admins can select people they already share an organization with; the picker shows each person's name, email, and current organizations without exposing unrelated accounts. They can add and remove organization members, switch members between the member and admin roles, and add existing organization members to teams. Owners cannot be changed or removed; only the owner can change or remove an admin. Every organization member can create boards and teams in that organization. Organization owners and admins assign those teams to one or more boards with a viewer/member/admin role. Teams remain owned by one organization so a team cannot silently bridge organization security boundaries. The board creation dialog lists every organization the user belongs to.

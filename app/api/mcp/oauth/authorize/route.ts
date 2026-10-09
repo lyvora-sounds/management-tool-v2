@@ -1,10 +1,11 @@
-import { parseAuthorizationRequest, oauthConfig } from "@/lib/mcp/oauthConfig";
+import { validateAuthorizationRequest } from "@/lib/mcp/oauthClients";
+import { oauthServerConfig } from "@/lib/mcp/oauthConfig";
 
-export function GET(request: Request) {
+export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
-    parseAuthorizationRequest(params);
-    const consent = new URL("/dashboard/mcp-authorize", oauthConfig().issuer);
+    await validateAuthorizationRequest(params);
+    const consent = new URL("/dashboard/mcp-authorize", oauthServerConfig().issuer);
     consent.search = params.toString();
     return new Response(null, { status: 302, headers: { location: consent.toString(), "cache-control": "no-store" } });
   } catch {

@@ -70,11 +70,24 @@ describe("scoped MCP server", () => {
       "get_project",
       "list_tickets",
       "get_ticket",
+      "get_change_history",
     ]);
     for (const tool of result.tools) {
       expect(tool.annotations?.readOnlyHint).toBe(true);
       expect(tool.inputSchema.properties).not.toHaveProperty("boardId");
       expect(JSON.stringify(tool.inputSchema)).not.toContain("environment");
+    }
+  });
+
+  it("exposes mutation tools only for an explicitly writable connection", async () => {
+    const extra = await connect({ ...boardContext, scopes: ["tickets:read", "tickets:write"] });
+    try {
+      const result = await extra.client.listTools();
+      expect(result.tools.filter((tool) => tool.annotations?.readOnlyHint === false).map((tool) => tool.name)).toEqual(["create_ticket", "update_tickets", "revert_change"]);
+      const readOnly = await client.callTool({ name: "update_tickets", arguments: { updates: [] } });
+      expect(readOnly.isError).toBe(true);
+    } finally {
+      await extra.client.close(); await extra.server.close();
     }
   });
 
