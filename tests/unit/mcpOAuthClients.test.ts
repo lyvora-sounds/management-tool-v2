@@ -28,6 +28,17 @@ beforeEach(() => {
   revokeClient.mockResolvedValue({ count: 1 });
 });
 describe("in-app ChatGPT setup", () => {
+  it("accepts write scope only for a client whose owner enabled it", async () => {
+    const response = await POST(request("POST", { redirectUri: callback, allowWrite: true }));
+    expect(response.status).toBe(201);
+    const data = createClient.mock.calls[0][0].data;
+    expect(data.allowWrite).toBe(true);
+    findClient.mockResolvedValue({ ...data, revokedAt: null });
+    const client = (await resolveOAuthClient(data.id))!;
+    const params = new URLSearchParams({ client_id: data.id, redirect_uri: callback, resource: "https://kikiboard.test/api/mcp", state: "state", response_type: "code", code_challenge_method: "S256", code_challenge: "a".repeat(43), scope: "tickets:read tickets:write" });
+    expect(parseAuthorizationRequest(params, client).writeRequested).toBe(true);
+    expect(() => parseAuthorizationRequest(params, { ...client, allowWrite: false })).toThrow();
+  });
   it("accepts only exact HTTPS ChatGPT OAuth callbacks", () => {
     expect(validChatGptCallback(callback)).toBe(true);
     expect(validChatGptCallback("https://chatgpt.com/connector/oauth/callback-123")).toBe(true);

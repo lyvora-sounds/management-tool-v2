@@ -12,7 +12,7 @@ const taskChangesSchema = { type: "object", additionalProperties: false, propert
   startDate: { type: ["string", "null"] }, dueDate: { type: ["string", "null"] },
 } };
 const writeMetadata = {
-  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
   securitySchemes: [{ type: "oauth2", scopes: ["tickets:read", "tickets:write"] }],
   _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read", "tickets:write"] }] },
 };
