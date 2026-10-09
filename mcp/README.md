@@ -85,11 +85,19 @@ URL: https://YOUR_KIKIBOARD_HOST/api/mcp
 Authorization: Bearer kiki_YOUR_ONE_TIME_TOKEN
 ```
 
-Every connection exposes four read-only tools:
+Every connection exposes these read-only tools:
 
-- `get_project` — the organization and its boards, or the single bound board;
-- `list_tickets` — ticket summaries, including the board each ticket is on;
-- `get_ticket` — details for one ticket inside the credential's scope;
+- `get_project` — the organization and its boards, or the single bound board,
+  including accessible people (IDs, names and emails), labels, epics, lists and
+  all custom-field definitions, options and enabled state;
+- `list_tickets` — ticket summaries with assignee and QA identities; filter by
+  `assigneeId`, `qaId` or assignee name/email (`person`). Use the final ticket ID
+  as `cursor` for the next page (maximum 100 tickets per call);
+- `get_ticket` — all ticket details inside the credential's scope, including
+  people, collaborators, labels, epic, checklist, comments with authors,
+  attachment metadata, sharing state, timestamps and every custom field
+  (unset values are null);
+- `get_attachment` — a scoped attachment's file contents as base64, up to 5 MiB;
 - `get_change_history` — the latest 50 MCP operations and their revert status.
 
 Do not place tokens in source control, chat prompts, logs, or client-visible
@@ -164,11 +172,54 @@ read-only connection must be replaced or reauthorized to grant writes. Refresh
 preserves the granted permissions and cannot change scopes.
 
 Writable connections also expose `create_ticket`, `update_tickets`, and
-`revert_change`. Updates support title, description, priority, list, completion,
-archive, and start/due dates. A batch contains at most 50 tickets on one board
-and commits atomically. Board/list management, assignment, comments, custom
-fields, and permanent deletion are outside this first version. Every write
-rechecks token expiry/revocation and the creator's current board edit permission.
+`revert_change`. Creation and updates support title, description, priority,
+list, completion, archive, start/due dates, order, quarter, epic, assignee, QA,
+collaborators, labels, custom values, checklist, comments, attachments and public
+sharing. Server-generated IDs, timestamps, completion attribution and calendar
+integration IDs are read-only; sharing uses `shared: true/false` and the server
+generates its token. Board/list/field-definition management and permanent task
+deletion are outside the ticket tools.
+
+A batch contains at most 50 explicit tickets on one board and commits atomically.
+Every write rechecks token expiry/revocation and the creator's current board edit
+permission. Assignments additionally honor `memberCanAssign` and require board
+access for every recipient. Assignment operations set the requested person
+idempotently; null clears assignee/QA. `collaboratorIds` and `labelIds` replace
+those sets. Epics, labels, custom fields and referenced tickets must belong to
+the same board. Custom SELECT values must match an option; NUMBER values must
+be finite numbers. Disabled fields cannot be changed.
+
+`customFields` patches are `{ customFieldId, value: string | null }` entries.
+Parent/child fields use the app's relationship synchronization; every related
+ticket touched by that synchronization is included in the same journal and
+conflict checks. `subtasks` replaces the checklist; retain existing IDs to edit
+entries, omit IDs to create, and omit entries to remove them. `comments` contains
+add/edit/delete operations; editing or deleting requires authorship or board
+admin permission. New comments and assignments send the existing in-app
+notifications inside the transaction.
+
+`attachments` uploads use `{ filename, contentBase64 }`, renames use
+`{ id, filename }`, and removals use `{ id, delete: true }`. Total uploaded bytes
+are limited to 5 MiB per operation. Files use private Vercel Blob storage; MCP
+never accepts arbitrary file URLs or exposes storage credentials. Failed writes
+attempt to clean up new uploads. Removed files and uploads undone by revert are
+retained in storage so journaled operations remain recoverable; storage cleanup
+is not automatic. Public sharing is enabled or revoked via `shared`.
+
+Example: use IDs returned by `get_project` to set Mario's QA assignment and the
+Environment field in one `update_tickets` entry:
+
+```json
+{
+  "updates": [{
+    "ticketId": "TICKET_ID",
+    "changes": {
+      "qaId": "MARIO_USER_ID",
+      "customFields": [{ "customFieldId": "ENVIRONMENT_FIELD_ID", "value": "production" }]
+    }
+  }]
+}
+```
 
 Task writes, before/after snapshots, and board activity are saved in one
 serializable transaction. Completion sends the existing board integration
@@ -179,7 +230,10 @@ access; MCP history remains bounded to its credential's organization/board.
 
 `revert_change` previews by default; use `confirm: true` only after approval.
 The entire revert is rejected if any affected task changed afterward or its
-original list disappeared. Undoing creation archives the task and preserves
+original list disappeared. Relation snapshots also detect later comment,
+attachment, checklist and custom-value edits, even when the task timestamp did
+not change. Revert rechecks assignment and comment permissions. Legacy scalar
+journals remain readable and revert only their original scalar fields. Undoing creation archives the task and preserves
 its content. Reverts are themselves journaled. History covers MCP task writes,
 not all app edits; sent Slack/Discord messages cannot be recalled. Records
 survive credential revocation, but deleting the board/organization cascades
@@ -189,3 +243,12 @@ For protected Vercel deployments, use the canonical public endpoint or a
 Vercel automation bypass header in clients that support custom headers. A
 Vercel authentication error occurs before Kikiboard token validation. See
 [Vercel's automation bypass instructions](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation).
+
+## Updating an installed connector
+
+Deploy the changed server at the existing `/api/mcp` endpoint, then refresh the
+MCP tool definitions in the client (or reconnect if the client caches schemas).
+Existing write-enabled credentials keep their scopes; this expansion needs no
+database migration. Local tests do not deploy the endpoint or refresh a remote
+plugin. Verify `tools/list`, QA assignment, custom values and person search in
+the deployed connector before relying on the new contract.

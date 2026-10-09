@@ -94,3 +94,18 @@ board edit permission and saves task state, a `McpChange` journal and board
 activity atomically. Read-only tokens do not expose mutation tools. OAuth write
 access requires a write-enabled client and explicit consent. See `mcp/README.md`
 for supported fields, history access and rollback limitations.
+
+### Expanded MCP ticket contract
+
+MCP reads now include assignee/QA identities, collaborators, checklist,
+comments, attachment metadata, sharing and all custom-field definitions and
+values. Project metadata supplies accessible people and field options. Ticket
+listing supports assignee name/email, assignee/QA IDs and cursor pagination.
+Writable credentials can edit every user-editable ticket field, including QA,
+custom values, labels, epic, quarter, collaborators, checklist, comments,
+private attachments and sharing. Assignment honors `memberCanAssign`; comment
+edits require authorship or admin permission. Parent/child synchronization is
+journaled across all affected tickets; reverts check nested state for later
+edits. System IDs/timestamps and calendar integration IDs remain read-only.
+See `mcp/README.md` for request shapes, upload limits, retained blobs and client
+tool refresh after deployment.
