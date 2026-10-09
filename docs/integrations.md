@@ -54,3 +54,8 @@ Settings → MCP (`/dashboard/settings?tab=mcp`) creates either token and shows
 it once in a selectable field. The board Integrations dialog creates the board
 token. The route is public in Clerk middleware only because it performs this
 machine authentication itself.
+
+ChatGPT connects through the OAuth flow described in `mcp/README.md`. Settings
+→ MCP includes ChatGPT instructions alongside the bearer configuration for other
+clients. OAuth-created ChatGPT credentials appear in the same scope's token
+list and use the existing revocation endpoints.

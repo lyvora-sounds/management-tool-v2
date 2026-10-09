@@ -249,6 +249,11 @@ export function McpSettings() {
       </div>
 
       <div className="space-y-3">
+        <div className="rounded-xl border bg-card p-4 space-y-2">
+          <h3 className="font-semibold">{t("mcpChatGptTitle")}</h3>
+          <p className="text-sm text-muted-foreground">{t("mcpChatGptInstructions")}</p>
+          <p className="text-sm text-muted-foreground">{t("mcpChatGptSetup")}</p>
+        </div>
         <div className="grid gap-2 sm:grid-cols-2">
           {SCOPES.map((item) => (
             <button

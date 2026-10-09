@@ -1053,7 +1053,10 @@
     "mcpToolsTitle": "Mga tool sa connection na ito",
     "mcpToolProject": "get_project — ang organization at ang mga boards nito, o isang board at ang mga list nito.",
     "mcpToolList": "list_tickets — tickets sa connection na ito.",
-    "mcpToolGet": "get_ticket — isang ticket sa connection na ito."
+    "mcpToolGet": "get_ticket — isang ticket sa connection na ito.",
+    "mcpChatGptTitle": "Koneksyon sa ChatGPT",
+    "mcpChatGptInstructions": "Sa ChatGPT sa web, magdagdag ng custom MCP server gamit ang endpoint sa ibaba at piliin ang OAuth. Mag-sign in sa Kikiboard, pumili ng organisasyon o board, at payagan ang read-only access.",
+    "mcpChatGptSetup": "Dapat munang i-configure ng administrator ang OAuth client ID, secret, at callback URL. Ang JSON sa ibaba ay para sa mga client na sumusuporta sa bearer headers; gumagamit ng OAuth ang ChatGPT."
   },
   "calendar": {
     "title": "Calendar",
@@ -1346,5 +1349,19 @@
       "title": "I-paste ang AI key mo",
       "body": "Sa key mula sa sarili mong provider bubukas ang Brain Dump, pagdidikta sa boses at ang pagpapaganda ng teksto. Naka-encrypt itong nakaimbak."
     }
+  },
+  "mcpOAuth": {
+    "title": "Ikonekta ang ChatGPT sa Kikiboard",
+    "description": "Piliin ang organisasyon o board na maaaring basahin ng ChatGPT. Tumatagal ang koneksyon nang hanggang 30 araw.",
+    "permissions": "Maaaring basahin ng ChatGPT ang impormasyon ng proyekto at mga tickets sa napiling saklaw. Hindi nito maaaring baguhin ang mga ito.",
+    "selection": "Saklaw ng koneksyon",
+    "choose": "Pumili ng organisasyon o board",
+    "organization": "Organisasyon: {name} (lahat ng boards)",
+    "board": "Board: {name} ({organization})",
+    "noScopes": "Kailangan mo ng admin access sa organisasyon o board upang gumawa ng koneksyon.",
+    "revoke": "Bawiin ang koneksyon sa Settings → MCP sa pamamagitan ng pagpili ng saklaw nito at pag-alis ng kredensyal ng ChatGPT.",
+    "allow": "Payagan ang access",
+    "deny": "Kanselahin",
+    "invalidRequest": "Hindi wasto ang kahilingan o hindi pa naka-configure ang OAuth para sa ChatGPT."
   }
 }

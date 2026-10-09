@@ -2,9 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const findUniqueToken = vi.fn();
 const updateToken = vi.fn();
+const findOAuthGrant = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   default: {
+    mcpOAuthGrant: { findUnique: (...args: unknown[]) => findOAuthGrant(...args) },
     externalAccessToken: {
       findUnique: (...args: unknown[]) => findUniqueToken(...args),
       update: (...args: unknown[]) => updateToken(...args),
@@ -37,12 +39,28 @@ function credential(overrides: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://kikiboard.test");
+  findOAuthGrant.mockReset();
   findUniqueToken.mockReset();
   updateToken.mockReset();
   updateToken.mockResolvedValue({});
 });
 
 describe("authenticateExternalAccess", () => {
+  it("accepts resource-bound unexpired OAuth access and applies credential revocation", async () => {
+    findOAuthGrant.mockResolvedValue({ resource: "https://kikiboard.test/api/mcp", accessExpiresAt: new Date(Date.now() + 60000), externalAccessToken: credential() });
+    await expect(authenticateExternalAccess(request("kiki_oauth_test"))).resolves.toMatchObject({ organizationId: "org-1", boardId: "board-1" });
+    findOAuthGrant.mockResolvedValue({ resource: "https://kikiboard.test/api/mcp", accessExpiresAt: new Date(Date.now() + 60000), externalAccessToken: credential({ revokedAt: new Date() }) });
+    await expect(authenticateExternalAccess(request("kiki_oauth_test"))).resolves.toBeNull();
+  });
+
+  it("rejects OAuth access minted for another resource or past its expiry", async () => {
+    for (const overrides of [{ resource: "https://other.test/api/mcp" }, { accessExpiresAt: new Date(0) }, { accessExpiresAt: null }]) {
+      findOAuthGrant.mockResolvedValue({ resource: "https://kikiboard.test/api/mcp", accessExpiresAt: new Date(Date.now() + 60000), externalAccessToken: credential(), ...overrides });
+      await expect(authenticateExternalAccess(request("kiki_oauth_test"))).resolves.toBeNull();
+    }
+    expect(findUniqueToken).not.toHaveBeenCalled();
+  });
   it("returns the organization and board bound to a valid credential", async () => {
     const generated = createExternalAccessToken();
     findUniqueToken.mockResolvedValue(credential());

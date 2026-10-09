@@ -1053,7 +1053,10 @@
     "mcpToolsTitle": "Herramientas de esta conexión",
     "mcpToolProject": "get_project — la organización y sus tableros, o un tablero y sus listas.",
     "mcpToolList": "list_tickets — tickets de esta conexión.",
-    "mcpToolGet": "get_ticket — un ticket de esta conexión."
+    "mcpToolGet": "get_ticket — un ticket de esta conexión.",
+    "mcpChatGptTitle": "Conexión con ChatGPT",
+    "mcpChatGptInstructions": "En ChatGPT en la web, añade un servidor MCP con la URL de abajo y selecciona OAuth. Inicia sesión en Kikiboard, elige una organización o un tablero y permite el acceso de lectura.",
+    "mcpChatGptSetup": "El administrador debe configurar primero el ID del cliente OAuth, su secreto y la URL de retorno. El JSON de abajo es para clientes con cabeceras bearer; ChatGPT utiliza OAuth."
   },
   "calendar": {
     "title": "Calendario",
@@ -1346,5 +1349,19 @@
       "title": "Pega tu clave de IA",
       "body": "Con una clave de tu propio proveedor se activan el Brain Dump, el dictado por voz y la mejora de textos. Se guarda cifrada."
     }
+  },
+  "mcpOAuth": {
+    "title": "Conectar ChatGPT a Kikiboard",
+    "description": "Elige la organización o el tablero que ChatGPT puede leer. La conexión dura hasta 30 días.",
+    "permissions": "ChatGPT puede leer información del proyecto y tickets del ámbito seleccionado. No puede editarlas.",
+    "selection": "Ámbito de la conexión",
+    "choose": "Elige una organización o un tablero",
+    "organization": "Organización: {name} (todos los tableros)",
+    "board": "Tablero: {name} ({organization})",
+    "noScopes": "Necesitas permisos de administrador de la organización o del tablero para crear una conexión.",
+    "revoke": "Revoca la conexión en Ajustes → MCP seleccionando su ámbito y eliminando la credencial de ChatGPT.",
+    "allow": "Permitir acceso",
+    "deny": "Cancelar",
+    "invalidRequest": "La solicitud no es válida o no se ha configurado OAuth para ChatGPT."
   }
 }

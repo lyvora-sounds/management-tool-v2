@@ -64,18 +64,27 @@ export async function authenticateExternalAccess(
   const rawToken = readBearerToken(request);
   if (!rawToken?.startsWith(TOKEN_PREFIX)) return null;
 
-  const credential = await db.externalAccessToken.findUnique({
-    where: { tokenHash: hashExternalAccessToken(rawToken) },
-    select: {
-      id: true,
-      organizationId: true,
-      boardId: true,
-      scopes: true,
-      expiresAt: true,
-      revokedAt: true,
-      board: { select: { title: true, organizationId: true } },
-    },
-  });
+  const credentialSelect = {
+    id: true, organizationId: true, boardId: true, scopes: true,
+    expiresAt: true, revokedAt: true,
+    board: { select: { title: true, organizationId: true } },
+  } as const;
+  let credential;
+  if (rawToken.startsWith("kiki_oauth_")) {
+    const grant = await db.mcpOAuthGrant.findUnique({
+      where: { accessTokenHash: hashExternalAccessToken(rawToken) },
+      select: { resource: true, accessExpiresAt: true, externalAccessToken: { select: credentialSelect } },
+    });
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl || !grant?.accessExpiresAt || grant.accessExpiresAt <= new Date() ||
+      grant.resource !== `${new URL(appUrl).origin}/api/mcp`) return null;
+    credential = grant.externalAccessToken;
+  } else {
+    credential = await db.externalAccessToken.findUnique({
+      where: { tokenHash: hashExternalAccessToken(rawToken) },
+      select: credentialSelect,
+    });
+  }
 
   if (
     !credential ||
