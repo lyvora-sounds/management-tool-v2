@@ -609,7 +609,7 @@ export function TaskModal({
               />}
 
               {/* Labels + Dates + Priority + Epic + Quarter + Attachments row */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 [&_button]:font-bold [&_button]:font-sans [&_button]:text-sm [&_input]:font-bold [&_input]:font-sans [&_input]:text-sm">
                 <div className="flex gap-2 flex-wrap items-center">
                   {/* Selector de Estado / Lista */}
                   <Select
@@ -619,7 +619,7 @@ export function TaskModal({
                       if (targetListId) handleMoveToList(targetListId);
                     }}
                   >
-                    <SelectTrigger className="h-8 text-xs w-auto min-w-32 gap-1.5 font-medium bg-background border shadow-2xs">
+                    <SelectTrigger className="h-8 text-sm font-sans w-auto min-w-32 gap-1.5 font-bold bg-background border shadow-2xs">
                       <span
                         className={cn(
                           "w-2 h-2 rounded-full shrink-0",
@@ -686,7 +686,7 @@ export function TaskModal({
                       value={currentEpicId || "none"}
                       onValueChange={(v) => saveEpic(v === "none" ? null : v)}
                     >
-                      <SelectTrigger className="h-8 text-xs w-auto min-w-28 gap-1">
+                      <SelectTrigger className="h-8 text-sm font-sans font-bold w-auto min-w-28 gap-1">
                         <Layers size={13} className="text-muted-foreground" />
                         <SelectValue placeholder={tBoard("epicFilter")} />
                       </SelectTrigger>
@@ -716,7 +716,7 @@ export function TaskModal({
                       readOnly={!canEdit}
                       onChange={(e) => setCurrentQuarter(e.target.value)}
                       onBlur={() => saveQuarter(currentQuarter)}
-                      className="text-xs bg-transparent border-0 outline-none w-20"
+                      className="text-sm font-sans font-bold placeholder:font-bold bg-transparent border-0 outline-none w-20"
                     />
                   </div>
 

@@ -724,6 +724,7 @@
     "noEpic": "No epic",
     "quarterPlaceholder": "Q (e.g. 2026-Q1)",
     "statusColumn": "Status / Column",
+    "descriptionLanguage": "AI output language",
     "improveWithAi": "Improve with AI",
     "aiSuggestions": "AI suggestions",
     "aiConsulting": "Querying your configured AI model...",
