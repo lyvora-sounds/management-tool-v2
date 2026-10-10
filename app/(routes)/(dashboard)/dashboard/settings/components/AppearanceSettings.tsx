@@ -79,7 +79,7 @@ function PreviewCard() {
 
   return (
     <div className="rounded-xl bg-muted p-3">
-      <div className="flex flex-col gap-(--card-gap) rounded-lg border bg-background px-(--card-px) py-(--card-py) text-(length:--card-text) shadow-sm">
+      <div className="flex flex-col gap-(--card-gap) glass-tile rounded-lg border bg-background px-(--card-px) py-(--card-py) text-(length:--card-text) shadow-sm">
         <div className="flex items-center gap-2">
           <span className="flex-1 leading-snug">{t("appearancePreviewTitle")}</span>
           {show.priority && (
