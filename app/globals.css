@@ -499,6 +499,7 @@
   --glass-fill: rgb(255 255 255 / 0.34);
   --glass-fill-popup: rgb(255 255 255 / 0.78);
   --glass-fill-dialog: rgb(255 255 255 / 0.9);
+  --glass-fill-control: rgb(255 255 255 / 0.62);
   --glass-overlay: rgb(18 20 40 / 0.28);
   --glass-sheen: rgb(255 255 255 / 0.45);
   --glass-rim: rgb(255 255 255 / 0.95);
@@ -515,6 +516,7 @@
   --glass-fill: rgb(74 77 92 / 0.4);
   --glass-fill-popup: rgb(62 65 80 / 0.84);
   --glass-fill-dialog: rgb(60 63 78 / 0.94);
+  --glass-fill-control: rgb(255 255 255 / 0.08);
   --glass-overlay: rgb(8 10 20 / 0.38);
   --glass-sheen: rgb(255 255 255 / 0.12);
   --glass-rim: rgb(255 255 255 / 0.5);
@@ -538,6 +540,7 @@
     --glass-fill: var(--sidebar);
     --glass-fill-popup: var(--popover);
     --glass-fill-dialog: var(--popover);
+    --glass-fill-control: var(--background);
     --glass-sheen: transparent;
     --glass-rim: transparent;
   }
@@ -551,6 +554,7 @@
     --glass-fill: var(--sidebar);
     --glass-fill-popup: var(--popover);
     --glass-fill-dialog: var(--popover);
+    --glass-fill-control: var(--background);
     --glass-sheen: transparent;
     --glass-rim: transparent;
   }
@@ -621,6 +625,17 @@
   background: var(--glass-overlay);
   -webkit-backdrop-filter: blur(10px) saturate(1.1);
   backdrop-filter: blur(10px) saturate(1.1);
+}
+/* Controles (selects, inputs, botones y cajas con bg-background): en oscuro son
+   casi negro sólido y desentonan sobre las superficies translúcidas. Pasan a un
+   relleno de cristal, un velo claro sobre lo que haya detrás. Quedan fuera el
+   pulgar del interruptor, los paneles que ya tienen su cristal y el modal de
+   confirmación de borrado. */
+:root[data-style="glass"] .bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):not(.fixed):not([data-slot$="-content"]):not([data-slot="sidebar-inset"]) {
+  background-color: var(--glass-fill-control);
+}
+:root[data-style="glass"] :is(button, a, [role="combobox"], [data-slot$="-trigger"]).bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):hover {
+  background-color: color-mix(in oklab, var(--foreground) 12%, transparent);
 }
 /* Borde especular: un filo de luz que brilla en la esquina superior izquierda y
    en la inferior derecha, como el canto de un cristal. */
