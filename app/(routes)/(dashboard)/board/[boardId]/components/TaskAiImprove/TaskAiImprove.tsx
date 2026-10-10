@@ -99,13 +99,13 @@ export function TaskAiImprove({
 
   if (!open) {
     return (
-      <div className="flex items-center gap-1.5">
+      <div className="inline-flex w-fit shrink-0 self-start items-center overflow-hidden rounded-full border border-primary/30 bg-input/30">
         <Button
           variant="outline"
           size="sm"
           onClick={startImprove}
           disabled={loading}
-          className="gap-1.5 h-8 text-sm font-sans font-bold border-primary/30 text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
+          className="gap-1.5 h-8 rounded-none border-0 bg-transparent text-sm font-sans font-bold text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
         >
           <Sparkles size={13} />
           <span>{t("improveWithAi")}</span>
@@ -116,7 +116,7 @@ export function TaskAiImprove({
           value={descriptionLanguage}
           onChange={(event) => setDescriptionLanguage(event.target.value)}
           disabled={loading}
-          className="h-8 rounded-full border border-primary/30 bg-background px-2 text-sm font-sans font-bold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-8 cursor-pointer rounded-none border-0 border-l border-primary/20 bg-transparent pl-3 pr-2 text-sm font-sans font-bold text-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
           <option value="en">English</option>
           <option value="es">Español</option>
