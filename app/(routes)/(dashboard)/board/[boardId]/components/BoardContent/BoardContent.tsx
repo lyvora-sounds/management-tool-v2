@@ -410,12 +410,12 @@ export function BoardContent({
 
           <DragOverlay>
             {activeTask && (
-              <div className="bg-background rounded-lg px-3 py-2 shadow-md border text-sm rotate-2 opacity-95">
+              <div className="glass-tile bg-background rounded-lg px-3 py-2 shadow-md border text-sm rotate-2 opacity-95">
                 {activeTask.title}
               </div>
             )}
             {activeList && (
-              <div className="bg-muted rounded-xl w-64 p-3 shadow-md opacity-95">
+              <div className="glass-panel bg-muted rounded-xl w-64 p-3 shadow-md opacity-95">
                 <h3 className="font-semibold text-sm">{activeList.title}</h3>
               </div>
             )}

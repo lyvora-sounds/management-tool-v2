@@ -64,7 +64,7 @@ export function OnboardingChecklist({ state, firstBoardId }: OnboardingChecklist
               datos del dashboard. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-24 -right-16 size-64 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-3xl"
+            className="workspace-glow pointer-events-none absolute -top-24 -right-16 size-64 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-3xl"
           />
 
           <div className="relative flex flex-col gap-4 p-5">
