@@ -28,8 +28,8 @@ export function TaskAiImprove({
   onApply,
 }: TaskAiImproveProps) {
   const locale = useLocale();
-  const [descriptionLanguage, setDescriptionLanguage] = useState(
-    ["en", "es", "tl"].includes(locale) ? locale : "en",
+  const [descriptionLanguage, setDescriptionLanguage] = useState<"en" | "es" | "tl">(
+    locale === "es" || locale === "tl" ? locale : "en",
   );
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
@@ -114,7 +114,12 @@ export function TaskAiImprove({
           aria-label={t("descriptionLanguage")}
           title={t("descriptionLanguage")}
           value={descriptionLanguage}
-          onChange={(event) => setDescriptionLanguage(event.target.value)}
+          onChange={(event) => {
+            const language = event.target.value;
+            if (language === "en" || language === "es" || language === "tl") {
+              setDescriptionLanguage(language);
+            }
+          }}
           disabled={loading}
           className="h-8 cursor-pointer rounded-none border-0 border-l border-primary/20 bg-transparent pl-3 pr-2 text-sm font-sans font-bold text-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
