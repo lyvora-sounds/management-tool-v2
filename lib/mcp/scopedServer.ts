@@ -105,7 +105,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
         annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
         _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
-        description: `List tickets on ${scopeDescription}.`,
+        description: `List tickets on ${scopeDescription}. By default, returns a ready-to-display Markdown table grouped by board, with colored status and priority emoji, assignees, QA, due dates and ticket links. Present the returned table to the user, preserving its columns, links and emoji rather than replacing it with a plain list. Full original records are also available in structuredContent.data. Raw JSON text and SVG are explicit presentation options.`,
         inputSchema: {
           type: "object",
           additionalProperties: false,
