@@ -512,20 +512,20 @@
   --orb-a: 0.62;
 }
 :root.dark[data-style="glass"] {
-  --glass-fill: rgb(30 32 46 / 0.42);
-  --glass-fill-popup: rgb(30 32 46 / 0.8);
-  --glass-fill-dialog: rgb(30 32 46 / 0.9);
-  --glass-overlay: rgb(0 0 0 / 0.5);
-  --glass-sheen: rgb(255 255 255 / 0.1);
+  --glass-fill: rgb(74 77 92 / 0.4);
+  --glass-fill-popup: rgb(62 65 80 / 0.84);
+  --glass-fill-dialog: rgb(60 63 78 / 0.94);
+  --glass-overlay: rgb(8 10 20 / 0.38);
+  --glass-sheen: rgb(255 255 255 / 0.12);
   --glass-rim: rgb(255 255 255 / 0.5);
-  --glass-edge: rgb(255 255 255 / 0.14);
-  --glass-fill-card: rgb(40 42 60 / 0.5);
-  --glass-fill-tile: rgb(46 48 68 / 0.62);
+  --glass-edge: rgb(255 255 255 / 0.18);
+  --glass-fill-card: rgb(74 77 92 / 0.38);
+  --glass-fill-tile: rgb(88 92 110 / 0.52);
   --glass-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.25), 0 10px 22px -10px rgb(0 0 0 / 0.55);
   --glass-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -12px rgb(0 0 0 / 0.65);
-  --orb-l: 0.55;
+  --orb-l: 0.62;
   --orb-c: 0.14;
-  --orb-a: 0.45;
+  --orb-a: 0.55;
 }
 /* Sin transparencia si el sistema lo pide, o si el navegador no soporta
    backdrop-filter: superficies opacas. */
