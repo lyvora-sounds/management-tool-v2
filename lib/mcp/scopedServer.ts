@@ -5,6 +5,7 @@ import type { ExternalAccessContext } from "@/lib/externalAccess";
 import { createMcpTicket, updateMcpTickets, listMcpChanges, revertMcpChange, McpWriteError } from "./writes";
 
 import { relationSchema } from "./ticketRelations";
+import { informationResponse, presentationSchema, SVG_CAPABILITY } from "./presentation";
 import { canReadBoard } from "@/lib/boardAccess";
 
 const userSelect = { id: true, name: true, email: true } as const;
@@ -83,7 +84,7 @@ const listSelect = {
 export function createScopedMcpServer(context: ExternalAccessContext) {
   const server = new Server(
     { name: "kikiboard", version: "1.2.0" },
-    { capabilities: { tools: {} } },
+    { capabilities: { tools: {}, experimental: { [SVG_CAPABILITY]: { supported: true, links: true } } } },
   );
   const scopeDescription = context.boardId
     ? "the single board bound to this connection"
@@ -155,14 +156,17 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         { name: "revert_change", description: "Preview undo with confirm=false first. After user approval, set confirm=true to revert an entire MCP change. Conflicts with later task edits reject the whole revert. Creation is undone by archiving.", ...writeMetadata,
           inputSchema: { type: "object", additionalProperties: false, required: ["changeId"], properties: { changeId: { type: "string" }, confirm: { type: "boolean", default: false } } } },
       ] : []),
-    ],
+    ].map(tool => ["get_project", "list_tickets", "get_ticket", "get_change_history"].includes(tool.name) ? { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...tool.inputSchema.properties, presentation: presentationSchema } } } : tool),
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
     const args = (params.arguments ?? {}) as Record<string, unknown>;
+    const metadata = params._meta as Record<string, unknown> | undefined;
+    const capabilities = metadata?.["io.modelcontextprotocol/clientCapabilities"] ?? server.getClientCapabilities();
+    const information = (data: unknown) => informationResponse(params.name, data, args.presentation, capabilities);
     if (["create_ticket", "update_tickets", "get_change_history", "revert_change"].includes(params.name)) {
       try {
-        if (params.name === "get_change_history") return text(await listMcpChanges(context));
+        if (params.name === "get_change_history") return information(await listMcpChanges(context));
         if (!context.scopes.includes("tickets:write")) throw new McpWriteError("This connection is read-only");
         if (params.name === "create_ticket") return text(await createMcpTicket(context, args));
         if (params.name === "update_tickets") return text(await updateMcpTickets(context, args));
@@ -210,7 +214,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         if (!board || board.organizationId !== context.organizationId) {
           return { isError: true, content: [{ type: "text", text: "Board not found" }] };
         }
-        return text({ scope: "board", board: { ...board, people: await boardPeople(board, context.organizationId) } });
+        return information({ scope: "board", board: { ...board, people: await boardPeople(board, context.organizationId) } });
       }
 
       const organization = await db.organization.findUnique({
@@ -235,7 +239,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         return { isError: true, content: [{ type: "text", text: "Organization not found" }] };
       }
       const boards = await Promise.all(organization.boards.map(async board => ({ ...board, people: await boardPeople(board, context.organizationId) })));
-      return text({ scope: "organization", organization: { ...organization, boards } });
+      return information({ scope: "organization", organization: { ...organization, boards } });
     }
 
     if (params.name === "list_tickets") {
@@ -274,7 +278,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
           list: { select: listSelect },
         },
       });
-      return text(tasks.map(({ list, ...task }) => ({
+      return information(tasks.map(({ list, ...task }) => ({
         ...task,
         board: list.board,
         list: { id: list.id, title: list.title },
@@ -327,7 +331,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       const definitions = await db.customField.findMany({ where: { boardId: task.list.board.id }, orderBy: { order: "asc" }, select: { id: true, name: true, defaultKey: true, type: true, options: true, enabled: true } });
       const { list, ...ticket } = task;
       const detail = toTicketDetail(ticket);
-      return text({
+      return information({
         ...detail,
         customFields: definitions.length ? definitions.map(field => ({ id: field.id, name: field.name, key: field.defaultKey, type: field.type, options: field.options, enabled: field.enabled, value: task.customValues.find(row => row.customField.id === field.id)?.value ?? null })) : detail.customFields,
         collaborators: ticket.collaborators?.map(row => row.user) ?? [],

@@ -30,13 +30,30 @@ Almost every mutating API follows the same sequence.
 
 ![Core data model](./diagrams/data-model.svg)
 
-Ownership is **not** a `BoardMember` row. `Board.userId` is the owner. Members live in `BoardMember` with `role` `"admin"` or `"member"`. Unknown stored roles normalize to `"member"`.
+Ownership is **not** a `BoardMember` row. `Board.userId` is the owner. Members live in `BoardMember` with `role` `"admin"`, `"member"`, or `"viewer"`. Unknown stored roles normalize to `"viewer"`.
 
 A task belongs to exactly one `List` on one `Board`. People on a task:
 
 - `assigneeId` — owner of the work
 - `qaId` — reviewer
+- `completedById` — who marked it done
 - `TaskCollaborator` — extra watchers (comment notifications)
+
+### Tables
+
+`prisma/schema.prisma` is the source of truth. The map names every model. The three diagrams under it draw the foreign keys: the arrowhead sits on the referenced row.
+
+![Postgres tables by domain](./diagrams/db-schema-map.svg)
+
+![Who can open a board](./diagrams/db-access.svg)
+
+![How a task is stored](./diagrams/db-work.svg)
+
+![Credentials, audit, and MCP](./diagrams/db-mcp.svg)
+
+Deletes cascade. Six links use `SetNull`: `Organization.createdById`, `ExternalAccessToken.createdById`, and on a task `epicId`, `assigneeId`, `qaId`, and `completedById`.
+
+`Notification.boardId` and `Notification.taskId` are stored strings with no foreign key. So are `McpChange.tokenId`, `McpChange.actorId`, and `McpChange.revertsChangeId`. `revertsChangeId` is unique. MCP secrets and calendar tokens are stored as hashes or ciphertext, not plaintext.
 
 ## App surfaces after sign-in
 
