@@ -38,7 +38,12 @@ The client then sends that list to `POST /api/boards/[boardId]/batchTasks`, whic
 
 ## Improve a card
 
-`POST /api/ai/improve` `{ title, description }`
+`POST /api/ai/improve` `{ title, description, descriptionLanguage? }`
+
+A compact selector beside Improve with AI chooses English (`en`), Spanish (`es`),
+or Tagalog (`tl`) for the description and suggested subtasks, initially matching the UI locale. The
+server rejects unsupported languages. Without a selection (older clients), the
+description and suggested subtasks follow the original task language. Title behavior is unchanged.
 
 `improveTask` rewrites copy; the client patches the task if the user accepts.
 

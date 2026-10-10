@@ -271,6 +271,10 @@ with colored emoji plus readable labels: ⚪ Draft, 🔵 In progress, 🟣 In re
 🔵 Low and ⚪ Not set. Completed tickets always show Done regardless of list.
 Markdown escapes untrusted content and uses canonical ticket links. Colors come
 from emoji, because Markdown hosts do not reliably allow custom CSS or HTML.
+The ticket-list tool description asks clients to preserve this table, its columns,
+links and emoji when presenting results. After deploying changes, refresh the MCP
+connection so clients reload the tool schema. A client connected to an older
+deployment may still receive raw JSON.
 Each response offers the optional SVG format.
 
 Use `presentation.format: "markdown"` explicitly, or omit presentation for the

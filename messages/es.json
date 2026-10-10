@@ -724,6 +724,7 @@
     "noEpic": "Sin épica",
     "quarterPlaceholder": "Q (ej. 2026-Q1)",
     "statusColumn": "Estado / Columna",
+    "descriptionLanguage": "Idioma de la respuesta de IA",
     "improveWithAi": "Mejorar con IA",
     "aiSuggestions": "Sugerencias de IA",
     "aiConsulting": "Consultando a tu modelo de IA configurado...",

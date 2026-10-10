@@ -724,6 +724,7 @@
     "noEpic": "Walang epic",
     "quarterPlaceholder": "Q (hal. 2026-Q1)",
     "statusColumn": "Status / Column",
+    "descriptionLanguage": "Wika ng sagot ng AI",
     "improveWithAi": "Pagandahin gamit ang AI",
     "aiSuggestions": "Mga mungkahi ng AI",
     "aiConsulting": "Kinukunsulta ang naka-configure na AI model...",
