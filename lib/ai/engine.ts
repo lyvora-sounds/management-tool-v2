@@ -222,13 +222,16 @@ export async function improveTask(
   title: string,
   description: string,
   creds: AiCredentials,
+  descriptionLanguage?: "en" | "es" | "tl",
 ): Promise<ImproveTaskResult> {
   const userContent = `Task Title: ${title}\nTask Description: ${
     description || "(empty)"
   }`;
 
   const responseText = await queryLlm(
-    IMPROVE_TASK_PROMPT,
+    IMPROVE_TASK_PROMPT + (descriptionLanguage
+      ? `\nWrite the entire description, including headings and acceptance criteria, and every suggested subtask title in ${{ en: "English", es: "Spanish", tl: "Tagalog" }[descriptionLanguage]}. This overrides the language of the input and example for the description and suggested subtasks. Keep the main task title in its original language.`
+      : "\nWrite the description and suggested subtasks in the same language as the original task. Do not copy the language of the example."),
     userContent,
     creds,
   );

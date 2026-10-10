@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Loader2, Check, X, ArrowRight, Plus } from "lucide-react";
+import { Sparkles, Loader2, Check, X, ArrowRight } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ImproveTaskResult } from "@/lib/ai/types";
 import Link from "next/link";
 
@@ -27,6 +27,10 @@ export function TaskAiImprove({
   currentDescription,
   onApply,
 }: TaskAiImproveProps) {
+  const locale = useLocale();
+  const [descriptionLanguage, setDescriptionLanguage] = useState<"en" | "es" | "tl">(
+    locale === "es" || locale === "tl" ? locale : "en",
+  );
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
@@ -47,6 +51,7 @@ export function TaskAiImprove({
         body: JSON.stringify({
           title: currentTitle,
           description: currentDescription,
+          descriptionLanguage,
         }),
       });
 
@@ -94,16 +99,35 @@ export function TaskAiImprove({
 
   if (!open) {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={startImprove}
-        disabled={loading}
-        className="gap-1.5 h-8 text-xs border-primary/30 text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
-      >
-        <Sparkles size={13} />
-        <span>{t("improveWithAi")}</span>
-      </Button>
+      <div className="inline-flex w-fit shrink-0 self-start items-center overflow-hidden rounded-full border border-primary/30 bg-input/30">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={startImprove}
+          disabled={loading}
+          className="gap-1.5 h-8 rounded-none border-0 bg-transparent text-sm font-sans font-bold text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
+        >
+          <Sparkles size={13} />
+          <span>{t("improveWithAi")}</span>
+        </Button>
+        <select
+          aria-label={t("descriptionLanguage")}
+          title={t("descriptionLanguage")}
+          value={descriptionLanguage}
+          onChange={(event) => {
+            const language = event.target.value;
+            if (language === "en" || language === "es" || language === "tl") {
+              setDescriptionLanguage(language);
+            }
+          }}
+          disabled={loading}
+          className="h-8 cursor-pointer rounded-none border-0 border-l border-primary/20 bg-transparent pl-3 pr-2 text-sm font-sans font-bold text-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        >
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="tl">Tagalog</option>
+        </select>
+      </div>
     );
   }
 

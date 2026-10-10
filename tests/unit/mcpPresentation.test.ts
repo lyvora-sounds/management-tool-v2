@@ -62,6 +62,7 @@ describe("MCP information presentation", () => {
 
 it("defaults to Markdown even for SVG-capable clients and retains full structured data", () => {
   const result = informationResponse("list_tickets", [{ ...ticket, completed: true, priority: "high", list: { title: "Draft" } }], undefined, { experimental: { [SVG_CAPABILITY]: { supported: true } } });
+  expect(result.content[0]).toMatchObject({ type: "text", text: expect.stringContaining("| Ticket | Status | Priority | List | Assignee | QA | Due date |") });
   expect(result.content[0]).toMatchObject({ type: "text", text: expect.stringContaining("🟢 **Done**") });
   expect(result.content[0]).toMatchObject({ text: expect.stringContaining("🟠 **High**") });
   expect(result.structuredContent?.data).toEqual([{ ...ticket, completed: true, priority: "high", list: { title: "Draft" } }]);

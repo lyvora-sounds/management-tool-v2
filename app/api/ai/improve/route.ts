@@ -29,7 +29,14 @@ export async function POST(req: Request) {
     );
   }
 
-  const { title, description } = await req.json();
+  const { title, description, descriptionLanguage } = await req.json();
+  if (descriptionLanguage !== undefined &&
+      !["en", "es", "tl"].includes(descriptionLanguage)) {
+    return NextResponse.json(
+      { error: "Unsupported description language" },
+      { status: 400 },
+    );
+  }
   if (!title && !description) {
     return NextResponse.json(
       { error: "Se requiere un título o descripción para mejorar" },
@@ -38,7 +45,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await improveTask(title || "", description || "", creds);
+    const result = await improveTask(title || "", description || "", creds, descriptionLanguage);
     return NextResponse.json(result);
   } catch (err: any) {
     console.error("AI improve error:", err);
