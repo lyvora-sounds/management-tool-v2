@@ -22,6 +22,7 @@ import { useBoardAccess } from "../BoardAccess";
 import { displayCustomFieldValue } from "@/lib/customValueUtils";
 import { useLocale, useTranslations } from "next-intl";
 import { dateLocale } from "@/i18n/routing";
+import { useAppearance } from "@/components/Appearance/AppearanceProvider";
 
 function getInitials(name: string | null | undefined, email: string | undefined) {
   if (name)
@@ -47,6 +48,7 @@ export function TaskCard({
   const t = useTranslations("task");
   const tPriority = useTranslations("priority");
   const locale = useLocale();
+  const { card: show } = useAppearance().appearance;
   const updateTask = useBoardStore((s) => s.updateTask);
   const lists = useBoardStore((s) => s.lists);
   const [modalOpen, setModalOpen] = useState(false);
@@ -132,13 +134,16 @@ export function TaskCard({
     !isOverdue &&
     due.getTime() - today.getTime() <= 3 * 24 * 60 * 60 * 1000;
 
-  const hasFooter =
-    subtaskTotal > 0 ||
-    commentCount > 0 ||
-    attachmentCount > 0 ||
-    Boolean(due) ||
-    Boolean(task.assignee) ||
-    Boolean(task.qa);
+  const showDue = show.dueDate && Boolean(due);
+  const showSubtasks = show.subtasks && subtaskTotal > 0;
+  const showActivity = show.activity && (commentCount > 0 || attachmentCount > 0);
+  const showPeople = show.people && Boolean(task.assignee || task.qa);
+  const hasFooter = showDue || showSubtasks || showActivity || showPeople;
+  const hasTags =
+    show.tags &&
+    Boolean(
+      task.epic || task.quarter || (task.customValues && task.customValues.length > 0),
+    );
 
   return (
     <div
@@ -147,7 +152,7 @@ export function TaskCard({
       {...(canEdit ? attributes : {})}
       {...(canEdit ? listeners : {})}
       className={cn(
-        "group bg-background rounded-lg px-3 py-2 shadow-sm border text-sm hover:border-primary/50 transition-colors flex flex-col gap-1.5",
+        "group glass-tile bg-background rounded-lg px-(--card-px) py-(--card-py) shadow-sm border text-(length:--card-text) hover:border-primary/50 transition-colors flex flex-col gap-(--card-gap)",
         canEdit && "cursor-grab active:cursor-grabbing",
       )}
     >
@@ -175,7 +180,7 @@ export function TaskCard({
           {task.title}
         </span>
 
-        {priority && (
+        {show.priority && priority && (
           <span
             className={cn(
               "text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0",
@@ -191,7 +196,7 @@ export function TaskCard({
         </div>
       </div>
 
-      {(task.epic || task.quarter || (task.customValues && task.customValues.length > 0)) && (
+      {hasTags && (
         <div className="flex items-center gap-1.5 pl-6 flex-wrap">
           {task.epic && (
             <span
@@ -234,7 +239,7 @@ export function TaskCard({
       {hasFooter && (
         <div className="flex items-center justify-between gap-2 pl-6 text-muted-foreground pt-0.5">
           <div className="flex items-center gap-2.5 flex-wrap">
-            {due && (
+            {showDue && due && (
               <span
                 className={cn(
                   "flex items-center gap-1 text-[11px]",
@@ -252,7 +257,7 @@ export function TaskCard({
                 })}
               </span>
             )}
-            {subtaskTotal > 0 && (
+            {showSubtasks && (
               <span
                 className={cn(
                   "flex items-center gap-1 text-[11px]",
@@ -265,13 +270,13 @@ export function TaskCard({
                 {subtaskDone}/{subtaskTotal}
               </span>
             )}
-            {commentCount > 0 && (
+            {show.activity && commentCount > 0 && (
               <span className="flex items-center gap-1 text-[11px]">
                 <MessageSquare size={11} />
                 {commentCount}
               </span>
             )}
-            {attachmentCount > 0 && (
+            {show.activity && attachmentCount > 0 && (
               <span className="flex items-center gap-1 text-[11px]">
                 <Paperclip size={11} />
                 {attachmentCount}
@@ -281,7 +286,7 @@ export function TaskCard({
 
           {/* Assignee & QA Avatars visible on card */}
           <div className="flex items-center gap-1 shrink-0 ml-auto">
-            {task.qa && (
+            {show.people && task.qa && (
               <div
                 title={t("qaPrefix", { name: task.qa.name ?? task.qa.email })}
                 className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center ring-1 ring-background shadow-xs"
@@ -289,7 +294,7 @@ export function TaskCard({
                 {getInitials(task.qa.name, task.qa.email)}
               </div>
             )}
-            {task.assignee && (
+            {show.people && task.assignee && (
               <div
                 title={t("assigneePrefix", { name: task.assignee.name ?? task.assignee.email })}
                 className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center ring-1 ring-background shadow-xs"

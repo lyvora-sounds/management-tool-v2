@@ -7,6 +7,7 @@ import { OnboardingGuide } from "@/components/Shared/GuidePointer";
 import { Suspense } from "react";
 import db from "@/lib/db";
 import { readableBoardWhere } from "@/lib/boardAccess";
+import { AppearanceProvider } from "@/components/Appearance/AppearanceProvider";
 
 export default async function LayoutDashboard({
   children,
@@ -15,19 +16,27 @@ export default async function LayoutDashboard({
 }) {
   const { userId } = await auth();
 
-  const { boards, dbUserId } = await (async () => {
-    if (!userId) return { boards: [], dbUserId: "" };
-    const user = await db.user.findUnique({ where: { clerkId: userId } });
-    if (!user) return { boards: [], dbUserId: "" };
+  const { boards, dbUserId, appearance } = await (async () => {
+    if (!userId) return { boards: [], dbUserId: "", appearance: null };
+    const user = await db.user.findUnique({
+      where: { clerkId: userId },
+      include: { settings: { select: { appearance: true } } },
+    });
+    if (!user) return { boards: [], dbUserId: "", appearance: null };
     const boards = await db.board.findMany({
       where: readableBoardWhere(user.id),
       orderBy: { createdAt: "desc" },
       include: { organization: { select: { id: true, name: true } } },
     });
-    return { boards, dbUserId: user.id };
+    return {
+      boards,
+      dbUserId: user.id,
+      appearance: user.settings?.appearance ?? null,
+    };
   })();
 
   return (
+    <AppearanceProvider initial={appearance}>
     <SidebarProvider className="workspace-theme">
       <BoardsStoreInitializer boards={boards} ownUserId={dbUserId} />
       <AppSidebar />
@@ -42,5 +51,6 @@ export default async function LayoutDashboard({
         <OnboardingGuide />
       </Suspense>
     </SidebarProvider>
+    </AppearanceProvider>
   );
 }

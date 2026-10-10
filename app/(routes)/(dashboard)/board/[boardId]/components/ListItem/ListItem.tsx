@@ -36,7 +36,7 @@ export function ListItem({ list, boardId, canManage, boardUsers, memberCanAssign
     <div
       ref={setNodeRef}
       style={style}
-      className="flex flex-col bg-muted rounded-xl w-64 shrink-0 p-3 gap-2"
+      className="glass-panel flex flex-col bg-muted rounded-xl w-64 shrink-0 p-3 gap-2"
     >
       <div
         className={canEdit ? "cursor-grab active:cursor-grabbing" : undefined}
@@ -49,7 +49,7 @@ export function ListItem({ list, boardId, canManage, boardUsers, memberCanAssign
         items={list.tasks.map((t) => t.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-(--list-gap)">
           {list.tasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-1.5 py-6 rounded-lg border-2 border-dashed border-border/50 text-muted-foreground/50 select-none">
               <ArrowDownToLine size={16} />

@@ -53,6 +53,11 @@ model UserSettings {
   onboardingDismissedAt DateTime? // el usuario cerró la tarjeta de primeros pasos
   tourSeenAt            DateTime? // ya vio (o saltó) el tour del tablero
 
+  // Preferencias de apariencia (modo, acento, densidad, campos de la tarjeta).
+  // JSON a propósito: son opciones de interfaz que irán creciendo, y lib/appearance.ts
+  // las valida y rellena con valores por defecto. null = tema original.
+  appearance Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
