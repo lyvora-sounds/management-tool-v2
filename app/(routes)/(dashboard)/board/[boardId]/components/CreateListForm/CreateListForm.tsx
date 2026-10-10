@@ -57,7 +57,7 @@ export function CreateListForm({ boardId }: CreateListFormProps) {
       <button
         data-guide="add-list"
         onClick={handleOpen}
-        className="flex items-center gap-2 bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl w-64 shrink-0 p-3 text-sm font-medium transition-colors cursor-pointer"
+        className="glass-panel flex items-center gap-2 bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl w-64 shrink-0 p-3 text-sm font-medium transition-colors cursor-pointer"
       >
         <Plus className="h-4 w-4" />
         {t("addList")}
@@ -66,7 +66,7 @@ export function CreateListForm({ boardId }: CreateListFormProps) {
   }
 
   return (
-    <div className="bg-muted rounded-xl w-64 shrink-0 p-3 flex flex-col gap-2">
+    <div className="glass-panel bg-muted rounded-xl w-64 shrink-0 p-3 flex flex-col gap-2">
       <Input
         ref={inputRef}
         placeholder={t("addListPlaceholder")}

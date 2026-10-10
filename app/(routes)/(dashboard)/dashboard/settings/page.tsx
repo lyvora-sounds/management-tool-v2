@@ -14,6 +14,7 @@ import {
   UserCog,
   SlidersHorizontal,
   Bot,
+  Palette,
 } from "lucide-react";
 import { UserProfile } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
@@ -36,6 +37,7 @@ import {
 } from "@/lib/ai/types";
 import { CustomFieldsSettings } from "./components/CustomFieldsSettings";
 import { McpSettings } from "./components/McpSettings";
+import { AppearanceSettings } from "./components/AppearanceSettings";
 
 const PROVIDERS: {
   id: AiProvider;
@@ -102,9 +104,15 @@ const PROVIDERS: {
   },
 ];
 
-type SettingsTab = "account" | "ai" | "custom-fields" | "mcp";
+type SettingsTab = "account" | "appearance" | "ai" | "custom-fields" | "mcp";
 
-const SETTINGS_TABS: SettingsTab[] = ["account", "ai", "custom-fields", "mcp"];
+const SETTINGS_TABS: SettingsTab[] = [
+  "account",
+  "appearance",
+  "ai",
+  "custom-fields",
+  "mcp",
+];
 
 function isSettingsTab(value: string | null): value is SettingsTab {
   return !!value && SETTINGS_TABS.includes(value as SettingsTab);
@@ -204,6 +212,7 @@ export default function SettingsPage() {
 
   const TABS: { id: SettingsTab; label: string; icon: typeof UserCog }[] = [
     { id: "account", label: t("tabAccount"), icon: UserCog },
+    { id: "appearance", label: t("tabAppearance"), icon: Palette },
     { id: "ai", label: t("tabAi"), icon: Sparkles },
     { id: "custom-fields", label: t("tabCustomFields"), icon: SlidersHorizontal },
     { id: "mcp", label: t("tabMcp"), icon: Bot },
@@ -242,6 +251,9 @@ export default function SettingsPage() {
           <UserProfile routing="hash" />
         </div>
       )}
+
+      {/* Apariencia: tema, acento, densidad y campos de la tarjeta. Se guarda solo. */}
+      {activeTab === "appearance" && <AppearanceSettings />}
 
       {/* Custom Fields Settings */}
       {activeTab === "custom-fields" && (

@@ -139,6 +139,218 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+
+/* Acentos de color, pensados sobre .workspace-theme: misma receta de luminosidad y
+   croma que el tema base, solo cambia el tono. El navbar lleva un tinte propio algo
+   más marcado (--workspace-navbar-bg). Contraste verificado (texto sobre primario
+   >= 4.5:1). "default" (índigo) no aplica nada. */
+:root[data-accent="blue"] {
+  --primary: oklch(0.46 0.1 245);
+  --primary-foreground: oklch(0.99 0.005 245);
+  --ring: oklch(0.58 0.1 245);
+}
+:root.dark[data-accent="blue"] {
+  --primary: oklch(0.78 0.09 245);
+  --primary-foreground: oklch(0.22 0.035 245);
+  --ring: oklch(0.78 0.09 245);
+}
+:root[data-accent="blue"] .workspace-theme {
+  --primary: oklch(0.46 0.1 245);
+  --primary-foreground: oklch(0.99 0.005 245);
+  --ring: oklch(0.58 0.1 245);
+  --background: oklch(0.985 0.006 240);
+  --foreground: oklch(0.25 0.025 240);
+  --muted: oklch(0.96 0.012 240);
+  --muted-foreground: oklch(0.5 0.025 240);
+  --accent: oklch(0.94 0.025 245);
+  --accent-foreground: oklch(0.36 0.075 245);
+  --border: oklch(0.91 0.014 240);
+  --sidebar: oklch(0.975 0.012 240);
+  --workspace-lavender: oklch(0.94 0.025 255);
+  --workspace-navbar-bg: oklch(0.975 0.015 255);
+}
+:root.dark[data-accent="blue"] .workspace-theme {
+  --primary: oklch(0.78 0.09 245);
+  --primary-foreground: oklch(0.22 0.035 245);
+  --background: oklch(0.18 0.018 240);
+  --foreground: oklch(0.95 0.01 240);
+  --muted: oklch(0.27 0.022 240);
+  --muted-foreground: oklch(0.73 0.025 240);
+  --accent: oklch(0.31 0.04 245);
+  --accent-foreground: oklch(0.9 0.04 245);
+  --border: oklch(0.36 0.025 240);
+  --sidebar: oklch(0.21 0.025 240);
+  --workspace-lavender: oklch(0.28 0.035 255);
+}
+:root[data-accent="emerald"] {
+  --primary: oklch(0.46 0.1 165);
+  --primary-foreground: oklch(0.99 0.005 165);
+  --ring: oklch(0.58 0.1 165);
+}
+:root.dark[data-accent="emerald"] {
+  --primary: oklch(0.78 0.09 165);
+  --primary-foreground: oklch(0.22 0.035 165);
+  --ring: oklch(0.78 0.09 165);
+}
+:root[data-accent="emerald"] .workspace-theme {
+  --primary: oklch(0.46 0.1 165);
+  --primary-foreground: oklch(0.99 0.005 165);
+  --ring: oklch(0.58 0.1 165);
+  --background: oklch(0.985 0.006 160);
+  --foreground: oklch(0.25 0.025 160);
+  --muted: oklch(0.96 0.012 160);
+  --muted-foreground: oklch(0.5 0.025 160);
+  --accent: oklch(0.94 0.025 165);
+  --accent-foreground: oklch(0.36 0.075 165);
+  --border: oklch(0.91 0.014 160);
+  --sidebar: oklch(0.975 0.012 160);
+  --workspace-lavender: oklch(0.94 0.025 175);
+  --workspace-navbar-bg: oklch(0.975 0.015 175);
+}
+:root.dark[data-accent="emerald"] .workspace-theme {
+  --primary: oklch(0.78 0.09 165);
+  --primary-foreground: oklch(0.22 0.035 165);
+  --background: oklch(0.18 0.018 160);
+  --foreground: oklch(0.95 0.01 160);
+  --muted: oklch(0.27 0.022 160);
+  --muted-foreground: oklch(0.73 0.025 160);
+  --accent: oklch(0.31 0.04 165);
+  --accent-foreground: oklch(0.9 0.04 165);
+  --border: oklch(0.36 0.025 160);
+  --sidebar: oklch(0.21 0.025 160);
+  --workspace-lavender: oklch(0.28 0.035 175);
+}
+:root[data-accent="rose"] {
+  --primary: oklch(0.46 0.1 10);
+  --primary-foreground: oklch(0.99 0.005 10);
+  --ring: oklch(0.58 0.1 10);
+}
+:root.dark[data-accent="rose"] {
+  --primary: oklch(0.78 0.09 10);
+  --primary-foreground: oklch(0.22 0.035 10);
+  --ring: oklch(0.78 0.09 10);
+}
+:root[data-accent="rose"] .workspace-theme {
+  --primary: oklch(0.46 0.1 10);
+  --primary-foreground: oklch(0.99 0.005 10);
+  --ring: oklch(0.58 0.1 10);
+  --background: oklch(0.985 0.006 5);
+  --foreground: oklch(0.25 0.025 5);
+  --muted: oklch(0.96 0.012 5);
+  --muted-foreground: oklch(0.5 0.025 5);
+  --accent: oklch(0.94 0.025 10);
+  --accent-foreground: oklch(0.36 0.075 10);
+  --border: oklch(0.91 0.014 5);
+  --sidebar: oklch(0.975 0.012 5);
+  --workspace-lavender: oklch(0.94 0.025 20);
+  --workspace-navbar-bg: oklch(0.975 0.015 20);
+}
+:root.dark[data-accent="rose"] .workspace-theme {
+  --primary: oklch(0.78 0.09 10);
+  --primary-foreground: oklch(0.22 0.035 10);
+  --background: oklch(0.18 0.018 5);
+  --foreground: oklch(0.95 0.01 5);
+  --muted: oklch(0.27 0.022 5);
+  --muted-foreground: oklch(0.73 0.025 5);
+  --accent: oklch(0.31 0.04 10);
+  --accent-foreground: oklch(0.9 0.04 10);
+  --border: oklch(0.36 0.025 5);
+  --sidebar: oklch(0.21 0.025 5);
+  --workspace-lavender: oklch(0.28 0.035 20);
+}
+:root[data-accent="amber"] {
+  --primary: oklch(0.46 0.1 68);
+  --primary-foreground: oklch(0.99 0.005 68);
+  --ring: oklch(0.58 0.1 68);
+}
+:root.dark[data-accent="amber"] {
+  --primary: oklch(0.78 0.09 68);
+  --primary-foreground: oklch(0.22 0.035 68);
+  --ring: oklch(0.78 0.09 68);
+}
+:root[data-accent="amber"] .workspace-theme {
+  --primary: oklch(0.46 0.1 68);
+  --primary-foreground: oklch(0.99 0.005 68);
+  --ring: oklch(0.58 0.1 68);
+  --background: oklch(0.985 0.006 63);
+  --foreground: oklch(0.25 0.025 63);
+  --muted: oklch(0.96 0.012 63);
+  --muted-foreground: oklch(0.5 0.025 63);
+  --accent: oklch(0.94 0.025 68);
+  --accent-foreground: oklch(0.36 0.075 68);
+  --border: oklch(0.91 0.014 63);
+  --sidebar: oklch(0.975 0.012 63);
+  --workspace-lavender: oklch(0.94 0.025 78);
+  --workspace-navbar-bg: oklch(0.975 0.015 78);
+}
+:root.dark[data-accent="amber"] .workspace-theme {
+  --primary: oklch(0.78 0.09 68);
+  --primary-foreground: oklch(0.22 0.035 68);
+  --background: oklch(0.18 0.018 63);
+  --foreground: oklch(0.95 0.01 63);
+  --muted: oklch(0.27 0.022 63);
+  --muted-foreground: oklch(0.73 0.025 63);
+  --accent: oklch(0.31 0.04 68);
+  --accent-foreground: oklch(0.9 0.04 68);
+  --border: oklch(0.36 0.025 63);
+  --sidebar: oklch(0.21 0.025 63);
+  --workspace-lavender: oklch(0.28 0.035 78);
+}
+:root[data-accent="graphite"] {
+  --primary: oklch(0.46 0.01 275);
+  --primary-foreground: oklch(0.99 0.0005 275);
+  --ring: oklch(0.58 0.01 275);
+}
+:root.dark[data-accent="graphite"] {
+  --primary: oklch(0.78 0.009 275);
+  --primary-foreground: oklch(0.22 0.0035 275);
+  --ring: oklch(0.78 0.009 275);
+}
+:root[data-accent="graphite"] .workspace-theme {
+  --primary: oklch(0.46 0.01 275);
+  --primary-foreground: oklch(0.99 0.0005 275);
+  --ring: oklch(0.58 0.01 275);
+  --background: oklch(0.985 0.0006 270);
+  --foreground: oklch(0.25 0.0025 270);
+  --muted: oklch(0.96 0.0012 270);
+  --muted-foreground: oklch(0.5 0.0025 270);
+  --accent: oklch(0.94 0.0025 275);
+  --accent-foreground: oklch(0.36 0.0075 275);
+  --border: oklch(0.91 0.0014 270);
+  --sidebar: oklch(0.975 0.0012 270);
+  --workspace-lavender: oklch(0.94 0.0025 285);
+  --workspace-navbar-bg: oklch(0.975 0.0015 285);
+}
+:root.dark[data-accent="graphite"] .workspace-theme {
+  --primary: oklch(0.78 0.009 275);
+  --primary-foreground: oklch(0.22 0.0035 275);
+  --background: oklch(0.18 0.0018 270);
+  --foreground: oklch(0.95 0.001 270);
+  --muted: oklch(0.27 0.0022 270);
+  --muted-foreground: oklch(0.73 0.0025 270);
+  --accent: oklch(0.31 0.004 275);
+  --accent-foreground: oklch(0.9 0.004 275);
+  --border: oklch(0.36 0.0025 270);
+  --sidebar: oklch(0.21 0.0025 270);
+  --workspace-lavender: oklch(0.28 0.0035 285);
+}
+
+/* Densidad de las tarjetas del tablero. */
+:root {
+  --card-px: 0.75rem;
+  --card-py: 0.5rem;
+  --card-gap: 0.375rem;
+  --card-text: 0.875rem;
+  --list-gap: 0.5rem;
+}
+:root[data-density="compact"] {
+  --card-px: 0.5rem;
+  --card-py: 0.25rem;
+  --card-gap: 0.125rem;
+  --card-text: 0.8125rem;
+  --list-gap: 0.25rem;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -177,7 +389,6 @@
   --sidebar-accent: var(--accent);
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
-  --workspace-sage: oklch(0.94 0.025 165);
   --workspace-lavender: oklch(0.94 0.025 285);
 }
 .dark .workspace-theme {
@@ -192,33 +403,32 @@
   --accent-foreground: oklch(0.90 0.04 275);
   --border: oklch(0.36 0.025 270);
   --sidebar: oklch(0.21 0.025 270);
-  --workspace-sage: oklch(0.27 0.028 165);
   --workspace-lavender: oklch(0.28 0.035 285);
 }
 .workspace-background {
   background: radial-gradient(ellipse at 100% 0%, var(--workspace-lavender), transparent 48%), var(--background);
 }
 .workspace-navbar {
-  background: color-mix(in oklch, var(--card) 88%, var(--workspace-lavender));
+  background: var(--workspace-navbar-bg, color-mix(in oklch, var(--card) 88%, var(--workspace-lavender)));
+}
+.dark .workspace-navbar {
+  background: var(--sidebar);
 }
 .workspace-nav-active {
   background: linear-gradient(110deg, var(--accent), color-mix(in oklch, var(--accent) 45%, var(--sidebar)));
   box-shadow: inset 3px 0 0 var(--primary);
 }
 .workspace-feature {
-  background: linear-gradient(115deg, var(--card) 25%, var(--workspace-lavender) 75%, var(--workspace-sage));
+  background: linear-gradient(115deg, var(--card) 25%, var(--workspace-lavender));
 }
 .workspace-progress,
 .workspace-theme [data-slot="progress-indicator"],
 .workspace-theme .workspace-primary-button,
 .workspace-selected-day {
-  background: linear-gradient(125deg, var(--primary), color-mix(in oklch, var(--primary) 80%, #4d887f));
+  background: linear-gradient(125deg, var(--primary), color-mix(in oklch, var(--primary) 82%, var(--background)));
 }
 .workspace-stat {
   background: linear-gradient(125deg, var(--card) 35%, var(--workspace-lavender));
-}
-.workspace-stat[data-tone="success"] {
-  background: linear-gradient(125deg, var(--card) 35%, var(--workspace-sage));
 }
 .workspace-stat[data-tone="danger"] {
   background: linear-gradient(125deg, var(--card) 35%, color-mix(in oklch, var(--destructive) 8%, var(--card)));
@@ -233,5 +443,297 @@
 .workspace-theme .workspace-primary-button:not(:disabled):not([aria-disabled="true"]):hover {
   background-image: linear-gradient(125deg,
     color-mix(in oklch, var(--primary) 92%, var(--foreground)),
-    color-mix(in oklch, var(--primary) 72%, #4d887f));
+    color-mix(in oklch, var(--primary) 78%, var(--background)));
+}
+
+/* ── Estilos de superficie (Ajustes > Apariencia > Estilo) ──────────────────────
+   Se combinan con modo, acento y densidad. Van después de los acentos para ganar
+   los empates de especificidad sobre .workspace-theme. */
+
+/* Suave: esquinas amplias, sombras difusas y bordes casi invisibles. */
+:root[data-style="soft"] {
+  --radius: 1rem;
+  --border: color-mix(in oklab, var(--foreground) 8%, var(--background));
+}
+/* Las utilidades de sombra de Tailwind llevan valores literales: se pisan en la
+   propia utilidad, no con variables de tema. */
+:root[data-style="soft"] .shadow-xs { --tw-shadow: 0 1px 4px 0 rgb(40 40 80 / 0.06); }
+:root[data-style="soft"] .shadow-sm { --tw-shadow: 0 2px 12px -2px rgb(40 40 80 / 0.10); }
+:root[data-style="soft"] .shadow-md { --tw-shadow: 0 8px 28px -8px rgb(40 40 80 / 0.14); }
+:root[data-style="soft"] .shadow-lg { --tw-shadow: 0 16px 44px -12px rgb(40 40 80 / 0.18); }
+:root[data-style="soft"] .shadow-xl { --tw-shadow: 0 24px 56px -16px rgb(40 40 80 / 0.22); }
+:root[data-style="soft"] .workspace-theme,
+:root.dark[data-style="soft"] .workspace-theme {
+  --border: color-mix(in oklab, var(--foreground) 8%, var(--background));
+}
+
+/* Nítido: esquinas casi rectas, sin sombras, bordes y texto con más contraste. */
+:root[data-style="sharp"] {
+  --radius: 0.25rem;
+  --border: color-mix(in oklab, var(--foreground) 26%, var(--background));
+  --input: color-mix(in oklab, var(--foreground) 32%, var(--background));
+}
+/* Sin sombras en tarjetas y controles; los menús y diálogos conservan la suya
+   para despegarse del fondo. */
+:root[data-style="sharp"] .shadow-2xs,
+:root[data-style="sharp"] .shadow-xs,
+:root[data-style="sharp"] .shadow-sm {
+  --tw-shadow: 0 0 #0000;
+}
+:root[data-style="sharp"] .workspace-theme,
+:root.dark[data-style="sharp"] .workspace-theme {
+  --border: color-mix(in oklab, var(--foreground) 26%, var(--background));
+  --input: color-mix(in oklab, var(--foreground) 32%, var(--background));
+  --muted-foreground: color-mix(in oklab, var(--foreground) 72%, var(--background));
+}
+
+/* Glass (inspirado en Liquid Glass): solo el chrome (sidebar, navbar, diálogos,
+   menús). Las tarjetas de tarea no llevan blur: en tableros grandes costaría
+   scroll y arrastre fluidos.
+   Receta: superficie NEUTRA translúcida (el color viene solo de lo que hay detrás),
+   desenfoque corto, borde especular que brilla en dos esquinas, sombra en capas
+   y, en Chromium/Brave, refracción en los bordes (filtro SVG #kiki-lens). */
+:root[data-style="glass"] {
+  --glass-blur: 12px;
+  --glass-saturate: 1.5;
+  --glass-fill: rgb(255 255 255 / 0.34);
+  --glass-fill-popup: rgb(255 255 255 / 0.78);
+  --glass-sheen: rgb(255 255 255 / 0.45);
+  --glass-rim: rgb(255 255 255 / 0.95);
+  --glass-edge: rgb(255 255 255 / 0.5);
+  --glass-fill-card: rgb(255 255 255 / 0.56);
+  --glass-fill-tile: rgb(255 255 255 / 0.74);
+  --glass-shadow-sm: 0 1px 2px rgb(20 20 50 / 0.05), 0 8px 20px -10px rgb(20 20 50 / 0.2);
+  --glass-shadow: 0 1px 2px rgb(20 20 50 / 0.06), 0 16px 36px -12px rgb(20 20 50 / 0.26);
+  --orb-l: 0.78;
+  --orb-c: 0.15;
+  --orb-a: 0.62;
+}
+:root.dark[data-style="glass"] {
+  --glass-fill: rgb(30 32 46 / 0.42);
+  --glass-fill-popup: rgb(30 32 46 / 0.8);
+  --glass-sheen: rgb(255 255 255 / 0.1);
+  --glass-rim: rgb(255 255 255 / 0.5);
+  --glass-edge: rgb(255 255 255 / 0.14);
+  --glass-fill-card: rgb(40 42 60 / 0.5);
+  --glass-fill-tile: rgb(46 48 68 / 0.62);
+  --glass-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.25), 0 10px 22px -10px rgb(0 0 0 / 0.55);
+  --glass-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -12px rgb(0 0 0 / 0.65);
+  --orb-l: 0.55;
+  --orb-c: 0.14;
+  --orb-a: 0.45;
+}
+/* Sin transparencia si el sistema lo pide, o si el navegador no soporta
+   backdrop-filter: superficies opacas. */
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-style="glass"] {
+    --glass-fill-card: var(--popover);
+    --glass-fill-tile: var(--popover);
+    --glass-blur: 0px;
+    --glass-saturate: 1;
+    --glass-fill: var(--sidebar);
+    --glass-fill-popup: var(--popover);
+    --glass-sheen: transparent;
+    --glass-rim: transparent;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root[data-style="glass"] {
+    --glass-fill-card: var(--popover);
+    --glass-fill-tile: var(--popover);
+    --glass-blur: 0px;
+    --glass-saturate: 1;
+    --glass-fill: var(--sidebar);
+    --glass-fill-popup: var(--popover);
+    --glass-sheen: transparent;
+    --glass-rim: transparent;
+  }
+}
+/* El cristal necesita color detrás: esferas suaves en tonos vecinos al acento. */
+:root[data-style="glass"]:not([data-gradients="off"]) .workspace-theme {
+  background: var(--background);
+  background:
+    radial-gradient(38% 34% at 3% 12%, oklch(from var(--primary) var(--orb-l) var(--orb-c) h / var(--orb-a)), transparent),
+    radial-gradient(30% 30% at 2% 80%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h + 40) / var(--orb-a)), transparent),
+    radial-gradient(40% 36% at 97% 4%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h - 35) / var(--orb-a)), transparent),
+    radial-gradient(46% 40% at 66% 108%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h + 20) / var(--orb-a)), transparent),
+    var(--background);
+  background-attachment: fixed;
+}
+:root[data-style="glass"]:not([data-gradients="off"]) .workspace-background {
+  background: transparent;
+}
+:root[data-style="glass"] .workspace-navbar,
+:root[data-style="glass"] [data-slot="sidebar-inner"],
+:root[data-style="glass"] [data-slot="sidebar"][data-mobile="true"] {
+  background: linear-gradient(180deg, var(--glass-sheen), transparent 50%), var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-edge);
+}
+/* Navbar flotante, gemelo del sidebar: fijo, separado del borde, redondeado y con
+   el mismo borde, brillo y sombra. El contenido pasa por debajo desenfocado. */
+:root[data-style="glass"] .workspace-navbar {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 20;
+  margin: 0.5rem 0.5rem 0;
+  border-radius: 1.5rem;
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow), inset 0 1px 1px var(--glass-sheen);
+}
+/* Sidebar flotante: separado del borde, redondeado y con profundidad. */
+:root[data-style="glass"] [data-slot="sidebar-container"] {
+  padding: 0.5rem;
+  border-right-width: 0;
+}
+:root[data-style="glass"] [data-slot="sidebar-inner"] {
+  position: relative;
+  border-radius: 1.5rem;
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow), inset 0 1px 1px var(--glass-sheen);
+}
+:root[data-style="glass"] [data-slot="dialog-content"],
+:root[data-style="glass"] [data-slot="popover-content"],
+:root[data-style="glass"] [data-slot="dropdown-menu-content"],
+:root[data-style="glass"] [data-slot="dropdown-menu-sub-content"],
+:root[data-style="glass"] [data-slot="select-content"],
+:root[data-style="glass"] [data-slot="sheet-content"] {
+  background: linear-gradient(180deg, var(--glass-sheen), transparent 40%), var(--glass-fill-popup);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-shadow), inset 0 1px 1px var(--glass-sheen);
+}
+/* Borde especular: un filo de luz que brilla en la esquina superior izquierda y
+   en la inferior derecha, como el canto de un cristal. */
+:root[data-style="glass"] .workspace-navbar::before,
+:root[data-style="glass"] [data-slot="sidebar-inner"]::before,
+:root[data-style="glass"] [data-slot="dialog-content"]::before,
+:root[data-style="glass"] [data-slot="popover-content"]::before,
+:root[data-style="glass"] [data-slot="dropdown-menu-content"]::before,
+:root[data-style="glass"] [data-slot="select-content"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(135deg, var(--glass-rim) 0%, transparent 30%, transparent 62%, var(--glass-rim) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* Refracción en los bordes (solo Chromium/Brave: Safari y Firefox no admiten
+   filtros SVG en backdrop-filter, y ahí queda el desenfoque normal). */
+:root[data-style="glass"][data-lens="on"] [data-slot="sidebar-inner"],
+:root[data-style="glass"][data-lens="on"] [data-slot="dialog-content"],
+:root[data-style="glass"][data-lens="on"] [data-slot="popover-content"],
+:root[data-style="glass"][data-lens="on"] [data-slot="dropdown-menu-content"],
+:root[data-style="glass"][data-lens="on"] [data-slot="select-content"] {
+  -webkit-backdrop-filter: url(#kiki-lens) blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: url(#kiki-lens) blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+
+/* ── Glass en todos los componentes ───────────────────────────────────────────
+   Los tokens de superficie pasan a ser translúcidos: así toda tarjeta (bg-card),
+   chip y hover (bg-muted) hereda el cristal sin tocarlos uno a uno. */
+:root[data-style="glass"] {
+  --card: var(--glass-fill-card);
+  --muted: color-mix(in oklab, var(--foreground) 7%, transparent);
+  --secondary: color-mix(in oklab, var(--foreground) 8%, transparent);
+  --border: color-mix(in oklab, var(--foreground) 11%, transparent);
+}
+:root[data-style="glass"] .workspace-theme,
+:root.dark[data-style="glass"] .workspace-theme {
+  --muted: color-mix(in oklab, var(--foreground) 7%, transparent);
+  --secondary: color-mix(in oklab, var(--foreground) 8%, transparent);
+  --border: color-mix(in oklab, var(--foreground) 11%, transparent);
+  --accent: color-mix(in oklab, var(--primary) 14%, transparent);
+}
+:root.dark[data-style="glass"],
+:root.dark[data-style="glass"] .workspace-theme {
+  --muted: color-mix(in oklab, var(--foreground) 9%, transparent);
+  --secondary: color-mix(in oklab, var(--foreground) 10%, transparent);
+  --border: color-mix(in oklab, var(--foreground) 13%, transparent);
+}
+/* Paneles: tarjetas, columnas de lista, bloques del dashboard. Desenfoque + brillo
+   interior + sombra suave. */
+:root[data-style="glass"] .bg-card,
+:root[data-style="glass"] .glass-panel {
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-shadow-sm), inset 0 1px 0 var(--glass-sheen), inset 0 0 0 1px var(--glass-edge);
+}
+:root[data-style="glass"] .glass-panel {
+  background: linear-gradient(180deg, var(--glass-sheen), transparent 45%), var(--glass-fill-card);
+}
+/* Fichas (tarjetas de tarea): cristal sin desenfoque, para no cargar tableros
+   grandes. Descansan sobre la columna, que sí desenfoca. */
+:root[data-style="glass"] .glass-tile {
+  background: var(--glass-fill-tile);
+  box-shadow: var(--glass-shadow-sm), inset 0 1px 0 var(--glass-sheen);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+:root[data-style="glass"] .glass-tile:hover {
+  box-shadow: 0 14px 28px -12px rgb(20 20 50 / 0.3), inset 0 1px 0 var(--glass-sheen);
+}
+/* Los bloques con degradado propio del tema pasan a cristal liso. */
+:root[data-style="glass"] .workspace-feature,
+:root[data-style="glass"] .workspace-stat,
+:root[data-style="glass"] .workspace-organization-header,
+:root[data-style="glass"] .workspace-calendar {
+  background: var(--glass-fill-card);
+}
+/* Ítem activo del sidebar: píldora de cristal con el tinte del acento. */
+:root[data-style="glass"] .workspace-nav-active {
+  background: var(--accent);
+  box-shadow: inset 0 1px 0 var(--glass-sheen), inset 0 0 0 1px color-mix(in oklab, var(--primary) 22%, transparent);
+}
+/* Botón primario: gema con brillo superior y halo del acento. */
+:root[data-style="glass"] .workspace-theme .workspace-primary-button {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), 0 8px 18px -8px color-mix(in oklab, var(--primary) 65%, transparent);
+}
+
+/* Degradados desactivados (Ajustes > Apariencia): superficies planas, sin tintes
+   ni halos. Los selectores llevan más especificidad que las reglas del tema para
+   ganar sin depender del orden. */
+:root[data-gradients="off"] .workspace-background {
+  background: var(--background);
+}
+:root[data-gradients="off"]:not([data-style="glass"]) .workspace-navbar {
+  background: var(--workspace-navbar-bg, var(--card));
+}
+:root.dark[data-gradients="off"]:not([data-style="glass"]) .workspace-navbar {
+  background: var(--sidebar);
+}
+:root[data-gradients="off"] .workspace-nav-active {
+  background: var(--accent);
+}
+:root[data-gradients="off"] .workspace-feature,
+:root[data-gradients="off"] .workspace-stat,
+:root[data-gradients="off"] .workspace-organization-header,
+:root[data-gradients="off"] .workspace-calendar {
+  background: var(--card);
+}
+:root[data-gradients="off"] .workspace-stat[data-tone="danger"] {
+  background: color-mix(in oklab, var(--destructive) 8%, var(--card));
+}
+:root[data-gradients="off"] .workspace-progress,
+:root[data-gradients="off"] .workspace-theme [data-slot="progress-indicator"],
+:root[data-gradients="off"] .workspace-theme .workspace-primary-button,
+:root[data-gradients="off"] .workspace-selected-day {
+  background: var(--primary);
+}
+:root[data-gradients="off"] .workspace-theme .workspace-primary-button:not(:disabled):not([aria-disabled="true"]):hover {
+  background: color-mix(in oklab, var(--primary) 90%, var(--foreground));
+}
+:root[data-gradients="off"] .workspace-ai-button {
+  background-image: none;
+  background-color: var(--primary);
+}
+:root[data-gradients="off"] .workspace-ai-button:hover {
+  background-color: color-mix(in oklab, var(--primary) 90%, var(--foreground));
+}
+:root[data-gradients="off"] .workspace-glow {
+  display: none;
 }

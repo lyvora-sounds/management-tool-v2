@@ -197,7 +197,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
             data-tour="board-ai"
             size="sm"
             onClick={() => setBrainDumpOpen(true)}
-            className="gap-1.5 h-8 text-xs bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-primary-foreground shadow-sm cursor-pointer"
+            className="workspace-ai-button gap-1.5 h-8 text-xs bg-gradient-to-r from-primary to-primary/75 hover:from-primary/90 hover:to-primary/65 text-primary-foreground shadow-sm cursor-pointer"
           >
             <Sparkles size={13} />
             <span className="hidden sm:inline">{t("aiBrainDump")}</span>
