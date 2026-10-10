@@ -498,6 +498,8 @@
   --glass-saturate: 1.5;
   --glass-fill: rgb(255 255 255 / 0.34);
   --glass-fill-popup: rgb(255 255 255 / 0.78);
+  --glass-fill-dialog: rgb(255 255 255 / 0.9);
+  --glass-overlay: rgb(18 20 40 / 0.28);
   --glass-sheen: rgb(255 255 255 / 0.45);
   --glass-rim: rgb(255 255 255 / 0.95);
   --glass-edge: rgb(255 255 255 / 0.5);
@@ -512,6 +514,8 @@
 :root.dark[data-style="glass"] {
   --glass-fill: rgb(30 32 46 / 0.42);
   --glass-fill-popup: rgb(30 32 46 / 0.8);
+  --glass-fill-dialog: rgb(30 32 46 / 0.9);
+  --glass-overlay: rgb(0 0 0 / 0.5);
   --glass-sheen: rgb(255 255 255 / 0.1);
   --glass-rim: rgb(255 255 255 / 0.5);
   --glass-edge: rgb(255 255 255 / 0.14);
@@ -533,6 +537,7 @@
     --glass-saturate: 1;
     --glass-fill: var(--sidebar);
     --glass-fill-popup: var(--popover);
+    --glass-fill-dialog: var(--popover);
     --glass-sheen: transparent;
     --glass-rim: transparent;
   }
@@ -545,6 +550,7 @@
     --glass-saturate: 1;
     --glass-fill: var(--sidebar);
     --glass-fill-popup: var(--popover);
+    --glass-fill-dialog: var(--popover);
     --glass-sheen: transparent;
     --glass-rim: transparent;
   }
@@ -603,6 +609,18 @@
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   box-shadow: var(--glass-shadow), inset 0 1px 1px var(--glass-sheen);
+}
+/* Diálogos: más opacos que los menús. Sobre un overlay oscuro una superficie
+   blanca al 78% se ve gris y desentona con los desplegables que se abren encima,
+   que descansan sobre el propio diálogo (claro). El overlay pasa a ser un velo. */
+:root[data-style="glass"] [data-slot="dialog-content"] {
+  background: linear-gradient(180deg, var(--glass-sheen), transparent 40%), var(--glass-fill-dialog);
+}
+:root[data-style="glass"] [data-slot="dialog-overlay"],
+:root[data-style="glass"] [data-slot="sheet-overlay"] {
+  background: var(--glass-overlay);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  backdrop-filter: blur(10px) saturate(1.1);
 }
 /* Borde especular: un filo de luz que brilla en la esquina superior izquierda y
    en la inferior derecha, como el canto de un cristal. */
