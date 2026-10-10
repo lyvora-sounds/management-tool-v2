@@ -487,16 +487,14 @@
   --muted-foreground: color-mix(in oklab, var(--foreground) 72%, var(--background));
 }
 
-/* Controles en Suave y Nítido (solo oscuro): bg-background es casi negro sólido y,
-   sobre diálogos y tarjetas más claros, se ve como un pozo negro (en Suave, sin
-   borde que lo defina). Pasan a un velo claro, como en Glass. El modo claro y el
-   estilo Original no cambian. */
-:root.dark[data-style="soft"] .bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):not(.fixed):not([data-slot$="-content"]):not([data-slot="sidebar-inset"]),
-:root.dark[data-style="sharp"] .bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):not(.fixed):not([data-slot$="-content"]):not([data-slot="sidebar-inset"]) {
+/* Controles en oscuro (Original, Suave y Nítido; Glass tiene su propia regla):
+   bg-background es casi negro sólido y, sobre diálogos y tarjetas más claros, se
+   ve como un pozo negro (en Suave, además, sin un borde que lo defina). Pasan a
+   un velo claro. El modo claro no cambia. */
+:root.dark:not([data-style="glass"]) .bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):not(.fixed):not([data-slot$="-content"]):not([data-slot="sidebar-inset"]) {
   background-color: color-mix(in oklab, var(--foreground) 8%, transparent);
 }
-:root.dark[data-style="soft"] :is(button, a, [role="combobox"], [data-slot$="-trigger"]).bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):hover,
-:root.dark[data-style="sharp"] :is(button, a, [role="combobox"], [data-slot$="-trigger"]).bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):hover {
+:root.dark:not([data-style="glass"]) :is(button, a, [role="combobox"], [data-slot$="-trigger"]).bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):hover {
   background-color: color-mix(in oklab, var(--foreground) 14%, transparent);
 }
 
