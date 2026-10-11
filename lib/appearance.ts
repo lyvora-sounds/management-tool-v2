@@ -22,6 +22,11 @@ export const ACCENTS = [
 ] as const;
 export type Accent = (typeof ACCENTS)[number];
 
+// Glass solo existe con el acento Grafito: su fondo plateado azulado y sus
+// superficies neutras están pensados para un único tono. Elegir Glass fuerza este
+// acento, y mientras esté activo no se puede cambiar.
+export const GLASS_ACCENT: Accent = "graphite";
+
 export const DENSITIES = ["comfortable", "compact"] as const;
 export type Density = (typeof DENSITIES)[number];
 
@@ -103,11 +108,16 @@ export function sanitizeAppearance(input: unknown): Appearance {
     if (typeof rawCard[field] === "boolean") card[field] = rawCard[field] as boolean;
   }
 
+  const style = pick(raw.style, STYLES, DEFAULT_APPEARANCE.style);
+
   return {
     mode: pick(raw.mode, THEME_MODES, DEFAULT_APPEARANCE.mode),
-    accent: pick(raw.accent, ACCENTS, DEFAULT_APPEARANCE.accent),
+    accent:
+      style === "glass"
+        ? GLASS_ACCENT
+        : pick(raw.accent, ACCENTS, DEFAULT_APPEARANCE.accent),
     density: pick(raw.density, DENSITIES, DEFAULT_APPEARANCE.density),
-    style: pick(raw.style, STYLES, DEFAULT_APPEARANCE.style),
+    style,
     gradients:
       typeof raw.gradients === "boolean"
         ? raw.gradients

@@ -11,6 +11,7 @@ import {
   ACCENT_SWATCH,
   CARD_FIELDS,
   DENSITIES,
+  GLASS_ACCENT,
   STYLES,
   THEME_MODES,
   type ThemeMode,
@@ -138,23 +139,38 @@ export function AppearanceSettings() {
         </div>
       </Section>
 
-      <Section title={t("appearanceAccentTitle")} description={t("appearanceAccentDesc")}>
+      <Section
+        title={t("appearanceAccentTitle")}
+        description={
+          appearance.style === "glass"
+            ? t("appearanceAccentLocked")
+            : t("appearanceAccentDesc")
+        }
+      >
         <div className="flex flex-wrap gap-3">
           {ACCENTS.map((accent) => {
             const selected = appearance.accent === accent;
+            // Glass solo existe con Grafito: el resto de acentos quedan bloqueados.
+            const locked = appearance.style === "glass" && accent !== GLASS_ACCENT;
             return (
               <button
                 key={accent}
                 type="button"
                 onClick={() => update({ accent })}
+                disabled={locked}
                 aria-pressed={selected}
                 title={t(`appearanceAccent_${accent}`)}
-                className="group flex flex-col items-center gap-1.5"
+                className={cn(
+                  "group flex flex-col items-center gap-1.5",
+                  locked && "cursor-not-allowed opacity-35",
+                )}
               >
                 <span
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-full ring-offset-2 ring-offset-background transition-shadow",
-                    selected ? "ring-2 ring-foreground/70" : "group-hover:ring-2 ring-border",
+                    selected
+                      ? "ring-2 ring-foreground/70"
+                      : !locked && "group-hover:ring-2 ring-border",
                   )}
                   style={{ backgroundColor: ACCENT_SWATCH[accent] }}
                 >
@@ -219,18 +235,21 @@ export function AppearanceSettings() {
         </div>
       </Section>
 
-      <Section title={t("appearanceEffectsTitle")} description={t("appearanceEffectsDesc")}>
-        <div className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3 sm:max-w-md">
-          <label htmlFor="appearance-gradients" className="cursor-pointer text-sm">
-            {t("appearanceGradients")}
-          </label>
-          <Switch
-            id="appearance-gradients"
-            checked={appearance.gradients}
-            onCheckedChange={(gradients) => update({ gradients })}
-          />
-        </div>
-      </Section>
+      {/* Solo Glass tiene fondo degradado; en el resto de estilos las superficies son planas. */}
+      {appearance.style === "glass" && (
+        <Section title={t("appearanceEffectsTitle")} description={t("appearanceEffectsDesc")}>
+          <div className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3 sm:max-w-md">
+            <label htmlFor="appearance-gradients" className="cursor-pointer text-sm">
+              {t("appearanceGradients")}
+            </label>
+            <Switch
+              id="appearance-gradients"
+              checked={appearance.gradients}
+              onCheckedChange={(gradients) => update({ gradients })}
+            />
+          </div>
+        </Section>
+      )}
 
       <Section title={t("appearanceCardTitle")} description={t("appearanceCardDesc")}>
         <div className="grid gap-6 md:grid-cols-2">

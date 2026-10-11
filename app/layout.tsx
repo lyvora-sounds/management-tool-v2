@@ -17,6 +17,7 @@ var m=document.cookie.match(/(?:^|; )${APPEARANCE_COOKIE}=([^;]+)/);if(!m)return
 var a=JSON.parse(decodeURIComponent(m[1])),r=document.documentElement;
 var d=a.mode==="dark"||(a.mode==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);
 if(d)r.classList.add("dark");
+if(a.style==="glass")a.accent="graphite";
 if(a.accent&&a.accent!=="default")r.dataset.accent=a.accent;
 if(a.density==="compact")r.dataset.density="compact";
 if(a.gradients===false)r.dataset.gradients="off";
