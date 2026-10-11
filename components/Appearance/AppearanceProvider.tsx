@@ -11,7 +11,6 @@ import {
 } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { LiquidGlassEngine } from "./LiquidGlassEngine";
 import {
   APPEARANCE_COOKIE,
   DEFAULT_APPEARANCE,
@@ -42,15 +41,6 @@ export function useAppearance() {
 
 const SAVE_DEBOUNCE_MS = 400;
 
-// Safari y Firefox no admiten filtros SVG en backdrop-filter.
-function supportsLens() {
-  return (
-    typeof CSS !== "undefined" &&
-    /Chrome\//.test(navigator.userAgent) &&
-    CSS.supports("backdrop-filter", "url(#kiki-lens-test)")
-  );
-}
-
 function writeCookie(appearance: Appearance) {
   try {
     document.cookie = `${APPEARANCE_COOKIE}=${encodeURIComponent(
@@ -75,7 +65,6 @@ export function AppearanceProvider({
   const [appearance, setAppearance] = useState<Appearance>(() =>
     sanitizeAppearance(initial),
   );
-  const [lens, setLens] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -87,10 +76,6 @@ export function AppearanceProvider({
       root.dataset.accent = appearance.accent;
       root.dataset.density = appearance.density;
       root.dataset.style = appearance.style;
-      const lensOn = appearance.style === "glass" && supportsLens();
-      if (lensOn) root.dataset.lens = "on";
-      else delete root.dataset.lens;
-      setLens(lensOn);
       if (appearance.gradients) delete root.dataset.gradients;
       else root.dataset.gradients = "off";
     };
@@ -109,7 +94,6 @@ export function AppearanceProvider({
       delete root.dataset.accent;
       delete root.dataset.density;
       delete root.dataset.style;
-      delete root.dataset.lens;
       delete root.dataset.gradients;
     };
   }, []);
@@ -161,7 +145,6 @@ export function AppearanceProvider({
 
   return (
     <AppearanceContext.Provider value={value}>
-      {lens && <LiquidGlassEngine />}
       {children}
     </AppearanceContext.Provider>
   );

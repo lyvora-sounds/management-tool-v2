@@ -498,18 +498,52 @@
   background-color: color-mix(in oklab, var(--foreground) 14%, transparent);
 }
 
+/* Nítido: todos los controles comparten una misma esquina (--radius). Los radios de
+   Tailwind rounded-3xl/4xl derivan de --radius, pero rounded-full mide 9999px y no
+   cambia con el estilo: junto a controles de esquinas casi rectas dejaba formas
+   mezcladas (pastilla por fuera y botones cuadrados por dentro, buscador redondo).
+   Quedan fuera los interruptores; los avatares y los puntos (div/span/img) no son
+   controles y siguen siendo círculos. */
+:root[data-style="sharp"] :is(
+  button,
+  input,
+  textarea,
+  select,
+  [role="combobox"],
+  [data-slot="toggle-group"],
+  [data-slot="select-trigger"],
+  .group\/badge
+):not([role="switch"]):not([data-slot="toggle-group-item"]) {
+  border-radius: var(--radius);
+}
+/* Grupo de botones unidos: solo los extremos llevan esquina. */
+:root[data-style="sharp"] [data-slot="toggle-group-item"] {
+  border-radius: 0;
+}
+:root[data-style="sharp"] [data-slot="toggle-group-item"]:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+:root[data-style="sharp"] [data-slot="toggle-group-item"]:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+:root[data-style="sharp"] [data-slot="toggle-group-item"]:only-child {
+  border-radius: var(--radius);
+}
+
 /* Glass (inspirado en Liquid Glass): solo el chrome (sidebar, navbar, diálogos,
    menús). Las tarjetas de tarea no llevan blur: en tableros grandes costaría
    scroll y arrastre fluidos.
    Receta: superficie NEUTRA translúcida (el color viene solo de lo que hay detrás),
-   desenfoque corto, borde especular que brilla en dos esquinas, sombra en capas
-   y, en Chromium/Brave, refracción en los bordes (filtro SVG a medida de cada elemento, ver LiquidGlassEngine). */
+   desenfoque corto, borde especular que brilla en dos esquinas y sombra en capas
+   (ver "Glass · Capas"). Sin distorsión: solo desenfoque. */
 :root[data-style="glass"] {
   --glass-blur: 8px;
   --glass-saturate: 1.6;
   --glass-fill: rgb(255 255 255 / 0.34);
   --glass-fill-popup: rgb(255 255 255 / 0.78);
   --glass-fill-dialog: rgb(255 255 255 / 0.9);
+  --lq-fill-dialog: rgb(255 255 255 / 0.58);
+  --lq-fill-popup: rgb(255 255 255 / 0.56);
   --glass-fill-control: rgb(255 255 255 / 0.62);
   --glass-overlay: rgb(18 20 40 / 0.28);
   --glass-sheen: rgb(255 255 255 / 0.45);
@@ -519,16 +553,13 @@
   --glass-fill-tile: rgb(255 255 255 / 0.74);
   --glass-shadow-sm: 0 1px 2px rgb(20 20 50 / 0.05), 0 8px 20px -10px rgb(20 20 50 / 0.2);
   --glass-shadow: 0 1px 2px rgb(20 20 50 / 0.06), 0 16px 36px -12px rgb(20 20 50 / 0.26);
-  --orb-l: 0.78;
-  --orb-c: 0.11;
-  --orb-a: 0.6;
-  --orb-shift: 45;
-  --beam-a: 0.42;
 }
 :root.dark[data-style="glass"] {
   --glass-fill: rgb(74 77 92 / 0.4);
   --glass-fill-popup: rgb(62 65 80 / 0.84);
   --glass-fill-dialog: rgb(60 63 78 / 0.94);
+  --lq-fill-dialog: rgb(50 53 70 / 0.58);
+  --lq-fill-popup: rgb(50 53 70 / 0.56);
   --glass-fill-control: rgb(255 255 255 / 0.08);
   --glass-overlay: rgb(8 10 20 / 0.38);
   --glass-sheen: rgb(255 255 255 / 0.12);
@@ -538,11 +569,6 @@
   --glass-fill-tile: rgb(88 92 110 / 0.52);
   --glass-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.25), 0 10px 22px -10px rgb(0 0 0 / 0.55);
   --glass-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -12px rgb(0 0 0 / 0.65);
-  --orb-l: 0.62;
-  --orb-c: 0.11;
-  --orb-a: 0.55;
-  --orb-shift: 45;
-  --beam-a: 0.08;
 }
 /* Sin transparencia si el sistema lo pide, o si el navegador no soporta
    backdrop-filter: superficies opacas. */
@@ -574,21 +600,15 @@
     --glass-rim: transparent;
   }
 }
-/* Fondo bicolor: dos tonos vecinos (el acento y otro desplazado --orb-shift) en
-   esferas suaves, y dos haces de luz con borde definido. El cristal solo se nota
-   si detrás hay algo que curvar: los bordes de los haces cruzan sidebar, navbar y
-   menús y la lente los dobla. */
+/* Fondo tipo iOS: plateado azulado casi monocromo, con formas grandes superpuestas
+   de esquinas muy redondeadas y un borde luminoso arriba (public/glass/bg-*.svg).
+   Glass solo existe con el acento Grafito, así que el fondo no sigue al acento. */
 :root[data-style="glass"]:not([data-gradients="off"]) .workspace-theme {
   background: var(--background);
-  background:
-    linear-gradient(118deg, transparent 27%, rgb(255 255 255 / var(--beam-a)) 27.3%, transparent 43%),
-    linear-gradient(118deg, transparent 63%, rgb(255 255 255 / calc(var(--beam-a) * 0.7)) 63.3%, transparent 74%),
-    radial-gradient(44% 40% at 4% 10%, oklch(from var(--primary) var(--orb-l) var(--orb-c) h / var(--orb-a)), transparent),
-    radial-gradient(48% 44% at 98% 6%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h + var(--orb-shift)) / var(--orb-a)), transparent),
-    radial-gradient(62% 52% at 72% 108%, oklch(from var(--primary) var(--orb-l) var(--orb-c) h / calc(var(--orb-a) * 0.8)), transparent),
-    radial-gradient(34% 32% at 0% 78%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h + var(--orb-shift)) / calc(var(--orb-a) * 0.7)), transparent),
-    var(--background);
-  background-attachment: fixed;
+  background: url("/glass/bg-light.svg") center / cover no-repeat fixed, var(--background);
+}
+:root.dark[data-style="glass"]:not([data-gradients="off"]) .workspace-theme {
+  background: url("/glass/bg-dark.svg") center / cover no-repeat fixed, var(--background);
 }
 :root[data-style="glass"]:not([data-gradients="off"]) .workspace-background {
   background: transparent;
@@ -597,8 +617,8 @@
 :root[data-style="glass"] [data-slot="sidebar-inner"],
 :root[data-style="glass"] [data-slot="sidebar"][data-mobile="true"] {
   background: linear-gradient(180deg, var(--glass-sheen), transparent 50%), var(--glass-fill);
-  -webkit-backdrop-filter: var(--kiki-lens,) blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: var(--kiki-lens,) blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border-color: var(--glass-edge);
 }
 /* Navbar flotante, gemelo del sidebar: fijo, separado del borde, redondeado y con
@@ -630,8 +650,8 @@
 :root[data-style="glass"] [data-slot="select-content"],
 :root[data-style="glass"] [data-slot="sheet-content"] {
   background: linear-gradient(180deg, var(--glass-sheen), transparent 40%), var(--glass-fill-popup);
-  -webkit-backdrop-filter: var(--kiki-lens,) blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: var(--kiki-lens,) blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   box-shadow: var(--glass-shadow), inset 0 1px 1px var(--glass-sheen);
 }
 /* Diálogos: más opacos que los menús. Sobre un overlay oscuro una superficie
@@ -651,7 +671,7 @@
    relleno de cristal, un velo claro sobre lo que haya detrás. Quedan fuera el
    pulgar del interruptor, los paneles que ya tienen su cristal y el modal de
    confirmación de borrado. */
-:root[data-style="glass"] .bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):not(.fixed):not([data-slot$="-content"]):not([data-slot="sidebar-inset"]) {
+:root[data-style="glass"] .bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):not(.fixed):not(.rdp-root):not([data-slot$="-content"]):not([data-slot="sidebar-inset"]) {
   background-color: var(--glass-fill-control);
 }
 :root[data-style="glass"] :is(button, a, [role="combobox"], [data-slot$="-trigger"]).bg-background:not(.glass-tile):not(.switch-thumb):not(.max-w-sm):hover {
@@ -752,7 +772,7 @@
 @media (prefers-reduced-motion: no-preference) {
   :root[data-style="glass"] [data-slot="button"]:not([data-variant="link"]) {
     transition:
-      transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.6),
       box-shadow 0.22s ease,
       background-color 0.2s ease,
       filter 0.2s ease;
@@ -789,8 +809,8 @@
 :root[data-style="glass"] [data-slot="button"]:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]) {
   background: var(--glass-fill-control);
   border-color: var(--glass-edge);
-  -webkit-backdrop-filter: var(--kiki-lens,) blur(3px) saturate(1.5);
-  backdrop-filter: var(--kiki-lens,) blur(3px) saturate(1.5);
+  -webkit-backdrop-filter: blur(3px) saturate(1.5);
+  backdrop-filter: blur(3px) saturate(1.5);
   box-shadow:
     inset 0 1px 0 var(--btn-hi),
     inset 0 -1px 0 var(--btn-lo),
@@ -812,46 +832,141 @@
   background: var(--glass-fill-control);
   box-shadow: inset 0 1px 0 var(--btn-hi), 0 6px 12px -8px rgb(20 20 50 / 0.3);
 }
-/* Degradados desactivados (Ajustes > Apariencia): superficies planas, sin tintes
-   ni halos. Los selectores llevan más especificidad que las reglas del tema para
-   ganar sin depender del orden. */
-:root[data-gradients="off"] .workspace-background {
+/* ── Glass · Capas ────────────────────────────────────────────────────────────
+   Estructura de cristal en capas (sin distorsión: solo desenfoque):
+     ::before = fondo desenfocado (backdrop-filter)
+     ::after  = relleno translúcido + filo especular
+     contenido encima.
+   El elemento de cristal no lleva backdrop-filter propio: el desenfoque vive en la
+   capa interna, y el relleno va encima para poder graduarse por tipo (chrome,
+   menús, diálogos). Se aplica al sidebar, el navbar, los diálogos y los popovers;
+   los menús y selects con scroll conservan su desenfoque directo (la capa se
+   desplazaría con el contenido). El velo del overlay no desenfoca: la página queda
+   nítida detrás del cristal. */
+:root[data-style="glass"] {
+  --lq-blur: 3px;
+  /* El velo del overlay deja de desenfocar: si la página llega ya borrosa, la capa
+     líquida del diálogo no tiene detalle que ondular. */
+}
+:root[data-style="glass"] :is([data-slot="dialog-overlay"], [data-slot="sheet-overlay"]) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-style="glass"] :is(
+  [data-slot="sidebar-inner"],
+  .workspace-navbar,
+  [data-slot="dialog-content"],
+  [data-slot="popover-content"]
+) {
+  isolation: isolate;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-style="glass"] :is([data-slot="sidebar-inner"], .workspace-navbar) {
+  --lq-fill: var(--glass-fill);
+}
+:root[data-style="glass"] [data-slot="popover-content"] {
+  --lq-fill: var(--lq-fill-popup);
+  --lq-blur: 4px;
+}
+:root[data-style="glass"] [data-slot="dialog-content"] {
+  --lq-fill: var(--lq-fill-dialog);
+  --lq-blur: 6px;
+}
+:root[data-style="glass"] :is(
+  [data-slot="sidebar-inner"],
+  .workspace-navbar,
+  [data-slot="dialog-content"],
+  [data-slot="popover-content"]
+)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 0;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+  -webkit-backdrop-filter: blur(var(--lq-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--lq-blur)) saturate(var(--glass-saturate));
+}
+:root[data-style="glass"] :is(
+  [data-slot="sidebar-inner"],
+  .workspace-navbar,
+  [data-slot="dialog-content"],
+  [data-slot="popover-content"]
+)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--glass-sheen), transparent 50%), var(--lq-fill);
+  box-shadow:
+    inset 1px 1px 0 var(--glass-rim),
+    inset -1px -1px 0 var(--glass-edge),
+    inset 0 0 6px var(--glass-sheen);
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-style="glass"] [data-slot="dialog-content"],
+  :root[data-style="glass"] [data-slot="popover-content"] {
+    --lq-fill: var(--popover);
+  }
+  :root[data-style="glass"] :is(
+    [data-slot="sidebar-inner"],
+  .workspace-navbar,
+  [data-slot="dialog-content"],
+  [data-slot="popover-content"]
+  )::before {
+    display: none;
+  }
+}
+
+/* Superficies planas, sin degradados, tintes ni halos. Aplican a todos los estilos
+   salvo Glass, que es el único con fondo degradado; en Glass solo se activan si el
+   usuario apaga "Degradados" en Ajustes > Apariencia. Los selectores llevan más
+   especificidad que las reglas del tema para ganar sin depender del orden. */
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-background {
   background: var(--background);
 }
-:root[data-gradients="off"]:not([data-style="glass"]) .workspace-navbar {
+:root:is([data-gradients="off"], :not([data-style="glass"])):not([data-style="glass"]) .workspace-navbar {
   background: var(--workspace-navbar-bg, var(--card));
 }
-:root.dark[data-gradients="off"]:not([data-style="glass"]) .workspace-navbar {
+:root.dark:is([data-gradients="off"], :not([data-style="glass"])):not([data-style="glass"]) .workspace-navbar {
   background: var(--sidebar);
 }
-:root[data-gradients="off"] .workspace-nav-active {
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-nav-active {
   background: var(--accent);
 }
-:root[data-gradients="off"] .workspace-feature,
-:root[data-gradients="off"] .workspace-stat,
-:root[data-gradients="off"] .workspace-organization-header,
-:root[data-gradients="off"] .workspace-calendar {
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-feature,
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-stat,
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-organization-header,
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-calendar {
   background: var(--card);
 }
-:root[data-gradients="off"] .workspace-stat[data-tone="danger"] {
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-stat[data-tone="danger"] {
   background: color-mix(in oklab, var(--destructive) 8%, var(--card));
 }
-:root[data-gradients="off"] .workspace-progress,
-:root[data-gradients="off"] .workspace-theme [data-slot="progress-indicator"],
-:root[data-gradients="off"] .workspace-theme .workspace-primary-button,
-:root[data-gradients="off"] .workspace-selected-day {
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-progress,
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-theme [data-slot="progress-indicator"],
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-theme .workspace-primary-button,
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-selected-day {
   background: var(--primary);
 }
-:root[data-gradients="off"] .workspace-theme .workspace-primary-button:not(:disabled):not([aria-disabled="true"]):hover {
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-theme .workspace-primary-button:not(:disabled):not([aria-disabled="true"]):hover {
   background: color-mix(in oklab, var(--primary) 90%, var(--foreground));
 }
-:root[data-gradients="off"] .workspace-ai-button {
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-ai-button {
   background-image: none;
   background-color: var(--primary);
 }
-:root[data-gradients="off"] .workspace-ai-button:hover {
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-ai-button:hover {
   background-color: color-mix(in oklab, var(--primary) 90%, var(--foreground));
 }
-:root[data-gradients="off"] .workspace-glow {
+:root:is([data-gradients="off"], :not([data-style="glass"])) .workspace-glow {
   display: none;
 }
