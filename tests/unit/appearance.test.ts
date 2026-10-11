@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   ACCENTS,
   DEFAULT_APPEARANCE,
+  GLASS_ACCENT,
   isDarkResolved,
   sanitizeAppearance,
 } from "@/lib/appearance";
@@ -27,6 +28,16 @@ describe("sanitizeAppearance", () => {
     expect(sanitizeAppearance({ style: "soft" }).style).toBe("soft");
     expect(sanitizeAppearance({ style: "sharp" }).style).toBe("sharp");
     expect(sanitizeAppearance({ style: "cristal" }).style).toBe("original");
+  });
+
+  it("Glass fuerza el acento Grafito, elija lo que elija el usuario", () => {
+    expect(GLASS_ACCENT).toBe("graphite");
+    for (const accent of ACCENTS) {
+      expect(sanitizeAppearance({ style: "glass", accent }).accent).toBe("graphite");
+    }
+    // Sin Glass el acento se respeta.
+    expect(sanitizeAppearance({ style: "soft", accent: "rose" }).accent).toBe("rose");
+    expect(sanitizeAppearance({ accent: "amber" }).accent).toBe("amber");
   });
 
   it("los degradados solo se desactivan con un false explícito", () => {
