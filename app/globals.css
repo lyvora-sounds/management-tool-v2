@@ -503,10 +503,10 @@
    scroll y arrastre fluidos.
    Receta: superficie NEUTRA translúcida (el color viene solo de lo que hay detrás),
    desenfoque corto, borde especular que brilla en dos esquinas, sombra en capas
-   y, en Chromium/Brave, refracción en los bordes (filtro SVG #kiki-lens). */
+   y, en Chromium/Brave, refracción en los bordes (filtro SVG a medida de cada elemento, ver LiquidGlassEngine). */
 :root[data-style="glass"] {
-  --glass-blur: 12px;
-  --glass-saturate: 1.5;
+  --glass-blur: 8px;
+  --glass-saturate: 1.6;
   --glass-fill: rgb(255 255 255 / 0.34);
   --glass-fill-popup: rgb(255 255 255 / 0.78);
   --glass-fill-dialog: rgb(255 255 255 / 0.9);
@@ -520,8 +520,10 @@
   --glass-shadow-sm: 0 1px 2px rgb(20 20 50 / 0.05), 0 8px 20px -10px rgb(20 20 50 / 0.2);
   --glass-shadow: 0 1px 2px rgb(20 20 50 / 0.06), 0 16px 36px -12px rgb(20 20 50 / 0.26);
   --orb-l: 0.78;
-  --orb-c: 0.15;
-  --orb-a: 0.62;
+  --orb-c: 0.11;
+  --orb-a: 0.6;
+  --orb-shift: 45;
+  --beam-a: 0.42;
 }
 :root.dark[data-style="glass"] {
   --glass-fill: rgb(74 77 92 / 0.4);
@@ -537,8 +539,10 @@
   --glass-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.25), 0 10px 22px -10px rgb(0 0 0 / 0.55);
   --glass-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -12px rgb(0 0 0 / 0.65);
   --orb-l: 0.62;
-  --orb-c: 0.14;
+  --orb-c: 0.11;
   --orb-a: 0.55;
+  --orb-shift: 45;
+  --beam-a: 0.08;
 }
 /* Sin transparencia si el sistema lo pide, o si el navegador no soporta
    backdrop-filter: superficies opacas. */
@@ -570,14 +574,19 @@
     --glass-rim: transparent;
   }
 }
-/* El cristal necesita color detrás: esferas suaves en tonos vecinos al acento. */
+/* Fondo bicolor: dos tonos vecinos (el acento y otro desplazado --orb-shift) en
+   esferas suaves, y dos haces de luz con borde definido. El cristal solo se nota
+   si detrás hay algo que curvar: los bordes de los haces cruzan sidebar, navbar y
+   menús y la lente los dobla. */
 :root[data-style="glass"]:not([data-gradients="off"]) .workspace-theme {
   background: var(--background);
   background:
-    radial-gradient(38% 34% at 3% 12%, oklch(from var(--primary) var(--orb-l) var(--orb-c) h / var(--orb-a)), transparent),
-    radial-gradient(30% 30% at 2% 80%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h + 40) / var(--orb-a)), transparent),
-    radial-gradient(40% 36% at 97% 4%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h - 35) / var(--orb-a)), transparent),
-    radial-gradient(46% 40% at 66% 108%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h + 20) / var(--orb-a)), transparent),
+    linear-gradient(118deg, transparent 27%, rgb(255 255 255 / var(--beam-a)) 27.3%, transparent 43%),
+    linear-gradient(118deg, transparent 63%, rgb(255 255 255 / calc(var(--beam-a) * 0.7)) 63.3%, transparent 74%),
+    radial-gradient(44% 40% at 4% 10%, oklch(from var(--primary) var(--orb-l) var(--orb-c) h / var(--orb-a)), transparent),
+    radial-gradient(48% 44% at 98% 6%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h + var(--orb-shift)) / var(--orb-a)), transparent),
+    radial-gradient(62% 52% at 72% 108%, oklch(from var(--primary) var(--orb-l) var(--orb-c) h / calc(var(--orb-a) * 0.8)), transparent),
+    radial-gradient(34% 32% at 0% 78%, oklch(from var(--primary) var(--orb-l) var(--orb-c) calc(h + var(--orb-shift)) / calc(var(--orb-a) * 0.7)), transparent),
     var(--background);
   background-attachment: fixed;
 }
@@ -588,8 +597,8 @@
 :root[data-style="glass"] [data-slot="sidebar-inner"],
 :root[data-style="glass"] [data-slot="sidebar"][data-mobile="true"] {
   background: linear-gradient(180deg, var(--glass-sheen), transparent 50%), var(--glass-fill);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: var(--kiki-lens,) blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: var(--kiki-lens,) blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border-color: var(--glass-edge);
 }
 /* Navbar flotante, gemelo del sidebar: fijo, separado del borde, redondeado y con
@@ -621,8 +630,8 @@
 :root[data-style="glass"] [data-slot="select-content"],
 :root[data-style="glass"] [data-slot="sheet-content"] {
   background: linear-gradient(180deg, var(--glass-sheen), transparent 40%), var(--glass-fill-popup);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: var(--kiki-lens,) blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: var(--kiki-lens,) blur(var(--glass-blur)) saturate(var(--glass-saturate));
   box-shadow: var(--glass-shadow), inset 0 1px 1px var(--glass-sheen);
 }
 /* Diálogos: más opacos que los menús. Sobre un overlay oscuro una superficie
@@ -667,17 +676,6 @@
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
-/* Refracción en los bordes (solo Chromium/Brave: Safari y Firefox no admiten
-   filtros SVG en backdrop-filter, y ahí queda el desenfoque normal). */
-:root[data-style="glass"][data-lens="on"] [data-slot="sidebar-inner"],
-:root[data-style="glass"][data-lens="on"] [data-slot="dialog-content"],
-:root[data-style="glass"][data-lens="on"] [data-slot="popover-content"],
-:root[data-style="glass"][data-lens="on"] [data-slot="dropdown-menu-content"],
-:root[data-style="glass"][data-lens="on"] [data-slot="select-content"] {
-  -webkit-backdrop-filter: url(#kiki-lens) blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: url(#kiki-lens) blur(var(--glass-blur)) saturate(var(--glass-saturate));
-}
-
 /* ── Glass en todos los componentes ───────────────────────────────────────────
    Los tokens de superficie pasan a ser translúcidos: así toda tarjeta (bg-card),
    chip y hover (bg-muted) hereda el cristal sin tocarlos uno a uno. */
@@ -733,11 +731,87 @@
   background: var(--accent);
   box-shadow: inset 0 1px 0 var(--glass-sheen), inset 0 0 0 1px color-mix(in oklab, var(--primary) 22%, transparent);
 }
-/* Botón primario: gema con brillo superior y halo del acento. */
-:root[data-style="glass"] .workspace-theme .workspace-primary-button {
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), 0 8px 18px -8px color-mix(in oklab, var(--primary) 65%, transparent);
-}
 
+/* ── Glass · Parte 1: botones ─────────────────────────────────────────────────
+   Capas de luz y sombra (brillo superior, sombreado inferior, halo del acento),
+   rebote fluido al pasar y pulsar, y una refracción pequeña en los bordes de los
+   botones de cristal (Chromium/Brave). Se apoya en data-variant del Button. */
+:root[data-style="glass"] {
+  --btn-hi: rgb(255 255 255 / 0.6);
+  --btn-lo: rgb(20 20 50 / 0.08);
+}
+:root.dark[data-style="glass"] {
+  --btn-hi: rgb(255 255 255 / 0.3);
+  --btn-lo: rgb(0 0 0 / 0.4);
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-style="glass"] {
+    --btn-hi: transparent;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-style="glass"] [data-slot="button"]:not([data-variant="link"]) {
+    transition:
+      transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.22s ease,
+      background-color 0.2s ease,
+      filter 0.2s ease;
+  }
+  :root[data-style="glass"] [data-slot="button"]:not([data-variant="link"]):not(:disabled):not([aria-disabled="true"]):hover {
+    transform: scale(1.025);
+  }
+  :root[data-style="glass"] [data-slot="button"]:not([data-variant="link"]):not(:disabled):not([aria-disabled="true"]):active {
+    transform: scale(0.965);
+  }
+}
+/* Primario: gema con brillo superior, sombreado inferior y halo del acento. */
+:root[data-style="glass"] [data-slot="button"][data-variant="default"],
+:root[data-style="glass"] .workspace-ai-button {
+  box-shadow:
+    inset 0 1px 0 var(--btn-hi),
+    inset 0 14px 14px -10px rgb(255 255 255 / 0.28),
+    inset 0 -10px 12px -8px rgb(0 0 0 / 0.18),
+    0 1px 2px rgb(0 0 0 / 0.16),
+    0 10px 20px -8px color-mix(in oklab, var(--primary) 65%, transparent);
+}
+:root[data-style="glass"] [data-slot="button"][data-variant="default"]:not(:disabled):hover,
+:root[data-style="glass"] .workspace-ai-button:not(:disabled):hover {
+  filter: brightness(1.07) saturate(1.05);
+}
+:root[data-style="glass"] [data-slot="button"][data-variant="default"]:not(:disabled):active,
+:root[data-style="glass"] .workspace-ai-button:not(:disabled):active {
+  box-shadow:
+    inset 0 1px 0 var(--btn-hi),
+    inset 0 -6px 8px -6px rgb(0 0 0 / 0.2),
+    0 4px 10px -6px color-mix(in oklab, var(--primary) 60%, transparent);
+}
+/* Contorno, secundario y destructivo: pastillas de cristal. */
+:root[data-style="glass"] [data-slot="button"]:is([data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]) {
+  background: var(--glass-fill-control);
+  border-color: var(--glass-edge);
+  -webkit-backdrop-filter: var(--kiki-lens,) blur(3px) saturate(1.5);
+  backdrop-filter: var(--kiki-lens,) blur(3px) saturate(1.5);
+  box-shadow:
+    inset 0 1px 0 var(--btn-hi),
+    inset 0 -1px 0 var(--btn-lo),
+    0 1px 2px rgb(20 20 50 / 0.08),
+    0 8px 16px -10px rgb(20 20 50 / 0.3);
+}
+:root[data-style="glass"] [data-slot="button"][data-variant="secondary"] {
+  background: color-mix(in oklab, var(--primary) 12%, var(--glass-fill-control));
+}
+:root[data-style="glass"] [data-slot="button"][data-variant="destructive"] {
+  background: color-mix(in oklab, var(--destructive) 16%, var(--glass-fill-control));
+  border-color: color-mix(in oklab, var(--destructive) 35%, transparent);
+}
+:root[data-style="glass"] [data-slot="button"]:is([data-variant="outline"], [data-variant="secondary"]):not(:disabled):hover {
+  background: color-mix(in oklab, var(--foreground) 7%, var(--glass-fill-control));
+}
+/* Fantasma: sin relleno hasta que se pasa por encima. */
+:root[data-style="glass"] [data-slot="button"][data-variant="ghost"]:not(:disabled):hover {
+  background: var(--glass-fill-control);
+  box-shadow: inset 0 1px 0 var(--btn-hi), 0 6px 12px -8px rgb(20 20 50 / 0.3);
+}
 /* Degradados desactivados (Ajustes > Apariencia): superficies planas, sin tintes
    ni halos. Los selectores llevan más especificidad que las reglas del tema para
    ganar sin depender del orden. */
