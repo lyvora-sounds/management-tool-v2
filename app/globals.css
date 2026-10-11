@@ -498,6 +498,38 @@
   background-color: color-mix(in oklab, var(--foreground) 14%, transparent);
 }
 
+/* Nítido: todos los controles comparten una misma esquina (--radius). Los radios de
+   Tailwind rounded-3xl/4xl derivan de --radius, pero rounded-full mide 9999px y no
+   cambia con el estilo: junto a controles de esquinas casi rectas dejaba formas
+   mezcladas (pastilla por fuera y botones cuadrados por dentro, buscador redondo).
+   Quedan fuera los interruptores; los avatares y los puntos (div/span/img) no son
+   controles y siguen siendo círculos. */
+:root[data-style="sharp"] :is(
+  button,
+  input,
+  textarea,
+  select,
+  [role="combobox"],
+  [data-slot="toggle-group"],
+  [data-slot="select-trigger"],
+  .group\/badge
+):not([role="switch"]):not([data-slot="toggle-group-item"]) {
+  border-radius: var(--radius);
+}
+/* Grupo de botones unidos: solo los extremos llevan esquina. */
+:root[data-style="sharp"] [data-slot="toggle-group-item"] {
+  border-radius: 0;
+}
+:root[data-style="sharp"] [data-slot="toggle-group-item"]:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+:root[data-style="sharp"] [data-slot="toggle-group-item"]:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+:root[data-style="sharp"] [data-slot="toggle-group-item"]:only-child {
+  border-radius: var(--radius);
+}
+
 /* Glass (inspirado en Liquid Glass): solo el chrome (sidebar, navbar, diálogos,
    menús). Las tarjetas de tarea no llevan blur: en tableros grandes costaría
    scroll y arrastre fluidos.
