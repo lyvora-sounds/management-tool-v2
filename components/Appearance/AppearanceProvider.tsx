@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { LiquidGlassEngine } from "./LiquidGlassEngine";
 import {
   APPEARANCE_COOKIE,
   DEFAULT_APPEARANCE,
@@ -41,59 +42,12 @@ export function useAppearance() {
 
 const SAVE_DEBOUNCE_MS = 400;
 
-// Mapa de desplazamiento del filtro de refracción: neutro (128,128) en el centro
-// y empuja hacia dentro cerca de los bordes (R en horizontal, G en vertical).
-const LENS_MAP =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" preserveAspectRatio="none">` +
-      `<defs>` +
-      `<linearGradient id="x" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="rgb(255,0,0)"/><stop offset=".16" stop-color="rgb(128,0,0)"/><stop offset=".84" stop-color="rgb(128,0,0)"/><stop offset="1" stop-color="rgb(0,0,0)"/></linearGradient>` +
-      `<linearGradient id="y" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgb(0,255,0)"/><stop offset=".16" stop-color="rgb(0,128,0)"/><stop offset=".84" stop-color="rgb(0,128,0)"/><stop offset="1" stop-color="rgb(0,0,0)"/></linearGradient>` +
-      `</defs>` +
-      `<rect width="200" height="200" fill="url(#x)"/>` +
-      `<rect width="200" height="200" fill="url(#y)" style="mix-blend-mode:screen"/>` +
-      `</svg>`,
-  );
-
-function GlassLensFilter() {
-  return (
-    <svg aria-hidden width="0" height="0" style={{ position: "absolute" }}>
-      <filter
-        id="kiki-lens"
-        x="0"
-        y="0"
-        width="100%"
-        height="100%"
-        colorInterpolationFilters="sRGB"
-      >
-        <feImage
-          href={LENS_MAP}
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-          preserveAspectRatio="none"
-          result="map"
-        />
-        <feDisplacementMap
-          in="SourceGraphic"
-          in2="map"
-          scale="30"
-          xChannelSelector="R"
-          yChannelSelector="G"
-        />
-      </filter>
-    </svg>
-  );
-}
-
 // Safari y Firefox no admiten filtros SVG en backdrop-filter.
 function supportsLens() {
   return (
     typeof CSS !== "undefined" &&
     /Chrome\//.test(navigator.userAgent) &&
-    CSS.supports("backdrop-filter", "url(#kiki-lens)")
+    CSS.supports("backdrop-filter", "url(#kiki-lens-test)")
   );
 }
 
@@ -121,6 +75,7 @@ export function AppearanceProvider({
   const [appearance, setAppearance] = useState<Appearance>(() =>
     sanitizeAppearance(initial),
   );
+  const [lens, setLens] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -132,8 +87,10 @@ export function AppearanceProvider({
       root.dataset.accent = appearance.accent;
       root.dataset.density = appearance.density;
       root.dataset.style = appearance.style;
-      if (appearance.style === "glass" && supportsLens()) root.dataset.lens = "on";
+      const lensOn = appearance.style === "glass" && supportsLens();
+      if (lensOn) root.dataset.lens = "on";
       else delete root.dataset.lens;
+      setLens(lensOn);
       if (appearance.gradients) delete root.dataset.gradients;
       else root.dataset.gradients = "off";
     };
@@ -204,7 +161,7 @@ export function AppearanceProvider({
 
   return (
     <AppearanceContext.Provider value={value}>
-      {appearance.style === "glass" && <GlassLensFilter />}
+      {lens && <LiquidGlassEngine />}
       {children}
     </AppearanceContext.Provider>
   );
