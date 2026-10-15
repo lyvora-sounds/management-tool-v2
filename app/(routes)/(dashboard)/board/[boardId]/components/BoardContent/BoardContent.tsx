@@ -114,6 +114,7 @@ export function BoardContent({
   const taskIdParam = searchParams.get("taskId");
 
   const lists = useBoardStore((s) => s.lists);
+  const epicsRevision = useBoardStore((s) => s.epicsRevision);
   const setLists = useBoardStore((s) => s.setLists);
   const reorderLists = useBoardStore((s) => s.reorderLists);
   const moveTask = useBoardStore((s) => s.moveTask);
@@ -150,11 +151,20 @@ export function BoardContent({
   }, [initialLists, setLists]);
 
   useEffect(() => {
+    let cancelled = false;
     fetch(`/api/boards/${boardId}/epics`)
-      .then((res) => res.json())
-      .then((data) => setEpics(data.epics || []))
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then((data) => {
+        if (!cancelled && Array.isArray(data?.epics)) setEpics(data.epics);
+      })
       .catch(() => {});
-  }, [boardId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [boardId, initialLists, epicsRevision]);
 
   const availableLabels = useMemo(() => {
     const map = new Map<string, { id: string; title: string; color: string }>();

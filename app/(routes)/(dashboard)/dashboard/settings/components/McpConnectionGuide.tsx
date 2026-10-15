@@ -100,7 +100,7 @@ export function McpConnectionGuide({ endpoint }: { endpoint: string }) {
             <div id={`mcp-step-${step}`} hidden={activeStep !== step} className="px-3 pb-4 pl-12 text-sm leading-relaxed text-muted-foreground">{t(`${provider}.step${step}`)}</div>
           </li>)}
         </ol>
-        <details className="text-xs leading-relaxed text-muted-foreground"><summary className="cursor-pointer font-medium">{t("accessTitle")}</summary><p className="mt-2">{t("intro")}</p></details>
+        <details className="text-xs leading-relaxed text-muted-foreground"><summary className="cursor-pointer font-medium">{t("accessTitle")}</summary><p className="mt-2">{t("intro")}</p><p className="mt-2">{t("tools")}</p></details>
       </div>
       <div className="min-w-0 space-y-5 bg-muted/20 p-5 sm:p-6">
         <div className="space-y-2">

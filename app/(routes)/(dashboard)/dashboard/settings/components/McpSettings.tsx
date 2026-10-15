@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bot, Check, Copy, Loader2, ShieldCheck, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -47,21 +47,6 @@ const SCOPES: { id: McpScope; labelKey: "mcpScopeOrganization" | "mcpScopeBoard"
   { id: "board", labelKey: "mcpScopeBoard" },
 ];
 
-function clientConfig(endpoint: string, token: string) {
-  return JSON.stringify(
-    {
-      mcpServers: {
-        kikiboard: {
-          url: endpoint,
-          headers: { Authorization: `Bearer ${token || "kiki_YOUR_TOKEN"}` },
-        },
-      },
-    },
-    null,
-    2,
-  );
-}
-
 function canManage(role: string) {
   return role === "owner" || role === "admin";
 }
@@ -74,7 +59,7 @@ export function McpSettings() {
   const [organizationId, setOrganizationId] = useState("");
   const [boardId, setBoardId] = useState("");
   const [endpoint, setEndpoint] = useState("/api/mcp");
-  const [copied, setCopied] = useState<"url" | "config" | "token" | null>(null);
+  const [tokenCopied, setTokenCopied] = useState(false);
   const [tokenName, setTokenName] = useState("");
   const [access, setAccess] = useState<"read" | "write">("read");
   const [createdToken, setCreatedToken] = useState("");
@@ -111,10 +96,6 @@ export function McpSettings() {
 
   const organization = organizations.find((item) => item.id === organizationId) ?? null;
   const board = organization?.boards.find((item) => item.id === boardId) ?? organization?.boards[0] ?? null;
-  const config = useMemo(
-    () => clientConfig(endpoint, createdToken),
-    [endpoint, createdToken],
-  );
   const allowed = scope === "organization"
     ? !!organization && canManage(organization.role)
     : !!board?.canIssueToken;
@@ -153,6 +134,7 @@ export function McpSettings() {
   };
 
   const selectScope = (next: McpScope) => {
+    if (next === scope) return;
     setScope(next);
     setCreatedToken("");
     setTokens([]);
@@ -164,15 +146,15 @@ export function McpSettings() {
     setTokens([]);
   };
 
-  const copyValue = async (value: string, kind: "url" | "config" | "token") => {
-    const ok = await copyToClipboard(value);
+  const copyToken = async () => {
+    const ok = await copyToClipboard(createdToken);
     if (!ok) {
       toast.error(t("mcpCopyError"));
       return;
     }
-    setCopied(kind);
-    toast.success(kind === "token" ? t("mcpTokenCopied") : t("mcpCopied"));
-    window.setTimeout(() => setCopied((current) => (current === kind ? null : current)), 1500);
+    setTokenCopied(true);
+    toast.success(t("mcpTokenCopied"));
+    window.setTimeout(() => setTokenCopied(false), 1500);
   };
 
   const createToken = async () => {
@@ -252,27 +234,6 @@ export function McpSettings() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <McpConnectionGuide endpoint={endpoint} />
-        <div className="grid gap-2 sm:grid-cols-2">
-          {SCOPES.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => selectScope(item.id)}
-              className={`rounded-xl border px-3 py-3 text-left text-sm font-semibold transition-colors ${
-                scope === item.id
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "bg-card text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t(item.labelKey)}
-            </button>
-          ))}
-        </div>
-        {organization && <p className="text-sm text-muted-foreground">{scopeHint()}</p>}
-      </div>
-
       {organizations.length === 0 ? (
         <div className="rounded-xl border bg-card p-6 shadow-sm space-y-3">
           <p className="text-sm font-medium">{t("mcpNoOrganizations")}</p>
@@ -282,64 +243,90 @@ export function McpSettings() {
           </Button>
         </div>
       ) : organization && (
-        <>
-          <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
-            <div className={`grid gap-4 ${scope === "board" ? "sm:grid-cols-2" : ""}`}>
-              <div className="space-y-2">
-                <Label>{t("mcpChooseOrganization")}</Label>
-                <Select
-                  value={organization.id}
-                  onValueChange={(value) => {
-                    if (typeof value === "string") selectOrganization(value);
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue>{organization.name}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {organizations.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {scope === "board" && (
-                <div className="space-y-2">
-                  <Label>{t("mcpChooseBoard")}</Label>
-                  {organization.boards.length === 0 || !board ? (
-                    <p className="text-sm text-muted-foreground">{t("mcpNoBoards")}</p>
-                  ) : (
-                    <Select
-                      value={board.id}
-                      onValueChange={(value) => {
-                        if (typeof value === "string") selectBoard(value);
-                      }}
+        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <fieldset aria-label={t("mcpScopeTitle")} className="m-0 min-w-0 divide-y border-0 p-0">
+            {SCOPES.map((item) => {
+              const selected = scope === item.id;
+              return (
+                <div key={item.id} className={selected ? "bg-primary/5" : undefined}>
+                  <button
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => selectScope(item.id)}
+                    className="flex w-full items-start gap-3 px-5 py-4 text-left"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${
+                        selected ? "border-primary" : "border-muted-foreground/50"
+                      }`}
                     >
-                      <SelectTrigger className="w-full">
-                        <SelectValue>{board.title}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {organization.boards.map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      {selected && <span className="size-2 rounded-full bg-primary" />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className={`block text-sm font-semibold ${selected ? "text-primary" : "text-foreground"}`}>
+                        {t(item.labelKey)}
+                      </span>
+                      {selected && (
+                        <span className="mt-1 block text-sm font-normal text-muted-foreground">{scopeHint()}</span>
+                      )}
+                    </span>
+                  </button>
+                  {selected && (
+                    <div className={`grid gap-4 px-5 pb-5 pl-12 ${item.id === "board" && board ? "sm:grid-cols-2" : ""}`}>
+                      <div className="space-y-2">
+                        <Label>{t("mcpChooseOrganization")}</Label>
+                        <Select
+                          value={organization.id}
+                          onValueChange={(value) => {
+                            if (typeof value === "string") selectOrganization(value);
+                          }}
+                        >
+                          <SelectTrigger className="w-full bg-background">
+                            <SelectValue>{organization.name}</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizations.map((org) => (
+                              <SelectItem key={org.id} value={org.id}>
+                                {org.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {item.id === "board" && board && (
+                        <div className="space-y-2">
+                          <Label>{t("mcpChooseBoard")}</Label>
+                          <Select
+                            value={board.id}
+                            onValueChange={(value) => {
+                              if (typeof value === "string") selectBoard(value);
+                            }}
+                          >
+                            <SelectTrigger className="w-full bg-background">
+                              <SelectValue>{board.title}</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {organization.boards.map((boardOption) => (
+                                <SelectItem key={boardOption.id} value={boardOption.id}>
+                                  {boardOption.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Link href={`/board/${board.id}`} className="inline-block text-sm font-medium text-primary hover:underline">
+                            {t("mcpOpenBoard")}
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-            {scope === "board" && board && (
-              <Link href={`/board/${board.id}`} className="inline-block text-sm font-medium text-primary hover:underline">
-                {t("mcpOpenBoard")}
-              </Link>
-            )}
-          </div>
+              );
+            })}
+          </fieldset>
 
-          <div className="rounded-xl border bg-card p-6 shadow-sm space-y-5">
+          <div className="space-y-5 border-t p-5 sm:p-6">
             {createdToken && (
               <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:bg-amber-950/20">
                 <Label htmlFor="mcp-token">{t("mcpTokenLabel")}</Label>
@@ -357,9 +344,9 @@ export function McpSettings() {
                     type="button"
                     variant="outline"
                     className="shrink-0 gap-1.5"
-                    onClick={() => copyValue(createdToken, "token")}
+                    onClick={() => void copyToken()}
                   >
-                    {copied === "token" ? <Check size={14} /> : <Copy size={14} />}
+                    {tokenCopied ? <Check size={14} /> : <Copy size={14} />}
                     {t("mcpCopyToken")}
                   </Button>
                 </div>
@@ -422,45 +409,13 @@ export function McpSettings() {
                 ))}
               </div>
             )}
-
-            <div className="space-y-2">
-              <Label htmlFor="mcp-url">{t("mcpEndpoint")}</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="mcp-url"
-                  readOnly
-                  value={endpoint}
-                  onFocus={(event) => event.currentTarget.select()}
-                  className="font-mono text-xs select-text"
-                />
-                <Button type="button" variant="outline" className="shrink-0 gap-1.5" onClick={() => copyValue(endpoint, "url")}>
-                  {copied === "url" ? <Check size={14} /> : <Copy size={14} />}
-                  {t("mcpCopy")}
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Label>{t("mcpConfigTitle")}</Label>
-                <Button type="button" size="sm" variant="outline" className="gap-1.5" onClick={() => copyValue(config, "config")}>
-                  {copied === "config" ? <Check size={13} /> : <Copy size={13} />}
-                  {t("mcpCopy")}
-                </Button>
-              </div>
-              <pre className="overflow-x-auto rounded-lg border bg-muted p-3 font-mono text-xs select-text">{config}</pre>
-              {!createdToken && <p className="text-xs text-muted-foreground">{t("mcpConfigHint")}</p>}
-            </div>
-
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold">{t("mcpToolsTitle")}</h3>
-              <p className="text-sm text-muted-foreground">
-                {t("mcpToolProject")} {t("mcpToolList")} {t("mcpToolGet")}
-              </p>
-            </div>
           </div>
-          {allowed && <McpChangeHistory key={`${organization.id}:${scope}:${board?.id ?? ""}`} organizationId={organization.id} boardId={scope === "board" ? board?.id ?? null : null} />}
-        </>
+        </div>
+      )}
+
+      <McpConnectionGuide endpoint={endpoint} />
+      {organization && allowed && (
+        <McpChangeHistory key={`${organization.id}:${scope}:${board?.id ?? ""}`} organizationId={organization.id} boardId={scope === "board" ? board?.id ?? null : null} />
       )}
     </div>
   );

@@ -122,7 +122,7 @@ export function AppearanceSettings() {
   return (
     <div className="space-y-8">
       <Section title={t("appearanceModeTitle")} description={t("appearanceModeDesc")}>
-        <div className="grid grid-cols-3 gap-2 sm:max-w-md">
+        <div className="grid grid-cols-3 gap-2">
           {THEME_MODES.map((mode) => {
             const Icon = MODE_ICON[mode];
             return (
@@ -186,7 +186,7 @@ export function AppearanceSettings() {
       </Section>
 
       <Section title={t("appearanceDensityTitle")} description={t("appearanceDensityDesc")}>
-        <div className="grid grid-cols-2 gap-2 sm:max-w-md">
+        <div className="grid grid-cols-2 gap-2">
           {DENSITIES.map((density) => (
             <ChoiceButton
               key={density}
@@ -238,7 +238,7 @@ export function AppearanceSettings() {
       {/* Solo Glass tiene fondo degradado; en el resto de estilos las superficies son planas. */}
       {appearance.style === "glass" && (
         <Section title={t("appearanceEffectsTitle")} description={t("appearanceEffectsDesc")}>
-          <div className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3 sm:max-w-md">
+          <div className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
             <label htmlFor="appearance-gradients" className="cursor-pointer text-sm">
               {t("appearanceGradients")}
             </label>

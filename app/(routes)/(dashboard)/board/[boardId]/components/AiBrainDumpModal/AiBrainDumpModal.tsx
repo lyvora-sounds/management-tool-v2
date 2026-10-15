@@ -6,10 +6,10 @@ import {
   Loader2,
   Trash2,
   Check,
-  Calendar,
-  Layers,
   ArrowRight,
   ListPlus,
+  Plus,
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -24,9 +24,11 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { VoiceInput } from "@/components/Shared/VoiceInput/VoiceInput";
@@ -34,6 +36,25 @@ import { useBoardStore } from "../../store/useBoardStore";
 import { ParsedTask } from "@/lib/ai/types";
 import { PRIORITIES, Priority } from "../TaskPriority/TaskPriority.constants";
 import Link from "next/link";
+import {
+  allTicketIndexes,
+  applyEpicToSelected,
+  shiftCreatingFor,
+  shiftSelection,
+  toggleTicketIndex,
+} from "./epicSelection";
+
+const CREATE_EPIC_VALUE = "__create_epic__";
+const EPIC_COLORS = [
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#f97316",
+  "#10b981",
+  "#06b6d4",
+  "#eab308",
+  "#64748b",
+];
 
 interface AiBrainDumpModalProps {
   boardId: string;
@@ -53,7 +74,9 @@ export function AiBrainDumpModal({
   const tPriority = useTranslations("priority");
   const tBoard = useTranslations("board");
   const tCommon = useTranslations("common");
+  const tEpics = useTranslations("epics");
   const lists = useBoardStore((s) => s.lists);
+  const notifyEpicsChanged = useBoardStore((s) => s.notifyEpicsChanged);
   const [inputText, setInputText] = useState("");
   const [parsing, setParsing] = useState(false);
   const [inserting, setInserting] = useState(false);
@@ -62,10 +85,19 @@ export function AiBrainDumpModal({
   >([]);
   const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
   const [noApiKey, setNoApiKey] = useState(false);
+  const [creatingFor, setCreatingFor] = useState<number | null>(null);
+  const [newEpicTitle, setNewEpicTitle] = useState("");
+  const [newEpicColor, setNewEpicColor] = useState(EPIC_COLORS[0]);
+  const [epicAssignees, setEpicAssignees] = useState<number[]>([]);
+  const [creatingEpic, setCreatingEpic] = useState(false);
 
   useEffect(() => {
     if (open) {
       loadEpics();
+    } else {
+      setCreatingFor(null);
+      setNewEpicTitle("");
+      setEpicAssignees([]);
     }
   }, [open, boardId]);
 
@@ -86,13 +118,15 @@ export function AiBrainDumpModal({
   };
 
   const handleParse = async () => {
-    if (!inputText.trim()) {
-      toast.info(t("emptyInput"));
+    if (!inputText.trim() || creatingEpic) {
+      if (!inputText.trim()) toast.info(t("emptyInput"));
       return;
     }
 
     setParsing(true);
     setNoApiKey(false);
+    setCreatingFor(null);
+    setEpicAssignees([]);
     try {
       const res = await fetch("/api/ai/parse", {
         method: "POST",
@@ -137,7 +171,10 @@ export function AiBrainDumpModal({
   };
 
   const handleRemoveTask = (index: number) => {
+    if (creatingEpic) return;
     setParsedTasks((prev) => prev.filter((_, i) => i !== index));
+    setCreatingFor((current) => shiftCreatingFor(current, index));
+    setEpicAssignees((current) => shiftSelection(current, index));
   };
 
   const handleUpdateTaskField = (index: number, field: string, value: any) => {
@@ -146,8 +183,47 @@ export function AiBrainDumpModal({
     );
   };
 
+  const handleCreateEpic = async () => {
+    const title = newEpicTitle.trim();
+    if (!title || creatingEpic) return;
+    const selected = epicAssignees;
+
+    setCreatingEpic(true);
+    try {
+      const res = await fetch(`/api/boards/${boardId}/epics`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, color: newEpicColor }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || tEpics("createError"));
+        return;
+      }
+
+      const epic = {
+        id: data.id as string,
+        title: data.title as string,
+        color: (data.color as string) || newEpicColor,
+      };
+      setEpics((prev) =>
+        prev.some((item) => item.id === epic.id) ? prev : [...prev, epic],
+      );
+      setParsedTasks((prev) => applyEpicToSelected(prev, selected, epic.id));
+      setCreatingFor(null);
+      setNewEpicTitle("");
+      setEpicAssignees([]);
+      notifyEpicsChanged();
+      toast.success(tEpics("created"));
+    } catch {
+      toast.error(tCommon("connectionError"));
+    } finally {
+      setCreatingEpic(false);
+    }
+  };
+
   const handleInsertAll = async () => {
-    if (parsedTasks.length === 0) return;
+    if (parsedTasks.length === 0 || creatingEpic) return;
 
     setInserting(true);
     try {
@@ -223,7 +299,7 @@ export function AiBrainDumpModal({
               <Button
                 size="sm"
                 onClick={handleParse}
-                disabled={parsing || !inputText.trim()}
+                disabled={parsing || creatingEpic || !inputText.trim()}
                 className="gap-1.5 h-8 text-xs font-semibold"
               >
                 {parsing ? (
@@ -291,6 +367,7 @@ export function AiBrainDumpModal({
                         size="icon"
                         variant="ghost"
                         onClick={() => handleRemoveTask(idx)}
+                        disabled={creatingEpic}
                         className="h-8 w-8 text-muted-foreground hover:text-rose-500 shrink-0"
                         title={t("discardTicket")}
                       >
@@ -333,13 +410,21 @@ export function AiBrainDumpModal({
                         </label>
                         <Select
                           value={item.targetEpicId || "none"}
-                          onValueChange={(v) =>
+                          onValueChange={(v) => {
+                            if (v === CREATE_EPIC_VALUE) {
+                              if (creatingEpic) return;
+                              setCreatingFor(idx);
+                              setNewEpicTitle("");
+                              setEpicAssignees(allTicketIndexes(parsedTasks.length));
+                              return;
+                            }
+                            if (!v) return;
                             handleUpdateTaskField(
                               idx,
                               "targetEpicId",
                               v === "none" ? null : v,
-                            )
-                          }
+                            );
+                          }}
                         >
                           <SelectTrigger className="h-7 text-xs w-full justify-between">
                             <SelectValue placeholder={t("noEpic")}>
@@ -373,6 +458,13 @@ export function AiBrainDumpModal({
                                 </div>
                               </SelectItem>
                             ))}
+                            <SelectSeparator />
+                            <SelectItem value={CREATE_EPIC_VALUE}>
+                              <span className="flex items-center gap-1.5">
+                                <Plus size={12} />
+                                <span>{t("createEpic")}</span>
+                              </span>
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -419,6 +511,126 @@ export function AiBrainDumpModal({
                       </div>
                     </div>
 
+                    {creatingFor === idx && (
+                      <form
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          handleCreateEpic();
+                        }}
+                        className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold">
+                            {tEpics("createNew")}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={creatingEpic}
+                            onClick={() => setCreatingFor(null)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X size={12} />
+                          </Button>
+                        </div>
+                        <Input
+                          autoFocus
+                          disabled={creatingEpic}
+                          value={newEpicTitle}
+                          onChange={(event) => setNewEpicTitle(event.target.value)}
+                          placeholder={tEpics("titlePlaceholder")}
+                          className="h-8 text-xs bg-background"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          {EPIC_COLORS.map((color) => (
+                            <button
+                              key={color}
+                              type="button"
+                              disabled={creatingEpic}
+                              aria-label={`${tEpics("color")} ${color}`}
+                              onClick={() => setNewEpicColor(color)}
+                              className={`w-5 h-5 rounded-full transition-transform ${
+                                newEpicColor === color
+                                  ? "scale-125 ring-2 ring-offset-1 ring-ring"
+                                  : "hover:scale-110"
+                              }`}
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                        <fieldset className="space-y-1.5" disabled={creatingEpic}>
+                          <legend className="text-xs font-medium">
+                            {t("includeInEpic")}
+                          </legend>
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id="brain-dump-assign-all"
+                              disabled={creatingEpic}
+                              checked={
+                                parsedTasks.length > 0 &&
+                                epicAssignees.length === parsedTasks.length
+                              }
+                              indeterminate={
+                                epicAssignees.length > 0 &&
+                                epicAssignees.length < parsedTasks.length
+                              }
+                              onCheckedChange={() =>
+                                setEpicAssignees(
+                                  epicAssignees.length === parsedTasks.length
+                                    ? []
+                                    : allTicketIndexes(parsedTasks.length),
+                                )
+                              }
+                            />
+                            <label
+                              htmlFor="brain-dump-assign-all"
+                              className="text-xs font-medium cursor-pointer"
+                            >
+                              {t("assignAll")}
+                            </label>
+                          </div>
+                          <div className="max-h-32 space-y-1 overflow-y-auto pl-1">
+                            {parsedTasks.map((task, index) => (
+                              <div key={index} className="flex items-center gap-2">
+                                <Checkbox
+                                  id={`brain-dump-epic-ticket-${index}`}
+                                  disabled={creatingEpic}
+                                  checked={epicAssignees.includes(index)}
+                                  onCheckedChange={() =>
+                                    setEpicAssignees((current) =>
+                                      toggleTicketIndex(current, index),
+                                    )
+                                  }
+                                />
+                                <label
+                                  htmlFor={`brain-dump-epic-ticket-${index}`}
+                                  className="min-w-0 truncate text-xs cursor-pointer"
+                                >
+                                  {task.title.trim() || t("untitledTicket")}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </fieldset>
+                        <div className="flex justify-end">
+                          <Button
+                            type="submit"
+                            size="sm"
+                            disabled={creatingEpic || !newEpicTitle.trim()}
+                            className="h-7 gap-1.5 text-xs"
+                          >
+                            {creatingEpic ? (
+                              <Loader2 size={12} className="animate-spin" />
+                            ) : (
+                              <Plus size={12} />
+                            )}
+                            <span>{tEpics("saveEpic")}</span>
+                          </Button>
+                        </div>
+                      </form>
+                    )}
+
                     {/* Subtasks Checklist */}
                     {item.subtasks && item.subtasks.length > 0 && (
                       <div className="space-y-1 pt-1">
@@ -450,7 +662,7 @@ export function AiBrainDumpModal({
                 <Button
                   size="sm"
                   onClick={handleInsertAll}
-                  disabled={inserting || parsedTasks.length === 0}
+                  disabled={inserting || creatingEpic || parsedTasks.length === 0}
                   className="gap-1.5"
                 >
                   {inserting ? (
