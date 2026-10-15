@@ -27,6 +27,7 @@ model User {
   activityLogs         ActivityLog[]
   completedTasks       Task[]                @relation("CompletedTasks")
   settings             UserSettings?
+  mfa                  UserMfa?
   calendarSync         UserCalendarSync?
   externalAccessTokens ExternalAccessToken[] @relation("ExternalAccessTokenCreator")
   createdOrganizations Organization[]        @relation("OrganizationCreator")
@@ -60,6 +61,27 @@ model UserSettings {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model UserMfa {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled       Boolean   @default(false)
+  phone              String?
+  phoneEnabled       Boolean   @default(false)
+  phonePending       String?
+  totpPending        String?
+  totpSecret         String?
+  totpEnabled        Boolean   @default(false)
+  emailCodeHash      String?
+  emailCodeExpiresAt DateTime?
+  emailCodeAttempts  Int       @default(0)
+  phoneCodeHash      String?
+  phoneCodeExpiresAt DateTime?
+  phoneCodeAttempts  Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model UserCalendarSync {
