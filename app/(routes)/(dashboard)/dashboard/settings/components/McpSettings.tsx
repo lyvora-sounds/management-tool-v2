@@ -253,7 +253,7 @@ export function McpSettings() {
                     type="button"
                     aria-pressed={selected}
                     onClick={() => selectScope(item.id)}
-                    className="flex w-full items-start gap-3 px-5 py-4 text-left"
+                    className="flex w-full items-start gap-3 px-5 py-4 text-left sm:px-6"
                   >
                     <span
                       aria-hidden="true"
@@ -273,7 +273,7 @@ export function McpSettings() {
                     </span>
                   </button>
                   {selected && (
-                    <div className={`grid gap-4 px-5 pb-5 pl-12 ${item.id === "board" && board ? "sm:grid-cols-2" : ""}`}>
+                    <div className="grid gap-4 px-5 pb-5 sm:grid-cols-2 sm:px-6">
                       <div className="space-y-2">
                         <Label>{t("mcpChooseOrganization")}</Label>
                         <Select
@@ -314,7 +314,7 @@ export function McpSettings() {
                               ))}
                             </SelectContent>
                           </Select>
-                          <Link href={`/board/${board.id}`} className="inline-block text-sm font-medium text-primary hover:underline">
+                          <Link href={`/board/${board.id}`} className="inline-block text-xs font-medium text-primary hover:underline">
                             {t("mcpOpenBoard")}
                           </Link>
                         </div>
@@ -354,24 +354,31 @@ export function McpSettings() {
             )}
 
             <form
-              className="space-y-4"
+              className="grid items-start gap-x-4 gap-y-2 sm:grid-cols-2"
               onSubmit={(event) => {
                 event.preventDefault();
                 void createToken();
               }}
             >
-              <div className="space-y-2">
-                <Label htmlFor="mcp-token-name">{t("mcpTokenName")}</Label>
-                <Input
-                  id="mcp-token-name"
-                  value={tokenName}
-                  onChange={(event) => setTokenName(event.target.value)}
-                  placeholder={t("mcpTokenNamePlaceholder")}
-                  maxLength={80}
+              <Label htmlFor="mcp-token-name" className="order-1">{t("mcpTokenName")}</Label>
+              <label className="order-3 flex min-w-0 items-start gap-2 text-sm leading-snug sm:order-2">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 shrink-0"
+                  checked={access === "write"}
+                  onChange={(event) => setAccess(event.target.checked ? "write" : "read")}
                 />
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={access === "write"} onChange={(event) => setAccess(event.target.checked ? "write" : "read")} />{t("mcpWriteAccess")}</label>
+                <span className="min-w-0">{t("mcpWriteAccess")}</span>
+              </label>
+              <Input
+                id="mcp-token-name"
+                className="order-2 sm:order-3"
+                value={tokenName}
+                onChange={(event) => setTokenName(event.target.value)}
+                placeholder={t("mcpTokenNamePlaceholder")}
+                maxLength={80}
+              />
+              <div className="order-4 space-y-2">
                 <Button type="submit" disabled={!canCreate || creating}>
                   {creating && <Loader2 size={14} className="animate-spin" />}
                   {t("mcpCreateToken")}

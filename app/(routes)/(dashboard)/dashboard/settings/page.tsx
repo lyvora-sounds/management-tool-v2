@@ -376,88 +376,87 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* API Key Input */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* API Key Input */}
+            <div className={`space-y-2 ${provider === "custom" || baseUrl ? "" : "sm:col-span-2"}`}>
               <Label className="text-sm font-medium flex items-center gap-1.5">
                 <Key size={14} />
                 <span>{t("apiKey", { name: providerName ?? "" })}</span>
               </Label>
-              {hasApiKey && (
-                <span className="text-xs text-emerald-600 flex items-center gap-1">
+              <Input
+                data-guide="ai-key"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={
+                  hasApiKey
+                    ? t("keyPlaceholderChange", { masked: maskedApiKey })
+                    : selectedProviderMeta?.keyPlaceholder || t("keyPlaceholder")
+                }
+              />
+              {hasApiKey ? (
+                <p className="text-xs text-emerald-600 flex items-center gap-1">
                   <CheckCircle2 size={13} />
                   <span>{t("keyActive", { masked: maskedApiKey })}</span>
-                </span>
+                </p>
+              ) : (
+                <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <AlertCircle size={13} />
+                  <span>{t("keyNeeded")}</span>
+                </p>
               )}
             </div>
-            <Input
-              data-guide="ai-key"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={
-                hasApiKey
-                  ? t("keyPlaceholderChange", { masked: maskedApiKey })
-                  : selectedProviderMeta?.keyPlaceholder || t("keyPlaceholder")
-              }
-            />
-            {!hasApiKey && (
-              <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                <AlertCircle size={13} />
-                <span>
-                  {t("keyNeeded")}
-                </span>
-              </p>
+
+            {/* Custom Base URL (if custom or needed) */}
+            {(provider === "custom" || baseUrl) && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium flex items-center gap-1.5">
+                  <Server size={14} />
+                  <span>{t("customEndpoint")}</span>
+                </Label>
+                <Input
+                  value={baseUrl}
+                  onChange={(e) => setBaseUrl(e.target.value)}
+                  placeholder={t("customEndpointPlaceholder")}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("customEndpointHint")}
+                </p>
+              </div>
             )}
           </div>
-
-          {/* Custom Base URL (if custom or needed) */}
-          {(provider === "custom" || baseUrl) && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium flex items-center gap-1.5">
-                <Server size={14} />
-                <span>{t("customEndpoint")}</span>
-              </Label>
-              <Input
-                value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
-                placeholder={t("customEndpointPlaceholder")}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("customEndpointHint")}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Voice & Speech Preferences */}
-        <div className="rounded-xl border bg-card p-6 space-y-6 shadow-sm">
-          <div className="flex items-center gap-2.5 pb-4 border-b">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-              <Globe size={20} />
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <div className="grid items-start gap-4 sm:grid-cols-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                <Globe size={20} />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold">{t("voiceTitle")}</h2>
+                <p className="text-xs text-muted-foreground">
+                  {t("voiceDesc")}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold">{t("voiceTitle")}</h2>
-              <p className="text-xs text-muted-foreground">
-                {t("voiceDesc")}
-              </p>
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">{t("voiceLanguage")}</Label>
-            <Select
-              value={voiceLanguage}
-              onValueChange={(v) => setVoiceLanguage(v ?? "es-ES")}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="es-ES">🇪🇸 {tCommon("spanish")} (es-ES)</SelectItem>
-                <SelectItem value="en-US">🇺🇸 {tCommon("english")} (en-US)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="min-w-0 space-y-2">
+              <Label className="text-sm font-medium">{t("voiceLanguage")}</Label>
+              <Select
+                value={voiceLanguage}
+                onValueChange={(v) => setVoiceLanguage(v ?? "es-ES")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="es-ES">🇪🇸 {tCommon("spanish")} (es-ES)</SelectItem>
+                  <SelectItem value="en-US">🇺🇸 {tCommon("english")} (en-US)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
