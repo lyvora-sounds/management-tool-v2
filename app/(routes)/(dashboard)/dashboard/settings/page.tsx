@@ -104,6 +104,37 @@ const PROVIDERS: {
   },
 ];
 
+// Clerk pinta su propio tema claro. Estas variables apuntan a los tokens del
+// workspace, así Cuenta sigue el modo, el acento y el estilo del resto de la app.
+const clerkAppearance = {
+  variables: {
+    colorBackground: "var(--card)",
+    colorForeground: "var(--foreground)",
+    colorPrimary: "var(--primary)",
+    colorPrimaryForeground: "var(--primary-foreground)",
+    colorMuted: "var(--muted)",
+    colorMutedForeground: "var(--muted-foreground)",
+    colorInput: "var(--background)",
+    colorInputForeground: "var(--foreground)",
+    colorBorder: "var(--border)",
+    colorDanger: "var(--destructive)",
+    colorNeutral: "var(--foreground)",
+    colorRing: "var(--ring)",
+    colorShadow: "transparent",
+    borderRadius: "var(--radius)",
+    fontFamily: "inherit",
+  },
+  elements: {
+    rootBox: "w-full",
+    cardBox: "w-full max-w-full border border-border shadow-none",
+    card: "bg-transparent shadow-none",
+    navbar: "border-border bg-transparent",
+    scrollBox: "bg-transparent",
+    pageScrollBox: "bg-transparent",
+    footer: "bg-transparent",
+  },
+};
+
 type SettingsTab = "account" | "appearance" | "ai" | "custom-fields" | "mcp";
 
 const SETTINGS_TABS: SettingsTab[] = [
@@ -219,7 +250,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-6">
+    <div className="mx-auto w-full min-w-0 max-w-7xl p-4 sm:p-8 space-y-6">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -247,8 +278,8 @@ export default function SettingsPage() {
 
       {/* Cuenta: perfil, email, contraseña y sesiones, gestionado por Clerk */}
       {activeTab === "account" && (
-        <div className="flex justify-center [&_.cl-rootBox]:w-full [&_.cl-cardBox]:w-full [&_.cl-cardBox]:max-w-none [&_.cl-cardBox]:shadow-none">
-          <UserProfile routing="hash" />
+        <div className="w-full min-w-0 [&_.cl-rootBox]:w-full [&_.cl-rootBox]:max-w-full [&_.cl-cardBox]:w-full [&_.cl-cardBox]:max-w-full [&_.cl-cardBox]:shadow-none">
+          <UserProfile routing="hash" appearance={clerkAppearance} />
         </div>
       )}
 
@@ -345,88 +376,87 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* API Key Input */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* API Key Input */}
+            <div className={`space-y-2 ${provider === "custom" || baseUrl ? "" : "sm:col-span-2"}`}>
               <Label className="text-sm font-medium flex items-center gap-1.5">
                 <Key size={14} />
                 <span>{t("apiKey", { name: providerName ?? "" })}</span>
               </Label>
-              {hasApiKey && (
-                <span className="text-xs text-emerald-600 flex items-center gap-1">
+              <Input
+                data-guide="ai-key"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={
+                  hasApiKey
+                    ? t("keyPlaceholderChange", { masked: maskedApiKey })
+                    : selectedProviderMeta?.keyPlaceholder || t("keyPlaceholder")
+                }
+              />
+              {hasApiKey ? (
+                <p className="text-xs text-emerald-600 flex items-center gap-1">
                   <CheckCircle2 size={13} />
                   <span>{t("keyActive", { masked: maskedApiKey })}</span>
-                </span>
+                </p>
+              ) : (
+                <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <AlertCircle size={13} />
+                  <span>{t("keyNeeded")}</span>
+                </p>
               )}
             </div>
-            <Input
-              data-guide="ai-key"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={
-                hasApiKey
-                  ? t("keyPlaceholderChange", { masked: maskedApiKey })
-                  : selectedProviderMeta?.keyPlaceholder || t("keyPlaceholder")
-              }
-            />
-            {!hasApiKey && (
-              <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                <AlertCircle size={13} />
-                <span>
-                  {t("keyNeeded")}
-                </span>
-              </p>
+
+            {/* Custom Base URL (if custom or needed) */}
+            {(provider === "custom" || baseUrl) && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium flex items-center gap-1.5">
+                  <Server size={14} />
+                  <span>{t("customEndpoint")}</span>
+                </Label>
+                <Input
+                  value={baseUrl}
+                  onChange={(e) => setBaseUrl(e.target.value)}
+                  placeholder={t("customEndpointPlaceholder")}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("customEndpointHint")}
+                </p>
+              </div>
             )}
           </div>
-
-          {/* Custom Base URL (if custom or needed) */}
-          {(provider === "custom" || baseUrl) && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium flex items-center gap-1.5">
-                <Server size={14} />
-                <span>{t("customEndpoint")}</span>
-              </Label>
-              <Input
-                value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
-                placeholder={t("customEndpointPlaceholder")}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("customEndpointHint")}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Voice & Speech Preferences */}
-        <div className="rounded-xl border bg-card p-6 space-y-6 shadow-sm">
-          <div className="flex items-center gap-2.5 pb-4 border-b">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-              <Globe size={20} />
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <div className="grid items-start gap-4 sm:grid-cols-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                <Globe size={20} />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold">{t("voiceTitle")}</h2>
+                <p className="text-xs text-muted-foreground">
+                  {t("voiceDesc")}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold">{t("voiceTitle")}</h2>
-              <p className="text-xs text-muted-foreground">
-                {t("voiceDesc")}
-              </p>
-            </div>
-          </div>
 
-          <div className="space-y-2 max-w-sm">
-            <Label className="text-sm font-medium">{t("voiceLanguage")}</Label>
-            <Select
-              value={voiceLanguage}
-              onValueChange={(v) => setVoiceLanguage(v ?? "es-ES")}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="es-ES">🇪🇸 {tCommon("spanish")} (es-ES)</SelectItem>
-                <SelectItem value="en-US">🇺🇸 {tCommon("english")} (en-US)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="min-w-0 space-y-2">
+              <Label className="text-sm font-medium">{t("voiceLanguage")}</Label>
+              <Select
+                value={voiceLanguage}
+                onValueChange={(v) => setVoiceLanguage(v ?? "es-ES")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="es-ES">🇪🇸 {tCommon("spanish")} (es-ES)</SelectItem>
+                  <SelectItem value="en-US">🇺🇸 {tCommon("english")} (en-US)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 

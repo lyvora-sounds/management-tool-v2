@@ -34,7 +34,7 @@ The UI `VoiceInput` component records in the browser and posts here.
 
 `parseBrainDump` asks the model (see `lib/ai/prompts.ts`) for a JSON list of tasks: title, description, priority, dates, subtasks, target list.
 
-The client then sends that list to `POST /api/boards/[boardId]/batchTasks`, which inserts cards and logs `activity.brainDump`.
+Before insert, the review step can create a board epic and choose which detected tickets join it. All of them start selected. Saving the epic refreshes the board epic list. The client then sends that list to `POST /api/boards/[boardId]/batchTasks`, which inserts cards and logs `activity.brainDump`.
 
 ## Improve a card
 

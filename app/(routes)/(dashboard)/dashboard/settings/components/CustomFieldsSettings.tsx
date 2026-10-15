@@ -407,15 +407,15 @@ export function CustomFieldsSettings() {
               </div>
             </div>
 
-            <div className="grid gap-3">
+            <div className="grid gap-3 lg:grid-cols-2">
               {defaultFields.map((field) => (
                 <div
                   key={field.id}
-                  className="flex items-center justify-between p-3.5 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                  className="flex flex-col gap-2 p-3.5 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
                 >
-                  <div className="space-y-1 min-w-0 pr-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{field.name}</span>
+                  <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className="break-words font-medium text-sm">{field.name}</span>
                       <Badge variant="secondary" className="text-[10px] uppercase tracking-wider font-semibold">
                         {typeLabel(field.type, t)}
                       </Badge>
@@ -423,37 +423,38 @@ export function CustomFieldsSettings() {
                         {t("isDefault")}
                       </Badge>
                     </div>
-                    {field.options && field.options.length > 0 && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {t("optionsLabel")} <code className="text-[11px]">{field.options.join(", ")}</code>
-                      </p>
-                    )}
-                  </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    {field.type === "SELECT" && isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(field)}
-                        className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        <Edit2 size={13} className="mr-1" />
-                        {t("editOptions")}
-                      </Button>
-                    )}
+                    <div className="ml-auto flex max-w-full min-w-0 flex-wrap items-center justify-end gap-2">
+                      {field.type === "SELECT" && isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditDialog(field)}
+                          className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit2 size={13} className="mr-1" />
+                          {t("editOptions")}
+                        </Button>
+                      )}
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {field.enabled ? t("enabled") : t("disabled")}
-                      </span>
-                      <Switch
-                        checked={field.enabled}
-                        disabled={!isAdmin || savingFieldId === field.id}
-                        onCheckedChange={() => handleToggleEnabled(field)}
-                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {field.enabled ? t("enabled") : t("disabled")}
+                        </span>
+                        <Switch
+                          checked={field.enabled}
+                          disabled={!isAdmin || savingFieldId === field.id}
+                          onCheckedChange={() => handleToggleEnabled(field)}
+                        />
+                      </div>
                     </div>
                   </div>
+
+                  {field.options && field.options.length > 0 && (
+                    <p className="text-xs text-muted-foreground break-words">
+                      {t("optionsLabel")} <code className="text-[11px]">{field.options.join(", ")}</code>
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -488,58 +489,59 @@ export function CustomFieldsSettings() {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-3">
+              <div className="grid gap-3 lg:grid-cols-2">
                 {userCustomFields.map((field) => (
                   <div
                     key={field.id}
-                    className="flex items-center justify-between p-3.5 rounded-lg border bg-background hover:border-primary/40 transition-all"
+                    className="flex flex-col gap-2 p-3.5 rounded-lg border bg-background hover:border-primary/40 transition-all"
                   >
-                    <div className="space-y-1 min-w-0 pr-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{field.name}</span>
+                    <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <span className="break-words font-medium text-sm">{field.name}</span>
                         <Badge variant="secondary" className="text-[10px] uppercase tracking-wider font-semibold">
                           {typeLabel(field.type, t)}
                         </Badge>
                       </div>
-                      {field.options && field.options.length > 0 && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          {t("optionsLabel")} <code className="text-[11px]">{field.options.join(", ")}</code>
-                        </p>
-                      )}
-                    </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      {isAdmin && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={() => openEditDialog(field)}
-                            title={t("editField")}
-                          >
-                            <Edit2 size={14} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            onClick={() => setDeletingField(field)}
-                            title={t("deleteField")}
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        </>
-                      )}
+                      <div className="ml-auto flex max-w-full min-w-0 flex-wrap items-center justify-end gap-2">
+                        {isAdmin && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={() => openEditDialog(field)}
+                              title={t("editField")}
+                            >
+                              <Edit2 size={14} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => setDeletingField(field)}
+                              title={t("deleteField")}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </>
+                        )}
 
-                      <div className="flex items-center gap-2 pl-2 border-l">
-                        <Switch
-                          checked={field.enabled}
-                          disabled={!isAdmin || savingFieldId === field.id}
-                          onCheckedChange={() => handleToggleEnabled(field)}
-                        />
+                        <div className="flex items-center gap-2 pl-2 border-l">
+                          <Switch
+                            checked={field.enabled}
+                            disabled={!isAdmin || savingFieldId === field.id}
+                            onCheckedChange={() => handleToggleEnabled(field)}
+                          />
+                        </div>
                       </div>
                     </div>
+
+                    {field.options && field.options.length > 0 && (
+                      <p className="text-xs text-muted-foreground break-words">
+                        {t("optionsLabel")} <code className="text-[11px]">{field.options.join(", ")}</code>
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>

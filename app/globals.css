@@ -390,6 +390,30 @@
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --workspace-lavender: oklch(0.94 0.025 285);
+  /* El perfil de Clerk (Ajustes > Cuenta) hereda estos tokens, así claro, oscuro
+     y el acento cambian con el resto de la app. */
+  --clerk-color-background: var(--card);
+  --clerk-color-foreground: var(--foreground);
+  --clerk-color-primary: var(--primary);
+  --clerk-color-primary-foreground: var(--primary-foreground);
+  --clerk-color-muted: var(--muted);
+  --clerk-color-muted-foreground: var(--muted-foreground);
+  --clerk-color-input: var(--background);
+  --clerk-color-input-foreground: var(--foreground);
+  --clerk-color-border: var(--border);
+  --clerk-color-danger: var(--destructive);
+  --clerk-color-neutral: var(--foreground);
+  --clerk-color-ring: var(--ring);
+  --clerk-color-shadow: transparent;
+  --clerk-border-radius: var(--radius);
+  --clerk-font-family: inherit;
+}
+/* El perfil de Clerk trae un ancho propio. Aquí ocupa la misma columna que el
+   resto de Ajustes. */
+.workspace-theme .cl-rootBox,
+.workspace-theme .cl-cardBox {
+  width: 100%;
+  max-width: 100%;
 }
 .dark .workspace-theme {
   --primary: oklch(0.78 0.09 275);

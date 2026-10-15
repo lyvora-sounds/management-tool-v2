@@ -41,6 +41,44 @@ export function useAppearance() {
 
 const SAVE_DEBOUNCE_MS = 400;
 
+// Los diálogos de Clerk se montan en document.body, fuera de .workspace-theme.
+// Copiamos el color ya resuelto para que sigan el mismo tema.
+const CLERK_COLOR_VARS: [string, string][] = [
+  ["--clerk-color-background", "--card"],
+  ["--clerk-color-foreground", "--foreground"],
+  ["--clerk-color-primary", "--primary"],
+  ["--clerk-color-primary-foreground", "--primary-foreground"],
+  ["--clerk-color-muted", "--muted"],
+  ["--clerk-color-muted-foreground", "--muted-foreground"],
+  ["--clerk-color-input", "--background"],
+  ["--clerk-color-input-foreground", "--foreground"],
+  ["--clerk-color-border", "--border"],
+  ["--clerk-color-danger", "--destructive"],
+  ["--clerk-color-neutral", "--foreground"],
+  ["--clerk-color-ring", "--ring"],
+];
+
+function syncClerkTheme(root: HTMLElement) {
+  const theme = root.querySelector(".workspace-theme");
+  if (!theme) return;
+  const styles = getComputedStyle(theme);
+  for (const [clerkVar, token] of CLERK_COLOR_VARS) {
+    const value = styles.getPropertyValue(token).trim();
+    if (value) root.style.setProperty(clerkVar, value);
+  }
+  const radius = styles.getPropertyValue("--radius").trim();
+  if (radius) root.style.setProperty("--clerk-border-radius", radius);
+  root.style.setProperty("--clerk-color-shadow", "transparent");
+  root.style.setProperty("--clerk-font-family", "inherit");
+}
+
+function clearClerkTheme(root: HTMLElement) {
+  for (const [clerkVar] of CLERK_COLOR_VARS) root.style.removeProperty(clerkVar);
+  root.style.removeProperty("--clerk-border-radius");
+  root.style.removeProperty("--clerk-color-shadow");
+  root.style.removeProperty("--clerk-font-family");
+}
+
 function writeCookie(appearance: Appearance) {
   try {
     document.cookie = `${APPEARANCE_COOKIE}=${encodeURIComponent(
@@ -78,6 +116,7 @@ export function AppearanceProvider({
       root.dataset.style = appearance.style;
       if (appearance.gradients) delete root.dataset.gradients;
       else root.dataset.gradients = "off";
+      syncClerkTheme(root);
     };
     apply();
 
@@ -95,6 +134,7 @@ export function AppearanceProvider({
       delete root.dataset.density;
       delete root.dataset.style;
       delete root.dataset.gradients;
+      clearClerkTheme(root);
     };
   }, []);
 
