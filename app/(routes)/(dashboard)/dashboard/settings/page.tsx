@@ -38,6 +38,7 @@ import {
 import { CustomFieldsSettings } from "./components/CustomFieldsSettings";
 import { McpSettings } from "./components/McpSettings";
 import { AppearanceSettings } from "./components/AppearanceSettings";
+import { TwoFactorSettings } from "./components/TwoFactorSettings";
 
 const PROVIDERS: {
   id: AiProvider;
@@ -278,8 +279,11 @@ export default function SettingsPage() {
 
       {/* Cuenta: perfil, email, contraseña y sesiones, gestionado por Clerk */}
       {activeTab === "account" && (
-        <div className="w-full min-w-0 [&_.cl-rootBox]:w-full [&_.cl-rootBox]:max-w-full [&_.cl-cardBox]:w-full [&_.cl-cardBox]:max-w-full [&_.cl-cardBox]:shadow-none">
-          <UserProfile routing="hash" appearance={clerkAppearance} />
+        <div className="space-y-6">
+          <TwoFactorSettings />
+          <div className="w-full min-w-0 [&_.cl-rootBox]:w-full [&_.cl-rootBox]:max-w-full [&_.cl-cardBox]:w-full [&_.cl-cardBox]:max-w-full [&_.cl-cardBox]:shadow-none">
+            <UserProfile routing="hash" appearance={clerkAppearance} />
+          </div>
         </div>
       )}
 

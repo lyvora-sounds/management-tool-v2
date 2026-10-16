@@ -9,7 +9,8 @@ Identity has two stores: **Clerk** (session, OAuth, password) and **Neon `User`*
 1. Public pages (`/`, marketing, share links) skip `auth.protect()`.
 2. Any other route — including `/dashboard` and `/api/*` — requires a Clerk session. Unauthenticated users are sent to `/sign-in`.
 3. Supported methods: email/password and Google OAuth (Clerk).
-4. The first dashboard load calls `getOrCreateUser(clerkId)`:
+4. Two-factor sign-in is optional and handled by Clerk. Authenticator app (TOTP) and backup codes are enabled on the development instance. A user turns them on from Settings → Account → Security; sign-in asks for a code only after that enrollment. SMS stays off until phone numbers are enabled in Clerk. The extra card above the Clerk profile stores its own email, phone, and QR codes and does not change sign-in.
+5. The first dashboard load calls `getOrCreateUser(clerkId)`:
 
    - User already has this `clerkId` → reuse.
    - Same **email** exists (password account later used Google, or the reverse) → attach `clerkId` to that row instead of duplicating.
