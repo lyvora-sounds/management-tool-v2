@@ -12,6 +12,10 @@ import {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+type CodeDelivery =
+  | { ok: true }
+  | { ok: false; error: "too_soon" | "send_failed" };
+
 export async function loadAccount(clerkId: string) {
   return db.user.findUnique({
     where: { clerkId },
@@ -38,14 +42,14 @@ async function sendCode(to: string, text: string) {
   return !error;
 }
 
-export async function sendEmailCode(userId: string, email: string, existingExpiresAt: Date | null) {
-  if (recentlySent(existingExpiresAt)) return { error: "too_soon" as const };
+export async function sendEmailCode(userId: string, email: string, existingExpiresAt: Date | null): Promise<CodeDelivery> {
+  if (recentlySent(existingExpiresAt)) return { ok: false, error: "too_soon" };
   const code = createNumericCode();
   const sent = await sendCode(
     email,
     `Your Kiki security code is ${code}. It expires in 10 minutes.`,
   );
-  if (!sent) return { error: "send_failed" as const };
+  if (!sent) return { ok: false, error: "send_failed" };
   await db.userMfa.update({
     where: { userId },
     data: {
@@ -57,14 +61,14 @@ export async function sendEmailCode(userId: string, email: string, existingExpir
   return { ok: true as const };
 }
 
-export async function sendPhoneCode(userId: string, email: string, phone: string, existingExpiresAt: Date | null) {
-  if (recentlySent(existingExpiresAt)) return { error: "too_soon" as const };
+export async function sendPhoneCode(userId: string, email: string, phone: string, existingExpiresAt: Date | null): Promise<CodeDelivery> {
+  if (recentlySent(existingExpiresAt)) return { ok: false, error: "too_soon" };
   const code = createNumericCode();
   const sent = await sendCode(
     email,
     `Use ${code} to confirm ${phone} on your Kiki account. It expires in 10 minutes.`,
   );
-  if (!sent) return { error: "send_failed" as const };
+  if (!sent) return { ok: false, error: "send_failed" };
   await db.userMfa.update({
     where: { userId },
     data: {

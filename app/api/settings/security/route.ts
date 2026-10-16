@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
   if (action === "email-send") {
     const result = await sendEmailCode(user.id, user.email, mfa.emailCodeExpiresAt);
-    if ("error" in result) return failure(result.error);
+    if (!result.ok) return failure(result.error);
     return NextResponse.json({ ok: true, email: user.email });
   }
 
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     const phone = normalizePhone(typeof body?.phone === "string" ? body.phone : "");
     if (!phone) return failure("invalid_phone");
     const result = await sendPhoneCode(user.id, user.email, phone, mfa.phoneCodeExpiresAt);
-    if ("error" in result) return failure(result.error);
+    if (!result.ok) return failure(result.error);
     return NextResponse.json({ ok: true, email: user.email, phone });
   }
 
