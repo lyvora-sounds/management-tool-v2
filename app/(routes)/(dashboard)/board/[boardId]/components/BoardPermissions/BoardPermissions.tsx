@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, X, UserCheck, Users } from "lucide-react";
+import { ShieldCheck, X, UserCheck, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -35,6 +35,7 @@ export function BoardPermissions({
   const [teamGrants, setTeamGrants] = useState<TeamGrant[]>([]);
   const [teamName, setTeamName] = useState("");
   const [canCreateTeam, setCanCreateTeam] = useState(false);
+  const [kikiMode, setKikiMode] = useState<"off" | "owner" | "member">("owner");
 
   useEffect(() => {
     if (!open) return;
@@ -51,6 +52,7 @@ export function BoardPermissions({
         setTeams(data.organization.teams);
         setTeamGrants(data.teamAccess);
         setCanCreateTeam(data.canCreateTeam === true);
+        if (data.kikiMode) setKikiMode(data.kikiMode);
       })
       .catch(() => toast.error(t("loadAccessError")))
       .finally(() => setLoadingAccess(false));
@@ -71,6 +73,23 @@ export function BoardPermissions({
       toast.success(value ? t("membersCanAssign") : t("ownerOnly"));
     } else {
       setMemberCanAssign(prev);
+      toast.error(t("saveError"));
+    }
+    setSaving(false);
+  };
+
+  const saveKikiMode = async (value: typeof kikiMode) => {
+    const prev = kikiMode;
+    setKikiMode(value);
+    setSaving(true);
+    const res = await fetch(`/api/boards/${boardId}/permissions`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kikiMode: value }),
+    });
+    if (res.ok) toast.success(t("kikiSaved"));
+    else {
+      setKikiMode(prev);
       toast.error(t("saveError"));
     }
     setSaving(false);
@@ -239,6 +258,26 @@ export function BoardPermissions({
                 }`}
               />
             </button>
+          </div>
+
+          <div className="rounded-lg border p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <Sparkles size={17} className="text-muted-foreground mt-0.5 shrink-0" />
+              <div>
+                <div className="text-sm font-medium">{t("kikiTitle")}</div>
+                <div className="text-xs text-muted-foreground">{t("kikiHint")}</div>
+              </div>
+            </div>
+            <select
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              value={kikiMode}
+              disabled={loadingAccess || saving}
+              onChange={(event) => saveKikiMode(event.target.value as typeof kikiMode)}
+            >
+              <option value="owner">{t("kikiOwner")}</option>
+              <option value="member">{t("kikiMember")}</option>
+              <option value="off">{t("kikiOff")}</option>
+            </select>
           </div>
         </div>
 
