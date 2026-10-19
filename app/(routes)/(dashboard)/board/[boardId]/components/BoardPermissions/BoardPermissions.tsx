@@ -36,6 +36,7 @@ export function BoardPermissions({
   const [teamName, setTeamName] = useState("");
   const [canCreateTeam, setCanCreateTeam] = useState(false);
   const [kikiMode, setKikiMode] = useState<"off" | "owner" | "member">("owner");
+  const [kikiTriage, setKikiTriage] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -53,6 +54,7 @@ export function BoardPermissions({
         setTeamGrants(data.teamAccess);
         setCanCreateTeam(data.canCreateTeam === true);
         if (data.kikiMode) setKikiMode(data.kikiMode);
+        setKikiTriage(data.kikiTriage === true);
       })
       .catch(() => toast.error(t("loadAccessError")))
       .finally(() => setLoadingAccess(false));
@@ -90,6 +92,23 @@ export function BoardPermissions({
     if (res.ok) toast.success(t("kikiSaved"));
     else {
       setKikiMode(prev);
+      toast.error(t("saveError"));
+    }
+    setSaving(false);
+  };
+
+  const saveKikiTriage = async (value: boolean) => {
+    const prev = kikiTriage;
+    setKikiTriage(value);
+    setSaving(true);
+    const res = await fetch(`/api/boards/${boardId}/permissions`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kikiTriage: value }),
+    });
+    if (res.ok) toast.success(t("kikiSaved"));
+    else {
+      setKikiTriage(prev);
       toast.error(t("saveError"));
     }
     setSaving(false);
@@ -278,6 +297,24 @@ export function BoardPermissions({
               <option value="member">{t("kikiMember")}</option>
               <option value="off">{t("kikiOff")}</option>
             </select>
+            {kikiMode !== "off" && (
+              <div className="flex items-start justify-between gap-4 pt-1">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">{t("kikiTriage")}</span>
+                  <span className="text-xs text-muted-foreground">{t("kikiTriageHint")}</span>
+                </div>
+                <button
+                  disabled={saving}
+                  onClick={() => saveKikiTriage(!kikiTriage)}
+                  role="switch"
+                  aria-checked={kikiTriage}
+                  aria-label={t("kikiTriage")}
+                  className={`relative shrink-0 h-5 w-9 rounded-full transition-colors ${kikiTriage ? "bg-primary" : "bg-muted-foreground/30"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${kikiTriage ? "translate-x-4" : "translate-x-0"}`} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

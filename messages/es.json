@@ -651,6 +651,9 @@
     "renameList": "Renombrar lista"
   },
   "task": {
+    "kikiApply": "Aplicar sugerencias",
+    "kikiApplied": "Sugerencias aplicadas",
+    "kikiApplyError": "No se pudieron aplicar las sugerencias",
     "kikiAgent": "Agente",
     "kikiUndo": "Deshacer cambios",
     "kikiUndone": "Cambios deshechos",
@@ -806,6 +809,8 @@
     "empty": "No hay miembros ni invitaciones aún."
   },
   "permissions": {
+    "kikiTriage": "Triage automático",
+    "kikiTriageHint": "Al crear un ticket, Kiki sugiere etiquetas, prioridad, responsable y duplicados. Nada cambia hasta que alguien pulsa «Aplicar». Cada ticket nuevo usa una llamada de IA.",
     "kikiTitle": "Kiki, asistente de IA",
     "kikiHint": "Los miembros pueden mencionar a @Kiki en un ticket para que responda y lo edite. Elige con qué clave de IA trabaja.",
     "kikiOwner": "Usa la clave del propietario del tablero",
