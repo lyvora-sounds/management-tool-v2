@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { isBoardAdmin } from "@/lib/boardAccess";
+import { KIKI_MODES, type KikiMode } from "@/lib/agent/kiki";
 
 export async function PATCH(
   req: Request,
@@ -19,12 +20,18 @@ export async function PATCH(
   const canManage = await isBoardAdmin(user.id, boardId);
   if (!canManage) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { memberCanAssign } = await req.json();
+  const body = await req.json();
+  const data: { memberCanAssign?: boolean; kikiMode?: KikiMode } = {};
+  if ("memberCanAssign" in body) data.memberCanAssign = Boolean(body.memberCanAssign);
+  if ("kikiMode" in body) {
+    if (!KIKI_MODES.includes(body.kikiMode)) return NextResponse.json({ error: "Invalid kikiMode" }, { status: 400 });
+    data.kikiMode = body.kikiMode;
+  }
 
   const board = await db.board.update({
     where: { id: boardId },
-    data: { memberCanAssign: Boolean(memberCanAssign) },
-    select: { memberCanAssign: true },
+    data,
+    select: { memberCanAssign: true, kikiMode: true },
   });
 
   return NextResponse.json(board);

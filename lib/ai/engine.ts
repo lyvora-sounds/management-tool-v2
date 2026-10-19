@@ -10,7 +10,7 @@ import { IMPROVE_TASK_PROMPT, PARSE_BRAIN_DUMP_PROMPT } from "./prompts";
 /**
  * Clean JSON output from LLM by removing code fences if present.
  */
-function cleanJsonString(raw: string): string {
+export function cleanJsonString(raw: string): string {
   let cleaned = raw.trim();
   if (cleaned.startsWith("```")) {
     const lines = cleaned.split("\n");

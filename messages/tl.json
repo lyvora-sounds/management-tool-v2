@@ -651,6 +651,13 @@
     "renameList": "Palitan ang pangalan ng list"
   },
   "task": {
+    "kikiAgent": "Agent",
+    "kikiUndo": "I-undo ang mga pagbabago",
+    "kikiUndone": "Na-undo ang mga pagbabago",
+    "kikiUndoError": "Hindi ma-undo: nagbago ang ticket pagkatapos",
+    "kikiInsert": "I-mention si Kiki",
+    "kikiThinking": "Gumagawa si Kiki…",
+    "kikiHintPlaceholder": "Sumulat ng comment… o @Kiki para humingi ng tulong",
     "title": "Pamagat ng ticket",
     "description": "Deskripsyon",
     "status": "Status",
@@ -799,6 +806,12 @@
     "empty": "Wala pang members o imbitasyon."
   },
   "permissions": {
+    "kikiTitle": "Kiki, AI assistant",
+    "kikiHint": "Puwedeng i-mention ng mga miyembro si @Kiki sa isang ticket para sumagot at mag-edit. Piliin kung aling AI key ang gagamitin.",
+    "kikiOwner": "Gamitin ang key ng may-ari ng board",
+    "kikiMember": "Sariling key ng bawat tao",
+    "kikiOff": "Naka-off sa board na ito",
+    "kikiSaved": "Na-update si Kiki",
     "membersCanAssign": "Puwedeng mag-assign ng tickets ang mga member",
     "ownerOnly": "Tanging owner ang puwedeng mag-assign",
     "saveError": "Hindi ma-save ang permissions",

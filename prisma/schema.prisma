@@ -14,6 +14,7 @@ datasource db {
 
 model User {
   id                   String                @id @default(cuid())
+  isAgent              Boolean               @default(false) // usuario de sistema de Kiki; nunca inicia sesión
   clerkId              String                @unique
   email                String                @unique
   name                 String?
@@ -125,6 +126,8 @@ model Board {
 
   // Los miembros pueden repartir trabajo salvo que un admin lo apague a mano.
   memberCanAssign Boolean @default(true)
+  // Quién paga a Kiki cuando lo mencionan: "off" | "owner" (clave del propietario) | "member" (clave de quien menciona)
+  kikiMode String @default("owner")
   accessMode      String  @default("organization") // "organization" | "restricted"
   defaultRole     String  @default("member") // "viewer" | "member"
 
@@ -459,6 +462,8 @@ model TaskCollaborator {
 model Comment {
   id      String @id @default(cuid())
   content String
+  // Cambio MCP que Kiki aplicó junto a este comentario (permite deshacerlo desde el ticket).
+  agentChangeId String?
 
   taskId String
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)

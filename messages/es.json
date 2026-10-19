@@ -651,6 +651,13 @@
     "renameList": "Renombrar lista"
   },
   "task": {
+    "kikiAgent": "Agente",
+    "kikiUndo": "Deshacer cambios",
+    "kikiUndone": "Cambios deshechos",
+    "kikiUndoError": "No se pudo deshacer: el ticket cambió después",
+    "kikiThinking": "Kiki está trabajando…",
+    "kikiInsert": "Mencionar a Kiki",
+    "kikiHintPlaceholder": "Escribe un comentario… o @Kiki para pedirle ayuda",
     "title": "Título del ticket",
     "description": "Descripción",
     "status": "Estado",
@@ -799,6 +806,12 @@
     "empty": "No hay miembros ni invitaciones aún."
   },
   "permissions": {
+    "kikiTitle": "Kiki, asistente de IA",
+    "kikiHint": "Los miembros pueden mencionar a @Kiki en un ticket para que responda y lo edite. Elige con qué clave de IA trabaja.",
+    "kikiOwner": "Usa la clave del propietario del tablero",
+    "kikiMember": "Cada persona usa su propia clave",
+    "kikiOff": "Desactivado en este tablero",
+    "kikiSaved": "Kiki actualizado",
     "membersCanAssign": "Los miembros pueden asignar tickets",
     "ownerOnly": "Solo el propietario puede asignar",
     "saveError": "Error al guardar permisos",

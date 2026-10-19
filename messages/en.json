@@ -651,6 +651,13 @@
     "renameList": "Rename list"
   },
   "task": {
+    "kikiAgent": "Agent",
+    "kikiUndo": "Undo changes",
+    "kikiUndone": "Changes undone",
+    "kikiUndoError": "Could not undo: the ticket changed afterwards",
+    "kikiThinking": "Kiki is working…",
+    "kikiInsert": "Mention Kiki",
+    "kikiHintPlaceholder": "Write a comment… or @Kiki to ask for help",
     "title": "Ticket title",
     "description": "Description",
     "status": "Status",
@@ -799,6 +806,12 @@
     "empty": "No members or invitations yet."
   },
   "permissions": {
+    "kikiTitle": "Kiki, AI assistant",
+    "kikiHint": "Members can mention @Kiki on a ticket so it replies and edits it. Choose which AI key it works with.",
+    "kikiOwner": "Use the board owner's key",
+    "kikiMember": "Each person uses their own key",
+    "kikiOff": "Off on this board",
+    "kikiSaved": "Kiki updated",
     "membersCanAssign": "Members can assign tickets",
     "ownerOnly": "Only the owner can assign",
     "saveError": "Could not save permissions",
