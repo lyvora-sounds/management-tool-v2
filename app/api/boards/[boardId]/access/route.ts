@@ -19,6 +19,7 @@ export async function GET(
     select: {
       accessMode: true,
       defaultRole: true,
+      kikiMode: true,
       organization: {
         select: {
           id: true,
