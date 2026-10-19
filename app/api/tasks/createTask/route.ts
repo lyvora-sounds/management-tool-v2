@@ -1,8 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import db from "@/lib/db";
 import { canEditBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
+import { runTriage } from "@/lib/agent/triage";
+
+// El triage de Kiki corre tras responder (after) y llama al modelo de IA.
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -60,6 +64,11 @@ export async function POST(req: Request) {
     boardId: list.boardId,
     userId: user.id,
   });
+
+  const board = await db.board.findUnique({ where: { id: list.boardId }, select: { kikiTriage: true, kikiMode: true } });
+  if (board?.kikiTriage && board.kikiMode !== "off") {
+    after(() => runTriage({ taskId: task.id, creatorId: user.id }).catch((error) => console.error("[kiki:triage]", error)));
+  }
 
   return NextResponse.json(task, { status: 201 });
 }

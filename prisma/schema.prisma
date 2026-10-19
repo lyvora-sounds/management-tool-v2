@@ -128,6 +128,8 @@ model Board {
   memberCanAssign Boolean @default(true)
   // Quién paga a Kiki cuando lo mencionan: "off" | "owner" (clave del propietario) | "member" (clave de quien menciona)
   kikiMode String @default("owner")
+  // Triage automático: al crear un ticket, Kiki sugiere etiquetas, prioridad, responsable y duplicados. Apagado por defecto (cada ticket gasta una llamada de IA).
+  kikiTriage Boolean @default(false)
   accessMode      String  @default("organization") // "organization" | "restricted"
   defaultRole     String  @default("member") // "viewer" | "member"
 
@@ -464,6 +466,8 @@ model Comment {
   content String
   // Cambio MCP que Kiki aplicó junto a este comentario (permite deshacerlo desde el ticket).
   agentChangeId String?
+  // Sugerencias de triage pendientes de aceptar: { changes, duplicates, applied }.
+  agentSuggestion Json?
 
   taskId String
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
