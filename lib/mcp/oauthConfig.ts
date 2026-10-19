@@ -105,11 +105,15 @@ export function parseAuthorizationRequest(params: URLSearchParams, client = lega
   if (params.get("client_id") !== client.clientId || !client.redirects.includes(redirectUri)) throw new Error("Invalid OAuth client or callback");
   if (params.get("response_type") !== "code" || params.get("code_challenge_method") !== "S256" || !/^[A-Za-z0-9_-]{43}$/.test(challenge)) throw new Error("S256 PKCE is required");
   if (params.get("resource") !== config.resource) throw new Error("Invalid OAuth resource");
+  // Claude sigue el `scope` del desafío 401 (solo tickets:read) y nunca pide escritura por su cuenta.
+  // Solo para sus clientes, si quien los creó activó la escritura, se ofrece igualmente la casilla de
+  // la pantalla de consentimiento: la escritura sigue necesitando ese «sí» explícito en cada conexión.
+  // Con ChatGPT y el cliente de despliegue se mantiene la regla estricta: solo si lo piden.
   const scopes = (params.get("scope") || (client.allowWrite ? `${OAUTH_SCOPE} ${OAUTH_WRITE_SCOPE}` : OAUTH_SCOPE)).split(/\s+/);
   if (!scopes.includes(OAUTH_SCOPE) || scopes.some((scope) => scope !== OAUTH_SCOPE && scope !== OAUTH_WRITE_SCOPE)) throw new Error("Invalid OAuth scope");
   if (scopes.includes(OAUTH_WRITE_SCOPE) && !client.allowWrite) throw new Error("This OAuth client is read-only");
   if (!state || state.length > 2048) throw new Error("Invalid OAuth state");
-  return { clientId: client.clientId, redirectUri, resource: config.resource, state, challenge, ...(client.ownerId ? { ownerId: client.ownerId } : {}), ...(scopes.includes(OAUTH_WRITE_SCOPE) ? { writeRequested: true } : {}) };
+  return { clientId: client.clientId, redirectUri, resource: config.resource, state, challenge, ...(client.ownerId ? { ownerId: client.ownerId } : {}), ...(scopes.includes(OAUTH_WRITE_SCOPE) || (client.allowWrite && oauthClientName(redirectUri) === "Claude") ? { writeRequested: true } : {}) };
 }
 
 export function authorizationCallback(request: AuthorizationRequest, result: { code: string } | { error: string }) {
