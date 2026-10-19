@@ -42,8 +42,9 @@ export async function GET(
   const reverted = new Map(changes.map((c) => [c.id, c.revertedAt !== null]));
 
   return NextResponse.json(
-    comments.map(({ agentChangeId, ...c }) => ({
+    comments.map(({ agentChangeId, agentSuggestion, ...c }) => ({
       ...c,
+      suggestion: agentSuggestion && typeof agentSuggestion === "object" && !Array.isArray(agentSuggestion) ? { pending: (agentSuggestion as { applied?: boolean }).applied !== true } : null,
       change: agentChangeId ? { id: agentChangeId, reverted: reverted.get(agentChangeId) ?? true } : null,
     })),
   );
@@ -122,5 +123,5 @@ export async function POST(
     after(() => runKiki({ taskId, invokerId: user.id }).catch((error) => console.error("[kiki]", error)));
   }
 
-  return NextResponse.json({ ...comment, change: null }, { status: 201 });
+  return NextResponse.json({ ...comment, change: null, suggestion: null }, { status: 201 });
 }

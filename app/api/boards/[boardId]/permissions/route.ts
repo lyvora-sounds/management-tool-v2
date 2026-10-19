@@ -21,7 +21,8 @@ export async function PATCH(
   if (!canManage) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json();
-  const data: { memberCanAssign?: boolean; kikiMode?: KikiMode } = {};
+  const data: { memberCanAssign?: boolean; kikiMode?: KikiMode; kikiTriage?: boolean } = {};
+  if ("kikiTriage" in body) data.kikiTriage = Boolean(body.kikiTriage);
   if ("memberCanAssign" in body) data.memberCanAssign = Boolean(body.memberCanAssign);
   if ("kikiMode" in body) {
     if (!KIKI_MODES.includes(body.kikiMode)) return NextResponse.json({ error: "Invalid kikiMode" }, { status: 400 });
@@ -31,7 +32,7 @@ export async function PATCH(
   const board = await db.board.update({
     where: { id: boardId },
     data,
-    select: { memberCanAssign: true, kikiMode: true },
+    select: { memberCanAssign: true, kikiMode: true, kikiTriage: true },
   });
 
   return NextResponse.json(board);

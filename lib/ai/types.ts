@@ -38,7 +38,7 @@ export interface ImproveTaskResult {
 export const PROVIDER_DEFAULT_MODELS: Record<AiProvider, string> = {
   openai: "gpt-4o",
   claude: "claude-3-5-sonnet-20241022",
-  gemini: "gemini-2.0-flash",
+  gemini: "gemini-3.8-flash",
   grok: "grok-2-1212",
   deepseek: "deepseek-chat",
   kimi: "moonshot-v1-8k",
