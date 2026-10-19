@@ -45,6 +45,12 @@ export function verifyPkce(verifier: string, challenge: string) {
     createHash("sha256").update(verifier).digest("base64url") === challenge;
 }
 
+// Claude (claude.ai y claude.com) siempre vuelve a estas dos URL. Son fijas, así que no se
+// piden al usuario: el cliente de Claude se crea con ellas y el resto sigue
+// rechazándose por coincidencia exacta (parseAuthorizationRequest).
+export const CLAUDE_CALLBACKS = ["https://claude.ai/api/mcp/auth_callback", "https://claude.com/api/mcp/auth_callback"] as const;
+export const oauthClientName = (redirectUri: string) => (CLAUDE_CALLBACKS as readonly string[]).includes(redirectUri) ? "Claude" : "ChatGPT";
+
 export type OAuthClient = { clientId: string; secretHash: string; redirects: string[]; ownerId?: string; allowWrite?: boolean };
 
 export function legacyOAuthClient(): OAuthClient {
