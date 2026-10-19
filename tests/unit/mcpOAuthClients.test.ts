@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { authenticateOAuthClient, oauthHash, parseAuthorizationRequest } from "@/lib/mcp/oauthConfig";
+import { authenticateOAuthClient, CLAUDE_CALLBACKS, oauthClientName, oauthHash, parseAuthorizationRequest } from "@/lib/mcp/oauthConfig";
 
 const findClient = vi.fn();
 const createClient = vi.fn();
@@ -84,5 +84,28 @@ describe("in-app ChatGPT setup", () => {
     expect(await resolveOAuthClient("kiki_client_1")).toBeNull();
     findClient.mockResolvedValue(null);
     expect(await resolveOAuthClient("kiki_client_1")).toBeNull();
+  });
+  it("creates a Claude client bound to Claude's fixed callbacks and ignores any callback sent by the browser", async () => {
+    const response = await POST(request("POST", { provider: "claude", redirectUri: "https://evil.test/cb", allowWrite: true }));
+    expect(response.status).toBe(201);
+    const data = createClient.mock.calls[0][0].data;
+    expect(data.redirectUris).toEqual([...CLAUDE_CALLBACKS]);
+    expect(data.allowWrite).toBe(true);
+    findClient.mockResolvedValue({ ...data, revokedAt: null });
+    const client = (await resolveOAuthClient(data.id))!;
+    const params = (redirect: string) => new URLSearchParams({ client_id: data.id, redirect_uri: redirect, resource: "https://kikiboard.test/api/mcp", state: "state", response_type: "code", code_challenge_method: "S256", code_challenge: "a".repeat(43) });
+    for (const callbackUrl of CLAUDE_CALLBACKS) expect(parseAuthorizationRequest(params(callbackUrl), client).ownerId).toBe("user-1");
+    expect(() => parseAuthorizationRequest(params("https://claude.ai.evil.test/api/mcp/auth_callback"), client)).toThrow();
+    expect(() => parseAuthorizationRequest(params(callback), client)).toThrow();
+  });
+  it("still requires a valid ChatGPT callback unless the provider is Claude, and rejects unknown providers", async () => {
+    expect((await POST(request("POST", { provider: "chatgpt", redirectUri: "https://claude.ai/api/mcp/auth_callback" }))).status).toBe(400);
+    expect((await POST(request("POST", { provider: "other", redirectUri: callback }))).status).toBe(400);
+    expect(createClient).not.toHaveBeenCalled();
+  });
+  it("names the connection after the client's provider", () => {
+    expect(oauthClientName("https://claude.ai/api/mcp/auth_callback")).toBe("Claude");
+    expect(oauthClientName("https://claude.com/api/mcp/auth_callback")).toBe("Claude");
+    expect(oauthClientName(callback)).toBe("ChatGPT");
   });
 });

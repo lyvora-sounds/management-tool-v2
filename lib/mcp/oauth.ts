@@ -4,7 +4,7 @@ import { requireOrganizationManager } from "@/lib/organizations";
 import { createExternalAccessToken } from "@/lib/externalAccess";
 import {
   ACCESS_TOKEN_SECONDS, REFRESH_TOKEN_SECONDS, OAUTH_SCOPE, OAUTH_WRITE_SCOPE,
-  oauthConfig, oauthServerConfig, oauthHash, oauthToken, verifyPkce, type AuthorizationRequest,
+  oauthClientName, oauthConfig, oauthServerConfig, oauthHash, oauthToken, verifyPkce, type AuthorizationRequest,
 } from "./oauthConfig";
 
 export async function issueAuthorizationCode(userId: string, request: AuthorizationRequest, selection: string, allowWrite = false) {
@@ -29,7 +29,7 @@ export async function issueAuthorizationCode(userId: string, request: Authorizat
   const expiresAt = new Date(Date.now() + REFRESH_TOKEN_SECONDS * 1000);
   await db.externalAccessToken.create({
     data: {
-      name: "ChatGPT", tokenHash: credential.hash, tokenPrefix: "OAuth",
+      name: oauthClientName(request.redirectUri), tokenHash: credential.hash, tokenPrefix: "OAuth",
       scopes: allowWrite ? [OAUTH_SCOPE, OAUTH_WRITE_SCOPE] : [OAUTH_SCOPE], organizationId, boardId, createdById: userId, expiresAt,
       oauthGrant: { create: {
         clientId: request.clientId, redirectUri: request.redirectUri, resource: request.resource,

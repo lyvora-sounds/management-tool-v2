@@ -1445,18 +1445,18 @@
     }
   },
   "mcpOAuth": {
-    "title": "Ikonekta ang ChatGPT sa Kikiboard",
-    "description": "Piliin ang organisasyon o board na maaaring basahin ng ChatGPT. Tumatagal ang koneksyon nang hanggang 30 araw.",
+    "title": "Ikonekta ang {client} sa Kikiboard",
+    "description": "Piliin ang organisasyon o board na maaaring basahin ng {client}. Tumatagal ang koneksyon nang hanggang 30 araw.",
     "permissions": "Maaaring basahin ng koneksyon ang impormasyon ng proyekto at mga tickets. Pinapayagan lang ang pagbabago ng tasks kung tahasang i-enable mo ang write access.",
     "selection": "Saklaw ng koneksyon",
     "choose": "Pumili ng organisasyon o board",
     "organization": "Organisasyon: {name} (lahat ng boards)",
     "board": "Board: {name} ({organization})",
     "noScopes": "Kailangan mo ng admin access sa organisasyon o board upang gumawa ng koneksyon.",
-    "revoke": "Bawiin ang koneksyon sa Settings → MCP sa pamamagitan ng pagpili ng saklaw nito at pag-alis ng kredensyal ng ChatGPT.",
+    "revoke": "Bawiin ang koneksyon sa Settings → MCP sa pamamagitan ng pagpili ng saklaw nito at pag-alis ng kredensyal ng {client}.",
     "allow": "Payagan ang access",
     "deny": "Kanselahin",
-    "invalidRequest": "Hindi wasto ang kahilingan o hindi pa naka-configure ang OAuth para sa ChatGPT.",
+    "invalidRequest": "Hindi wasto ang kahilingan o hindi pa naka-configure ang OAuth para sa client na ito.",
     "writeAccess": "Payagan ang paggawa, pag-edit at pag-archive ng tasks na may nababaligtad na history"
   },
   "mcpGuide": {
@@ -1469,10 +1469,10 @@
             "4": "Aprubahan ang access"
         },
         "claude": {
-            "1": "Gumawa ng scoped token",
+            "1": "Gumawa ng credentials",
             "2": "Idagdag ang connector",
-            "3": "I-configure ang authentication",
-            "4": "I-enable sa usapan"
+            "3": "I-paste ang ID at secret",
+            "4": "Kumonekta at aprubahan"
         },
         "grok": {
             "1": "Gumawa ng scoped token",
@@ -1502,7 +1502,9 @@
     "clientId": "OAuth client ID",
     "clientSecret": "OAuth client secret",
     "credentialsHint": "I-paste ang dalawang halaga sa OAuth fields ng ChatGPT. Iba ang secret na ito sa bearer token sa itaas. Kung mawala ito, bawiin ang setup at gumawa ng bago.",
+    "credentialsHintClaude": "I-paste ang dalawang halaga sa advanced settings ng Claude connector (OAuth client ID at secret). Iba ang secret na ito sa bearer token. Kung mawala ito, bawiin ang setup at gumawa ng bago.",
     "clients": "Iyong mga ChatGPT setup",
+    "clientsClaude": "Iyong mga Claude setup",
     "revoke": "Bawiin",
     "revokeHint": "Ang pagbawi ng setup ay humihinto sa mga koneksyon ng ChatGPT at pag-refresh ng token nito.",
     "revoked": "Nabawi ang ChatGPT setup",
@@ -1521,11 +1523,11 @@
       "step4": "Mag-sign in gamit ang parehong account, piliin ang organisasyon o board na pinamamahalaan mo, at aprubahan ang read-only o tahasang hiniling na read/write access."
     },
     "claude": {
-      "intro": "Maaaring ipadala ng Claude custom connectors ang Kikiboard bearer token bilang request header.",
-      "step1": "Pumili ng organisasyon o board sa itaas, pangalanan ang koneksyon, at gumawa ng token. Kopyahin ito kapag lumabas.",
-      "step2": "Sa Claude, buksan ang Customize → Connectors → Add custom connector. Ilagay ang MCP URL.",
-      "step3": "Piliin ang No sign in at magdagdag ng request header na Authorization na may value na Bearer, isang space, at iyong token.",
-      "step4": "Idagdag ang connector at i-enable ito sa conversation gamit ang + → Connectors."
+      "intro": "OAuth ang gamit ng Claude. Gumawa rito ng client ID at secret; walang callback URL na kokopyahin.",
+      "step1": "Gumawa ng credentials sa ibaba. Piliin kung makakabasa lang ang Claude o makakasulat din ng tickets.",
+      "step2": "Sa Claude, buksan ang Customize → Connectors → Add custom connector. Ilagay ang MCP URL at buksan ang advanced settings.",
+      "step3": "I-paste ang OAuth client ID at secret, pagkatapos ay idagdag ang connector.",
+      "step4": "I-click ang Connect, mag-sign in gamit ang parehong account, piliin ang organisasyon o board na pinamamahalaan mo at aprubahan ang access. Pagkatapos ay i-enable ito sa usapan gamit ang + → Connectors."
     },
     "grok": {
       "intro": "Gumamit ng bearer token sa Grok CLI o xAI Remote MCP API. Para sa Grok CLI ang mga hakbang na ito.",

@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import db from "@/lib/db";
-import { oauthHash, oauthToken, oauthServerConfig } from "@/lib/mcp/oauthConfig";
+import { CLAUDE_CALLBACKS, oauthHash, oauthToken, oauthServerConfig } from "@/lib/mcp/oauthConfig";
 import { validChatGptCallback } from "@/lib/mcp/oauthClients";
 
 const headers = { "cache-control": "no-store" };
@@ -25,11 +25,14 @@ export async function POST(request: Request) {
   const config = oauthServerConfig();
   if (request.headers.get("origin") !== config.issuer) return Response.json({ error: "Invalid origin" }, { status: 403, headers });
   const body = await request.json().catch(() => null);
-  if (!validChatGptCallback(body?.redirectUri)) return Response.json({ error: "Invalid ChatGPT callback URL" }, { status: 400, headers });
+  if (body?.provider !== undefined && body.provider !== "chatgpt" && body.provider !== "claude") return Response.json({ error: "Invalid provider" }, { status: 400, headers });
+  // Claude vuelve siempre a las mismas URL, así que no se aceptan del cliente; ChatGPT sí necesita la suya.
+  const claude = body?.provider === "claude";
+  if (!claude && !validChatGptCallback(body?.redirectUri)) return Response.json({ error: "Invalid ChatGPT callback URL" }, { status: 400, headers });
   if (body.allowWrite !== undefined && typeof body.allowWrite !== "boolean") return Response.json({ error: "Invalid access mode" }, { status: 400, headers });
   const secret = oauthToken("kiki_secret_");
   const client = await db.mcpOAuthClient.create({ data: {
-    id: oauthToken("kiki_client_"), secretHash: oauthHash(secret), redirectUris: [body.redirectUri], createdById: user.id, allowWrite: body.allowWrite === true,
+    id: oauthToken("kiki_client_"), secretHash: oauthHash(secret), redirectUris: claude ? [...CLAUDE_CALLBACKS] : [body.redirectUri], createdById: user.id, allowWrite: body.allowWrite === true,
   }, select });
   return Response.json({ ...client, secret }, { status: 201, headers });
 }
