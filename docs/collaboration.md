@@ -39,6 +39,12 @@ Mentioning `@Kiki` in a comment makes Kiki reply on the ticket and, when asked, 
 - **Limit**: at most 8 Kiki replies per ticket per 10 minutes.
 - **Undo**: each edit is an `McpChange` (no token). The reply comment stores `Comment.agentChangeId`; `POST /api/tasks/[taskId]/agent-undo` reverts it through `revertMcpChange`. Kiki's reply is posted before the edit so it is part of both snapshots; `agentChangeId` is set with raw SQL so `updatedAt` does not move. Undo fails with a conflict if the ticket changed afterwards.
 
+### Kiki triage (opt-in)
+
+`Board.kikiTriage` (off by default; switch in Board permissions, hidden when Kiki is off). When on, `POST /api/tasks/createTask` runs `runTriage` after responding. It uses the same key rule as mentions (`kikiMode`; owner key, or the creator's) and does nothing without a key.
+
+Kiki only **suggests**. If it has something useful, it posts a comment and stores `{ changes, duplicates, applied }` in `Comment.agentSuggestion`. Allowed suggestions: priority (only if empty), up to 3 labels, assignee (only if empty), possible duplicates among the 40 latest tickets (mentioned in the comment text). `POST /api/tasks/[taskId]/agent-apply` applies them as the person who clicks Apply (their permissions, `updateMcpTickets`), links the `McpChange` to the comment, and Undo works as for mentions. The claim and the link are raw SQL so `updatedAt` does not move. Brain-dump batch creation does not trigger triage yet.
+
 ## Notifications
 
 `GET /api/notifications` — unread, newest first, max 50.

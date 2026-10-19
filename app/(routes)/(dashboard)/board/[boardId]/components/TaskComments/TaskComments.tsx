@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, Sparkles, Trash2, Undo2 } from "lucide-react";
+import { Check, Send, Sparkles, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { es, enUS } from "date-fns/locale";
@@ -56,6 +56,18 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
     }, 2500);
     return () => clearInterval(timer);
   }, [waiting, taskId]);
+
+  const applySuggestion = async (commentId: string) => {
+    const res = await fetch(`/api/tasks/${taskId}/agent-apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ commentId }),
+    });
+    if (res.ok) toast.success(t("kikiApplied"));
+    else toast.error(t("kikiApplyError"));
+    const data = await fetch(`/api/tasks/${taskId}/comments`).then((r) => r.json()).catch(() => null);
+    if (Array.isArray(data)) setComments(data);
+  };
 
   const undo = async (changeId: string) => {
     const res = await fetch(`/api/tasks/${taskId}/agent-undo`, {
@@ -137,6 +149,15 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
               </div>
             </div>
             <p className={`text-sm rounded-lg px-3 py-2 whitespace-pre-wrap wrap-break-word min-w-0 ${c.user.isAgent ? "bg-primary/10" : "bg-muted"}`}>{c.content}</p>
+            {c.suggestion?.pending && !c.change && canEdit && (
+              <button
+                onClick={() => applySuggestion(c.id)}
+                className="mt-0.5 flex w-fit items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+              >
+                <Check size={11} />
+                {t("kikiApply")}
+              </button>
+            )}
             {c.change && canEdit && !c.change.reverted && (
               <button
                 onClick={() => undo(c.change!.id)}

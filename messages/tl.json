@@ -651,6 +651,9 @@
     "renameList": "Palitan ang pangalan ng list"
   },
   "task": {
+    "kikiApply": "Ilapat ang mga mungkahi",
+    "kikiApplied": "Nailapat ang mga mungkahi",
+    "kikiApplyError": "Hindi nailapat ang mga mungkahi",
     "kikiAgent": "Agent",
     "kikiUndo": "I-undo ang mga pagbabago",
     "kikiUndone": "Na-undo ang mga pagbabago",
@@ -806,6 +809,8 @@
     "empty": "Wala pang members o imbitasyon."
   },
   "permissions": {
+    "kikiTriage": "Awtomatikong triage",
+    "kikiTriageHint": "Kapag may bagong ticket, magmumungkahi si Kiki ng labels, priority, assignee at duplicates. Walang magbabago hangga't hindi pinipindot ang Apply. Isang AI call ang bawat bagong ticket.",
     "kikiTitle": "Kiki, AI assistant",
     "kikiHint": "Puwedeng i-mention ng mga miyembro si @Kiki sa isang ticket para sumagot at mag-edit. Piliin kung aling AI key ang gagamitin.",
     "kikiOwner": "Gamitin ang key ng may-ari ng board",

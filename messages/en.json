@@ -651,6 +651,9 @@
     "renameList": "Rename list"
   },
   "task": {
+    "kikiApply": "Apply suggestions",
+    "kikiApplied": "Suggestions applied",
+    "kikiApplyError": "Could not apply the suggestions",
     "kikiAgent": "Agent",
     "kikiUndo": "Undo changes",
     "kikiUndone": "Changes undone",
@@ -806,6 +809,8 @@
     "empty": "No members or invitations yet."
   },
   "permissions": {
+    "kikiTriage": "Automatic triage",
+    "kikiTriageHint": "When a ticket is created, Kiki suggests labels, priority, assignee and duplicates. Nothing changes until someone clicks Apply. Each new ticket uses one AI call.",
     "kikiTitle": "Kiki, AI assistant",
     "kikiHint": "Members can mention @Kiki on a ticket so it replies and edits it. Choose which AI key it works with.",
     "kikiOwner": "Use the board owner's key",

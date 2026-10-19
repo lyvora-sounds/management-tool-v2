@@ -64,3 +64,41 @@ export function buildPatch(
   }
   return Object.keys(patch).length ? patch : null;
 }
+
+export type Triage = {
+  reply: string;
+  changes: { priority?: string | null; labelIds?: string[]; assigneeId?: string | null } | null;
+  duplicates: string[];
+};
+
+const PRIORITIES = ["urgent", "high", "medium", "low"];
+
+// Valida la respuesta del triage contra lo que se le ofreció al modelo: prioridad
+// de la lista cerrada, etiquetas y responsable solo si existen en el tablero, y
+// duplicados solo entre los tickets candidatos.
+export function parseTriage(
+  raw: string,
+  ref: { labels: Ref[]; members: Ref[]; candidates: Ref[]; currentPriority: string | null; hasAssignee: boolean },
+): Triage | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleanJsonString(raw));
+  } catch {
+    return null;
+  }
+  const obj = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
+  const changes: NonNullable<Triage["changes"]> = {};
+  if (typeof obj.priority === "string" && PRIORITIES.includes(obj.priority) && !ref.currentPriority) changes.priority = obj.priority;
+  if (Array.isArray(obj.labelIds)) {
+    const ids = [...new Set(obj.labelIds.filter((id): id is string => typeof id === "string" && ref.labels.some((l) => l.id === id)))];
+    if (ids.length) changes.labelIds = ids.slice(0, 5);
+  }
+  if (typeof obj.assigneeId === "string" && !ref.hasAssignee && ref.members.some((m) => m.id === obj.assigneeId)) changes.assigneeId = obj.assigneeId;
+  const duplicates = Array.isArray(obj.duplicateOf)
+    ? [...new Set(obj.duplicateOf.filter((id): id is string => typeof id === "string" && ref.candidates.some((c) => c.id === id)))].slice(0, 3)
+    : [];
+  const reply = typeof obj.reply === "string" ? obj.reply.trim().slice(0, 1500) : "";
+  const hasChanges = Object.keys(changes).length > 0;
+  if (!reply || (!hasChanges && !duplicates.length)) return null;
+  return { reply, changes: hasChanges ? changes : null, duplicates };
+}
