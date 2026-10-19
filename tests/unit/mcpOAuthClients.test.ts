@@ -108,4 +108,21 @@ describe("in-app ChatGPT setup", () => {
     expect(oauthClientName("https://claude.com/api/mcp/auth_callback")).toBe("Claude");
     expect(oauthClientName(callback)).toBe("ChatGPT");
   });
+  it("offers write consent to a write-enabled client even when it only asks for read scope (Claude follows the 401 challenge)", async () => {
+    await POST(request("POST", { provider: "claude", allowWrite: true }));
+    const writable = { ...createClient.mock.calls[0][0].data, revokedAt: null };
+    findClient.mockResolvedValue(writable);
+    const client = (await resolveOAuthClient(writable.id))!;
+    const readOnlyRequest = new URLSearchParams({ client_id: writable.id, redirect_uri: CLAUDE_CALLBACKS[0], resource: "https://kikiboard.test/api/mcp", state: "state", response_type: "code", code_challenge_method: "S256", code_challenge: "a".repeat(43), scope: "tickets:read" });
+    expect(parseAuthorizationRequest(readOnlyRequest, client).writeRequested).toBe(true);
+    // A ChatGPT client keeps the strict rule: write only when it asks for it.
+    const chatgptClient = { ...client, redirects: [callback] };
+    const chatgptRequest = new URLSearchParams(readOnlyRequest); chatgptRequest.set("redirect_uri", callback);
+    expect(parseAuthorizationRequest(chatgptRequest, chatgptClient).writeRequested).toBeUndefined();
+    // A read-only client never gets the offer, and cannot request write.
+    const readOnlyClient = { ...client, allowWrite: false };
+    expect(parseAuthorizationRequest(readOnlyRequest, readOnlyClient).writeRequested).toBeUndefined();
+    readOnlyRequest.set("scope", "tickets:read tickets:write");
+    expect(() => parseAuthorizationRequest(readOnlyRequest, readOnlyClient)).toThrow();
+  });
 });
