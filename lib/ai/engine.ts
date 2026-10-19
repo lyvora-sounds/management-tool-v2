@@ -150,20 +150,14 @@ async function callOpenAiCompatible(
   return content;
 }
 
-/**
- * Dispatch LLM request based on provider
- */
-export async function queryLlm(
-  systemPrompt: string,
-  userContent: string,
-  creds: AiCredentials,
-): Promise<string> {
-  if (!creds.apiKey) {
-    throw new Error(
-      "No has configurado tu clave API de IA. Ve a Ajustes en tu cuenta para añadirla.",
-    );
-  }
+// Los proveedores devuelven 429/5xx cuando están saturados (sobre todo en cuotas
+// gratuitas) y suele pasar solo en segundos. Los errores llevan el estado en el
+// mensaje: «Error de X (503): …».
+const RETRYABLE = /\((429|500|502|503|504)\)/;
+export const isRetryableLlmError = (error: unknown) => error instanceof Error && RETRYABLE.test(error.message);
+const RETRY_DELAYS_MS = [1500, 3500];
 
+async function dispatchLlm(systemPrompt: string, userContent: string, creds: AiCredentials): Promise<string> {
   switch (creds.provider) {
     case "claude":
       return await callClaude(systemPrompt, userContent, creds);
@@ -176,6 +170,31 @@ export async function queryLlm(
     case "custom":
     default:
       return await callOpenAiCompatible(systemPrompt, userContent, creds);
+  }
+}
+
+/**
+ * Dispatch LLM request based on provider. Reintenta 2 veces ante 429/5xx.
+ */
+export async function queryLlm(
+  systemPrompt: string,
+  userContent: string,
+  creds: AiCredentials,
+  retryDelaysMs: number[] = RETRY_DELAYS_MS,
+): Promise<string> {
+  if (!creds.apiKey) {
+    throw new Error(
+      "No has configurado tu clave API de IA. Ve a Ajustes en tu cuenta para añadirla.",
+    );
+  }
+
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await dispatchLlm(systemPrompt, userContent, creds);
+    } catch (error) {
+      if (attempt >= retryDelaysMs.length || !isRetryableLlmError(error)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, retryDelaysMs[attempt]));
+    }
   }
 }
 
