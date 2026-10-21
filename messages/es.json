@@ -651,6 +651,28 @@
     "renameList": "Renombrar lista"
   },
   "task": {
+    "send": "Enviar",
+    "deleteComment": "Eliminar comentario",
+    "emptyCommentsHint": "Empieza la conversación o pídele ayuda a Kiki.",
+    "mentionSomeone": "Mencionar a alguien",
+    "commentHint": "Enter envía · Mayús+Enter salto de línea",
+    "kikiAgentHint": "Asistente de IA",
+    "kikiChipSummarize": "Resumir",
+    "kikiPromptSummarize": "@Kiki resume este ticket en 2 frases.",
+    "kikiChipSubtasks": "Proponer subtareas",
+    "kikiPromptSubtasks": "@Kiki propón subtareas para hacerlo paso a paso.",
+    "kikiChipPriority": "Sugerir prioridad",
+    "kikiPromptPriority": "@Kiki ¿qué prioridad le pondrías y por qué?",
+    "kikiApply": "Aplicar sugerencias",
+    "kikiApplied": "Sugerencias aplicadas",
+    "kikiApplyError": "No se pudieron aplicar las sugerencias",
+    "kikiAgent": "Agente",
+    "kikiUndo": "Deshacer cambios",
+    "kikiUndone": "Cambios deshechos",
+    "kikiUndoError": "No se pudo deshacer: el ticket cambió después",
+    "kikiThinking": "Kiki está trabajando…",
+    "kikiInsert": "Mencionar a Kiki",
+    "kikiHintPlaceholder": "Escribe un comentario… o @Kiki para pedirle ayuda",
     "title": "Título del ticket",
     "description": "Descripción",
     "status": "Estado",
@@ -801,6 +823,14 @@
     "empty": "No hay miembros ni invitaciones aún."
   },
   "permissions": {
+    "kikiTriage": "Triage automático",
+    "kikiTriageHint": "Al crear un ticket, Kiki sugiere etiquetas, prioridad, responsable y duplicados. Nada cambia hasta que alguien pulsa «Aplicar». Cada ticket nuevo usa una llamada de IA.",
+    "kikiTitle": "Kiki, asistente de IA",
+    "kikiHint": "Los miembros pueden mencionar a @Kiki en un ticket para que responda y lo edite. Elige con qué clave de IA trabaja.",
+    "kikiOwner": "Usa la clave del propietario del tablero",
+    "kikiMember": "Cada persona usa su propia clave",
+    "kikiOff": "Desactivado en este tablero",
+    "kikiSaved": "Kiki actualizado",
     "membersCanAssign": "Los miembros pueden asignar tickets",
     "ownerOnly": "Solo el propietario puede asignar",
     "saveError": "Error al guardar permisos",
@@ -1206,6 +1236,7 @@
     "mcpReverted": "{actor} revirtió cambios en {count} tickets mediante MCP"
   },
   "notifications": {
+    "mentioned": "{actor} te mencionó en el ticket \"{ticket}\"",
     "title": "Notificaciones",
     "markAllRead": "Marcar todas como leídas",
     "empty": "Sin notificaciones nuevas",
@@ -1437,18 +1468,18 @@
     }
   },
   "mcpOAuth": {
-    "title": "Conectar ChatGPT a Kikiboard",
-    "description": "Elige la organización o el tablero que ChatGPT puede leer. La conexión dura hasta 30 días.",
+    "title": "Conectar {client} a Kikiboard",
+    "description": "Elige la organización o el tablero que {client} puede leer. La conexión dura hasta 30 días.",
     "permissions": "La conexión puede leer información del proyecto y tickets. Los cambios de tareas solo se permiten si activas expresamente el acceso de escritura.",
     "selection": "Ámbito de la conexión",
     "choose": "Elige una organización o un tablero",
     "organization": "Organización: {name} (todos los tableros)",
     "board": "Tablero: {name} ({organization})",
     "noScopes": "Necesitas permisos de administrador de la organización o del tablero para crear una conexión.",
-    "revoke": "Revoca la conexión en Ajustes → MCP seleccionando su ámbito y eliminando la credencial de ChatGPT.",
+    "revoke": "Revoca la conexión en Ajustes → MCP seleccionando su ámbito y eliminando la credencial de {client}.",
     "allow": "Permitir acceso",
     "deny": "Cancelar",
-    "invalidRequest": "La solicitud no es válida o no se ha configurado OAuth para ChatGPT.",
+    "invalidRequest": "La solicitud no es válida o no se ha configurado OAuth para este cliente.",
     "writeAccess": "Permitir crear, editar y archivar tareas con historial reversible"
   },
   "mcpGuide": {
@@ -1461,10 +1492,10 @@
             "4": "Autoriza el acceso"
         },
         "claude": {
-            "1": "Crea un token con alcance",
+            "1": "Genera las credenciales",
             "2": "Añade el conector",
-            "3": "Configura la autenticación",
-            "4": "Actívalo en una conversación"
+            "3": "Pega el ID y el secreto",
+            "4": "Conecta y aprueba"
         },
         "grok": {
             "1": "Crea un token con alcance",
@@ -1494,7 +1525,9 @@
     "clientId": "ID del cliente OAuth",
     "clientSecret": "Secreto del cliente OAuth",
     "credentialsHint": "Pega estos dos valores en los campos OAuth de ChatGPT. Este secreto es distinto del token bearer de arriba. Si lo pierdes, revoca la configuración y crea otra.",
+    "credentialsHintClaude": "Pega estos dos valores en las opciones avanzadas del conector de Claude (ID y secreto de cliente OAuth). Este secreto es distinto de un token bearer. Si lo pierdes, revoca la configuración y crea otra.",
     "clients": "Tus configuraciones de ChatGPT",
+    "clientsClaude": "Tus configuraciones de Claude",
     "revoke": "Revocar",
     "revokeHint": "Revocar una configuración detiene sus conexiones de ChatGPT y la renovación de tokens.",
     "revoked": "Configuración de ChatGPT revocada",
@@ -1513,11 +1546,11 @@
       "step4": "Inicia sesión con esta misma cuenta, elige la organización o el tablero que administras y aprueba lectura o lectura/escritura solicitada explícitamente."
     },
     "claude": {
-      "intro": "Los conectores personalizados de Claude pueden enviar el token bearer de Kikiboard en una cabecera.",
-      "step1": "Elige una organización o un tablero arriba, nombra la conexión y crea un token. Cópialo cuando aparezca.",
-      "step2": "En Claude, abre Personalizar → Conectores → Añadir conector personalizado. Introduce la URL MCP.",
-      "step3": "Selecciona Sin iniciar sesión y añade la cabecera Authorization con el valor Bearer, un espacio y tu token.",
-      "step4": "Añade el conector y actívalo en la conversación mediante + → Conectores."
+      "intro": "Claude usa OAuth. Genera aquí tu ID y secreto de cliente; no hace falta copiar ninguna URL de retorno.",
+      "step1": "Genera las credenciales abajo. Elige si Claude podrá solo leer o también escribir tickets.",
+      "step2": "En Claude, abre Personalizar → Conectores → Añadir conector personalizado. Introduce la URL MCP y abre las opciones avanzadas.",
+      "step3": "Pega el ID y el secreto de cliente OAuth y añade el conector.",
+      "step4": "Pulsa Conectar, inicia sesión con esta misma cuenta, elige la organización o el tablero que administras y aprueba el acceso. Luego actívalo en la conversación con + → Conectores."
     },
     "grok": {
       "intro": "Utiliza un token bearer con Grok CLI o la API Remote MCP de xAI. Estos pasos configuran Grok CLI.",

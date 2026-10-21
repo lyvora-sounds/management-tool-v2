@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import db from "@/lib/db";
 import { isBoardAdmin, readableBoardWhere } from "@/lib/boardAccess";
 import { issueAuthorizationCode } from "@/lib/mcp/oauth";
-import { authorizationCallback } from "@/lib/mcp/oauthConfig";
+import { authorizationCallback, oauthClientName } from "@/lib/mcp/oauthConfig";
 
 export const dynamic = "force-dynamic";
 export const metadata = { referrer: "no-referrer" as const, robots: { index: false, follow: false } };
@@ -23,6 +23,7 @@ export default async function McpAuthorizePage({ searchParams }: {
   try { authorization = await validateAuthorizationRequest(query); }
   catch { return <p className="p-6">{t("invalidRequest")}</p>; }
   const serialized = query.toString();
+  const client = oauthClientName(authorization.redirectUri);
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const user = await db.user.findUnique({ where: { clerkId: userId }, select: { id: true } });
@@ -61,8 +62,8 @@ export default async function McpAuthorizePage({ searchParams }: {
   return (
     <div className="mx-auto max-w-xl p-6 sm:p-10">
       <div className="space-y-5 rounded-xl border bg-card p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("description")}</p>
+        <h1 className="text-2xl font-semibold">{t("title", { client })}</h1>
+        <p className="text-sm text-muted-foreground">{t("description", { client })}</p>
         <p className="text-sm">{t("permissions")}</p>
         <form action={consent} className="space-y-5">
           {hasOptions ? <>
@@ -77,7 +78,7 @@ export default async function McpAuthorizePage({ searchParams }: {
               </option>)}
             </select>
           </> : <p className="text-sm">{t("noScopes")}</p>}
-          <p className="text-sm text-muted-foreground">{t("revoke")}</p>
+          <p className="text-sm text-muted-foreground">{t("revoke", { client })}</p>
           {authorization.writeRequested && <label className="flex gap-2 text-sm"><input type="checkbox" name="writeAccess" />{t("writeAccess")}</label>}
           <div className="flex gap-3">
             <button name="decision" value="allow" disabled={!hasOptions} className="rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50">{t("allow")}</button>

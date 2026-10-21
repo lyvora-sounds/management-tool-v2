@@ -1,8 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import db from "@/lib/db";
 import { canEditBoard, canReadBoard } from "@/lib/boardAccess";
 import { encodeLogMessage } from "@/lib/activityMessages";
+import { hasKikiMention, runKiki } from "@/lib/agent/kiki";
+import { getBoardUsers } from "@/lib/boardUsers";
+import { findMentionedUserIds } from "@/lib/mentions";
+
+// Kiki responde después de contestar al usuario (after), así que necesita margen para llamar al modelo.
+export const maxDuration = 60;
 
 export async function GET(
   _req: Request,
@@ -26,11 +32,24 @@ export async function GET(
 
   const comments = await db.comment.findMany({
     where: { taskId },
-    include: { user: { select: { name: true, email: true } } },
+    include: { user: { select: { name: true, email: true, isAgent: true } } },
     orderBy: { createdAt: "asc" },
   });
 
-  return NextResponse.json(comments);
+  // Para pintar «Deshacer» solo donde aún se puede: el cambio de Kiki existe y no se ha revertido.
+  const changeIds = comments.flatMap((c) => (c.agentChangeId ? [c.agentChangeId] : []));
+  const changes = changeIds.length
+    ? await db.mcpChange.findMany({ where: { id: { in: changeIds } }, select: { id: true, revertedAt: true } })
+    : [];
+  const reverted = new Map(changes.map((c) => [c.id, c.revertedAt !== null]));
+
+  return NextResponse.json(
+    comments.map(({ agentChangeId, agentSuggestion, ...c }) => ({
+      ...c,
+      suggestion: agentSuggestion && typeof agentSuggestion === "object" && !Array.isArray(agentSuggestion) ? { pending: (agentSuggestion as { applied?: boolean }).applied !== true } : null,
+      change: agentChangeId ? { id: agentChangeId, reverted: reverted.get(agentChangeId) ?? true } : null,
+    })),
+  );
 }
 
 export async function POST(
@@ -77,19 +96,24 @@ export async function POST(
   });
 
   const actorName = user.name ?? user.email;
+
+  // «@Nombre» avisa a esa persona aunque no esté en la tarjeta; el aviso de mención sustituye al de comentario.
+  const boardUsers = await getBoardUsers(task.list.board);
+  const mentioned = new Set(findMentionedUserIds(content, boardUsers).filter((id) => id !== user.id));
+  mentioned.forEach((id) => notifyUserIds.add(id));
   const notifyList = Array.from(notifyUserIds);
 
   const [comment] = await db.$transaction([
     db.comment.create({
       data: { content: content.trim(), taskId, userId: user.id },
-      include: { user: { select: { name: true, email: true } } },
+      include: { user: { select: { name: true, email: true, isAgent: true } } },
     }),
     ...(notifyList.length > 0
       ? [
           db.notification.createMany({
             data: notifyList.map((notifyUserId) => ({
               type: "comment",
-              message: encodeLogMessage("notifications.commented", {
+              message: encodeLogMessage(mentioned.has(notifyUserId) ? "notifications.mentioned" : "notifications.commented", {
                 actor: actorName,
                 ticket: task.title,
               }),
@@ -102,5 +126,9 @@ export async function POST(
       : []),
   ]);
 
-  return NextResponse.json(comment, { status: 201 });
+  if (task.list.board.kikiMode !== "off" && hasKikiMention(comment.content)) {
+    after(() => runKiki({ taskId, invokerId: user.id }).catch((error) => console.error("[kiki]", error)));
+  }
+
+  return NextResponse.json({ ...comment, change: null, suggestion: null }, { status: 201 });
 }

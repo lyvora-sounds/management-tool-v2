@@ -190,7 +190,7 @@ export async function createMcpEpic(context: ExternalAccessContext, args: Record
   }, { isolationLevel: "Serializable" });
 }
 
-export async function updateMcpTickets(context: ExternalAccessContext, args: Record<string, unknown>) {
+export async function updateMcpTickets(context: ExternalAccessContext, args: Record<string, unknown>, sessionActorId?: string) {
   if (!Array.isArray(args.updates) || !args.updates.length || args.updates.length > 50) throw new McpWriteError("Provide 1 to 50 ticket updates");
   const updates = args.updates.map((raw: unknown) => {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new McpWriteError("Invalid ticket update");
@@ -204,12 +204,12 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
   const board = await db.task.findFirst({ where: { id: updates[0].id, list: { board: boardScope(context) } }, select: { list: { select: { boardId: true } } } });
   if (!board) throw new McpWriteError("Ticket not found in this connection");
   const boardId = board.list.boardId;
-  const actor = await writeActor(context, boardId);
+  const actor = await writeActor(context, boardId, sessionActorId);
   const uploaded: string[] = [];
   let result;
   try {
     result = await db.$transaction(async (tx) => {
-      await validateCredential(tx, context);
+      await validateCredential(tx, context, sessionActorId);
       const captured = new Map<string, Snapshot>();
       const capture = async (id: string) => {
         if (captured.has(id)) return;
@@ -239,7 +239,7 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
       }
       const before = [...captured.values()];
       const after = await Promise.all(before.map(row => tx.task.findUniqueOrThrow({ where: { id: row.id }, select })));
-      const change = await tx.mcpChange.create({ data: { ...changeScope(context), boardId, tokenId: context.tokenId, actorId: actor.id, kind: "update", summary: summary(args.summary, `Update ${updates.length} tickets`), before, after: after.map(taskSnapshot) } });
+      const change = await tx.mcpChange.create({ data: { ...changeScope(context), boardId, tokenId: context.tokenId || null, actorId: actor.id, kind: "update", summary: summary(args.summary, `Update ${updates.length} tickets`), before, after: after.map(taskSnapshot) } });
       await activity(tx, boardId, actor, "activity.mcpUpdated", updates.length);
       return { changeId: change.id, before, after };
     }, { isolationLevel: "Serializable", timeout: 60000 });

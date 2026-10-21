@@ -119,11 +119,38 @@ create their own OAuth client in **Settings → MCP → ChatGPT**:
 4. Paste those values into ChatGPT's OAuth configuration. Create and install the plugin, then select it with `@` in a Work chat.
 5. Sign in to Kikiboard with the same account that generated the client. Choose an organization or board you administer and approve access.
 
-Only exact ChatGPT callbacks on `https://chatgpt.com` are accepted. Each client
+Only exact ChatGPT callbacks on `https://chatgpt.com` are accepted (Claude has its own fixed callbacks; see below). Each client
 belongs to its creator. List or revoke your clients in the ChatGPT guide;
 revoking one invalidates its connections and refresh tokens. Authenticated
 settings routes `/api/settings/mcp/oauth-clients` expose creation, metadata-only
 listing and revocation. Secret responses are not cached.
+
+## Connect Claude with OAuth
+
+Claude's custom connectors (Customize → Connectors → Add custom connector) probe
+the MCP URL without credentials, see the `401` with OAuth metadata and switch to
+OAuth on their own, so the bearer-header setup is not reliable there. Use an
+account-owned OAuth client instead:
+
+1. In **Settings → MCP → Claude**, choose read-only or read/write and select
+   Generate Claude credentials. The client ID and secret are shown once; only the
+   secret hash is stored.
+2. In Claude, add a custom connector with the MCP URL, open the advanced
+   settings and paste the OAuth client ID and secret.
+3. Select Connect, sign in to Kikiboard with the same account, choose an
+   organization or board you administer and approve access.
+
+Claude always returns to `https://claude.ai/api/mcp/auth_callback` or
+`https://claude.com/api/mcp/auth_callback`. Those two URLs are fixed on the
+server (`CLAUDE_CALLBACKS`), so the browser cannot choose a callback for a Claude
+client, and every other callback is still rejected by exact match. The security
+model is the same as ChatGPT: client owned by its creator, PKCE S256, hashed
+secret, explicit consent, and revocation that also revokes its connections. The
+connection is named after the client (`Claude` or `ChatGPT`). Dynamic client
+registration is still not exposed.
+
+Claude Code and other bearer-header clients keep using a token from
+**Settings → MCP**.
 
 The original `MCP_OAUTH_CLIENT_ID`, `MCP_OAUTH_CLIENT_SECRET` and
 `MCP_OAUTH_REDIRECT_URIS` environment variables are optional compatibility for

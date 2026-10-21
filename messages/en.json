@@ -651,6 +651,28 @@
     "renameList": "Rename list"
   },
   "task": {
+    "send": "Send",
+    "deleteComment": "Delete comment",
+    "emptyCommentsHint": "Start the conversation or ask Kiki for help.",
+    "mentionSomeone": "Mention someone",
+    "commentHint": "Enter to send · Shift+Enter for a new line",
+    "kikiAgentHint": "AI assistant",
+    "kikiChipSummarize": "Summarize",
+    "kikiPromptSummarize": "@Kiki summarize this ticket in 2 sentences.",
+    "kikiChipSubtasks": "Suggest subtasks",
+    "kikiPromptSubtasks": "@Kiki suggest subtasks to do this step by step.",
+    "kikiChipPriority": "Suggest priority",
+    "kikiPromptPriority": "@Kiki what priority would you give this and why?",
+    "kikiApply": "Apply suggestions",
+    "kikiApplied": "Suggestions applied",
+    "kikiApplyError": "Could not apply the suggestions",
+    "kikiAgent": "Agent",
+    "kikiUndo": "Undo changes",
+    "kikiUndone": "Changes undone",
+    "kikiUndoError": "Could not undo: the ticket changed afterwards",
+    "kikiThinking": "Kiki is working…",
+    "kikiInsert": "Mention Kiki",
+    "kikiHintPlaceholder": "Write a comment… or @Kiki to ask for help",
     "title": "Ticket title",
     "description": "Description",
     "status": "Status",
@@ -801,6 +823,14 @@
     "empty": "No members or invitations yet."
   },
   "permissions": {
+    "kikiTriage": "Automatic triage",
+    "kikiTriageHint": "When a ticket is created, Kiki suggests labels, priority, assignee and duplicates. Nothing changes until someone clicks Apply. Each new ticket uses one AI call.",
+    "kikiTitle": "Kiki, AI assistant",
+    "kikiHint": "Members can mention @Kiki on a ticket so it replies and edits it. Choose which AI key it works with.",
+    "kikiOwner": "Use the board owner's key",
+    "kikiMember": "Each person uses their own key",
+    "kikiOff": "Off on this board",
+    "kikiSaved": "Kiki updated",
     "membersCanAssign": "Members can assign tickets",
     "ownerOnly": "Only the owner can assign",
     "saveError": "Could not save permissions",
@@ -1206,6 +1236,7 @@
     "mcpReverted": "{actor} reverted changes to {count} tickets through MCP"
   },
   "notifications": {
+    "mentioned": "{actor} mentioned you on the ticket \"{ticket}\"",
     "title": "Notifications",
     "markAllRead": "Mark all as read",
     "empty": "No new notifications",
@@ -1437,18 +1468,18 @@
     }
   },
   "mcpOAuth": {
-    "title": "Connect ChatGPT to Kikiboard",
-    "description": "Choose the organization or board ChatGPT may read. This connection lasts up to 30 days.",
+    "title": "Connect {client} to Kikiboard",
+    "description": "Choose the organization or board {client} may read. This connection lasts up to 30 days.",
     "permissions": "This connection can read project information and tickets. Task changes are allowed only when you explicitly enable write access.",
     "selection": "Connection scope",
     "choose": "Choose an organization or board",
     "organization": "Organization: {name} (all boards)",
     "board": "Board: {name} ({organization})",
     "noScopes": "You need organization or board admin access to create a connection.",
-    "revoke": "Revoke this connection in Settings → MCP by selecting its scope and removing the ChatGPT credential.",
+    "revoke": "Revoke this connection in Settings → MCP by selecting its scope and removing the {client} credential.",
     "allow": "Allow access",
     "deny": "Cancel",
-    "invalidRequest": "This connection request is invalid or ChatGPT OAuth has not been configured.",
+    "invalidRequest": "This connection request is invalid or OAuth has not been configured for this client.",
     "writeAccess": "Allow task creation, editing and archiving with reversible change history"
   },
   "mcpGuide": {
@@ -1461,10 +1492,10 @@
             "4": "Approve access"
         },
         "claude": {
-            "1": "Create a scoped token",
+            "1": "Generate credentials",
             "2": "Add your connector",
-            "3": "Configure authentication",
-            "4": "Enable in a conversation"
+            "3": "Paste the ID and secret",
+            "4": "Connect and approve"
         },
         "grok": {
             "1": "Create a scoped token",
@@ -1494,7 +1525,9 @@
     "clientId": "OAuth client ID",
     "clientSecret": "OAuth client secret",
     "credentialsHint": "Paste these two values into ChatGPT’s OAuth fields. This secret is different from the bearer token above. If you lose it, revoke this setup and create another.",
+    "credentialsHintClaude": "Paste these two values into the advanced settings of the Claude connector (OAuth client ID and secret). This secret is different from a bearer token. If you lose it, revoke this setup and create another.",
     "clients": "Your ChatGPT setups",
+    "clientsClaude": "Your Claude setups",
     "revoke": "Revoke",
     "revokeHint": "Revoking a setup stops its ChatGPT connections and token refreshes.",
     "revoked": "ChatGPT setup revoked",
@@ -1513,11 +1546,11 @@
       "step4": "Sign in to Kikiboard with this same account, choose the organization or board you administer, and approve read-only or explicitly requested read/write access."
     },
     "claude": {
-      "intro": "Claude custom connectors can send your Kikiboard bearer token as a request header.",
-      "step1": "Choose an organization or board above, name the connection, and create a token. Copy it when it appears.",
-      "step2": "In Claude, open Customize → Connectors → Add custom connector. Enter the MCP URL.",
-      "step3": "Select No sign in and add a request header named Authorization with value Bearer followed by a space and your token.",
-      "step4": "Add the connector, then enable it in your conversation using + → Connectors."
+      "intro": "Claude uses OAuth. Generate your client ID and secret here; there is no callback URL to copy.",
+      "step1": "Generate the credentials below. Choose whether Claude can only read or also write tickets.",
+      "step2": "In Claude, open Customize → Connectors → Add custom connector. Enter the MCP URL and open the advanced settings.",
+      "step3": "Paste the OAuth client ID and secret, then add the connector.",
+      "step4": "Click Connect, sign in with this same account, choose the organization or board you administer and approve access. Then enable it in a conversation with + → Connectors."
     },
     "grok": {
       "intro": "Use a bearer token with Grok CLI or xAI’s Remote MCP API. These steps configure Grok CLI.",

@@ -434,7 +434,7 @@ export function TaskModal({
       />
 
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="sm:max-w-4xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-6xl p-0 overflow-hidden">
           <DialogHeader className="flex flex-row items-center gap-2 px-4 py-3 border-b bg-muted/50">
             <DialogTitle className="text-sm font-medium text-muted-foreground flex-1 truncate flex items-center gap-2">
               <DropdownMenu>
@@ -540,8 +540,8 @@ export function TaskModal({
 
           <div
             key={currentTask.id}
-            className="flex sm:divide-x overflow-hidden"
-            style={{ maxHeight: "70vh" }}
+            className="flex overflow-hidden sm:h-[min(82vh,50rem)]"
+            style={{ maxHeight: "78vh" }}
           >
             {/* Left — task details */}
             <div
@@ -857,11 +857,11 @@ export function TaskModal({
 
             {/* Right — comments */}
             <div
-              className={`sm:w-72 sm:shrink-0 flex flex-col px-4 pt-2 pb-4 min-h-0 ${
+              className={`sm:w-96 lg:w-[28rem] sm:shrink-0 sm:border-l bg-muted/30 flex flex-col min-h-0 ${
                 mobileTab !== "comments" ? "hidden sm:flex" : "flex-1"
               }`}
             >
-              <TaskComments taskId={currentTask.id} />
+              <TaskComments taskId={currentTask.id} members={boardUsers} />
             </div>
           </div>
         </DialogContent>

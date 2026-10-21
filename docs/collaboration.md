@@ -27,6 +27,24 @@ QA (`/qa`) and collaborators (`/collaborators`) follow the same notify-if-not-se
 
 GET returns the thread with author name/email, oldest first.
 
+## Kiki (AI agent in comments)
+
+Mentioning `@Kiki` in a comment makes Kiki reply on the ticket and, when asked, edit it.
+
+- `POST /api/tasks/[taskId]/comments` saves the comment, then runs `runKiki` after the response (`after()`, `maxDuration` 60). The UI polls the thread until Kiki's comment arrives.
+- Kiki is a system `User` (`isAgent`, clerkId `agent_kiki`). It is not a board member and cannot sign in. Its comments carry the agent badge.
+- **Whose key**: `Board.kikiMode` — `owner` (board owner's BYOK key, default), `member` (the person who mentioned it), or `off`. Board admins change it in Board permissions (`PATCH /api/boards/[boardId]/permissions`). No key → Kiki replies asking for one.
+- **Permissions**: Kiki acts as the person who mentioned it. Writes go through `updateMcpTickets(..., sessionActorId)`, so `canEditBoard` and relation checks apply to that person.
+- **Scope**: only the mentioned ticket. Allowed fields: title, description, priority, dates, list, completed, assignee, labels, new subtasks (`buildPatch` in `lib/agent/parse.ts`). No archive, share, delete or attachments. Ticket text is passed as data, not instructions.
+- **Limit**: at most 8 Kiki replies per ticket per 10 minutes.
+- **Undo**: each edit is an `McpChange` (no token). The reply comment stores `Comment.agentChangeId`; `POST /api/tasks/[taskId]/agent-undo` reverts it through `revertMcpChange`. Kiki's reply is posted before the edit so it is part of both snapshots; `agentChangeId` is set with raw SQL so `updatedAt` does not move. Undo fails with a conflict if the ticket changed afterwards.
+
+### Kiki triage (opt-in)
+
+`Board.kikiTriage` (off by default; switch in Board permissions, hidden when Kiki is off). When on, `POST /api/tasks/createTask` runs `runTriage` after responding. It uses the same key rule as mentions (`kikiMode`; owner key, or the creator's) and does nothing without a key.
+
+Kiki only **suggests**. If it has something useful, it posts a comment and stores `{ changes, duplicates, applied }` in `Comment.agentSuggestion`. Allowed suggestions: priority (only if empty), up to 3 labels, assignee (only if empty), possible duplicates among the 40 latest tickets (mentioned in the comment text). `POST /api/tasks/[taskId]/agent-apply` applies them as the person who clicks Apply (their permissions, `updateMcpTickets`), links the `McpChange` to the comment, and Undo works as for mentions. The claim and the link are raw SQL so `updatedAt` does not move. Brain-dump batch creation does not trigger triage yet.
+
 ## Notifications
 
 `GET /api/notifications` — unread, newest first, max 50.
