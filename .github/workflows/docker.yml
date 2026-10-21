@@ -1,0 +1,65 @@
+name: Docker
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migrations:
+    name: Postgres
+    runs-on: ubuntu-latest
+
+    # Base desechable. Aplica las migraciones desde cero, el camino que se
+    # rompió cuando un cambio de schema.prisma llegó a main sin su migración.
+    # No corre en cada PR: solo al pulsar "Run workflow", o al hacer push a main.
+    services:
+      postgres:
+        # Mirror de la imagen oficial: evita el límite anónimo de Docker Hub.
+        image: public.ecr.aws/docker/library/postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Conexión directa a la base del runner: sin pooler, así que el advisory
+      # lock de `migrate deploy` funciona sin el P1002 que vimos en Vercel.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci
+      DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Aplicar migraciones sobre una base vacía
+        run: pnpm exec prisma migrate deploy
+
+      - name: Comprobar que schema.prisma coincide con las migraciones
+        # Si sale SQL, es que schema.prisma cambió sin generar la migración.
+        # El primer comando lo imprime para poder leerlo; el segundo falla.
+        run: |
+          pnpm exec prisma migrate diff \
+            --from-config-datasource --to-schema prisma/schema.prisma --script
+          pnpm exec prisma migrate diff \
+            --from-config-datasource --to-schema prisma/schema.prisma --exit-code

@@ -2,7 +2,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import db from "@/lib/db";
 import type { ExternalAccessContext } from "@/lib/externalAccess";
-import { createMcpTicket, updateMcpTickets, listMcpChanges, revertMcpChange, McpWriteError } from "./writes";
+import { createMcpTicket, createMcpEpic, updateMcpTickets, listMcpChanges, revertMcpChange, McpWriteError } from "./writes";
 
 import { relationSchema } from "./ticketRelations";
 import { informationResponse, presentationSchema, SVG_CAPABILITY } from "./presentation";
@@ -151,6 +151,8 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       ...(context.scopes.includes("tickets:write") ? [
         { name: "create_ticket", description: "Create a ticket in a list in this connection. Returns a change ID; reverting creation archives the ticket and preserves its content.", ...writeMetadata,
           inputSchema: { type: "object", additionalProperties: false, required: ["title", "listId"], properties: { ...taskChangesSchema.properties, summary: { type: "string", maxLength: 500 } } } },
+        { name: "create_epic", description: "Create an epic on a board in this connection. A board-scoped token uses that board; an organization token must pass boardId from get_project. Returns the epic so tickets can be attached with update_tickets. Epic creation is not in change history and cannot be reverted.", ...writeMetadata,
+          inputSchema: { type: "object", additionalProperties: false, required: ["title"], properties: { title: { type: "string", maxLength: 500 }, description: { type: ["string", "null"], maxLength: 50000 }, color: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" }, quarter: { type: ["string", "null"], pattern: "^\\d{4}-Q[1-4]$" }, boardId: { type: "string", description: "Required for organization connections. On a board-scoped token it must match the bound board if supplied." } } } },
         { name: "update_tickets", description: "Edit, move, complete or archive up to 50 tickets on one board atomically. Every batch has a change ID and before/after history. Supports people, QA, collaborators, labels, epics, custom fields, checklist, comments, attachments and public sharing. IDs and custom-field options are available from get_project. Server-generated IDs, timestamps and calendar integration IDs cannot be supplied.", ...writeMetadata, annotations: { ...writeMetadata.annotations, destructiveHint: true },
           inputSchema: { type: "object", additionalProperties: false, required: ["updates"], properties: { updates: { type: "array", minItems: 1, maxItems: 50, items: { type: "object", required: ["ticketId", "changes"], additionalProperties: false, properties: { ticketId: { type: "string" }, changes: taskChangesSchema } } }, summary: { type: "string", maxLength: 500 } } } },
         { name: "revert_change", description: "Preview undo with confirm=false first. After user approval, set confirm=true to revert an entire MCP change. Conflicts with later task edits reject the whole revert. Creation is undone by archiving.", ...writeMetadata,
@@ -164,11 +166,12 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
     const metadata = params._meta as Record<string, unknown> | undefined;
     const capabilities = metadata?.["io.modelcontextprotocol/clientCapabilities"] ?? server.getClientCapabilities();
     const information = (data: unknown) => informationResponse(params.name, data, args.presentation, capabilities);
-    if (["create_ticket", "update_tickets", "get_change_history", "revert_change"].includes(params.name)) {
+    if (["create_ticket", "create_epic", "update_tickets", "get_change_history", "revert_change"].includes(params.name)) {
       try {
         if (params.name === "get_change_history") return information(await listMcpChanges(context));
         if (!context.scopes.includes("tickets:write")) throw new McpWriteError("This connection is read-only");
         if (params.name === "create_ticket") return text(await createMcpTicket(context, args));
+        if (params.name === "create_epic") return text(await createMcpEpic(context, args));
         if (params.name === "update_tickets") return text(await updateMcpTickets(context, args));
         if (typeof args.changeId !== "string" || !args.changeId) throw new McpWriteError("changeId is required");
         return text(await revertMcpChange(context, args.changeId, args.confirm === true));

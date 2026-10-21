@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bot, Check, Copy, Loader2, ShieldCheck, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -39,7 +39,10 @@ type AccessTokenSummary = {
   name: string;
   tokenPrefix: string;
   lastUsedAt: string | null;
+  createdAt: string;
   scopes: string[];
+  organization: { id: string; name: string };
+  board: { id: string; title: string } | null;
 };
 
 const SCOPES: { id: McpScope; labelKey: "mcpScopeOrganization" | "mcpScopeBoard" }[] = [
@@ -65,7 +68,7 @@ export function McpSettings() {
   const [createdToken, setCreatedToken] = useState("");
   const [creating, setCreating] = useState(false);
   const [tokens, setTokens] = useState<AccessTokenSummary[]>([]);
-  const tokenListRequest = useRef(0);
+  const [tokensLoading, setTokensLoading] = useState(true);
 
   useEffect(() => {
     const configured = process.env.NEXT_PUBLIC_APP_URL;
@@ -101,49 +104,47 @@ export function McpSettings() {
     : !!board?.canIssueToken;
   const canCreate = tokenName.trim().length > 0 && allowed;
 
+  const loadMyTokens = async () => {
+    const res = await fetch("/api/settings/mcp/tokens");
+    if (!res.ok) throw new Error("load");
+    setTokens(await res.json());
+  };
+
   useEffect(() => {
-    if (!organization) return;
-    const url = scope === "organization"
-      ? `/api/organizations/${organization.id}/external-access`
-      : board
-        ? `/api/boards/${board.id}/external-access`
-        : null;
-    if (!url) return;
-    const requestId = ++tokenListRequest.current;
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(url);
-        if (!res.ok || cancelled || requestId !== tokenListRequest.current) return;
-        setTokens(await res.json());
+        const res = await fetch("/api/settings/mcp/tokens");
+        if (!res.ok) throw new Error("load");
+        const data = (await res.json()) as AccessTokenSummary[];
+        if (!cancelled) setTokens(data);
       } catch {
-        if (!cancelled && requestId === tokenListRequest.current) setTokens([]);
+        if (!cancelled) toast.error(t("mcpTokensLoadError"));
+      } finally {
+        if (!cancelled) setTokensLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [organization, board, scope]);
+  }, [t]);
 
   const selectOrganization = (nextId: string) => {
     const next = organizations.find((item) => item.id === nextId);
     setOrganizationId(nextId);
     setBoardId(next?.boards[0]?.id ?? "");
     setCreatedToken("");
-    setTokens([]);
   };
 
   const selectScope = (next: McpScope) => {
     if (next === scope) return;
     setScope(next);
     setCreatedToken("");
-    setTokens([]);
   };
 
   const selectBoard = (nextId: string) => {
     setBoardId(nextId);
     setCreatedToken("");
-    setTokens([]);
   };
 
   const copyToken = async () => {
@@ -172,11 +173,14 @@ export function McpSettings() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(typeof data?.error === "string" ? data.error : t("mcpTokenCreateError"));
-      tokenListRequest.current += 1;
       setCreatedToken(data.token);
       setTokenName("");
-      setTokens((current) => [data, ...current]);
       toast.success(t("mcpTokenCreated"));
+      try {
+        await loadMyTokens();
+      } catch {
+        toast.error(t("mcpTokensLoadError"));
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("mcpTokenCreateError"));
     } finally {
@@ -184,15 +188,15 @@ export function McpSettings() {
     }
   };
 
-  const revokeToken = async (tokenId: string) => {
-    if (!organization) return;
-    if (scope === "board" && !board) return;
-    const url = scope === "organization"
-      ? `/api/organizations/${organization.id}/external-access/${tokenId}`
-      : `/api/boards/${board!.id}/external-access/${tokenId}`;
-    const res = await fetch(url, { method: "DELETE" });
+  const revokeToken = async (token: AccessTokenSummary) => {
+    if (!window.confirm(t("mcpRevokeConfirm", { name: token.name }))) return;
+    const res = await fetch("/api/settings/mcp/tokens", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: token.id }),
+    });
     if (res.ok) {
-      setTokens((current) => current.filter((token) => token.id !== tokenId));
+      setTokens((current) => current.filter((item) => item.id !== token.id));
       toast.success(t("mcpTokenRevoked"));
     } else {
       toast.error(t("mcpTokenRevokeError"));
@@ -387,38 +391,56 @@ export function McpSettings() {
               </div>
             </form>
 
-            {tokens.length > 0 && (
-              <div className="space-y-2 border-t pt-4">
-                <h3 className="text-sm font-semibold">{t("mcpActiveTokens")}</h3>
-                {tokens.map((token) => (
-                  <div key={token.id} className="flex items-center justify-between gap-2 text-sm">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{token.name}</p>
-                      <p className="text-xs text-muted-foreground">{t(token.scopes?.includes("tickets:write") ? "mcpReadWrite" : "mcpReadOnly")}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {token.tokenPrefix}…
-                        {" · "}
-                        {token.lastUsedAt
-                          ? `${t("mcpLastUsed")} ${new Date(token.lastUsedAt).toLocaleString()}`
-                          : t("mcpNeverUsed")}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => revokeToken(token.id)}
-                      aria-label={t("mcpRevoke")}
-                    >
-                      <Trash2 size={14} />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}
+
+      <div className="rounded-xl border bg-card p-5 sm:p-6 shadow-sm space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">{t("mcpYourTokens")}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{t("mcpYourTokensHint")}</p>
+        </div>
+        {tokensLoading ? (
+          <div className="flex justify-center py-6">
+            <Loader2 className="animate-spin text-muted-foreground" size={20} />
+          </div>
+        ) : tokens.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t("mcpNoTokens")}</p>
+        ) : (
+          <ul className="space-y-2">
+            {tokens.map((token) => (
+              <li key={token.id} className="flex items-center justify-between gap-2 rounded-lg border p-3 text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{token.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {token.board
+                      ? t("mcpTokenBoardScope", { title: token.board.title, name: token.organization.name })
+                      : t("mcpTokenOrgScope", { name: token.organization.name })}
+                    {" · "}
+                    {t(token.scopes.includes("tickets:write") ? "mcpReadWrite" : "mcpReadOnly")}
+                  </p>
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {token.tokenPrefix}…
+                    {" · "}
+                    {token.lastUsedAt
+                      ? `${t("mcpLastUsed")} ${new Date(token.lastUsedAt).toLocaleString()}`
+                      : t("mcpNeverUsed")}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => void revokeToken(token)}
+                  aria-label={t("mcpRevoke")}
+                >
+                  <Trash2 size={14} />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <McpConnectionGuide endpoint={endpoint} />
       {organization && allowed && (
