@@ -423,6 +423,18 @@ export function TaskModal({
   };
 
   const selectedEpicMeta = epics.find((e) => e.id === currentEpicId);
+  const epicItems: Record<string, React.ReactNode> = {
+    none: t("noEpic"),
+    ...Object.fromEntries(
+      epics.map((ep) => [
+        ep.id,
+        <span key={ep.id} className="flex items-center gap-1.5">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: ep.color }} />
+          <span className="truncate">{ep.title}</span>
+        </span>,
+      ]),
+    ),
+  };
 
   return (
     <>
@@ -684,6 +696,8 @@ export function TaskModal({
                   {/* Epic Selector */}
                   {epics.length > 0 && (
                     <Select
+                      // sin `items`, base-ui muestra el id de la épica en el botón en lugar de su nombre
+                      items={epicItems}
                       disabled={!canEdit}
                       value={currentEpicId || "none"}
                       onValueChange={(v) => saveEpic(v === "none" ? null : v)}
