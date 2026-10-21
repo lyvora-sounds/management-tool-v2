@@ -705,6 +705,8 @@
     "commentPlaceholder": "Escribe un comentario...",
     "selectParent": "Seleccionar ticket padre...",
     "selectChildren": "Seleccionar ticket(s) hijo(s)...",
+    "hierarchyKicker": "RUTA",
+    "hierarchyNote": "Los tickets del mismo paso avanzan juntos.",
     "select": "Seleccionar...",
     "unspecified": "Sin especificar",
     "numberPlaceholder": "Ej. 1, 2, 5...",

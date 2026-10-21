@@ -62,6 +62,12 @@ Attachments are private blobs. Download goes through `/api/tasks/[taskId]/attach
 
 `archived` / `archivedAt` hide work from the active board. `/api/boards/[boardId]/archive` lists archived cards. Epics group tasks (`Epic.status` open/completed, optional `quarter` like `2026-Q1`). Tasks can also store their own `quarter`.
 
+## Parent and child diagram
+
+The **Parent ticket** and **Child ticket** custom fields are the hierarchy. Saving either field keeps the other side in sync. Opening a ticket in that tree loads `GET /api/boards/[boardId]/hierarchy?taskId=` and inlines an SVG in the task modal.
+
+The highest ancestor is the diagram title. Its children are step 01, left to right in the stored child list. A nested child is the next step, and siblings share a step. A ticket with no parent and no children draws nothing. A cycle stops at the repeated ticket. The picture redraws after a parent or child value is saved.
+
 ## Dashboard and calendar reads
 
 - Dashboard aggregates pending, overdue, completed-this-week, assigned-to-me.

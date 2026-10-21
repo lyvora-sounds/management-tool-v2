@@ -705,6 +705,8 @@
     "commentPlaceholder": "Sumulat ng comment...",
     "selectParent": "Pumili ng parent ticket...",
     "selectChildren": "Pumili ng child ticket(s)...",
+    "hierarchyKicker": "LANDAS",
+    "hierarchyNote": "Ang mga tickets sa parehong hakbang ay sabay umuusad.",
     "select": "Pumili...",
     "unspecified": "Hindi tinukoy",
     "numberPlaceholder": "hal. 1, 2, 5...",

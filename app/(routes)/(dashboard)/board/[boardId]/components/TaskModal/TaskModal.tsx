@@ -55,6 +55,7 @@ import { TaskPriority } from "../TaskPriority/TaskPriority";
 import { TaskAiImprove } from "../TaskAiImprove/TaskAiImprove";
 import { TaskShareModal } from "../TaskShareModal/TaskShareModal";
 import { TaskCustomFields } from "../TaskCustomFields/TaskCustomFields";
+import { TaskHierarchyDiagram } from "../TaskHierarchyDiagram/TaskHierarchyDiagram";
 import type { Priority } from "../TaskPriority/TaskPriority.constants";
 import type { LabelModel } from "@/lib/generated/prisma/models/Label";
 import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
@@ -84,6 +85,7 @@ export function TaskModal({
   const addSubtask = useBoardStore((s) => s.addSubtask);
   const moveTask = useBoardStore((s) => s.moveTask);
   const attachmentsRef = useRef<TaskAttachmentsHandle>(null);
+  const [hierarchyVersion, setHierarchyVersion] = useState(0);
 
   // Flat list of all tasks across all lists for navigation
   const allTasks =
@@ -801,8 +803,18 @@ export function TaskModal({
                 <TaskAttachments ref={attachmentsRef} taskId={currentTask.id} />
               </div>
 
+              <TaskHierarchyDiagram
+                boardId={boardId}
+                taskId={currentTask.id}
+                refreshKey={hierarchyVersion}
+              />
+
               {/* Custom Values / Custom Fields */}
-              <TaskCustomFields taskId={currentTask.id} boardId={boardId} />
+              <TaskCustomFields
+                taskId={currentTask.id}
+                boardId={boardId}
+                onTicketLinkChange={() => setHierarchyVersion((version) => version + 1)}
+              />
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">

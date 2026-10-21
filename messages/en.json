@@ -705,6 +705,8 @@
     "commentPlaceholder": "Write a comment...",
     "selectParent": "Select parent ticket...",
     "selectChildren": "Select child ticket(s)...",
+    "hierarchyKicker": "PATH",
+    "hierarchyNote": "Tickets on the same step run together.",
     "select": "Select...",
     "unspecified": "Unspecified",
     "numberPlaceholder": "e.g. 1, 2, 5...",
