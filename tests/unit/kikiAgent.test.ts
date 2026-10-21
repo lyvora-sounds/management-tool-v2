@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPatch, hasKikiMention, parseReply, parseTriage } from "@/lib/agent/parse";
+import { buildPatch, hasKikiMention, parseBatchTriage, parseReply, parseTriage } from "@/lib/agent/parse";
 
 const ref = {
   lists: [{ id: "l1" }, { id: "l2" }],
@@ -83,5 +83,32 @@ describe("parseTriage", () => {
     const out = parseTriage(answer({ duplicateOf: ["t1"] }), triageRef);
     expect(out?.changes).toBeNull();
     expect(out?.duplicates).toEqual(["t1"]);
+  });
+});
+
+describe("parseBatchTriage", () => {
+  const ref = { labels: [{ id: "b1" }], members: [{ id: "u1" }], candidates: [{ id: "t1" }], currentPriority: null as string | null, hasAssignee: false };
+  const item = (id: string, extra: Record<string, unknown> = {}) => ({ id, reply: "Sugiero…", priority: null, labelIds: ["b1"], assigneeId: null, duplicateOf: [], ...extra });
+
+  it("keeps one validated suggestion per ticket of the batch", () => {
+    const raw = JSON.stringify({ tickets: [item("a"), item("b", { duplicateOf: ["t1"], labelIds: [] })] });
+    const out = parseBatchTriage(raw, ["a", "b"], () => ref);
+    expect([...out.keys()]).toEqual(["a", "b"]);
+    expect(out.get("a")?.changes).toEqual({ labelIds: ["b1"] });
+    expect(out.get("b")?.duplicates).toEqual(["t1"]);
+  });
+  it("ignores ids outside the batch, repeated ids and entries with nothing useful", () => {
+    const raw = JSON.stringify({ tickets: [item("zzz"), item("a"), item("a", { labelIds: [] }), item("b", { reply: "" })] });
+    expect([...parseBatchTriage(raw, ["a", "b"], () => ref).keys()]).toEqual(["a"]);
+  });
+  it("applies each ticket's own state (existing priority and assignee are never overwritten)", () => {
+    const raw = JSON.stringify({ tickets: [item("a", { priority: "high", assigneeId: "u1" }), item("b", { priority: "high", assigneeId: "u1" })] });
+    const out = parseBatchTriage(raw, ["a", "b"], (id) => (id === "a" ? ref : { ...ref, currentPriority: "medium", hasAssignee: true }));
+    expect(out.get("a")?.changes).toEqual({ priority: "high", labelIds: ["b1"], assigneeId: "u1" });
+    expect(out.get("b")?.changes).toEqual({ labelIds: ["b1"] });
+  });
+  it("returns nothing for broken output", () => {
+    expect(parseBatchTriage("not json", ["a"], () => ref).size).toBe(0);
+    expect(parseBatchTriage('{"tickets":"x"}', ["a"], () => ref).size).toBe(0);
   });
 });

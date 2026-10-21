@@ -73,19 +73,20 @@ export type Triage = {
 
 const PRIORITIES = ["urgent", "high", "medium", "low"];
 
-// Valida la respuesta del triage contra lo que se le ofreció al modelo: prioridad
-// de la lista cerrada, etiquetas y responsable solo si existen en el tablero, y
-// duplicados solo entre los tickets candidatos.
-export function parseTriage(
-  raw: string,
-  ref: { labels: Ref[]; members: Ref[]; candidates: Ref[]; currentPriority: string | null; hasAssignee: boolean },
-): Triage | null {
-  let parsed: unknown;
+type TriageRef = { labels: Ref[]; members: Ref[]; candidates: Ref[]; currentPriority: string | null; hasAssignee: boolean };
+
+function parseJson(raw: string): unknown {
   try {
-    parsed = JSON.parse(cleanJsonString(raw));
+    return JSON.parse(cleanJsonString(raw));
   } catch {
     return null;
   }
+}
+
+// Valida la propuesta de un ticket contra lo que se le ofreció al modelo: prioridad
+// de la lista cerrada, etiquetas y responsable solo si existen en el tablero, y
+// duplicados solo entre los tickets candidatos.
+export function triageFromObject(parsed: unknown, ref: TriageRef): Triage | null {
   const obj = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
   const changes: NonNullable<Triage["changes"]> = {};
   if (typeof obj.priority === "string" && PRIORITIES.includes(obj.priority) && !ref.currentPriority) changes.priority = obj.priority;
@@ -101,4 +102,22 @@ export function parseTriage(
   const hasChanges = Object.keys(changes).length > 0;
   if (!reply || (!hasChanges && !duplicates.length)) return null;
   return { reply, changes: hasChanges ? changes : null, duplicates };
+}
+
+export function parseTriage(raw: string, ref: TriageRef): Triage | null {
+  return triageFromObject(parseJson(raw), ref);
+}
+
+// Triage de un lote (Brain Dump): `{"tickets":[{"id", ...}]}`. Solo cuentan los ids del lote.
+export function parseBatchTriage(raw: string, ids: string[], refFor: (id: string) => TriageRef): Map<string, Triage> {
+  const parsed = parseJson(raw);
+  const list = parsed && typeof parsed === "object" && Array.isArray((parsed as { tickets?: unknown }).tickets) ? (parsed as { tickets: unknown[] }).tickets : [];
+  const result = new Map<string, Triage>();
+  for (const item of list) {
+    const id = item && typeof item === "object" ? (item as { id?: unknown }).id : undefined;
+    if (typeof id !== "string" || !ids.includes(id) || result.has(id)) continue;
+    const triage = triageFromObject(item, refFor(id));
+    if (triage) result.set(id, triage);
+  }
+  return result;
 }
