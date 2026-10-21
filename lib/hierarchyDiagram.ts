@@ -3,6 +3,7 @@ export type HierarchyNode = {
   title: string;
   parentId: string | null;
   childIds: string[];
+  archived?: boolean;
 };
 
 type DiagramOptions = {
@@ -21,6 +22,17 @@ function escapeXml(value: string) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&apos;");
+}
+
+function charsFor(width: number, fontSize: number) {
+  return Math.max(8, Math.floor(width / (fontSize * 0.62)));
+}
+
+function fitText(value: string, maxChars: number) {
+  const compact = value.replace(/\s+/g, " ").trim();
+  const chars = [...compact];
+  if (chars.length <= maxChars) return compact;
+  return `${chars.slice(0, Math.max(1, maxChars - 1)).join("").trimEnd()}…`;
 }
 
 function childrenOf(
@@ -87,7 +99,9 @@ export function hierarchySvg(nodes: HierarchyNode[], options: DiagramOptions = {
 
   const kicker = options.kicker ?? "PATH";
   const note = options.note ?? "Siblings on one step run together.";
-  const title = cyclic ? focus.title : root.title;
+  const heading = cyclic ? focus : root;
+  const title = heading.title;
+  const titleFill = heading.archived ? "#5E7695" : "#13233C";
   const nodeWidth = 200;
   const nodeGap = 28;
   const rankHeight = 118;
@@ -96,6 +110,8 @@ export function hierarchySvg(nodes: HierarchyNode[], options: DiagramOptions = {
   const widest = Math.max(...ranks.map((rank) => rank.length));
   const width = Math.max(640, pad * 2 + widest * nodeWidth + (widest - 1) * nodeGap);
   const height = header + ranks.length * rankHeight + pad;
+  const stepChars = charsFor(nodeWidth - 8, 18);
+  const headingLabel = escapeXml(fitText(title, charsFor(width - 64, 24)));
 
   const rankMarkup = ranks.map((rank, rankIndex) => {
     const rowWidth = rank.length * nodeWidth + (rank.length - 1) * nodeGap;
@@ -108,11 +124,14 @@ export function hierarchySvg(nodes: HierarchyNode[], options: DiagramOptions = {
         : "";
     const cards = rank.map((node, index) => {
       const x = originX + index * (nodeWidth + nodeGap);
-      const label = escapeXml(node.title);
-      return `<g data-id="${escapeXml(node.id)}" data-step="${rankIndex + 1}"><rect x="${x}" y="${y}" width="34" height="34" rx="4" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/><text x="${x + 17}" y="${y + 22}" text-anchor="middle" font-family="${MONO}" font-size="12" fill="#D3A05B">${step}</text><text x="${x}" y="${y + 62}" font-family="${FONT}" font-size="18" font-weight="600" fill="#13233C">${label}</text></g>`;
+      const clipId = `h-label-${rankIndex}-${index}`;
+      const full = escapeXml(node.title);
+      const label = escapeXml(fitText(node.title, stepChars));
+      const fill = node.archived ? "#5E7695" : "#13233C";
+      return `<g data-id="${escapeXml(node.id)}" data-step="${rankIndex + 1}"><title>${full}</title><clipPath id="${clipId}"><rect x="${x}" y="${y + 44}" width="${nodeWidth - 8}" height="32"/></clipPath><rect x="${x}" y="${y}" width="34" height="34" rx="4" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/><text x="${x + 17}" y="${y + 22}" text-anchor="middle" font-family="${MONO}" font-size="12" fill="#D3A05B">${step}</text><text clip-path="url(#${clipId})" x="${x}" y="${y + 62}" font-family="${FONT}" font-size="18" font-weight="600" fill="${fill}">${label}</text></g>`;
     }).join("");
     return `${line}${cards}`;
   }).join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-labelledby="hierarchy-title hierarchy-desc"><title id="hierarchy-title">${escapeXml(title)}</title><desc id="hierarchy-desc">${escapeXml(note)}</desc><rect width="${width}" height="${height}" fill="#F7F7F7"/><rect x="32" y="28" width="1" height="16" fill="#D3A05B"/><text x="42" y="41" font-family="${FONT}" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">${escapeXml(kicker)}</text><text x="${width - 32}" y="41" text-anchor="end" font-family="${FONT}" font-size="12" fill="#5E7695">${escapeXml(note)}</text><text x="32" y="76" font-family="${FONT}" font-size="24" font-weight="600" letter-spacing="-0.025em" fill="#13233C">${escapeXml(title)}</text><rect x="32" y="90" width="40" height="2" fill="#D3A05B"/>${rankMarkup}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-labelledby="hierarchy-title hierarchy-desc"><title id="hierarchy-title">${escapeXml(title)}</title><desc id="hierarchy-desc">${escapeXml(note)}</desc><rect width="${width}" height="${height}" fill="#F7F7F7"/><rect x="32" y="28" width="1" height="16" fill="#D3A05B"/><text x="42" y="41" font-family="${FONT}" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">${escapeXml(kicker)}</text><text x="${width - 32}" y="41" text-anchor="end" font-family="${FONT}" font-size="12" fill="#5E7695">${escapeXml(note)}</text><clipPath id="h-heading"><rect x="32" y="52" width="${width - 64}" height="32"/></clipPath><text clip-path="url(#h-heading)" x="32" y="76" font-family="${FONT}" font-size="24" font-weight="600" letter-spacing="-0.025em" fill="${titleFill}">${headingLabel}</text><rect x="32" y="90" width="40" height="2" fill="#D3A05B"/>${rankMarkup}</svg>`;
 }

@@ -66,7 +66,7 @@ Attachments are private blobs. Download goes through `/api/tasks/[taskId]/attach
 
 The **Parent ticket** and **Child ticket** custom fields are the hierarchy. Saving either field keeps the other side in sync. Opening a ticket in that tree loads `GET /api/boards/[boardId]/hierarchy?taskId=` and inlines an SVG in the task modal.
 
-The highest ancestor is the diagram title. Its children are step 01, left to right in the stored child list. A nested child is the next step, and siblings share a step. A ticket with no parent and no children draws nothing. A cycle stops at the repeated ticket. The picture redraws after a parent or child value is saved.
+The highest ancestor is the diagram title, including an archived ancestor. Its children are step 01, left to right in the stored child list. A nested child is the next step, and siblings share a step. Archived tickets stay in the path and are drawn in muted type. A ticket with no parent and no children draws nothing. A cycle stops at the repeated ticket. Step titles are shortened to the width of the step; the full title stays on the step. The picture clears while the next ticket loads and redraws after a parent or child value is saved.
 
 ## Dashboard and calendar reads
 

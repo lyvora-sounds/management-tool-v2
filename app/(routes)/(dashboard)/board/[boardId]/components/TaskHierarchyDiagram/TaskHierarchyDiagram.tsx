@@ -15,24 +15,27 @@ export function TaskHierarchyDiagram({
   const t = useTranslations("task");
   const kicker = t("hierarchyKicker");
   const note = t("hierarchyNote");
-  const [svg, setSvg] = useState<string | null>(null);
+  const requestKey = `${boardId}\0${taskId}\0${refreshKey}\0${kicker}\0${note}`;
+  const [loaded, setLoaded] = useState<{ key: string; svg: string | null } | null>(null);
+  const svg = loaded?.key === requestKey ? loaded.svg : null;
 
   useEffect(() => {
     let cancelled = false;
+    const key = requestKey;
     const params = new URLSearchParams({ taskId, kicker, note });
     (async () => {
       try {
         const res = await fetch(`/api/boards/${boardId}/hierarchy?${params}`);
         const data = res.ok ? await res.json() : null;
-        if (!cancelled) setSvg(typeof data?.svg === "string" ? data.svg : null);
+        if (!cancelled) setLoaded({ key, svg: typeof data?.svg === "string" ? data.svg : null });
       } catch {
-        if (!cancelled) setSvg(null);
+        if (!cancelled) setLoaded({ key, svg: null });
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [boardId, taskId, refreshKey, kicker, note]);
+  }, [requestKey, boardId, taskId, kicker, note]);
 
   if (!svg?.startsWith("<svg")) return null;
 

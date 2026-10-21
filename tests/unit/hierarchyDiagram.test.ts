@@ -6,8 +6,9 @@ function node(
   title: string,
   parentId: string | null,
   childIds: string[] = [],
+  archived = false,
 ): HierarchyNode {
-  return { id, title, parentId, childIds };
+  return { id, title, parentId, childIds, archived };
 }
 
 function ids(svg: string) {
@@ -70,6 +71,53 @@ describe("hierarchySvg", () => {
     const seen = ids(svg!);
     expect(seen.filter((id) => id === "a")).toHaveLength(1);
     expect(seen.filter((id) => id === "b")).toHaveLength(1);
+  });
+
+  it("shortens a step title that would overlap the next step and keeps the full title", () => {
+    const long = "Stand up Kikiboard hosting in kiki-infra";
+    const svg = hierarchySvg(
+      [
+        node("root", "Hosting", null, ["a", "b"]),
+        node("a", long, "root"),
+        node("b", "Network", "root"),
+      ],
+      { focusId: "root" },
+    );
+    expect(svg).toContain(`<title>${long}</title>`);
+    expect(svg).toContain(">Stand up Kikiboa…</text>");
+    expect(svg).not.toContain(`>${long}</text>`);
+    expect(svg).toContain(">Network<");
+  });
+
+  it("shortens a root title that would run past the diagram", () => {
+    const long = "Stand up Kikiboard hosting before the first Terraform commit lands";
+    const svg = hierarchySvg(
+      [
+        node("root", long, null, ["a"]),
+        node("a", "Network", "root"),
+      ],
+      { focusId: "a" },
+    );
+    expect(svg).toContain(`<title id="hierarchy-title">${long}</title>`);
+    expect(svg).not.toContain(`>${long}</text>`);
+  });
+
+  it("keeps an archived ancestor as the title and mutes an archived step", () => {
+    const svg = hierarchySvg(
+      [
+        node("root", "Archived root", null, ["mid"], true),
+        node("mid", "Old step", "root", ["child"], true),
+        node("child", "Active", "mid"),
+      ],
+      { focusId: "child" },
+    );
+    expect(svg).toContain('fill="#5E7695">Archived root</text>');
+    expect(svg).toContain('fill="#5E7695">Old step</text>');
+    expect(svg).toContain('fill="#13233C">Active</text>');
+    expect(steps(svg!)).toEqual([
+      ["mid", "1"],
+      ["child", "2"],
+    ]);
   });
 
   it("escapes titles that contain markup", () => {

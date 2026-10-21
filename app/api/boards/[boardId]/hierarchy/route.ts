@@ -30,10 +30,11 @@ export async function GET(
   if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const tasks = await db.task.findMany({
-    where: { list: { boardId }, archived: false },
+    where: { list: { boardId } },
     select: {
       id: true,
       title: true,
+      archived: true,
       customValues: {
         where: { customField: { defaultKey: { in: ["parent", "child"] }, boardId } },
         select: { value: true, customField: { select: { defaultKey: true } } },
@@ -49,6 +50,7 @@ export async function GET(
       title: row.title,
       parentId: parent || null,
       childIds: parseListValue(child),
+      archived: row.archived,
     };
   });
 
