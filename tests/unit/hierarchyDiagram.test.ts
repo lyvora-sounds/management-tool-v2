@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hierarchySvg, type HierarchyNode } from "@/lib/hierarchyDiagram";
+import { hierarchyRanks, hierarchySteps, hierarchySvg, type HierarchyNode } from "@/lib/hierarchyDiagram";
 
 function node(
   id: string,
@@ -131,5 +131,33 @@ describe("hierarchySvg", () => {
     expect(svg).toContain("A &lt; B &amp; C");
     expect(svg).toContain("D &gt; E");
     expect(svg).not.toContain("A < B");
+  });
+});
+
+describe("hierarchySteps and hierarchyRanks", () => {
+  const n = (id: string, parentId: string | null, childIds: string[] = []) => ({ id, title: id, parentId, childIds });
+  const chain = [n("root", null, ["a"]), n("a", "root", ["b"]), n("b", "a", ["c"]), n("c", "b"), n("alone", null)];
+
+  it("numbers every ticket of a chain from 1 and leaves the root and loose tickets unnumbered", () => {
+    const steps = hierarchySteps(chain);
+    expect([...steps.keys()].sort()).toEqual(["a", "b", "c"]);
+    expect(steps.get("a")).toEqual({ step: 1, total: 3, rootId: "root" });
+    expect(steps.get("c")).toEqual({ step: 3, total: 3, rootId: "root" });
+  });
+  it("gives siblings the same step", () => {
+    const steps = hierarchySteps([n("root", null, ["x", "y"]), n("x", "root", ["z"]), n("y", "root"), n("z", "x")]);
+    expect(steps.get("x")?.step).toBe(1);
+    expect(steps.get("y")?.step).toBe(1);
+    expect(steps.get("z")).toEqual({ step: 2, total: 2, rootId: "root" });
+  });
+  it("matches the steps used by the ticket's path", () => {
+    const layout = hierarchyRanks(chain, "b")!;
+    const steps = hierarchySteps(chain);
+    layout.ranks.forEach((rank, index) => rank.forEach((node) => expect(steps.get(node.id)?.step).toBe(index + 1)));
+    expect(layout.root.id).toBe("root");
+  });
+  it("ignores cycles instead of looping and returns nothing for an unknown ticket", () => {
+    expect(hierarchySteps([n("p", "q", ["q"]), n("q", "p", ["p"])]).size).toBe(0);
+    expect(hierarchyRanks(chain, "missing")).toBeNull();
   });
 });

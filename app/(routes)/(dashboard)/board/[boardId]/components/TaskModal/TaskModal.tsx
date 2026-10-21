@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   AlignLeft,
   CheckCircle2,
@@ -55,7 +56,8 @@ import { TaskPriority } from "../TaskPriority/TaskPriority";
 import { TaskAiImprove } from "../TaskAiImprove/TaskAiImprove";
 import { TaskShareModal } from "../TaskShareModal/TaskShareModal";
 import { TaskCustomFields } from "../TaskCustomFields/TaskCustomFields";
-import { TaskHierarchyDiagram } from "../TaskHierarchyDiagram/TaskHierarchyDiagram";
+import { TaskHierarchy } from "../TaskHierarchy/TaskHierarchy";
+import { hierarchyNodesFromLists } from "../TaskHierarchy/hierarchyNodes";
 import type { Priority } from "../TaskPriority/TaskPriority.constants";
 import type { LabelModel } from "@/lib/generated/prisma/models/Label";
 import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
@@ -85,7 +87,8 @@ export function TaskModal({
   const addSubtask = useBoardStore((s) => s.addSubtask);
   const moveTask = useBoardStore((s) => s.moveTask);
   const attachmentsRef = useRef<TaskAttachmentsHandle>(null);
-  const [hierarchyVersion, setHierarchyVersion] = useState(0);
+  const router = useRouter();
+  const hierarchyNodes = useMemo(() => hierarchyNodesFromLists(lists), [lists]);
 
   // Flat list of all tasks across all lists for navigation
   const allTasks =
@@ -423,6 +426,18 @@ export function TaskModal({
   };
 
   const selectedEpicMeta = epics.find((e) => e.id === currentEpicId);
+  const epicItems: Record<string, React.ReactNode> = {
+    none: t("noEpic"),
+    ...Object.fromEntries(
+      epics.map((ep) => [
+        ep.id,
+        <span key={ep.id} className="flex items-center gap-1.5">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: ep.color }} />
+          <span className="truncate">{ep.title}</span>
+        </span>,
+      ]),
+    ),
+  };
 
   return (
     <>
@@ -684,6 +699,8 @@ export function TaskModal({
                   {/* Epic Selector */}
                   {epics.length > 0 && (
                     <Select
+                      // sin `items`, base-ui muestra el id de la épica en el botón en lugar de su nombre
+                      items={epicItems}
                       disabled={!canEdit}
                       value={currentEpicId || "none"}
                       onValueChange={(v) => saveEpic(v === "none" ? null : v)}
@@ -803,17 +820,21 @@ export function TaskModal({
                 <TaskAttachments ref={attachmentsRef} taskId={currentTask.id} />
               </div>
 
-              <TaskHierarchyDiagram
-                boardId={boardId}
-                taskId={currentTask.id}
-                refreshKey={hierarchyVersion}
+              <TaskHierarchy
+                focusId={currentTask.id}
+                nodes={hierarchyNodes}
+                onNavigate={(id) => {
+                  const index = allTasks.findIndex((entry) => entry.task.id === id);
+                  if (index >= 0) goTo(index);
+                }}
               />
 
               {/* Custom Values / Custom Fields */}
               <TaskCustomFields
                 taskId={currentTask.id}
                 boardId={boardId}
-                onTicketLinkChange={() => setHierarchyVersion((version) => version + 1)}
+                // Los campos padre/hijo se guardan por API: se refresca el tablero para que el recorrido y las tarjetas se actualicen ya.
+                onTicketLinkChange={() => router.refresh()}
               />
 
               <div className="flex flex-col gap-2">
