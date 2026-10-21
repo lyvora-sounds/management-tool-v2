@@ -651,6 +651,18 @@
     "renameList": "Palitan ang pangalan ng list"
   },
   "task": {
+    "send": "Ipadala",
+    "deleteComment": "Burahin ang comment",
+    "emptyCommentsHint": "Simulan ang usapan o humingi ng tulong kay Kiki.",
+    "mentionSomeone": "Mag-mention ng tao",
+    "commentHint": "Enter para ipadala · Shift+Enter para sa bagong linya",
+    "kikiAgentHint": "AI assistant",
+    "kikiChipSummarize": "I-summarize",
+    "kikiPromptSummarize": "@Kiki i-summarize ang ticket na ito sa 2 pangungusap.",
+    "kikiChipSubtasks": "Magmungkahi ng subtasks",
+    "kikiPromptSubtasks": "@Kiki magmungkahi ng subtasks para gawin ito nang paunti-unti.",
+    "kikiChipPriority": "Magmungkahi ng priority",
+    "kikiPromptPriority": "@Kiki anong priority ang ibibigay mo rito at bakit?",
     "kikiApply": "Ilapat ang mga mungkahi",
     "kikiApplied": "Nailapat ang mga mungkahi",
     "kikiApplyError": "Hindi nailapat ang mga mungkahi",
