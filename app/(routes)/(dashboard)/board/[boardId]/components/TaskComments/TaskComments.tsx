@@ -14,6 +14,18 @@ import { useBoardAccess } from "../BoardAccess";
 
 type Candidate = { key: string; handle: string; agent?: boolean };
 
+// Kiki lleva su propio color (violeta) para que se distinga de las personas aunque el acento del usuario
+// sea gris. Es independiente del acento y del estilo de la interfaz.
+const KIKI_UI = {
+  avatar: "bg-violet-500 text-white shadow-sm shadow-violet-500/30",
+  name: "text-violet-700 dark:text-violet-300",
+  badge: "bg-violet-500/15 text-violet-700 dark:text-violet-300",
+  bubble: "border-violet-500/30 bg-violet-500/8 dark:bg-violet-500/12",
+  action: "bg-violet-600 text-white hover:bg-violet-700",
+  mention: "text-violet-600 dark:text-violet-300",
+  soft: "text-violet-600 dark:text-violet-300",
+} as const;
+
 const MENTION_TOKEN = /(^|\s)@([^\n@]{0,30})$/;
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -31,7 +43,7 @@ function Avatar({ name, agent }: { name: string; agent?: boolean }) {
       aria-hidden
       className={cn(
         "grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-semibold",
-        agent ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+        agent ? KIKI_UI.avatar : "bg-muted text-muted-foreground",
       )}
     >
       {agent ? <Sparkles size={13} /> : initials(name)}
@@ -53,7 +65,7 @@ function CommentText({ content, handles }: { content: string; handles: string[] 
     const start = (match.index ?? 0) + match[1].length;
     parts.push(content.slice(last, start));
     parts.push(
-      <span key={start} className="font-medium text-primary">
+      <span key={start} className={cn("font-medium", match[2].toLowerCase() === "@kiki" ? KIKI_UI.mention : "text-primary")}>
         {match[2]}
       </span>,
     );
@@ -299,9 +311,9 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
                 <div className="min-w-0 flex-1">
                   {!grouped && (
                     <div className="mb-1 flex items-center gap-1.5">
-                      <span className="truncate text-xs font-semibold">{name}</span>
+                      <span className={cn("truncate text-xs font-semibold", c.user.isAgent && KIKI_UI.name)}>{name}</span>
                       {c.user.isAgent && (
-                        <span className="rounded bg-primary/10 px-1 text-[10px] font-semibold text-primary">{t("kikiAgent")}</span>
+                        <span className={cn("rounded px-1 text-[10px] font-semibold", KIKI_UI.badge)}>{t("kikiAgent")}</span>
                       )}
                       <span className="text-[11px] text-muted-foreground">
                         {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: dateFnsLocale })}
@@ -320,7 +332,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
                   <div
                     className={cn(
                       "min-w-0 whitespace-pre-wrap wrap-break-word rounded-xl border px-3 py-2 text-sm leading-relaxed",
-                      c.user.isAgent ? "border-primary/20 bg-primary/5" : "bg-background",
+                      c.user.isAgent ? KIKI_UI.bubble : "bg-background",
                     )}
                   >
                     <CommentText content={c.content} handles={handles} />
@@ -328,7 +340,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
                   {c.suggestion?.pending && !c.change && canEdit && (
                     <button
                       onClick={() => applySuggestion(c.id)}
-                      className="mt-1.5 flex w-fit items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                      className={cn("mt-1.5 flex w-fit items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors", KIKI_UI.action)}
                     >
                       <Check size={12} />
                       {t("kikiApply")}
@@ -351,7 +363,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
         {waiting && (
           <div className="mt-3 flex items-center gap-2.5">
             <Avatar name="Kiki" agent />
-            <p className="flex animate-pulse items-center gap-1.5 text-xs text-muted-foreground">{t("kikiThinking")}</p>
+            <p className={cn("flex animate-pulse items-center gap-1.5 text-xs", KIKI_UI.soft)}>{t("kikiThinking")}</p>
           </div>
         )}
       </div>
@@ -383,7 +395,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
                 >
                   <Avatar name={candidate.handle} agent={candidate.agent} />
                   <span className="flex-1 truncate">{candidate.handle}</span>
-                  {candidate.agent && <span className="text-[11px] text-muted-foreground">{t("kikiAgentHint")}</span>}
+                  {candidate.agent && <span className={cn("rounded px-1 text-[10px] font-semibold", KIKI_UI.badge)}>{t("kikiAgentHint")}</span>}
                 </li>
               ))}
             </ul>
@@ -396,9 +408,9 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
                   key={chip.label}
                   type="button"
                   onClick={() => setText(`${chip.prompt} `)}
-                  className="flex items-center gap-1 rounded-full border bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                  className="flex items-center gap-1 rounded-full border border-violet-500/25 bg-violet-500/5 px-2.5 py-1 text-xs text-violet-700 transition-colors hover:bg-violet-500/15 dark:text-violet-300"
                 >
-                  <Sparkles size={11} className="text-primary" />
+                  <Sparkles size={11} />
                   {chip.label}
                 </button>
               ))}
@@ -443,7 +455,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
                 onClick={() => setText(value && !/\s$/.test(value) ? `${value} @Kiki ` : `${value}@Kiki `)}
                 title={t("kikiInsert")}
                 aria-label={t("kikiInsert")}
-                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+                className="rounded-md p-1.5 text-violet-600 transition-colors hover:bg-violet-500/15 dark:text-violet-300"
               >
                 <Sparkles size={15} />
               </button>

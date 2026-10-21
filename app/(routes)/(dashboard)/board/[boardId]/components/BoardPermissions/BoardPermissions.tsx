@@ -281,7 +281,7 @@ export function BoardPermissions({
 
           <div className="rounded-lg border p-4 space-y-3">
             <div className="flex items-start gap-3">
-              <Sparkles size={17} className="text-muted-foreground mt-0.5 shrink-0" />
+              <Sparkles size={17} className="text-violet-600 dark:text-violet-300 mt-0.5 shrink-0" />
               <div>
                 <div className="text-sm font-medium">{t("kikiTitle")}</div>
                 <div className="text-xs text-muted-foreground">{t("kikiHint")}</div>
