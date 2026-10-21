@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { getUserAiCredentials } from "@/lib/ai/getUserAiCredentials";
+import { PROVIDER_DEFAULT_MODELS } from "@/lib/ai/types";
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
       const buffer = await file.arrayBuffer();
       const base64Audio = Buffer.from(buffer).toString("base64");
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(creds.model || PROVIDER_DEFAULT_MODELS.gemini)}:generateContent?key=${encodeURIComponent(
         creds.apiKey,
       )}`;
 

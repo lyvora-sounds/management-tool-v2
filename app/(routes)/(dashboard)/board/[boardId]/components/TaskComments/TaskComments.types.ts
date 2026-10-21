@@ -11,4 +11,6 @@ export type CommentItem = {
 
 export type TaskCommentsProps = {
   taskId: string;
+  // Personas del tablero que se pueden mencionar con «@».
+  members?: { id: string; name: string | null; email: string }[];
 };

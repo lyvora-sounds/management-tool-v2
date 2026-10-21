@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { encrypt, maskApiKey, decrypt } from "@/lib/crypto";
-import { AiProvider, PROVIDER_DEFAULT_MODELS } from "@/lib/ai/types";
+import { AiProvider, usableModel } from "@/lib/ai/types";
 
 export async function GET() {
   const { userId } = await auth();
@@ -26,7 +26,8 @@ export async function GET() {
     provider: (settings?.aiProvider as AiProvider) || "openai",
     hasApiKey: Boolean(rawKey),
     maskedApiKey: rawKey ? maskApiKey(rawKey) : "",
-    model: settings?.aiModel || PROVIDER_DEFAULT_MODELS[(settings?.aiProvider as AiProvider) || "openai"],
+    // Vacío = usa el modelo por defecto de la app (también si el guardado ya fue retirado).
+    model: usableModel(settings?.aiModel) ?? "",
     baseUrl: settings?.aiBaseUrl || "",
     voiceLanguage: settings?.voiceLanguage || "es-ES",
   });
