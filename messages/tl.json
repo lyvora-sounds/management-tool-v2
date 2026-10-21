@@ -651,6 +651,12 @@
     "renameList": "Palitan ang pangalan ng list"
   },
   "task": {
+    "hierarchyTitle": "Landas",
+    "hierarchyOrigin": "Pinagmulan · {count, plural, one {# hakbang} other {# hakbang}}",
+    "hierarchyStep": "Hakbang {step} sa {total}",
+    "hierarchyDone": "Tapos na",
+    "hierarchyOriginLabel": "Pinagmulan",
+    "hierarchyStepTitle": "Hakbang {step} sa {total} · {root}",
     "send": "Ipadala",
     "deleteComment": "Burahin ang comment",
     "emptyCommentsHint": "Simulan ang usapan o humingi ng tulong kay Kiki.",

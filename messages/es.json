@@ -651,6 +651,12 @@
     "renameList": "Renombrar lista"
   },
   "task": {
+    "hierarchyTitle": "Ruta",
+    "hierarchyOrigin": "Origen · {count, plural, one {# paso} other {# pasos}}",
+    "hierarchyStep": "Paso {step} de {total}",
+    "hierarchyDone": "Completado",
+    "hierarchyOriginLabel": "Origen",
+    "hierarchyStepTitle": "Paso {step} de {total} · {root}",
     "send": "Enviar",
     "deleteComment": "Eliminar comentario",
     "emptyCommentsHint": "Empieza la conversación o pídele ayuda a Kiki.",
