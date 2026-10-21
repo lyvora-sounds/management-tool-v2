@@ -34,9 +34,10 @@ interface CustomFieldValue {
 interface TaskCustomFieldsProps {
   taskId: string;
   boardId: string;
+  onTicketLinkChange?: () => void;
 }
 
-export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
+export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCustomFieldsProps) {
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
   const { canEdit } = useBoardAccess();
@@ -96,6 +97,9 @@ export function TaskCustomFields({ taskId, boardId }: TaskCustomFieldsProps) {
         setSavedValues((prev) => ({ ...prev, [customFieldId]: newValue }));
         setSavedSuccessId(customFieldId);
         setTimeout(() => setSavedSuccessId(null), 2000);
+        if (isTicketRefKey(fields.find((field) => field.id === customFieldId)?.defaultKey)) {
+          onTicketLinkChange?.();
+        }
       } else {
         setValues((prev) => ({ ...prev, [customFieldId]: previous }));
         toast.error(t("saveCustomValueError"));

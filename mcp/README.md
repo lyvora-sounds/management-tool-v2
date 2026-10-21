@@ -69,7 +69,10 @@ uses the normal Clerk browser session.
 The response contains a `kiki_...` token once. Store it in the client's secret
 configuration. Kikiboard stores only its hash and cannot show it again.
 
-List organization credentials with
+Settings → MCP lists every token the signed-in user created (`GET /api/settings/mcp/tokens`)
+and can revoke one (`DELETE /api/settings/mcp/tokens` with `{ "id" }`). The list
+shows name, prefix, scope, and last use. The plaintext token is never stored and
+is not returned after creation. List organization credentials with
 `GET /api/organizations/ORGANIZATION_ID/external-access` and revoke one with
 `DELETE /api/organizations/ORGANIZATION_ID/external-access/TOKEN_ID`. That list
 contains organization tokens only. List board credentials with
@@ -198,14 +201,18 @@ generating the OAuth client, then approve write access when connecting. A
 read-only connection must be replaced or reauthorized to grant writes. Refresh
 preserves the granted permissions and cannot change scopes.
 
-Writable connections also expose `create_ticket`, `update_tickets`, and
-`revert_change`. Creation and updates support title, description, priority,
+Writable connections also expose `create_ticket`, `create_epic`, `update_tickets`, and
+`revert_change`. Ticket creation and updates support title, description, priority,
 list, completion, archive, start/due dates, order, quarter, epic, assignee, QA,
 collaborators, labels, custom values, checklist, comments, attachments and public
 sharing. Server-generated IDs, timestamps, completion attribution and calendar
 integration IDs are read-only; sharing uses `shared: true/false` and the server
-generates its token. Board/list/field-definition management and permanent task
-deletion are outside the ticket tools.
+generates its token. `create_epic` takes a title and optional description, color
+(`#RRGGBB`), and quarter (`YYYY-Qn`). A board-scoped token creates the epic on
+that board. An organization token must pass `boardId` from `get_project`. Epic
+creation is not stored in `McpChange` and cannot be reverted; attach tickets
+afterward with `update_tickets` and `epicId`. List, label, custom-field
+definition management and permanent task deletion stay outside these tools.
 
 A batch contains at most 50 explicit tickets on one board and commits atomically.
 Every write rechecks token expiry/revocation and the creator's current board edit

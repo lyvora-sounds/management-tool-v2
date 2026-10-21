@@ -60,9 +60,9 @@ expiration. Environment fields are ignored.
 Every credential belongs to one organization. A null `boardId` reads every
 board in that organization. A set `boardId` reads only that board, and
 authentication rejects the credential if the board no longer belongs to the
-same organization. One credential cannot read a second organization. MCP tools
-never accept a board id: `get_project`, `list_tickets`, and `get_ticket` derive
-the organization and board from the credential. Tickets are not filtered by
+same organization. One credential cannot read a second organization. Read tools never accept a board id: `get_project`, `list_tickets`, and `get_ticket` derive
+the organization and board from the credential. `create_epic` on an organization
+token is the exception: it requires `boardId` from `get_project`. Tickets are not filtered by
 environment.
 
 Credentials always expose `tickets:read`; Settings can opt into `tickets:write`. Plaintext tokens are returned
@@ -85,18 +85,20 @@ transfers invalidate access and refresh. Required deployment configuration and
 the manual ChatGPT linking check are documented in `mcp/README.md`.
 
 `/dashboard/settings?tab=mcp` creates either credential and shows it once in a
-field that can be selected or copied. The board Integrations dialog creates the
-board credential.
+field that can be selected or copied. The same page lists tokens the current user
+created (name, prefix, last use) and can revoke them; the secret is never shown
+again. The board Integrations dialog creates the board credential.
 
 Users generate account-owned ChatGPT client credentials in Settings → MCP.
 The callback is allowlisted exactly, the secret is shown once and stored only
 as a hash, and client revocation invalidates its grants. The legacy deployment
 client remains optional. See `mcp/README.md` for provider-specific guides.
 
-Writable MCP connections add task creation and batches of up to 50 task updates
-on one board, plus conflict-safe revert. Each write checks the creator's current
+Writable MCP connections add task creation, epic creation, and batches of up to 50 task updates
+on one board, plus conflict-safe revert of ticket writes. Each ticket write checks the creator's current
 board edit permission and saves task state, a `McpChange` journal and board
-activity atomically. Read-only tokens do not expose mutation tools. OAuth write
+activity atomically. Epic creation checks the same permission and records board
+activity only; it is not in change history. Read-only tokens do not expose mutation tools. OAuth write
 access requires a write-enabled client and explicit consent. See `mcp/README.md`
 for supported fields, history access and rollback limitations.
 
@@ -106,7 +108,7 @@ MCP reads now include assignee/QA identities, collaborators, checklist,
 comments, attachment metadata, sharing and all custom-field definitions and
 values. Project metadata supplies accessible people and field options. Ticket
 listing supports assignee name/email, assignee/QA IDs and cursor pagination.
-Writable credentials can edit every user-editable ticket field, including QA,
+Writable credentials can create epics, and can edit every user-editable ticket field, including QA,
 custom values, labels, epic, quarter, collaborators, checklist, comments,
 private attachments and sharing. Assignment honors `memberCanAssign`; comment
 edits require authorship or admin permission. Parent/child synchronization is
