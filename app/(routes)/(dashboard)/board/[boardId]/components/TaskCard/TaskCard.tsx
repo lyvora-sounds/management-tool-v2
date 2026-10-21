@@ -21,6 +21,7 @@ import { targetListForCompletion } from "@/lib/statusTheme";
 import { useBoardAccess } from "../BoardAccess";
 import { displayCustomFieldValue } from "@/lib/customValueUtils";
 import { useLocale, useTranslations } from "next-intl";
+import { useHierarchyStep } from "../TaskHierarchy/HierarchySteps";
 import { dateLocale } from "@/i18n/routing";
 import { useAppearance } from "@/components/Appearance/AppearanceProvider";
 
@@ -73,6 +74,8 @@ export function TaskCard({
     transition,
     opacity: isDragging ? 0.3 : 1,
   };
+
+  const hierarchyStep = useHierarchyStep(task.id);
 
   const titleById = useMemo(() => {
     const map = new Map<string, string>();
@@ -169,6 +172,15 @@ export function TaskCard({
             <Circle size={15} />
           )}
         </div>}
+
+        {hierarchyStep && (
+          <span
+            title={t("hierarchyStepTitle", { step: hierarchyStep.step, total: hierarchyStep.total, root: titleById.get(hierarchyStep.rootId) ?? "" })}
+            className="shrink-0 rounded border bg-muted/50 px-1 font-mono text-[10px] leading-4 tabular-nums text-muted-foreground"
+          >
+            {String(hierarchyStep.step).padStart(2, "0")}
+          </span>
+        )}
 
         <span
           className={cn(

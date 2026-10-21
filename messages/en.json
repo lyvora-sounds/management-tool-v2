@@ -651,6 +651,12 @@
     "renameList": "Rename list"
   },
   "task": {
+    "hierarchyTitle": "Path",
+    "hierarchyOrigin": "Origin · {count, plural, one {# step} other {# steps}}",
+    "hierarchyStep": "Step {step} of {total}",
+    "hierarchyDone": "Done",
+    "hierarchyOriginLabel": "Origin",
+    "hierarchyStepTitle": "Step {step} of {total} · {root}",
     "send": "Send",
     "deleteComment": "Delete comment",
     "emptyCommentsHint": "Start the conversation or ask Kiki for help.",
