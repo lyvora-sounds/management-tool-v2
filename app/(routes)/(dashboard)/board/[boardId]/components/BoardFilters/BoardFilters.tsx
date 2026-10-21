@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import {
   BoardFiltersProps,
@@ -61,6 +62,33 @@ export function BoardFilters({
     { value: "week", label: t("thisWeek") },
     { value: "none", label: t("noDate") },
   ];
+
+  // base-ui muestra el `value` en bruto (un id, «all», «week»…) si el Select no sabe cómo se
+  // llama cada opción, porque el listado vive en un portal y no está montado mientras está cerrado.
+  // `items` le da el texto de cada valor para pintarlo en el botón.
+  const dueItems = Object.fromEntries(DUE_OPTIONS.map((opt) => [opt.value, opt.label]));
+  const memberItems: Record<string, ReactNode> = {
+    all: tBoard("allMembers"),
+    unassigned: tBoard("unassigned"),
+    ...Object.fromEntries(availableMembers.map((member) => [member.id, member.name ?? member.email])),
+  };
+  const quarterItems: Record<string, ReactNode> = {
+    all: tBoard("allQuarters"),
+    ...Object.fromEntries(availableQuarters.map((q) => [q, q])),
+  };
+  const epicItems: Record<string, ReactNode> = {
+    all: tBoard("allEpics"),
+    ...Object.fromEntries(
+      availableEpics.map((ep) => [
+        ep.id,
+        <span key={ep.id} className="flex items-center gap-1.5">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: ep.color }} />
+          <span className="truncate">{ep.title}</span>
+        </span>,
+      ]),
+    ),
+  };
+
   const hasActiveFilters =
     filters.status !== "all" ||
     filters.dueDate !== "all" ||
@@ -130,6 +158,7 @@ export function BoardFilters({
       {/* Member Filter (including Admin and members) */}
       {availableMembers.length > 0 && (
         <Select
+          items={memberItems}
           value={filters.memberId}
           onValueChange={(val) => onChange({ ...filters, memberId: val ?? "all" })}
         >
@@ -160,6 +189,7 @@ export function BoardFilters({
 
       {/* Due date */}
       <Select
+        items={dueItems}
         value={filters.dueDate}
         onValueChange={(val) => onChange({ ...filters, dueDate: val as FilterDueDate })}
       >
@@ -178,6 +208,7 @@ export function BoardFilters({
       {/* Quarter filter */}
       {availableQuarters.length > 0 && (
         <Select
+          items={quarterItems}
           value={filters.quarter}
           onValueChange={(val) => onChange({ ...filters, quarter: val ?? "all" })}
         >
@@ -201,6 +232,7 @@ export function BoardFilters({
       {/* Epic filter */}
       {availableEpics.length > 0 && (
         <Select
+          items={epicItems}
           value={filters.epicId}
           onValueChange={(val) => onChange({ ...filters, epicId: val ?? "all" })}
         >
