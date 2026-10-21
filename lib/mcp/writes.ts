@@ -158,6 +158,38 @@ export async function createMcpTicket(context: ExternalAccessContext, args: Reco
   return result;
 }
 
+export async function createMcpEpic(context: ExternalAccessContext, args: Record<string, unknown>) {
+  if (typeof args.title !== "string" || !args.title.trim() || args.title.trim().length > 500) throw new McpWriteError("title is required");
+  const title = args.title.trim();
+  if (args.description !== undefined && args.description !== null && (typeof args.description !== "string" || args.description.length > 50000)) throw new McpWriteError("Invalid description");
+  const description = typeof args.description === "string" ? args.description.trim() || null : null;
+  if (args.color !== undefined && (typeof args.color !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(args.color))) throw new McpWriteError("Invalid color");
+  const color = typeof args.color === "string" ? args.color : "#3b82f6";
+  if (args.quarter !== undefined && args.quarter !== null) {
+    if (typeof args.quarter !== "string" || !/^\d{4}-Q[1-4]$/.test(args.quarter)) throw new McpWriteError("Invalid quarter");
+  }
+  const quarter = typeof args.quarter === "string" ? args.quarter : null;
+  if (args.boardId !== undefined && (typeof args.boardId !== "string" || !args.boardId.trim() || args.boardId.length > 200)) throw new McpWriteError("Invalid boardId");
+  const requestedBoardId = typeof args.boardId === "string" ? args.boardId.trim() : undefined;
+  const boardId = context.boardId ?? requestedBoardId;
+  if (!boardId) throw new McpWriteError("boardId is required for an organization connection");
+  if (context.boardId && requestedBoardId && requestedBoardId !== context.boardId) throw new McpWriteError("Board not found in this connection");
+  const board = await db.board.findFirst({ where: { id: boardId, ...boardScope(context) }, select: { id: true } });
+  if (!board) throw new McpWriteError("Board not found in this connection");
+  const actor = await writeActor(context, board.id);
+  return db.$transaction(async (tx) => {
+    await validateCredential(tx, context);
+    const scoped = await tx.board.findFirst({ where: { id: board.id, ...boardScope(context) }, select: { id: true } });
+    if (!scoped) throw new McpWriteError("Board left this connection");
+    const epic = await tx.epic.create({
+      data: { boardId: board.id, title, description, color, quarter },
+      select: { id: true, title: true, description: true, color: true, quarter: true, status: true, boardId: true },
+    });
+    await activity(tx, board.id, actor, "activity.mcpEpicCreated", 1);
+    return { epic };
+  }, { isolationLevel: "Serializable" });
+}
+
 export async function updateMcpTickets(context: ExternalAccessContext, args: Record<string, unknown>) {
   if (!Array.isArray(args.updates) || !args.updates.length || args.updates.length > 50) throw new McpWriteError("Provide 1 to 50 ticket updates");
   const updates = args.updates.map((raw: unknown) => {

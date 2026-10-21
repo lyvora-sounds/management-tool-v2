@@ -91,7 +91,7 @@ describe("scoped MCP server", () => {
     const extra = await connect({ ...boardContext, scopes: ["tickets:read", "tickets:write"] });
     try {
       const result = await extra.client.listTools();
-      expect(result.tools.filter((tool) => tool.annotations?.readOnlyHint === false).map((tool) => tool.name)).toEqual(["create_ticket", "update_tickets", "revert_change"]);
+      expect(result.tools.filter((tool) => tool.annotations?.readOnlyHint === false).map((tool) => tool.name)).toEqual(["create_ticket", "create_epic", "update_tickets", "revert_change"]);
       const readOnly = await client.callTool({ name: "update_tickets", arguments: { updates: [] } });
       expect(readOnly.isError).toBe(true);
     } finally {

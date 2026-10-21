@@ -13,24 +13,29 @@ const history = vi.fn();
 const notification = vi.fn();
 const customWrite = vi.fn();
 const create = vi.fn();
-const tx = { board: { findUnique: async () => ({ memberCanAssign: true }) }, notification: { create: notification }, customField: { findFirst: async () => ({ id: "env", type: "SELECT", defaultKey: "environment", options: ["production"] }) }, customFieldValue: { findUnique: async () => null, upsert: customWrite }, task: { create, findFirst: lookup, updateMany: update, findUniqueOrThrow: lookup }, list: { findFirst: list }, externalAccessToken: { findUnique: credential }, mcpChange: { create: journal, updateMany: marked }, activityLog: { create: logs } };
+const epicCreate = vi.fn();
+const boardLookup = vi.fn();
+const tx = { board: { findUnique: async () => ({ memberCanAssign: true }), findFirst: (...args: unknown[]) => boardLookup(...args) }, epic: { create: epicCreate }, notification: { create: notification }, customField: { findFirst: async () => ({ id: "env", type: "SELECT", defaultKey: "environment", options: ["production"] }) }, customFieldValue: { findUnique: async () => null, upsert: customWrite }, task: { create, findFirst: lookup, updateMany: update, findUniqueOrThrow: lookup }, list: { findFirst: list }, externalAccessToken: { findUnique: credential }, mcpChange: { create: journal, updateMany: marked }, activityLog: { create: logs } };
 vi.mock("@/lib/boardAccess", () => ({ canEditBoard: (...args: unknown[]) => editable(...args), canReadBoard: async () => true, isBoardAdmin: async () => true }));
 vi.mock("@/lib/notifications/webhooks", () => ({ sendBoardWebhookNotification: vi.fn() }));
 vi.mock("@/lib/db", () => ({ default: {
   list: { findFirst: (...args: unknown[]) => list(...args) },
+  board: { findFirst: (...args: unknown[]) => boardLookup(...args) },
   task: { findFirst: async () => ({ list: { boardId: "board-1" } }) },
   user: { findUnique: async () => ({ id: "user-1", name: "Owner", email: "owner@test.invalid" }) },
   externalAccessToken: { findUnique: async () => ({ createdById: "user-1" }) },
   mcpChange: { findFirst: (...args: unknown[]) => history(...args) },
   $transaction: (callback: (client: unknown) => unknown) => callback(tx),
 } }));
-const { createMcpTicket, updateMcpTickets, revertMcpChange, taskSnapshot, snapshotsMatch, parseTaskPatch } = await import("@/lib/mcp/writes");
+const { createMcpTicket, createMcpEpic, updateMcpTickets, revertMcpChange, taskSnapshot, snapshotsMatch, parseTaskPatch } = await import("@/lib/mcp/writes");
 const context: ExternalAccessContext = { tokenId: "token-1", organizationId: "org-1", boardId: "board-1", boardTitle: "Board", scopes: ["tickets:read", "tickets:write"] };
 const task = { id: "task-1", title: "Original", description: null, listId: "list-1", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, assigneeId: null, qaId: null, epicId: null, quarter: null, shareToken: null, collaborators: [], labels: [], customValues: [], subtasks: [], comments: [], attachments: [], startDate: null, dueDate: null, updatedAt: new Date("2026-10-09T10:00:00.000Z") };
 beforeEach(() => {
   vi.clearAllMocks(); editable.mockResolvedValue(true);
   credential.mockResolvedValue({ scopes: context.scopes, organizationId: context.organizationId, boardId: context.boardId });
   create.mockResolvedValue(task);
+  epicCreate.mockResolvedValue({ id: "epic-1", title: "kiki-infra-migration", description: null, color: "#3b82f6", quarter: null, status: "open", boardId: "board-1" });
+  boardLookup.mockResolvedValue({ id: "board-1" });
   lookup.mockResolvedValue(task); update.mockResolvedValue({ count: 1 });
   list.mockResolvedValue({ id: "list-1", boardId: "board-1", title: "Todo" });
   journal.mockResolvedValue({ id: "change-1" }); marked.mockResolvedValue({ count: 1 });
@@ -102,5 +107,37 @@ describe("MCP task writes and revert guards", () => {
     const item = { ticketId: task.id, changes: { title: "Changed" } };
     await expect(updateMcpTickets(context, { updates: [item, item] })).rejects.toThrow("Duplicate");
     await expect(updateMcpTickets(context, { updates: Array(51).fill(item) })).rejects.toThrow("1 to 50");
+  });
+});
+
+describe("MCP epic creation", () => {
+  it("creates an epic on the bound board without asking for a board id", async () => {
+    const result = await createMcpEpic(context, { title: "kiki-infra-migration", description: "Terraform and Ansible", quarter: "2026-Q4" });
+    expect(epicCreate.mock.calls[0][0].data).toMatchObject({
+      boardId: "board-1",
+      title: "kiki-infra-migration",
+      description: "Terraform and Ansible",
+      quarter: "2026-Q4",
+      color: "#3b82f6",
+    });
+    expect(result.epic).toMatchObject({ id: "epic-1", title: "kiki-infra-migration", boardId: "board-1" });
+    expect(journal).not.toHaveBeenCalled();
+    expect(logs).toHaveBeenCalledOnce();
+  });
+
+  it("requires boardId on an organization connection and rejects boards outside scope", async () => {
+    const org = { ...context, boardId: null, boardTitle: null };
+    await expect(createMcpEpic(org, { title: "Migration" })).rejects.toThrow("boardId");
+    expect(epicCreate).not.toHaveBeenCalled();
+    boardLookup.mockResolvedValue(null);
+    await expect(createMcpEpic(org, { title: "Migration", boardId: "foreign" })).rejects.toThrow("connection");
+    expect(epicCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects read-only credentials, blank titles and invalid quarters", async () => {
+    await expect(createMcpEpic({ ...context, scopes: ["tickets:read"] }, { title: "Migration" })).rejects.toThrow("read-only");
+    await expect(createMcpEpic(context, { title: "   " })).rejects.toThrow("title");
+    await expect(createMcpEpic(context, { title: "Migration", quarter: "Q4" })).rejects.toThrow("quarter");
+    expect(epicCreate).not.toHaveBeenCalled();
   });
 });
