@@ -1214,6 +1214,7 @@
     "mcpReverted": "{actor} revirtió cambios en {count} tickets mediante MCP"
   },
   "notifications": {
+    "mentioned": "{actor} te mencionó en el ticket \"{ticket}\"",
     "title": "Notificaciones",
     "markAllRead": "Marcar todas como leídas",
     "empty": "Sin notificaciones nuevas",

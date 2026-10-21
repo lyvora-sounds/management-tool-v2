@@ -4,6 +4,8 @@ import db from "@/lib/db";
 import { canEditBoard, canReadBoard } from "@/lib/boardAccess";
 import { encodeLogMessage } from "@/lib/activityMessages";
 import { hasKikiMention, runKiki } from "@/lib/agent/kiki";
+import { getBoardUsers } from "@/lib/boardUsers";
+import { findMentionedUserIds } from "@/lib/mentions";
 
 // Kiki responde después de contestar al usuario (after), así que necesita margen para llamar al modelo.
 export const maxDuration = 60;
@@ -94,6 +96,11 @@ export async function POST(
   });
 
   const actorName = user.name ?? user.email;
+
+  // «@Nombre» avisa a esa persona aunque no esté en la tarjeta; el aviso de mención sustituye al de comentario.
+  const boardUsers = await getBoardUsers(task.list.board);
+  const mentioned = new Set(findMentionedUserIds(content, boardUsers).filter((id) => id !== user.id));
+  mentioned.forEach((id) => notifyUserIds.add(id));
   const notifyList = Array.from(notifyUserIds);
 
   const [comment] = await db.$transaction([
@@ -106,7 +113,7 @@ export async function POST(
           db.notification.createMany({
             data: notifyList.map((notifyUserId) => ({
               type: "comment",
-              message: encodeLogMessage("notifications.commented", {
+              message: encodeLogMessage(mentioned.has(notifyUserId) ? "notifications.mentioned" : "notifications.commented", {
                 actor: actorName,
                 ticket: task.title,
               }),

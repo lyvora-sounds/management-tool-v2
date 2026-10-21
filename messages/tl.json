@@ -1214,6 +1214,7 @@
     "mcpReverted": "Ibinalik ni {actor} ang changes sa {count} tickets sa pamamagitan ng MCP"
   },
   "notifications": {
+    "mentioned": "Binanggit ka ni {actor} sa ticket na \"{ticket}\"",
     "title": "Mga notification",
     "markAllRead": "Markahan lahat na nabasa",
     "empty": "Walang bagong notifications",
