@@ -1,8 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import db from "@/lib/db";
 import { canEditBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
+import { runBatchTriage } from "@/lib/agent/triage";
+
+// El triage de Kiki corre tras responder (after) y llama al modelo de IA.
+export const maxDuration = 60;
 
 interface BatchTaskItem {
   title: string;
@@ -98,6 +102,13 @@ export async function POST(
     key: "activity.brainDump",
     params: { actor: user.name ?? user.email, count: createdTasks.length },
   });
+
+  // Triage opt-in por tablero: una sola llamada de IA para todo el lote.
+  const board = await db.board.findUnique({ where: { id: boardId }, select: { kikiTriage: true, kikiMode: true } });
+  if (board?.kikiTriage && board.kikiMode !== "off") {
+    const taskIds = createdTasks.map((t) => t.id);
+    after(() => runBatchTriage({ taskIds, creatorId: user.id }).catch((error) => console.error("[kiki:triage]", error)));
+  }
 
   return NextResponse.json({
     success: true,

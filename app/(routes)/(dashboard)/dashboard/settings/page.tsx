@@ -185,7 +185,7 @@ export default function SettingsPage() {
         setProvider(data.provider || "openai");
         setHasApiKey(data.hasApiKey);
         setMaskedApiKey(data.maskedApiKey || "");
-        setModel(data.model || PROVIDER_DEFAULT_MODELS[data.provider as AiProvider] || "");
+        setModel(data.model || "");
         setBaseUrl(data.baseUrl || "");
         setVoiceLanguage(data.voiceLanguage || "es-ES");
       }
@@ -198,7 +198,7 @@ export default function SettingsPage() {
 
   const handleProviderChange = (newProvider: AiProvider) => {
     setProvider(newProvider);
-    setModel(PROVIDER_DEFAULT_MODELS[newProvider] || "");
+    setModel("");
     if (newProvider !== "custom") {
       setBaseUrl(PROVIDER_BASE_URLS[newProvider] || "");
     }
@@ -214,7 +214,8 @@ export default function SettingsPage() {
         body: JSON.stringify({
           provider,
           apiKey: apiKey || (hasApiKey ? maskedApiKey : ""),
-          model: model.trim() || PROVIDER_DEFAULT_MODELS[provider],
+          // Vacío = modelo por defecto de la app; no se guarda el valor por defecto como si fuera una elección.
+          model: model.trim() || null,
           baseUrl: baseUrl.trim() || null,
           voiceLanguage,
         }),

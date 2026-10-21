@@ -651,6 +651,18 @@
     "renameList": "Renombrar lista"
   },
   "task": {
+    "send": "Enviar",
+    "deleteComment": "Eliminar comentario",
+    "emptyCommentsHint": "Empieza la conversación o pídele ayuda a Kiki.",
+    "mentionSomeone": "Mencionar a alguien",
+    "commentHint": "Enter envía · Mayús+Enter salto de línea",
+    "kikiAgentHint": "Asistente de IA",
+    "kikiChipSummarize": "Resumir",
+    "kikiPromptSummarize": "@Kiki resume este ticket en 2 frases.",
+    "kikiChipSubtasks": "Proponer subtareas",
+    "kikiPromptSubtasks": "@Kiki propón subtareas para hacerlo paso a paso.",
+    "kikiChipPriority": "Sugerir prioridad",
+    "kikiPromptPriority": "@Kiki ¿qué prioridad le pondrías y por qué?",
     "kikiApply": "Aplicar sugerencias",
     "kikiApplied": "Sugerencias aplicadas",
     "kikiApplyError": "No se pudieron aplicar las sugerencias",
@@ -1214,6 +1226,7 @@
     "mcpReverted": "{actor} revirtió cambios en {count} tickets mediante MCP"
   },
   "notifications": {
+    "mentioned": "{actor} te mencionó en el ticket \"{ticket}\"",
     "title": "Notificaciones",
     "markAllRead": "Marcar todas como leídas",
     "empty": "Sin notificaciones nuevas",
