@@ -40,8 +40,10 @@ export function TaskHierarchyDiagram({
   if (!svg?.startsWith("<svg")) return null;
 
   return (
+    // The details column is a flex scroller. overflow-x-auto would otherwise
+    // let that column shrink this box to the SVG's min-content height.
     <div
-      className="overflow-x-auto rounded-lg border bg-[#F7F7F7] [&_svg]:h-auto [&_svg]:max-w-none [&_svg]:min-w-full"
+      className="min-h-max shrink-0 overflow-x-auto rounded-lg border bg-[#F7F7F7] [&_svg]:block [&_svg]:h-auto [&_svg]:max-w-none [&_svg]:min-w-full"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
