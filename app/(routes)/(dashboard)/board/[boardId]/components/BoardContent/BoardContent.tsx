@@ -28,6 +28,7 @@ import { CreateListForm } from "../CreateListForm/CreateListForm";
 import { TaskModal } from "../TaskModal/TaskModal";
 import { BoardContentProps } from "./BoardContent.types";
 import { BoardAccessProvider } from "../BoardAccess";
+import { HierarchyStepsProvider } from "../TaskHierarchy/HierarchySteps";
 import { BoardFilters } from "../BoardFilters/BoardFilters";
 import { BoardFiltersState } from "../BoardFilters/BoardFilters.types";
 import { BoardListView } from "../BoardListView/BoardListView";
@@ -271,6 +272,7 @@ export function BoardContent({
 
   return (
     <BoardAccessProvider canEdit={canEdit}>
+      <HierarchyStepsProvider lists={effectiveLists}>
     <div className="flex flex-col gap-4 h-full">
       <div className="flex items-center gap-2">
         <BoardFilters
@@ -387,6 +389,7 @@ export function BoardContent({
         />
       )}
     </div>
+      </HierarchyStepsProvider>
     </BoardAccessProvider>
   );
 }
