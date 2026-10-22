@@ -12,21 +12,21 @@ concurrency:
 
 jobs:
   verify:
-    name: Verificación
+    name: Verify
     runs-on: ubuntu-latest
 
-    # Sin Docker. El contenedor de Postgres vive en docker.yml y solo arranca
-    # a mano o cuando un merge llega a main. Así un PR no gasta el cupo de
-    # pulls del registry. El despliegue de la app sigue siendo Vercel.
+    # No Docker here. Postgres runs in docker.yml, on demand or on push to
+    # main, so pull requests do not burn the registry pull quota. The app
+    # still deploys on Vercel.
     env:
-      # Valores ficticios: solo tienen que dejar compilar, nunca se conectan
-      # a ningún servicio real. No pongáis credenciales de verdad aquí.
+      # Dummy values so the build can compile. They never reach a real
+      # service. Do not put live credentials here.
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2ktZHVtbXktY2xlcmsta2V5LWZvci1idWlsZCQ
       CLERK_SECRET_KEY: sk_test_ci_dummy_value_for_build_only
       ENCRYPTION_SECRET: ci-dummy-encryption-secret-not-a-real-key
       NEXT_PUBLIC_APP_URL: http://localhost:3000
-      # Resend construye su cliente a nivel de módulo en la ruta de
-      # invitaciones, así que el build falla si esta variable no existe.
+      # Resend constructs its client at module load in the invitation
+      # route, so the build fails if this variable is missing.
       RESEND_API_KEY: re_ci_dummy_value_for_build_only
 
     steps:
@@ -36,19 +36,22 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # October 21, 2026 Node.js security release. Keep the patch pin.
+          # 21 Oct 2026 Node.js security release. Keep the patch pin.
           node-version-file: .node-version
           cache: pnpm
 
-      - name: Instalar dependencias
+      - name: Reject unpatched Node.js
+        run: node scripts/check-node-patch.mjs
+
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck
         run: pnpm exec tsc --noEmit
 
       - name: Lint
-        # No bloquea todavía: hay errores heredados. Quitar esta línea
-        # cuando estén limpios, para que el lint pase a ser obligatorio.
+        # Not blocking yet: inherited lint errors. Remove continue-on-error
+        # once those are clean so lint becomes required.
         continue-on-error: true
         run: pnpm lint
 

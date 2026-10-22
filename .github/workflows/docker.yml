@@ -14,12 +14,12 @@ jobs:
     name: Postgres
     runs-on: ubuntu-latest
 
-    # Base desechable. Aplica las migraciones desde cero, el camino que se
-    # rompió cuando un cambio de schema.prisma llegó a main sin su migración.
-    # No corre en cada PR: solo al pulsar "Run workflow", o al hacer push a main.
+    # Throwaway Postgres. Applies migrations from scratch, the path that
+    # broke when a schema.prisma change reached main without its migration.
+    # Does not run on every PR: only on workflow_dispatch or push to main.
     services:
       postgres:
-        # Mirror de la imagen oficial: evita el límite anónimo de Docker Hub.
+        # Official image mirror: avoids Docker Hub anonymous pull limits.
         image: public.ecr.aws/docker/library/postgres:16
         env:
           POSTGRES_USER: postgres
@@ -34,8 +34,8 @@ jobs:
           --health-retries 5
 
     env:
-      # Conexión directa a la base del runner: sin pooler, así que el advisory
-      # lock de `migrate deploy` funciona sin el P1002 que vimos en Vercel.
+      # Direct connection to the runner database: no pooler, so the
+      # migrate deploy advisory lock works without the P1002 we saw on Vercel.
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci
       DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/ci
 
@@ -46,19 +46,22 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # October 21, 2026 Node.js security release. Keep the patch pin.
+          # 21 Oct 2026 Node.js security release. Keep the patch pin.
           node-version-file: .node-version
           cache: pnpm
 
-      - name: Instalar dependencias
+      - name: Reject unpatched Node.js
+        run: node scripts/check-node-patch.mjs
+
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Aplicar migraciones sobre una base vacía
+      - name: Apply migrations on an empty database
         run: pnpm exec prisma migrate deploy
 
-      - name: Comprobar que schema.prisma coincide con las migraciones
-        # Si sale SQL, es que schema.prisma cambió sin generar la migración.
-        # El primer comando lo imprime para poder leerlo; el segundo falla.
+      - name: Check schema.prisma matches the migrations
+        # SQL output means schema.prisma changed without a migration.
+        # The first command prints the diff; the second fails.
         run: |
           pnpm exec prisma migrate diff \
             --from-config-datasource --to-schema prisma/schema.prisma --script
