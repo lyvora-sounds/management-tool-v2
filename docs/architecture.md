@@ -14,7 +14,20 @@ Kikiboard is a Next.js 16 App Router app. The browser talks to Route Handlers un
 | Files | Vercel Blob (`access: "private"`) |
 | Email | Resend |
 | Deploy | Vercel |
-| Runtime | Node.js 22.23.4 or later. On Vercel, 22.x and 24.x receive the patch automatically. Node.js 18 and 20 do not. |
+| Runtime | Node.js 22.23.4 (see below) |
+
+## Node.js runtime
+
+Production and CI must run a binary that includes the 21 Oct 2026 Node.js security release (CVE-2026-111497 Brotli decoder RCE, plus TLS hostname-check bypasses). Patched floors are 22.23.4, 24.22.1, and 26.12.1. Node.js 18 and 20 receive no fix.
+
+How this repo pins it:
+
+- `.node-version` is `22.23.4`. GitHub Actions reads that file in `ci.yml` and `docker.yml`.
+- `package.json` `engines.node` is `22.x` so Vercel cannot stay on Node 20. Vercel rolls 22.x patches itself; do not pin a patch version there.
+- `scripts/check-node-patch.mjs` fails the workflow if the installed binary is below those floors.
+- Rebase feature branches onto `main` before merge so they do not replace `node-version-file` with a floating `node-version: 22`.
+
+A Vercel project still on Node 20 is exposed even with these files. Set the project to 22.x or 24.x and redeploy.
 
 ## Request path
 
