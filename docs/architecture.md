@@ -14,6 +14,7 @@ Kikiboard is a Next.js 16 App Router app. The browser talks to Route Handlers un
 | Files | Vercel Blob (`access: "private"`) |
 | Email | Resend |
 | Deploy | Vercel |
+| Runtime | Node.js 22.23.4 or later. On Vercel, 22.x and 24.x receive the patch automatically. Node.js 18 and 20 do not. |
 
 ## Request path
 
