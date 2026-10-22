@@ -36,7 +36,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # October 21, 2026 Node.js security release. Keep the patch pin.
+          node-version-file: .node-version
           cache: pnpm
 
       - name: Instalar dependencias
