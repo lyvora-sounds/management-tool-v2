@@ -2,6 +2,7 @@ export type HierarchyNode = {
   id: string;
   title: string;
   parentId: string | null;
+  parentIds?: string[];
   childIds: string[];
   archived?: boolean;
   completed?: boolean;
@@ -37,6 +38,37 @@ function fitText(value: string, maxChars: number) {
   return `${chars.slice(0, Math.max(1, maxChars - 1)).join("").trimEnd()}…`;
 }
 
+function directParentIds(node: HierarchyNode): string[] {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  const add = (id: string | null | undefined) => {
+    if (!id || id === node.id || seen.has(id)) return;
+    seen.add(id);
+    ids.push(id);
+  };
+  for (const id of node.parentIds ?? []) add(id);
+  add(node.parentId);
+  return ids;
+}
+
+function parentsOf(
+  node: HierarchyNode,
+  byId: Map<string, HierarchyNode>,
+) {
+  const ordered: HierarchyNode[] = [];
+  const seen = new Set<string>();
+  const add = (parent: HierarchyNode | undefined) => {
+    if (!parent || parent.id === node.id || seen.has(parent.id)) return;
+    seen.add(parent.id);
+    ordered.push(parent);
+  };
+  for (const id of directParentIds(node)) add(byId.get(id));
+  for (const candidate of byId.values()) {
+    if (candidate.childIds.includes(node.id)) add(candidate);
+  }
+  return ordered;
+}
+
 function childrenOf(
   node: HierarchyNode,
   byId: Map<string, HierarchyNode>,
@@ -51,7 +83,7 @@ function childrenOf(
   };
   for (const id of node.childIds) add(byId.get(id));
   for (const candidate of byId.values()) {
-    if (candidate.parentId === node.id) add(candidate);
+    if (directParentIds(candidate).includes(node.id)) add(candidate);
   }
   return ordered;
 }
@@ -59,12 +91,34 @@ function childrenOf(
 function climb(start: HierarchyNode, byId: Map<string, HierarchyNode>) {
   const seen = new Set<string>([start.id]);
   let current = start;
-  while (current.parentId && byId.has(current.parentId)) {
-    if (seen.has(current.parentId)) return { root: current, cyclic: true };
-    seen.add(current.parentId);
-    current = byId.get(current.parentId)!;
+  while (true) {
+    const parents = parentsOf(current, byId);
+    if (!parents.length) return { root: current, cyclic: false };
+    const next = parents.find((parent) => !seen.has(parent.id));
+    if (!next) return { root: current, cyclic: true };
+    seen.add(next.id);
+    current = next;
   }
-  return { root: current, cyclic: false };
+}
+
+function collectReachable(
+  frontier: HierarchyNode[],
+  byId: Map<string, HierarchyNode>,
+  initialPlaced: Set<string>,
+) {
+  const reachable = new Set<string>();
+  const visited = new Set<string>(initialPlaced);
+  const queue = [...frontier];
+  while (queue.length) {
+    const node = queue.shift()!;
+    if (visited.has(node.id)) continue;
+    visited.add(node.id);
+    reachable.add(node.id);
+    for (const child of childrenOf(node, byId, visited)) {
+      queue.push(child);
+    }
+  }
+  return reachable;
 }
 
 function ranksFrom(
@@ -72,14 +126,31 @@ function ranksFrom(
   byId: Map<string, HierarchyNode>,
   placed: Set<string>,
 ) {
+  const reachable = collectReachable(frontier, byId, placed);
   const ranks: HierarchyNode[][] = [];
   let current = frontier;
   while (current.length) {
-    const rank = current.filter((node) => !placed.has(node.id));
-    if (!rank.length) break;
+    const seen = new Set<string>();
+    const pending = current.filter((node) => {
+      if (placed.has(node.id) || seen.has(node.id)) return false;
+      seen.add(node.id);
+      return true;
+    });
+    if (!pending.length) break;
+
+    const ready = pending.filter((node) =>
+      parentsOf(node, byId).every((parent) => !reachable.has(parent.id) || placed.has(parent.id)),
+    );
+    const rank = ready.length > 0 ? ready : pending;
+    const rankIds = new Set(rank.map((node) => node.id));
     for (const node of rank) placed.add(node.id);
     ranks.push(rank);
-    current = rank.flatMap((node) => childrenOf(node, byId, placed));
+
+    const waiting = pending.filter((node) => !rankIds.has(node.id));
+    current = [
+      ...waiting,
+      ...rank.flatMap((node) => childrenOf(node, byId, placed)),
+    ];
   }
   return ranks;
 }
@@ -115,7 +186,7 @@ export function hierarchySteps(nodes: HierarchyNode[]): Map<string, HierarchySte
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const steps = new Map<string, HierarchyStep>();
   for (const root of nodes) {
-    if (root.parentId && byId.has(root.parentId)) continue;
+    if (parentsOf(root, byId).length > 0) continue;
     const placed = new Set<string>([root.id]);
     const ranks = ranksFrom(childrenOf(root, byId, placed), byId, placed);
     ranks.forEach((rank, index) => {

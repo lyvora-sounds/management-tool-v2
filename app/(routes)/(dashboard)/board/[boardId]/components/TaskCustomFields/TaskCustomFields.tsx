@@ -162,7 +162,7 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
                   onSelect={(newVal) => handleSaveValue(field.id, newVal)}
                   currentTaskId={taskId}
                   boardId={boardId}
-                  isMulti={isChildFieldKey(field.defaultKey)}
+                  isMulti={isTicketRefKey(field.defaultKey)}
                   placeholder={
                     isChildFieldKey(field.defaultKey)
                       ? t("selectChildren")

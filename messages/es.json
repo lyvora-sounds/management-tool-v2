@@ -731,7 +731,7 @@
     "moveToList": "Mover a lista",
     "noComments": "Sin comentarios todavía",
     "commentPlaceholder": "Escribe un comentario...",
-    "selectParent": "Seleccionar ticket padre...",
+    "selectParent": "Seleccionar ticket(s) padre...",
     "selectChildren": "Seleccionar ticket(s) hijo(s)...",
     "hierarchyKicker": "RUTA",
     "hierarchyNote": "Los tickets del mismo paso avanzan juntos.",

@@ -74,6 +74,9 @@ describe("custom value list helpers", () => {
       ["t2", "Signup"],
     ]);
     expect(displayCustomFieldValue("t1", "parent", titles)).toBe("Login");
+    expect(displayCustomFieldValue('["t1","t2"]', "parent", titles)).toBe(
+      "Login, Signup",
+    );
     expect(displayCustomFieldValue('["t1","t2"]', "child", titles)).toBe(
       "Login, Signup",
     );

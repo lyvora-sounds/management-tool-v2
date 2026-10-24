@@ -25,10 +25,7 @@ export function displayCustomFieldValue(
   defaultKey: string | null | undefined,
   titleById?: Map<string, string>,
 ): string {
-  if (defaultKey === "parent") {
-    return titleById?.get(value) ?? value;
-  }
-  if (defaultKey === "child") {
+  if (defaultKey === "parent" || defaultKey === "child") {
     return parseListValue(value)
       .map((id) => titleById?.get(id) ?? id)
       .join(", ");

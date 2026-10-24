@@ -731,7 +731,7 @@
     "moveToList": "Move to list",
     "noComments": "No comments yet",
     "commentPlaceholder": "Write a comment...",
-    "selectParent": "Select parent ticket...",
+    "selectParent": "Select parent ticket(s)...",
     "selectChildren": "Select child ticket(s)...",
     "hierarchyKicker": "PATH",
     "hierarchyNote": "Tickets on the same step run together.",
