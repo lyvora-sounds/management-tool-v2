@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import db from "@/lib/db";
-import { oauthServerConfig } from "@/lib/mcp/oauthConfig";
+import { isValidRequestOrigin } from "@/lib/mcp/oauthConfig";
 
 const headers = { "cache-control": "no-store" };
 const select = {
@@ -34,7 +34,7 @@ export async function GET() {
 export async function DELETE(request: Request) {
   const user = await actor();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers });
-  if (request.headers.get("origin") !== oauthServerConfig().issuer) {
+  if (!isValidRequestOrigin(request)) {
     return Response.json({ error: "Invalid origin" }, { status: 403, headers });
   }
   const body = await request.json().catch(() => null);

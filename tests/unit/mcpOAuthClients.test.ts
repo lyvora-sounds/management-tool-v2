@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { authenticateOAuthClient, CLAUDE_CALLBACKS, oauthClientName, oauthHash, parseAuthorizationRequest } from "@/lib/mcp/oauthConfig";
+import { authenticateOAuthClient, CLAUDE_CALLBACKS, isValidRequestOrigin, oauthClientName, oauthHash, parseAuthorizationRequest } from "@/lib/mcp/oauthConfig";
 
 const findClient = vi.fn();
 const createClient = vi.fn();
@@ -124,5 +124,33 @@ describe("in-app ChatGPT setup", () => {
     expect(parseAuthorizationRequest(readOnlyRequest, readOnlyClient).writeRequested).toBeUndefined();
     readOnlyRequest.set("scope", "tickets:read tickets:write");
     expect(() => parseAuthorizationRequest(readOnlyRequest, readOnlyClient)).toThrow();
+  });
+  it("allows requests from the configured canonical origin or matching preview hosts", () => {
+    const canonicalReq = new Request("https://kikiboard.test/api/settings/mcp/tokens", {
+      headers: { origin: "https://kikiboard.test", host: "kikiboard.test" },
+    });
+    expect(isValidRequestOrigin(canonicalReq)).toBe(true);
+
+    const previewReq = new Request("https://preview.vercel.app/api/settings/mcp/tokens", {
+      headers: { origin: "https://preview.vercel.app", host: "preview.vercel.app" },
+    });
+    expect(isValidRequestOrigin(previewReq)).toBe(true);
+
+    const forwardedPreviewReq = new Request("https://preview.vercel.app/api/settings/mcp/tokens", {
+      headers: {
+        origin: "https://preview.vercel.app",
+        host: "internal-host.local",
+        "x-forwarded-host": "preview.vercel.app",
+      },
+    });
+    expect(isValidRequestOrigin(forwardedPreviewReq)).toBe(true);
+
+    const maliciousReq = new Request("https://preview.vercel.app/api/settings/mcp/tokens", {
+      headers: { origin: "https://malicious.site", host: "preview.vercel.app" },
+    });
+    expect(isValidRequestOrigin(maliciousReq)).toBe(false);
+
+    const missingOrigin = new Request("https://preview.vercel.app/api/settings/mcp/tokens");
+    expect(isValidRequestOrigin(missingOrigin)).toBe(false);
   });
 });
