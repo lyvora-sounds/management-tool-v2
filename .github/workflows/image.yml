@@ -1,0 +1,58 @@
+name: Container image
+
+# Builds the production image and starts it with no secrets and no database. It proves the image builds,
+# boots and answers /api/health, which is all Cloud Run needs from it. Pushing to Artifact Registry is a
+# separate step added once the registry identity exists.
+on:
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - package.json
+      - pnpm-lock.yaml
+      - next.config.ts
+      - middleware.ts
+      - prisma/**
+      - .github/workflows/image.yml
+  workflow_dispatch:
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: kikiboard:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Placeholders: they only have to be well formed for the build to pass. Real values come with the
+          # deploy ticket. The publishable key decodes to "clerk.example.com$".
+          build-args: |
+            NEXT_PUBLIC_APP_URL=https://staging-gcp.kikiboard.xyz
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+
+      - name: Start it without any secret and call the health check
+        run: |
+          docker run -d --name kikiboard -p 8080:8080 kikiboard:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8080/api/health; then echo; exit 0; fi
+            sleep 2
+          done
+          docker logs kikiboard
+          exit 1

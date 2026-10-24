@@ -1,11 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { getResend } from "@/lib/resend";
 import db from "@/lib/db";
 import { canReadBoard, getBoardRole } from "@/lib/boardAccess";
 import { canManageBoard } from "@/lib/boardRoles";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function GET(
   _req: Request,
@@ -112,7 +111,7 @@ export async function POST(
 
   let emailError: unknown = null;
   try {
-    const { error } = await resend.emails.send({
+    const { error } = await getResend().emails.send({
       from: "no-reply@kikiboard.xyz",
       to: normalizedEmail,
       subject: `${inviterName} te invita a "${board.title}"`,
