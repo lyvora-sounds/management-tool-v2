@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import db from "@/lib/db";
-import { CLAUDE_CALLBACKS, oauthHash, oauthToken, oauthServerConfig } from "@/lib/mcp/oauthConfig";
+import { CLAUDE_CALLBACKS, isValidRequestOrigin, oauthHash, oauthToken } from "@/lib/mcp/oauthConfig";
 import { validChatGptCallback } from "@/lib/mcp/oauthClients";
 
 const headers = { "cache-control": "no-store" };
@@ -21,9 +21,8 @@ export async function GET() {
 export async function POST(request: Request) {
   const user = await actor();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers });
-  // A settings POST must originate from the same canonical application.
-  const config = oauthServerConfig();
-  if (request.headers.get("origin") !== config.issuer) return Response.json({ error: "Invalid origin" }, { status: 403, headers });
+  // A settings POST must originate from the same application or preview host.
+  if (!isValidRequestOrigin(request)) return Response.json({ error: "Invalid origin" }, { status: 403, headers });
   const body = await request.json().catch(() => null);
   if (body?.provider !== undefined && body.provider !== "chatgpt" && body.provider !== "claude") return Response.json({ error: "Invalid provider" }, { status: 400, headers });
   // Claude vuelve siempre a las mismas URL, así que no se aceptan del cliente; ChatGPT sí necesita la suya.
@@ -40,7 +39,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const user = await actor();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers });
-  if (request.headers.get("origin") !== oauthServerConfig().issuer) return Response.json({ error: "Invalid origin" }, { status: 403, headers });
+  if (!isValidRequestOrigin(request)) return Response.json({ error: "Invalid origin" }, { status: 403, headers });
   const body = await request.json().catch(() => null);
   if (typeof body?.id !== "string") return Response.json({ error: "Invalid client" }, { status: 400, headers });
   const result = await db.$transaction(async (tx) => {

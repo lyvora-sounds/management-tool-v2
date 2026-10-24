@@ -5,7 +5,7 @@ import { requireOrganizationManager } from "@/lib/organizations";
 import { type ExternalAccessContext, TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE } from "@/lib/externalAccess";
 import { changeScope, listMcpChanges, revertMcpChange, McpWriteError } from "@/lib/mcp/writes";
 import { historyUserIds, type HistorySnapshot } from "@/lib/mcp/historyPreview";
-import { oauthServerConfig } from "@/lib/mcp/oauthConfig";
+import { isValidRequestOrigin } from "@/lib/mcp/oauthConfig";
 
 const headers = { "cache-control": "no-store" };
 
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (request.headers.get("origin") !== oauthServerConfig().issuer) return Response.json({ error: "Invalid origin" }, { status: 403, headers });
+  if (!isValidRequestOrigin(request)) return Response.json({ error: "Invalid origin" }, { status: 403, headers });
   const actor = await scope(new URL(request.url).searchParams);
   if (!actor) return Response.json({ error: "Not found" }, { status: 404, headers });
   const body = await request.json().catch(() => null);
