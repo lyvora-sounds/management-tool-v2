@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { copyToClipboard } from "@/lib/copyText";
+import { mcpConnectionName, mcpScopeEndpoint } from "@/lib/mcp/connectionName";
 import { McpConnectionGuide } from "./McpConnectionGuide";
 import { McpChangeHistory } from "./McpChangeHistory";
 
@@ -61,7 +62,7 @@ export function McpSettings() {
   const [scope, setScope] = useState<McpScope>("organization");
   const [organizationId, setOrganizationId] = useState("");
   const [boardId, setBoardId] = useState("");
-  const [endpoint, setEndpoint] = useState("/api/mcp");
+  const [origin, setOrigin] = useState("");
   const [tokenCopied, setTokenCopied] = useState(false);
   const [tokenName, setTokenName] = useState("");
   const [access, setAccess] = useState<"read" | "write">("read");
@@ -72,7 +73,7 @@ export function McpSettings() {
 
   useEffect(() => {
     const configured = process.env.NEXT_PUBLIC_APP_URL;
-    setEndpoint(`${configured ? new URL(configured).origin : window.location.origin}/api/mcp`);
+    setOrigin(configured ? new URL(configured).origin : window.location.origin);
   }, []);
 
   useEffect(() => {
@@ -103,6 +104,8 @@ export function McpSettings() {
     ? !!organization && canManage(organization.role)
     : !!board?.canIssueToken;
   const canCreate = tokenName.trim().length > 0 && allowed;
+  const endpoint = mcpScopeEndpoint(origin, scope, organization?.id, scope === "board" ? board?.id : undefined);
+  const connectionName = mcpConnectionName(scope === "board" && board ? board.title : organization?.name ?? "");
 
   const loadMyTokens = async () => {
     const res = await fetch("/api/settings/mcp/tokens");
@@ -442,7 +445,7 @@ export function McpSettings() {
         )}
       </div>
 
-      <McpConnectionGuide endpoint={endpoint} />
+      <McpConnectionGuide endpoint={endpoint} connectionName={connectionName} />
       {organization && allowed && (
         <McpChangeHistory key={`${organization.id}:${scope}:${board?.id ?? ""}`} organizationId={organization.id} boardId={scope === "board" ? board?.id ?? null : null} />
       )}

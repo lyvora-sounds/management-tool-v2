@@ -50,6 +50,10 @@ route `/api/mcp`. Authentication does not use a browser session. Organization
 owners and admins issue a credential for one organization. Board owners and
 admins issue a credential for one board inside that organization. Tickets are
 not filtered by environment. The same token cannot read a second organization.
+A second organization or board is another connection: `/api/mcp/org/{organizationId}`
+or `/api/mcp/board/{boardId}`, each with its own token. `POST /api/mcp` remains
+valid for an existing single connection. OAuth grants are bound to the URL the
+client opened, and consent for a scoped URL can approve only that scope.
 Settings → MCP (`/dashboard/settings?tab=mcp`) creates either token and shows
 it once in a selectable field. The board Integrations dialog creates the board
 token. The route is public in Clerk middleware only because it performs this

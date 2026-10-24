@@ -135,6 +135,57 @@ describe("ChatGPT OAuth boundaries", () => {
     updateGrant.mockResolvedValue({ count: 0 });
     expect(await exchangeOAuthToken(params)).toBeNull();
   });
+  it("locks a scoped resource to that organization or board", async () => {
+    const orgId = "c".repeat(25);
+    const boardId = "b".repeat(25);
+    organizationManager.mockResolvedValue(true);
+    boardAdmin.mockResolvedValue(true);
+    findBoard.mockResolvedValue({ organizationId: orgId });
+    const orgParams = authorization();
+    orgParams.set("resource", `https://kikiboard.test/api/mcp/org/${orgId}`);
+    const orgRequest = parseAuthorizationRequest(orgParams);
+    expect(orgRequest.resource).toBe(`https://kikiboard.test/api/mcp/org/${orgId}`);
+    await expect(issueAuthorizationCode("user-1", orgRequest, `organization:${"d".repeat(25)}`)).rejects.toThrow(/locked/);
+    await expect(issueAuthorizationCode("user-1", orgRequest, `board:${boardId}`)).rejects.toThrow(/locked/);
+    expect(createCredential).not.toHaveBeenCalled();
+    await issueAuthorizationCode("user-1", orgRequest, `organization:${orgId}`);
+    expect(createCredential.mock.calls[0][0].data.oauthGrant.create.resource).toBe(orgRequest.resource);
+    expect(createCredential.mock.calls[0][0].data.boardId).toBeNull();
+
+    const boardParams = authorization();
+    boardParams.set("resource", `https://kikiboard.test/api/mcp/board/${boardId}`);
+    const boardRequest = parseAuthorizationRequest(boardParams);
+    await expect(issueAuthorizationCode("user-1", boardRequest, `organization:${orgId}`)).rejects.toThrow(/locked/);
+    await issueAuthorizationCode("user-1", boardRequest, `board:${boardId}`);
+    expect(createCredential.mock.calls[1][0].data.boardId).toBe(boardId);
+    expect(createCredential.mock.calls[1][0].data.oauthGrant.create.resource).toBe(boardRequest.resource);
+  });
+  it("exchanges a token only when the credential matches the scoped resource", async () => {
+    const orgId = "c".repeat(25);
+    const scoped = `https://kikiboard.test/api/mcp/org/${orgId}`;
+    const params = exchange();
+    params.set("resource", scoped);
+    findGrant.mockResolvedValue(grant({
+      resource: scoped,
+      externalAccessToken: { ...grant().externalAccessToken, organizationId: orgId, boardId: null, board: null },
+    }));
+    expect(await exchangeOAuthToken(params)).not.toBeNull();
+    updateGrant.mockClear();
+    findGrant.mockResolvedValue(grant({
+      resource: scoped,
+      externalAccessToken: { ...grant().externalAccessToken, organizationId: "d".repeat(25), boardId: null, board: null },
+    }));
+    expect(await exchangeOAuthToken(params)).toBeNull();
+    findGrant.mockResolvedValue(grant({
+      resource: scoped,
+      externalAccessToken: { ...grant().externalAccessToken, organizationId: orgId, boardId: "b".repeat(25), board: { organizationId: orgId } },
+    }));
+    expect(await exchangeOAuthToken(params)).toBeNull();
+    expect(updateGrant).not.toHaveBeenCalled();
+    const canonical = exchange();
+    findGrant.mockResolvedValue(grant({ resource: scoped }));
+    expect(await exchangeOAuthToken(canonical)).toBeNull();
+  });
   it("checks current permissions before creating organization or board credentials", async () => {
     organizationManager.mockResolvedValue(false); boardAdmin.mockResolvedValue(false);
     const request = parseAuthorizationRequest(authorization());

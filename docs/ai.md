@@ -60,7 +60,12 @@ expiration. Environment fields are ignored.
 Every credential belongs to one organization. A null `boardId` reads every
 board in that organization. A set `boardId` reads only that board, and
 authentication rejects the credential if the board no longer belongs to the
-same organization. One credential cannot read a second organization. Read tools never accept a board id: `get_project`, `list_tickets`, and `get_ticket` derive
+same organization. One credential cannot read a second organization. A second
+organization or board is another connection. Organization tokens use
+`POST /api/mcp/org/{organizationId}` and board tokens use
+`POST /api/mcp/board/{boardId}`. Those routes reject a token for a different
+scope. `POST /api/mcp` remains valid for an existing single connection.
+Read tools never accept a board id: `get_project`, `list_tickets`, and `get_ticket` derive
 the organization and board from the credential. `create_epic` on an organization
 token is the exception: it requires `boardId` from `get_project`. Tickets are not filtered by
 environment.
@@ -77,10 +82,12 @@ ChatGPT uses OAuth rather than pasted bearer-header JSON. Public discovery at
 advertises a user-created or legacy predefined confidential client, PKCE S256, and read/optional write scopes.
 `/api/mcp/oauth/authorize` validates the request and redirects to the protected
 `/dashboard/mcp-authorize` consent page. The user selects an organization or
-board they may administer; consent creates a revocable external-access
+board they may administer. A connector opened at a scoped URL can approve only
+that organization or board. Consent creates a revocable external-access
 credential and a hashed, five-minute authorization code. `/api/mcp/oauth/token`
 exchanges it once for a resource-bound one-hour access token and a rotating
-refresh token. The connection expires after 30 days. Revocation and board
+refresh token. The access token works only on the resource URL it was issued
+for. The connection expires after 30 days. Revocation and board
 transfers invalidate access and refresh. Required deployment configuration and
 the manual ChatGPT linking check are documented in `mcp/README.md`.
 

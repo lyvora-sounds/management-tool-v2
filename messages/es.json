@@ -1131,7 +1131,7 @@
     "enableOnTickets": "Habilitar en tickets",
     "mcpTitle": "Conexiones MCP",
     "mcpIntro": "Conecta ChatGPT, Claude, Grok, Gemini CLI u otro cliente MCP. Elige acceso de lectura o lectura/escritura dentro de una organización.",
-    "mcpOneOrgRule": "Una conexión no puede abrir dos organizaciones. Crea un token distinto para cada organización.",
+    "mcpOneOrgRule": "Una conexión no puede abrir dos organizaciones. Elige la siguiente organización o tablero, crea otro token y añádelo con la URL de esa conexión.",
     "mcpScopeTitle": "Ámbito de la conexión",
     "mcpScopeOrganization": "Una organización",
     "mcpScopeBoard": "Un tablero",
@@ -1521,6 +1521,7 @@
     "tools": "Herramientas de esta conexión: get_project (la organización y sus tableros, o un tablero y sus listas), list_tickets (tickets de esta conexión) y get_ticket (un ticket de esta conexión).",
     "provider": "Asistente de IA",
     "endpoint": "URL de MCP",
+    "multipleHint": "Esta URL pertenece a la organización o al tablero seleccionado arriba. Para conectar otro, selecciónalo, crea su token y añade una entrada de servidor distinta. Un token no puede cubrir dos organizaciones.",
     "copy": "Copiar",
     "copied": "Copiado",
     "copyError": "No se pudo copiar. Selecciona y copia el valor manualmente.",
@@ -1546,29 +1547,29 @@
     "officialDocs": "Instrucciones oficiales de {provider}",
     "chatgpt": {
       "intro": "ChatGPT utiliza OAuth. Genera aquí tus propias credenciales; no necesitas un secreto de despliegue.",
-      "step1": "En ChatGPT en la web, abre Plugins → + → Add custom MCP server. Introduce la URL MCP y selecciona OAuth.",
+      "step1": "En ChatGPT en la web, abre Plugins → + → Add custom MCP server. Introduce la URL MCP que aparece aquí y selecciona OAuth. Añade un conector distinto, con la URL de ese ámbito, para cada organización o tablero adicional.",
       "step2": "Copia la URL de retorno de ChatGPT en el campo de abajo y genera las credenciales. Pega el ID y el secreto en ChatGPT.",
       "step3": "Crea e instala el plugin. En un chat Work, escribe @ y selecciona Kikiboard.",
-      "step4": "Inicia sesión con esta misma cuenta, elige la organización o el tablero que administras y aprueba lectura o lectura/escritura solicitada explícitamente."
+      "step4": "Inicia sesión con esta misma cuenta. Aprueba la organización o el tablero que nombra esta URL, con lectura o con lectura/escritura solicitada explícitamente."
     },
     "claude": {
       "intro": "Claude usa OAuth. Genera aquí tu ID y secreto de cliente; no hace falta copiar ninguna URL de retorno.",
       "step1": "Genera las credenciales abajo. Elige si Claude podrá solo leer o también escribir tickets.",
-      "step2": "En Claude, abre Personalizar → Conectores → Añadir conector personalizado. Introduce la URL MCP y abre las opciones avanzadas.",
+      "step2": "En Claude, abre Personalizar → Conectores → Añadir conector personalizado. Introduce la URL MCP que aparece aquí y abre las opciones avanzadas. Claude guarda un conector por URL, así que cada organización o tablero necesita la suya.",
       "step3": "Pega el ID y el secreto de cliente OAuth y añade el conector.",
-      "step4": "Pulsa Conectar, inicia sesión con esta misma cuenta, elige la organización o el tablero que administras y aprueba el acceso. Luego actívalo en la conversación con + → Conectores."
+      "step4": "Pulsa Conectar, inicia sesión con esta misma cuenta y aprueba la organización o el tablero que nombra esta URL. Luego actívalo en la conversación con + → Conectores."
     },
     "grok": {
       "intro": "Utiliza un token bearer con Grok CLI o la API Remote MCP de xAI. Estos pasos configuran Grok CLI.",
       "step1": "Elige una organización o un tablero arriba y crea un token con ese ámbito.",
       "step2": "Configura KIKIBOARD_TOKEN de forma segura en el entorno de la terminal con el token que copiaste.",
-      "step3": "Ejecuta el comando de abajo. Comprueba la conexión con grok mcp list o grok mcp doctor kikiboard.",
+      "step3": "Ejecuta el comando de abajo. Repítelo con otro nombre, otra URL y otro token para cada organización o tablero. Comprueba las conexiones con grok mcp list.",
       "step4": "Inicia Grok CLI y pídele que utilice Kikiboard. Para la API de xAI, configura la URL MCP y la cabecera Authorization en una herramienta MCP remota."
     },
     "gemini": {
       "intro": "Utiliza Gemini CLI con la configuración Streamable HTTP de abajo. Estos pasos son para la CLI, no para la web de chat de Gemini.",
       "step1": "Elige una organización o un tablero arriba y crea un token con ese ámbito.",
-      "step2": "Añade la configuración de abajo a tu archivo privado ~/.gemini/settings.json conservando los ajustes existentes.",
+      "step2": "Añade la configuración de abajo a tu archivo privado ~/.gemini/settings.json conservando los ajustes existentes. Da a cada organización o tablero su propio nombre de servidor, URL y token.",
       "step3": "Sustituye kiki_YOUR_TOKEN por el token copiado. Utiliza httpUrl para este endpoint Streamable HTTP.",
       "step4": "Reinicia Gemini CLI, ejecuta /mcp para comprobar Kikiboard y pídele que liste tus tickets pendientes."
     },
