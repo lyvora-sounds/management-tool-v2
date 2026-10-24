@@ -21,7 +21,7 @@ export function mcpConnectionSnippet(provider: "grok" | "gemini" | "header", end
     return `grok mcp add --transport http ${connectionName} ${endpoint} --header "Authorization: Bearer \${KIKIBOARD_TOKEN}"`;
   }
   if (provider === "gemini") {
-    return JSON.stringify({ mcpServers: { [connectionName]: { httpUrl: endpoint, headers: { Authorization: "Bearer kiki_YOUR_TOKEN" } } } }, null, 2);
+    return JSON.stringify({ mcpServers: { [connectionName]: { url: endpoint, headers: { Authorization: "Bearer kiki_YOUR_TOKEN" } } } }, null, 2);
   }
   return "Authorization: Bearer kiki_YOUR_TOKEN";
 }

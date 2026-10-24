@@ -211,7 +211,7 @@ Settings → MCP includes separate guides for:
 
 - **Claude custom connectors:** use the OAuth guide above. Claude keeps one connector per URL, so each organization or board uses its own MCP URL. See [Claude instructions](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
 - **Grok CLI / xAI API:** use a scoped bearer token. Run `grok mcp add` once per organization or board, with a distinct server name, that scope's URL, and that scope's token. See [Grok MCP instructions](https://docs.x.ai/build/features/mcp-servers).
-- **Gemini CLI:** use a scoped bearer token and an `httpUrl` Streamable HTTP entry in private Gemini CLI settings. Each organization or board is its own key under `mcpServers`, with its own URL and token. See [Gemini MCP instructions](https://geminicli.com/docs/tools/mcp-server/).
+- **Antigravity / Gemini CLI:** use a scoped bearer token and a `url` Streamable HTTP entry in `~/.gemini/config/mcp_config.json` (or private Gemini CLI settings). Each organization or board is its own key under `mcpServers`, with its own URL and token. See [Gemini MCP instructions](https://geminicli.com/docs/tools/mcp-server/).
 
 Guides include a test prompt, copyable endpoint/configuration and official documentation links. OAuth client secrets and scoped bearer tokens are separate credentials.
 

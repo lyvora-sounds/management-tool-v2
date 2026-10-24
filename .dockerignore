@@ -1,0 +1,16 @@
+.git
+.github
+.agent-state
+.next
+node_modules
+lib/generated
+.env*
+*.log
+coverage
+docs
+mcp
+tests
+**/*.test.ts
+**/*.test.tsx
+Dockerfile
+.dockerignore

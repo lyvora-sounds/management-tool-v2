@@ -1567,11 +1567,11 @@
       "step4": "Start Grok CLI and ask it to use Kikiboard. For the xAI API, supply the MCP URL and Authorization header in a remote MCP tool."
     },
     "gemini": {
-      "intro": "Use Gemini CLI with the Streamable HTTP configuration below. These steps are for the CLI, not the Gemini chat website.",
+      "intro": "Use Antigravity or Gemini CLI with the Streamable HTTP configuration below. These steps are for MCP clients, not the Gemini chat website.",
       "step1": "Choose an organization or board above and create a scoped token.",
-      "step2": "Add the configuration below to your private ~/.gemini/settings.json, preserving your existing settings. Give each organization or board its own server name, URL, and token.",
-      "step3": "Replace kiki_YOUR_TOKEN with your copied token. Use httpUrl for this Streamable HTTP endpoint.",
-      "step4": "Restart Gemini CLI, run /mcp to check Kikiboard, and ask it to list your pending tickets."
+      "step2": "Add the configuration below to your private ~/.gemini/config/mcp_config.json (or ~/.gemini/settings.json), preserving your existing settings. Give each organization or board its own server name, URL, and token.",
+      "step3": "Replace kiki_YOUR_TOKEN with your copied token. Use url for this Streamable HTTP endpoint.",
+      "step4": "Refresh MCP servers (or restart Gemini CLI / run /mcp) to check Kikiboard, and ask it to list your pending tickets."
     },
     "allowWrite": "Request read/write access (you must also approve it during sign-in)",
     "troubleshootingTitle": "Connection failed or returned 401?",

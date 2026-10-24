@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+import { getResend } from "@/lib/resend";
 import db from "@/lib/db";
 import { decrypt, encrypt } from "@/lib/crypto";
 import {
@@ -10,7 +10,6 @@ import {
   totpUri,
 } from "@/lib/mfa";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 type CodeDelivery =
   | { ok: true }
@@ -33,7 +32,7 @@ export async function ensureMfa(userId: string) {
 
 async function sendCode(to: string, text: string) {
   if (!process.env.RESEND_API_KEY) return false;
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: "Kiki <no-reply@kikiboard.xyz>",
     to,
     subject: "Your Kiki security code",

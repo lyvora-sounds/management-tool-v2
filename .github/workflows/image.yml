@@ -1,0 +1,117 @@
+name: Container image
+
+# Builds the production image and starts it with no secrets and no database. It proves the image builds,
+# boots and answers /api/health, which is all Cloud Run needs from it. On a push to dev the image is also
+# pushed to Artifact Registry with OIDC (no stored keys), as the kikiboard-image-push identity from kiki-infra.
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - package.json
+      - pnpm-lock.yaml
+      - next.config.ts
+      - middleware.ts
+      - prisma/**
+      - .github/workflows/image.yml
+  workflow_dispatch:
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: kikiboard:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Placeholders: they only have to be well formed for the build to pass. Real values come with the
+          # deploy ticket. The publishable key decodes to "clerk.example.com$".
+          build-args: |
+            NEXT_PUBLIC_APP_URL=https://staging-gcp.kikiboard.xyz
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+
+      - name: Start it without any secret and call the health check
+        run: |
+          docker run -d --name kikiboard -p 8080:8080 kikiboard:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8080/api/health; then echo; exit 0; fi
+            sleep 2
+          done
+          docker logs kikiboard
+          exit 1
+
+  push:
+    name: Push to Artifact Registry
+    needs: build
+    # Skipped until the repository variables from kiki-infra's docs/bootstrap.md exist, so dev stays green.
+    if: github.event_name == 'push' && vars.GCP_IMAGE_PUSH_SERVICE_ACCOUNT != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      REGISTRY: ${{ vars.GCP_RUN_REGION || 'europe-west1' }}-docker.pkg.dev
+      IMAGE: ${{ vars.GCP_RUN_REGION || 'europe-west1' }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/kikiboard/kikiboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require the public build values
+        run: |
+          for v in STAGING_APP_URL STAGING_CLERK_PUBLISHABLE_KEY GCP_PROJECT_ID GCP_WORKLOAD_IDENTITY_PROVIDER; do
+            if [ -z "${!v}" ]; then echo "::error::Repository variable $v is not set"; exit 1; fi
+          done
+        env:
+          STAGING_APP_URL: ${{ vars.STAGING_APP_URL }}
+          STAGING_CLERK_PUBLISHABLE_KEY: ${{ vars.STAGING_CLERK_PUBLISHABLE_KEY }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_IMAGE_PUSH_SERVICE_ACCOUNT }}
+          token_format: access_token
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # Cloud Run runs the first manifest it finds; attestation manifests alongside the image confuse it.
+          provenance: false
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ vars.STAGING_APP_URL }}
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ vars.STAGING_CLERK_PUBLISHABLE_KEY }}
