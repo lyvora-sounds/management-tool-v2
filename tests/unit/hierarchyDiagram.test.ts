@@ -160,4 +160,80 @@ describe("hierarchySteps and hierarchyRanks", () => {
     expect(hierarchySteps([n("p", "q", ["q"]), n("q", "p", ["p"])]).size).toBe(0);
     expect(hierarchyRanks(chain, "missing")).toBeNull();
   });
+  it("converges parallel tasks onto a single downstream step when all blockers finish", () => {
+    const dag: HierarchyNode[] = [
+      { id: "root", title: "kiki-infra-migration", parentId: null, childIds: ["t1"] },
+      { id: "t1", title: "Terraform skeleton", parentId: "root", childIds: ["t2", "t3", "t4"] },
+      { id: "t2", title: "Network", parentId: "t1", childIds: ["t5"] },
+      { id: "t3", title: "Dockerfile", parentId: "t1", childIds: ["t5"] },
+      { id: "t4", title: "Secrets", parentId: "t1", childIds: ["t5"] },
+      { id: "t5", title: "Release path", parentId: "t2", parentIds: ["t2", "t3", "t4"], childIds: ["t6"] },
+      { id: "t6", title: "Managed Postgres", parentId: "t5", childIds: [] },
+    ];
+    const layout = hierarchyRanks(dag, "t5")!;
+    expect(layout.root.id).toBe("root");
+    expect(layout.ranks.map((rank) => rank.map((item) => item.id))).toEqual([
+      ["t1"],
+      ["t2", "t3", "t4"],
+      ["t5"],
+      ["t6"],
+    ]);
+    const steps = hierarchySteps(dag);
+    expect(steps.get("t1")?.step).toBe(1);
+    expect(steps.get("t2")?.step).toBe(2);
+    expect(steps.get("t3")?.step).toBe(2);
+    expect(steps.get("t4")?.step).toBe(2);
+    expect(steps.get("t5")?.step).toBe(3);
+    expect(steps.get("t6")?.step).toBe(4);
+  });
+  it("places a converging task after the longest blocking parallel branch", () => {
+    const dag: HierarchyNode[] = [
+      { id: "root", title: "Origin", parentId: null, childIds: ["a", "b"] },
+      { id: "a", title: "Branch A1", parentId: "root", childIds: ["a2"] },
+      { id: "b", title: "Branch B1", parentId: "root", childIds: ["join"] },
+      { id: "a2", title: "Branch A2", parentId: "a", childIds: ["join"] },
+      { id: "join", title: "Join", parentId: "a2", parentIds: ["a2", "b"], childIds: [] },
+    ];
+    const layout = hierarchyRanks(dag, "join")!;
+    expect(layout.ranks.map((rank) => rank.map((item) => item.id))).toEqual([
+      ["a", "b"],
+      ["a2"],
+      ["join"],
+    ]);
+  });
+  it("waits for blockers that belong to another path", () => {
+    const dag: HierarchyNode[] = [
+      { id: "rootA", title: "Root A", parentId: null, childIds: ["a"] },
+      { id: "a", title: "Short", parentId: "rootA", childIds: ["join"] },
+      { id: "rootB", title: "Root B", parentId: null, childIds: ["b"] },
+      { id: "b", title: "Long", parentId: "rootB", childIds: ["b2"] },
+      { id: "b2", title: "Longer", parentId: "b", childIds: ["join"] },
+      { id: "join", title: "Join", parentId: "a", parentIds: ["a", "b2"], childIds: [] },
+      { id: "other", title: "Other", parentId: null, childIds: ["leaf"] },
+      { id: "leaf", title: "Leaf", parentId: "other", childIds: [] },
+    ];
+    const layout = hierarchyRanks(dag, "join")!;
+    expect(layout.roots.map((node) => node.id)).toEqual(["rootA", "rootB"]);
+    expect(layout.ranks.map((rank) => rank.map((item) => item.id))).toEqual([
+      ["a", "b"],
+      ["b2"],
+      ["join"],
+    ]);
+    const numbered = hierarchySteps(dag);
+    expect(numbered.get("join")).toEqual({ step: 3, total: 3, rootId: "rootA" });
+    expect(numbered.get("a")?.step).toBe(1);
+    expect(numbered.get("b2")?.step).toBe(2);
+    expect(numbered.get("leaf")).toEqual({ step: 1, total: 1, rootId: "other" });
+    const fromShort = hierarchyRanks(dag, "a")!;
+    const joinRow = fromShort.ranks.findIndex((rank) => rank.some((node) => node.id === "join"));
+    expect(joinRow + 1).toBe(numbered.get("join")?.step);
+    const svg = hierarchySvg(dag, { focusId: "join" });
+    expect(svg).toContain("Root A · Root B");
+    expect(steps(svg!)).toEqual([
+      ["a", "1"],
+      ["b", "1"],
+      ["b2", "2"],
+      ["join", "3"],
+    ]);
+  });
 });
