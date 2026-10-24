@@ -4,12 +4,18 @@ import { requireOrganizationManager } from "@/lib/organizations";
 import { createExternalAccessToken } from "@/lib/externalAccess";
 import {
   ACCESS_TOKEN_SECONDS, REFRESH_TOKEN_SECONDS, OAUTH_SCOPE, OAUTH_WRITE_SCOPE,
-  oauthClientName, oauthConfig, oauthServerConfig, oauthHash, oauthToken, verifyPkce, type AuthorizationRequest,
+  oauthClientName, oauthConfig, oauthHash, oauthToken, verifyPkce, type AuthorizationRequest,
+  credentialMatchesAudience, mcpResourceUrl, parseMcpResource, selectionMatchesAudience,
 } from "./oauthConfig";
 
 export async function issueAuthorizationCode(userId: string, request: AuthorizationRequest, selection: string, allowWrite = false) {
   if (request.ownerId && request.ownerId !== userId) throw new Error("OAuth client belongs to another user");
   if (allowWrite && !request.writeRequested) throw new Error("Write scope was not requested by the OAuth client");
+  const audience = parseMcpResource(request.resource);
+  if (!audience) throw new Error("Invalid OAuth resource");
+  if (audience.kind !== "canonical" && !selectionMatchesAudience(selection, audience)) {
+    throw new Error("This connection is locked to a different organization or board");
+  }
   let organizationId: string;
   let boardId: string | null = null;
   if (selection.startsWith("board:")) {
@@ -42,12 +48,13 @@ export async function issueAuthorizationCode(userId: string, request: Authorizat
 }
 
 export async function exchangeOAuthToken(params: URLSearchParams, clientId = oauthConfig().clientId) {
-  const config = oauthServerConfig();
   const grantType = params.get("grant_type");
   const isCode = grantType === "authorization_code";
   if (!isCode && grantType !== "refresh_token") return null;
   const rawToken = params.get(isCode ? "code" : "refresh_token");
-  if (!rawToken || rawToken.length > 512 || params.get("resource") !== config.resource) return null;
+  const audience = parseMcpResource(params.get("resource") ?? "");
+  if (!rawToken || rawToken.length > 512 || !audience) return null;
+  const resource = mcpResourceUrl(audience);
   const requestedScopes = params.get("scope")?.split(/\s+/);
   if (requestedScopes?.some((scope) => scope !== OAUTH_SCOPE && scope !== OAUTH_WRITE_SCOPE)) return null;
   const hash = oauthHash(rawToken);
@@ -62,7 +69,7 @@ export async function exchangeOAuthToken(params: URLSearchParams, clientId = oau
       where: isCode ? { codeHash: hash } : { refreshTokenHash: hash },
       include: { externalAccessToken: { include: { board: { select: { organizationId: true } } } } },
     });
-    if (!grant || grant.clientId !== clientId || grant.resource !== config.resource || grant.refreshExpiresAt <= now) return false;
+    if (!grant || grant.clientId !== clientId || grant.resource !== resource || grant.refreshExpiresAt <= now) return false;
     const credential = grant.externalAccessToken;
     // Downscoped access tokens need their own persisted scope set. Until then,
     // reject narrowing rather than silently returning a more powerful token.
@@ -70,6 +77,7 @@ export async function exchangeOAuthToken(params: URLSearchParams, clientId = oau
     grantedScopes = credential.scopes.join(" ");
     if (credential.revokedAt || (credential.expiresAt && credential.expiresAt <= now) || !credential.scopes.includes(OAUTH_SCOPE)) return false;
     if (credential.boardId && credential.board?.organizationId !== credential.organizationId) return false;
+    if (!credentialMatchesAudience(credential, audience)) return false;
     if (isCode && (grant.codeExpiresAt <= now || params.get("redirect_uri") !== grant.redirectUri || !verifyPkce(params.get("code_verifier") ?? "", grant.codeChallenge))) return false;
     const accessExpiresAt = new Date(Math.min(now.getTime() + ACCESS_TOKEN_SECONDS * 1000, grant.refreshExpiresAt.getTime()));
     const result = await tx.mcpOAuthGrant.updateMany({
