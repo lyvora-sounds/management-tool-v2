@@ -17,6 +17,90 @@ export function oauthServerConfig() {
   return { issuer: url.origin, resource: `${url.origin}/api/mcp` };
 }
 
+const MCP_SCOPE_ID = /^[a-z0-9]{20,32}$/;
+
+export type McpAudience =
+  | { kind: "canonical" }
+  | { kind: "organization"; organizationId: string }
+  | { kind: "board"; boardId: string };
+
+export function isMcpScopeId(value: string) {
+  return MCP_SCOPE_ID.test(value);
+}
+
+export function parseMcpResource(resource: string): McpAudience | null {
+  let url: URL;
+  try { url = new URL(resource); } catch { return null; }
+  let origin: string;
+  try { origin = oauthServerConfig().issuer; } catch { return null; }
+  if (url.origin !== origin || url.username || url.password || url.search || url.hash) return null;
+  if (url.pathname === "/api/mcp") return { kind: "canonical" };
+  const org = /^\/api\/mcp\/org\/([a-z0-9]{20,32})$/.exec(url.pathname);
+  if (org) return { kind: "organization", organizationId: org[1] };
+  const board = /^\/api\/mcp\/board\/([a-z0-9]{20,32})$/.exec(url.pathname);
+  if (board) return { kind: "board", boardId: board[1] };
+  return null;
+}
+
+export function mcpResourceUrl(audience: McpAudience) {
+  const { issuer, resource } = oauthServerConfig();
+  if (audience.kind === "canonical") return resource;
+  if (audience.kind === "organization") return `${issuer}/api/mcp/org/${audience.organizationId}`;
+  return `${issuer}/api/mcp/board/${audience.boardId}`;
+}
+
+export function mcpResourceMetadataUrl(audience: McpAudience) {
+  const { issuer } = oauthServerConfig();
+  if (audience.kind === "canonical") return `${issuer}/.well-known/oauth-protected-resource`;
+  return `${issuer}/.well-known/oauth-protected-resource${new URL(mcpResourceUrl(audience)).pathname}`;
+}
+
+export function audienceFromMetadataPath(path: string[]): McpAudience | null {
+  if (path.length !== 4 || path[0] !== "api" || path[1] !== "mcp" || !isMcpScopeId(path[3] ?? "")) return null;
+  if (path[2] === "org") return { kind: "organization", organizationId: path[3] };
+  if (path[2] === "board") return { kind: "board", boardId: path[3] };
+  return null;
+}
+
+export function mcpProtectedResourceDocument(audience: McpAudience) {
+  const config = oauthServerConfig();
+  return {
+    resource: mcpResourceUrl(audience),
+    authorization_servers: [config.issuer],
+    scopes_supported: [OAUTH_SCOPE, OAUTH_WRITE_SCOPE],
+    bearer_methods_supported: ["header"],
+  };
+}
+
+export function credentialMatchesAudience(
+  credential: { organizationId: string; boardId: string | null },
+  audience: McpAudience,
+) {
+  if (audience.kind === "canonical") return true;
+  if (audience.kind === "organization") return credential.organizationId === audience.organizationId && credential.boardId == null;
+  return credential.boardId === audience.boardId;
+}
+
+export function selectionMatchesAudience(selection: string, audience: McpAudience) {
+  if (audience.kind === "organization") return selection === `organization:${audience.organizationId}`;
+  if (audience.kind === "board") return selection === `board:${audience.boardId}`;
+  return selection.startsWith("organization:") || selection.startsWith("board:");
+}
+
+export function filterConsentScopes<TOrg extends { id: string }, TBoard extends { id: string }>(
+  audience: McpAudience,
+  organizations: TOrg[],
+  boards: TBoard[],
+) {
+  if (audience.kind === "organization") {
+    return { organizations: organizations.filter((item) => item.id === audience.organizationId), boards: [] as TBoard[] };
+  }
+  if (audience.kind === "board") {
+    return { organizations: [] as TOrg[], boards: boards.filter((item) => item.id === audience.boardId) };
+  }
+  return { organizations, boards };
+}
+
 // Optional compatibility for installations with an existing deployment client.
 export function oauthConfig() {
   const server = oauthServerConfig();
@@ -95,7 +179,6 @@ export type AuthorizationRequest = {
 };
 
 export function parseAuthorizationRequest(params: URLSearchParams, client = legacyOAuthClient()): AuthorizationRequest {
-  const config = oauthServerConfig();
   for (const key of params.keys()) {
     if (params.getAll(key).length !== 1) throw new Error("Duplicate OAuth parameter");
   }
@@ -104,7 +187,9 @@ export function parseAuthorizationRequest(params: URLSearchParams, client = lega
   const challenge = params.get("code_challenge") ?? "";
   if (params.get("client_id") !== client.clientId || !client.redirects.includes(redirectUri)) throw new Error("Invalid OAuth client or callback");
   if (params.get("response_type") !== "code" || params.get("code_challenge_method") !== "S256" || !/^[A-Za-z0-9_-]{43}$/.test(challenge)) throw new Error("S256 PKCE is required");
-  if (params.get("resource") !== config.resource) throw new Error("Invalid OAuth resource");
+  const audience = parseMcpResource(params.get("resource") ?? "");
+  if (!audience) throw new Error("Invalid OAuth resource");
+  const resource = mcpResourceUrl(audience);
   // Claude sigue el `scope` del desafío 401 (solo tickets:read) y nunca pide escritura por su cuenta.
   // Solo para sus clientes, si quien los creó activó la escritura, se ofrece igualmente la casilla de
   // la pantalla de consentimiento: la escritura sigue necesitando ese «sí» explícito en cada conexión.
@@ -113,7 +198,7 @@ export function parseAuthorizationRequest(params: URLSearchParams, client = lega
   if (!scopes.includes(OAUTH_SCOPE) || scopes.some((scope) => scope !== OAUTH_SCOPE && scope !== OAUTH_WRITE_SCOPE)) throw new Error("Invalid OAuth scope");
   if (scopes.includes(OAUTH_WRITE_SCOPE) && !client.allowWrite) throw new Error("This OAuth client is read-only");
   if (!state || state.length > 2048) throw new Error("Invalid OAuth state");
-  return { clientId: client.clientId, redirectUri, resource: config.resource, state, challenge, ...(client.ownerId ? { ownerId: client.ownerId } : {}), ...(scopes.includes(OAUTH_WRITE_SCOPE) || (client.allowWrite && oauthClientName(redirectUri) === "Claude") ? { writeRequested: true } : {}) };
+  return { clientId: client.clientId, redirectUri, resource, state, challenge, ...(client.ownerId ? { ownerId: client.ownerId } : {}), ...(scopes.includes(OAUTH_WRITE_SCOPE) || (client.allowWrite && oauthClientName(redirectUri) === "Claude") ? { writeRequested: true } : {}) };
 }
 
 export function authorizationCallback(request: AuthorizationRequest, result: { code: string } | { error: string }) {

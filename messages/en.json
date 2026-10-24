@@ -1131,7 +1131,7 @@
     "enableOnTickets": "Enable on tickets",
     "mcpTitle": "MCP connections",
     "mcpIntro": "Connect ChatGPT, Claude, Grok, Gemini CLI or another MCP client. Choose read-only or read/write access within one organization.",
-    "mcpOneOrgRule": "One connection cannot open two organizations. Create a separate token for each organization.",
+    "mcpOneOrgRule": "One connection cannot open two organizations. Select the next organization or board, create another token, and add it with that connection’s own URL.",
     "mcpScopeTitle": "Connection scope",
     "mcpScopeOrganization": "One organization",
     "mcpScopeBoard": "One board",
@@ -1521,6 +1521,7 @@
     "tools": "Tools on this connection: get_project (the organization and its boards, or one board and its lists), list_tickets (tickets on this connection), and get_ticket (one ticket on this connection).",
     "provider": "AI assistant",
     "endpoint": "MCP URL",
+    "multipleHint": "This URL belongs to the organization or board selected above. To connect another, select it, create its token, and add a separate server entry. One token cannot cover two organizations.",
     "copy": "Copy",
     "copied": "Copied",
     "copyError": "Could not copy. Select and copy the value manually.",
@@ -1546,29 +1547,29 @@
     "officialDocs": "Official {provider} instructions",
     "chatgpt": {
       "intro": "ChatGPT uses OAuth. Generate your own credentials here; no deployment secret is needed.",
-      "step1": "In ChatGPT on the web, open Plugins → + → Add custom MCP server. Enter the MCP URL and select OAuth.",
+      "step1": "In ChatGPT on the web, open Plugins → + → Add custom MCP server. Enter the MCP URL shown here and select OAuth. Add a separate connector, with that scope’s URL, for each additional organization or board.",
       "step2": "Copy ChatGPT’s callback URL into the field below and generate credentials. Paste the client ID and secret into ChatGPT.",
       "step3": "Create and install the plugin. In a Work chat, type @ and select Kikiboard.",
-      "step4": "Sign in to Kikiboard with this same account, choose the organization or board you administer, and approve read-only or explicitly requested read/write access."
+      "step4": "Sign in to Kikiboard with this same account. Approve the organization or board named by this URL, with read-only or explicitly requested read/write access."
     },
     "claude": {
       "intro": "Claude uses OAuth. Generate your client ID and secret here; there is no callback URL to copy.",
       "step1": "Generate the credentials below. Choose whether Claude can only read or also write tickets.",
-      "step2": "In Claude, open Customize → Connectors → Add custom connector. Enter the MCP URL and open the advanced settings.",
+      "step2": "In Claude, open Customize → Connectors → Add custom connector. Enter the MCP URL shown here and open the advanced settings. Claude keeps one connector per URL, so each organization or board needs its own URL.",
       "step3": "Paste the OAuth client ID and secret, then add the connector.",
-      "step4": "Click Connect, sign in with this same account, choose the organization or board you administer and approve access. Then enable it in a conversation with + → Connectors."
+      "step4": "Click Connect, sign in with this same account, and approve the organization or board named by this URL. Then enable it in a conversation with + → Connectors."
     },
     "grok": {
       "intro": "Use a bearer token with Grok CLI or xAI’s Remote MCP API. These steps configure Grok CLI.",
       "step1": "Choose an organization or board above and create a scoped token.",
       "step2": "Securely set KIKIBOARD_TOKEN in your shell environment to the token you copied.",
-      "step3": "Run the command below. Use grok mcp list or grok mcp doctor kikiboard to check the connection.",
+      "step3": "Run the command below. Repeat it with a different name, URL, and token for each organization or board. Use grok mcp list to check the connections.",
       "step4": "Start Grok CLI and ask it to use Kikiboard. For the xAI API, supply the MCP URL and Authorization header in a remote MCP tool."
     },
     "gemini": {
       "intro": "Use Gemini CLI with the Streamable HTTP configuration below. These steps are for the CLI, not the Gemini chat website.",
       "step1": "Choose an organization or board above and create a scoped token.",
-      "step2": "Add the configuration below to your private ~/.gemini/settings.json, preserving your existing settings.",
+      "step2": "Add the configuration below to your private ~/.gemini/settings.json, preserving your existing settings. Give each organization or board its own server name, URL, and token.",
       "step3": "Replace kiki_YOUR_TOKEN with your copied token. Use httpUrl for this Streamable HTTP endpoint.",
       "step4": "Restart Gemini CLI, run /mcp to check Kikiboard, and ask it to list your pending tickets."
     },
