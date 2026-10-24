@@ -17,7 +17,7 @@ export function oauthServerConfig() {
   return { issuer: url.origin, resource: `${url.origin}/api/mcp` };
 }
 
-const MCP_SCOPE_ID = /^[a-z0-9]{20,32}$/;
+const MCP_SCOPE_ID = /^[a-z0-9_]{20,40}$/;
 
 export type McpAudience =
   | { kind: "canonical" }
@@ -35,9 +35,9 @@ export function parseMcpResource(resource: string): McpAudience | null {
   try { origin = oauthServerConfig().issuer; } catch { return null; }
   if (url.origin !== origin || url.username || url.password || url.search || url.hash) return null;
   if (url.pathname === "/api/mcp") return { kind: "canonical" };
-  const org = /^\/api\/mcp\/org\/([a-z0-9]{20,32})$/.exec(url.pathname);
+  const org = /^\/api\/mcp\/org\/([a-z0-9_]{20,40})$/.exec(url.pathname);
   if (org) return { kind: "organization", organizationId: org[1] };
-  const board = /^\/api\/mcp\/board\/([a-z0-9]{20,32})$/.exec(url.pathname);
+  const board = /^\/api\/mcp\/board\/([a-z0-9_]{20,40})$/.exec(url.pathname);
   if (board) return { kind: "board", boardId: board[1] };
   return null;
 }

@@ -17,6 +17,10 @@ describe("MCP resource URLs", () => {
   it("accepts the canonical URL and one organization or board path", () => {
     expect(parseMcpResource("https://kikiboard.test/api/mcp")).toEqual({ kind: "canonical" });
     expect(parseMcpResource(`https://kikiboard.test/api/mcp/org/${orgId}`)).toEqual({ kind: "organization", organizationId: orgId });
+    expect(parseMcpResource("https://kikiboard.test/api/mcp/org/org_3932da12d4d3de1180391f30")).toEqual({
+      kind: "organization",
+      organizationId: "org_3932da12d4d3de1180391f30",
+    });
     expect(parseMcpResource(`https://kikiboard.test/api/mcp/board/${boardId}`)).toEqual({ kind: "board", boardId });
   });
 
