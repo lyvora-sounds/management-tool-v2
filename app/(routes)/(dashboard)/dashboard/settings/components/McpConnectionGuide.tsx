@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { copyToClipboard } from "@/lib/copyText";
+import { mcpConnectionSnippet } from "@/lib/mcp/connectionName";
 
 type Provider = "chatgpt" | "claude" | "grok" | "gemini";
 type OAuthClient = { id: string; redirectUris: string[]; allowWrite: boolean };
@@ -19,19 +20,7 @@ const docs = {
   gemini: "https://geminicli.com/docs/tools/mcp-server/",
 };
 
-function toServerKey(scopeName?: string) {
-  if (!scopeName) return "kikiboard";
-  const slug = scopeName
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
-  return slug ? `kikiboard-${slug}` : "kikiboard";
-}
-
-export function McpConnectionGuide({ endpoint, scopeName }: { endpoint: string; scopeName?: string }) {
+export function McpConnectionGuide({ endpoint, connectionName }: { endpoint: string; connectionName: string }) {
   const t = useTranslations("mcpGuide");
   const [provider, setProvider] = useState<Provider>("chatgpt");
   const [activeStep, setActiveStep] = useState<number | null>(1);
@@ -90,12 +79,7 @@ export function McpConnectionGuide({ endpoint, scopeName }: { endpoint: string; 
     finally { setBusy(false); }
   }
 
-  const serverKey = toServerKey(scopeName);
-  const snippet = provider === "grok"
-    ? `grok mcp add --transport http ${serverKey} ${endpoint} --header "Authorization: Bearer \${KIKIBOARD_TOKEN}"`
-    : provider === "gemini"
-      ? JSON.stringify({ mcpServers: { [serverKey]: { url: endpoint, headers: { Authorization: "Bearer kiki_YOUR_TOKEN" } } } }, null, 2)
-      : `Authorization: Bearer kiki_YOUR_TOKEN`;
+  const snippet = mcpConnectionSnippet(provider === "grok" || provider === "gemini" ? provider : "header", endpoint, connectionName);
 
   return <section className="overflow-hidden rounded-xl border bg-card" aria-label={t("title")}>
     <div className="space-y-4 border-b p-5 sm:p-6">
@@ -123,6 +107,7 @@ export function McpConnectionGuide({ endpoint, scopeName }: { endpoint: string; 
         <div className="space-y-2">
           <Label htmlFor="mcp-endpoint">{t("endpoint")}</Label>
           <div className="flex gap-2"><Input id="mcp-endpoint" readOnly value={endpoint} className="min-w-0 bg-background font-mono text-xs" /><Button type="button" size="sm" variant="outline" onClick={() => copy(endpoint)}>{t("copy")}</Button></div>
+          <p className="text-xs leading-relaxed text-muted-foreground">{t("multipleHint")}</p>
         </div>
     {oauth ? <div className="space-y-4">
       <form onSubmit={createClient} className="space-y-3">

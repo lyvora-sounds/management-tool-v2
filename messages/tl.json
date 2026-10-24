@@ -1131,7 +1131,7 @@
     "enableOnTickets": "I-enable sa tickets",
     "mcpTitle": "Mga MCP connection",
     "mcpIntro": "Ikonekta ang ChatGPT, Claude, Grok, Gemini CLI o ibang MCP client. Pumili ng read-only o read/write access sa isang organisasyon.",
-    "mcpOneOrgRule": "Hindi kayang buksan ng isang connection ang dalawang organization. Gumawa ng hiwalay na token para sa bawat organization.",
+    "mcpOneOrgRule": "Hindi kayang buksan ng isang connection ang dalawang organization. Piliin ang susunod na organization o board, gumawa ng panibagong token, at idagdag ito gamit ang URL ng connection na iyon.",
     "mcpScopeTitle": "Saklaw ng koneksyon",
     "mcpScopeOrganization": "Isang organization",
     "mcpScopeBoard": "Isang board",
@@ -1521,6 +1521,7 @@
     "tools": "Mga tool sa connection na ito: get_project (ang organization at ang mga boards nito, o isang board at ang mga list nito), list_tickets (tickets sa connection na ito), at get_ticket (isang ticket sa connection na ito).",
     "provider": "AI assistant",
     "endpoint": "MCP URL",
+    "multipleHint": "Ang URL na ito ay para sa organization o board na napili sa itaas. Para kumonekta ng isa pa, piliin ito, gumawa ng token nito, at magdagdag ng hiwalay na server entry. Hindi kayang saklawin ng isang token ang dalawang organization.",
     "copy": "Kopyahin",
     "copied": "Nakopya",
     "copyError": "Hindi makopya. Piliin at kopyahin nang manu-mano ang halaga.",
@@ -1546,31 +1547,31 @@
     "officialDocs": "Opisyal na mga tagubilin ng {provider}",
     "chatgpt": {
       "intro": "Gumagamit ang ChatGPT ng OAuth. Gumawa ng sarili mong credentials dito; hindi kailangan ng deployment secret.",
-      "step1": "Sa ChatGPT sa web, buksan ang Plugins → + → Add custom MCP server. Ilagay ang MCP URL at piliin ang OAuth.",
+      "step1": "Sa ChatGPT sa web, buksan ang Plugins → + → Add custom MCP server. Ilagay ang MCP URL na ipinapakita rito at piliin ang OAuth. Magdagdag ng hiwalay na connector, gamit ang URL ng saklaw na iyon, para sa bawat karagdagang organization o board.",
       "step2": "Kopyahin ang ChatGPT callback URL sa field sa ibaba at gumawa ng credentials. I-paste ang client ID at secret sa ChatGPT.",
       "step3": "Gumawa at i-install ang plugin. Sa Work chat, mag-type ng @ at piliin ang Kikiboard.",
-      "step4": "Mag-sign in gamit ang parehong account, piliin ang organisasyon o board na pinamamahalaan mo, at aprubahan ang read-only o tahasang hiniling na read/write access."
+      "step4": "Mag-sign in gamit ang parehong account. Aprubahan ang organization o board na pinangalanan ng URL na ito, na read-only o tahasang hiniling na read/write access."
     },
     "claude": {
       "intro": "OAuth ang gamit ng Claude. Gumawa rito ng client ID at secret; walang callback URL na kokopyahin.",
       "step1": "Gumawa ng credentials sa ibaba. Piliin kung makakabasa lang ang Claude o makakasulat din ng tickets.",
-      "step2": "Sa Claude, buksan ang Customize → Connectors → Add custom connector. Ilagay ang MCP URL at buksan ang advanced settings.",
+      "step2": "Sa Claude, buksan ang Customize → Connectors → Add custom connector. Ilagay ang MCP URL na ipinapakita rito at buksan ang advanced settings. Isang connector bawat URL ang iniingatan ng Claude, kaya kailangan ng sariling URL ang bawat organization o board.",
       "step3": "I-paste ang OAuth client ID at secret, pagkatapos ay idagdag ang connector.",
-      "step4": "I-click ang Connect, mag-sign in gamit ang parehong account, piliin ang organisasyon o board na pinamamahalaan mo at aprubahan ang access. Pagkatapos ay i-enable ito sa usapan gamit ang + → Connectors."
+      "step4": "I-click ang Connect, mag-sign in gamit ang parehong account, at aprubahan ang organization o board na pinangalanan ng URL na ito. Pagkatapos ay i-enable ito sa usapan gamit ang + → Connectors."
     },
     "grok": {
       "intro": "Gumamit ng bearer token sa Grok CLI o xAI Remote MCP API. Para sa Grok CLI ang mga hakbang na ito.",
       "step1": "Pumili ng organisasyon o board sa itaas at gumawa ng scoped token.",
       "step2": "Ligtas na itakda ang KIKIBOARD_TOKEN sa shell environment gamit ang nakopyang token.",
-      "step3": "Patakbuhin ang command sa ibaba. Suriin ang koneksyon gamit ang grok mcp list o grok mcp doctor kikiboard.",
+      "step3": "Patakbuhin ang command sa ibaba. Ulitin ito gamit ang ibang pangalan, URL, at token para sa bawat organization o board. Suriin ang mga koneksyon gamit ang grok mcp list.",
       "step4": "Simulan ang Grok CLI at hilinging gamitin ang Kikiboard. Para sa xAI API, ilagay ang MCP URL at Authorization header sa remote MCP tool."
     },
     "gemini": {
       "intro": "Gumamit ng Antigravity o Gemini CLI sa Streamable HTTP configuration sa ibaba. Para sa mga MCP client ang mga hakbang na ito, hindi sa Gemini chat website.",
       "step1": "Pumili ng organisasyon o board sa itaas at gumawa ng scoped token.",
-      "step2": "Idagdag ang configuration sa iyong pribadong ~/.gemini/config/mcp_config.json (o ~/.gemini/settings.json) nang pinapanatili ang kasalukuyang settings.",
+      "step2": "Idagdag ang configuration sa iyong pribadong ~/.gemini/config/mcp_config.json (o ~/.gemini/settings.json) nang pinapanatili ang kasalukuyang settings. Bigyan ang bawat organization o board ng sariling pangalan ng server, URL, at token.",
       "step3": "Palitan ang kiki_YOUR_TOKEN ng nakopyang token. Gumamit ng url para sa Streamable HTTP endpoint na ito.",
-      "step4": "I-refresh ang mga MCP server (o patakbuhin ang /mcp sa Gemini CLI) upang suriin ang Kikiboard, at hilinging ilista ang iyong mga pending tickets."
+      "step4": "I-refresh ang mga MCP server (o i-restart ang Gemini CLI / patakbuhin ang /mcp) upang suriin ang Kikiboard, at hilinging ilista ang iyong mga pending tickets."
     },
     "allowWrite": "Humiling ng read/write access (kailangan mo ring aprubahan ito sa sign-in)",
     "troubleshootingTitle": "Nabigo ang koneksyon o nagbalik ng 401?",

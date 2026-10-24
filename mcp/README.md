@@ -4,11 +4,15 @@ Kikiboard exposes a stateless Streamable HTTP MCP server at:
 
 ```text
 https://YOUR_KIKIBOARD_HOST/api/mcp
+https://YOUR_KIKIBOARD_HOST/api/mcp/org/ORGANIZATION_ID
+https://YOUR_KIKIBOARD_HOST/api/mcp/board/BOARD_ID
 ```
 
 Bearer-header clients can use it directly. ChatGPT requires the OAuth setup
 below; it cannot import the bearer-header JSON configuration. Groq is a model provider rather than an
-MCP host; use it through an agent framework or client that can call MCP tools.
+MCP host; use it through an agent framework or client that can call MCP tools. DeepSeek is also a model
+provider, not an MCP host. When a model runs inside Cursor or another MCP host, that host's server list
+holds the Kikiboard connections.
 
 The same instructions are shown in the app at **Settings → MCP**
 (`/dashboard/settings?tab=mcp`). That screen creates a connection for one
@@ -84,9 +88,24 @@ contains organization tokens only. List board credentials with
 Configure the MCP URL and send the token as an HTTP bearer credential:
 
 ```text
-URL: https://YOUR_KIKIBOARD_HOST/api/mcp
+URL: https://YOUR_KIKIBOARD_HOST/api/mcp/org/ORGANIZATION_ID
 Authorization: Bearer kiki_YOUR_ONE_TIME_TOKEN
 ```
+
+Use the organization URL for an organization token and the board URL for a board token. `POST /api/mcp` remains valid for a connection that was already configured there.
+
+## Connect more than one organization or board
+
+One token still opens one organization, or one board. A second scope is a second connection with its own token. Clients that keep one connector per URL, including Claude and ChatGPT, need a different URL for each connection:
+
+```text
+https://YOUR_KIKIBOARD_HOST/api/mcp/org/ORGANIZATION_ID
+https://YOUR_KIKIBOARD_HOST/api/mcp/board/BOARD_ID
+```
+
+An organization URL accepts only an organization token for that organization. A board URL accepts only a token bound to that board. A token presented on the wrong URL is rejected. Bearer clients add one named server entry per URL. OAuth clients add one connector per URL. Consent for a scoped URL can approve only that organization or board, and the issued access token works only on that URL. An access token issued for `/api/mcp` continues to work only on `/api/mcp`.
+
+Give each connection a distinct name, such as `kikiboard-lyvora` or `kikiboard-checkout`, so the assistant can tell the tools apart. Settings → MCP shows the URL and a copyable entry for the organization or board selected there.
 
 Every connection exposes these read-only tools:
 
@@ -113,7 +132,7 @@ Deploy the OAuth, OAuth-client and MCP change-history migrations and set `NEXT_P
 the canonical HTTPS origin (for example `https://kikiboard.xyz`). End users
 create their own OAuth client in **Settings → MCP → ChatGPT**:
 
-1. In ChatGPT on the web, open Plugins → + → Add custom MCP server. Enter the MCP URL and choose OAuth.
+1. In ChatGPT on the web, open Plugins → + → Add custom MCP server. Enter the MCP URL for that organization or board and choose OAuth. Add another connector, with the other scope's URL, for each additional organization or board.
 2. Copy the exact callback URL displayed by ChatGPT into Kikiboard's ChatGPT callback field.
 3. Select Generate ChatGPT credentials. Kikiboard shows the client ID and a cryptographically random secret once; only the secret hash is stored.
 4. Paste those values into ChatGPT's OAuth configuration. Create and install the plugin, then select it with `@` in a Work chat.
@@ -159,6 +178,7 @@ settings API. In-app setup does not require them. No dynamic registration is
 exposed; clients use `client_secret_post` or `client_secret_basic` and PKCE S256.
 
 The connection uses the same organization/board boundary as bearer credentials.
+Add one connector per organization or board, using that scope's URL. Consent for a scoped URL can approve only that scope.
 Read access is always granted; write access requires a write-enabled client and
 explicit approval on the consent page.
 Authorization codes expire after five minutes and can be exchanged once.
@@ -169,10 +189,12 @@ and revoke its ChatGPT credential to stop access and refresh immediately.
 A board transfer invalidates the board connection.
 
 Discovery is public at `/.well-known/oauth-protected-resource` and
-`/.well-known/oauth-authorization-server`. Authorization starts at
+`/.well-known/oauth-authorization-server`. A scoped URL advertises itself at
+`/.well-known/oauth-protected-resource/api/mcp/org/{organizationId}` or
+`/.well-known/oauth-protected-resource/api/mcp/board/{boardId}`. Authorization starts at
 `/api/mcp/oauth/authorize`, redirects to a Clerk-protected consent page, and
-exchanges codes at `/api/mcp/oauth/token`. Tokens are bound to the canonical
-`/api/mcp` resource. Tool metadata distinguishes read tools from mutation tools.
+exchanges codes at `/api/mcp/oauth/token`. Tokens are bound to the resource URL
+the client requested. Tool metadata distinguishes read tools from mutation tools.
 
 Deployment validation: inspect both discovery documents, complete authorization
 in ChatGPT, call each tool, then revoke the connection and verify subsequent
@@ -187,9 +209,9 @@ and [OAuth requirements](https://developers.openai.com/plugins/build/auth).
 
 Settings → MCP includes separate guides for:
 
-- **Claude custom connectors:** use No sign in and a fixed Authorization bearer request header. Create a scoped token in Kikiboard first, then enable the connector in the conversation. See [Claude instructions](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
-- **Grok CLI / xAI API:** use a scoped bearer token. The guide supplies the Grok CLI add command, connection diagnostics and an API alternative. See [Grok MCP instructions](https://docs.x.ai/build/features/mcp-servers).
-- **Antigravity / Gemini CLI:** use a scoped bearer token and a `url` Streamable HTTP entry in `~/.gemini/config/mcp_config.json` (or `~/.gemini/settings.json`). The guide supplies the JSON and verification step. See [Gemini MCP instructions](https://geminicli.com/docs/tools/mcp-server/).
+- **Claude custom connectors:** use the OAuth guide above. Claude keeps one connector per URL, so each organization or board uses its own MCP URL. See [Claude instructions](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
+- **Grok CLI / xAI API:** use a scoped bearer token. Run `grok mcp add` once per organization or board, with a distinct server name, that scope's URL, and that scope's token. See [Grok MCP instructions](https://docs.x.ai/build/features/mcp-servers).
+- **Antigravity / Gemini CLI:** use a scoped bearer token and a `url` Streamable HTTP entry in `~/.gemini/config/mcp_config.json` (or private Gemini CLI settings). Each organization or board is its own key under `mcpServers`, with its own URL and token. See [Gemini MCP instructions](https://geminicli.com/docs/tools/mcp-server/).
 
 Guides include a test prompt, copyable endpoint/configuration and official documentation links. OAuth client secrets and scoped bearer tokens are separate credentials.
 

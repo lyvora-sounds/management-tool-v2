@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import db from "@/lib/db";
 import { isBoardAdmin, readableBoardWhere } from "@/lib/boardAccess";
 import { issueAuthorizationCode } from "@/lib/mcp/oauth";
-import { authorizationCallback, oauthClientName } from "@/lib/mcp/oauthConfig";
+import { authorizationCallback, filterConsentScopes, oauthClientName, parseMcpResource } from "@/lib/mcp/oauthConfig";
 
 export const dynamic = "force-dynamic";
 export const metadata = { referrer: "no-referrer" as const, robots: { index: false, follow: false } };
@@ -39,6 +39,12 @@ export default async function McpAuthorizePage({ searchParams }: {
   });
   const boards = (await Promise.all(readableBoards.map(async (board) =>
     await isBoardAdmin(user.id, board.id) ? board : null))).filter((board) => board !== null);
+  const audience = parseMcpResource(authorization.resource);
+  if (!audience) return <p className="p-6">{t("invalidRequest")}</p>;
+  const visible = filterConsentScopes(audience, organizations.map(({ organization }) => organization), boards);
+  const lockedOrganization = audience.kind === "organization" && visible.organizations.length === 1 ? visible.organizations[0] : null;
+  const lockedBoard = audience.kind === "board" && visible.boards.length === 1 ? visible.boards[0] : null;
+  const lockedSelection = lockedOrganization ? `organization:${lockedOrganization.id}` : lockedBoard ? `board:${lockedBoard.id}` : "";
 
   async function consent(form: FormData) {
     "use server";
@@ -58,7 +64,7 @@ export default async function McpAuthorizePage({ searchParams }: {
     redirect(authorizationCallback(validated, { code }));
   }
 
-  const hasOptions = organizations.length > 0 || boards.length > 0;
+  const hasOptions = visible.organizations.length > 0 || visible.boards.length > 0;
   return (
     <div className="mx-auto max-w-xl p-6 sm:p-10">
       <div className="space-y-5 rounded-xl border bg-card p-6 shadow-sm">
@@ -68,15 +74,22 @@ export default async function McpAuthorizePage({ searchParams }: {
         <form action={consent} className="space-y-5">
           {hasOptions ? <>
             <label className="block text-sm font-medium" htmlFor="mcp-oauth-selection">{t("selection")}</label>
-            <select required id="mcp-oauth-selection" name="selection" defaultValue="" className="w-full rounded-md border bg-background p-2">
+            {lockedSelection ? <>
+              <input type="hidden" name="selection" value={lockedSelection} />
+              <p id="mcp-oauth-selection" className="rounded-md border bg-background p-2 text-sm">
+                {lockedOrganization
+                  ? t("organization", { name: lockedOrganization.name })
+                  : t("board", { name: lockedBoard!.title, organization: lockedBoard!.organization.name })}
+              </p>
+            </> : <select required id="mcp-oauth-selection" name="selection" defaultValue="" className="w-full rounded-md border bg-background p-2">
               <option value="" disabled>{t("choose")}</option>
-              {organizations.map(({ organization }) => <option key={organization.id} value={`organization:${organization.id}`}>
+              {visible.organizations.map((organization) => <option key={organization.id} value={`organization:${organization.id}`}>
                 {t("organization", { name: organization.name })}
               </option>)}
-              {boards.map((board) => <option key={board.id} value={`board:${board.id}`}>
+              {visible.boards.map((board) => <option key={board.id} value={`board:${board.id}`}>
                 {t("board", { name: board.title, organization: board.organization.name })}
               </option>)}
-            </select>
+            </select>}
           </> : <p className="text-sm">{t("noScopes")}</p>}
           <p className="text-sm text-muted-foreground">{t("revoke", { client })}</p>
           {authorization.writeRequested && <label className="flex gap-2 text-sm"><input type="checkbox" name="writeAccess" />{t("writeAccess")}</label>}
