@@ -49,7 +49,8 @@ async function patchChildList(
 
 /**
  * Keep parent/child custom values consistent across tasks.
- * Values are task IDs (single ID for parent, JSON array of IDs for child).
+ * Values are task IDs. Parent and child both store a JSON array of IDs;
+ * a legacy parent value may still be a single raw ID.
  * Does not rewrite the field that was just saved.
  *
  * Recibe el cliente de transacción del llamante en lugar de abrir la suya:

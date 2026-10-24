@@ -83,9 +83,9 @@ export function TaskHierarchy({
   const layout = useMemo(() => hierarchyRanks(nodes, focusId), [nodes, focusId]);
   if (!layout || !layout.ranks.length) return null;
 
-  const { root, ranks, cyclic } = layout;
+  const { roots, ranks, cyclic } = layout;
   const currentRank = ranks.findIndex((rank) => rank.some((node) => node.id === focusId));
-  const isRoot = !cyclic && root.id === focusId;
+  const isRoot = !cyclic && roots.some((node) => node.id === focusId);
   const summary = isRoot ? t("hierarchyOrigin", { count: ranks.length }) : t("hierarchyStep", { step: currentRank + 1, total: ranks.length });
 
   const toggle = () => {
@@ -110,7 +110,7 @@ export function TaskHierarchy({
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-2">
             <span className="text-xs font-semibold">{t("hierarchyTitle")}</span>
-            <span className="truncate text-xs text-muted-foreground">{root.title}</span>
+            <span className="truncate text-xs text-muted-foreground">{roots.map((node) => node.title).join(" · ")}</span>
           </span>
           <span className="mt-1.5 flex gap-1" aria-hidden>
             {ranks.map((rank, index) => {
@@ -143,7 +143,11 @@ export function TaskHierarchy({
       {open && (
         <div className="max-h-72 overflow-y-auto border-t px-2 py-2">
           <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("hierarchyOriginLabel")}</p>
-          <StepRow node={root} current={isRoot} onNavigate={onNavigate} />
+          <div className="space-y-1">
+            {roots.map((node) => (
+              <StepRow key={node.id} node={node} current={!cyclic && node.id === focusId} onNavigate={onNavigate} />
+            ))}
+          </div>
           <ol className="mt-1">
             {ranks.map((rank, index) => (
               <li key={index} className="relative flex gap-2 pt-1">

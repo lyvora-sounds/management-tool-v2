@@ -66,7 +66,7 @@ Attachments are private blobs. Download goes through `/api/tasks/[taskId]/attach
 
 The **Parent ticket** and **Child ticket** custom fields define the task dependency graph (both fields support one or multiple tickets). Saving either field keeps the other side in sync.
 
-The highest ancestor is the path origin (`ORIGEN`), including an archived ancestor. Its direct children are step `01`, in the stored child list order. Parallel tasks on the same step appear side-by-side in a two-column layout, and a downstream ticket that is blocked by multiple parents is placed on the step after all of its blocking parents complete. Archived tickets stay in the path and are drawn in muted type. A ticket with no parent and no children draws nothing. A cycle stops at the repeated ticket.
+Every origin of the linked tickets is a path origin (`ORIGEN`), including an archived ancestor. Origins that do not share a parent stay in the same path. Their direct children are step `01`, in the stored child list order. Parallel tasks on the same step appear side-by-side in a two-column layout, and a downstream ticket that is blocked by multiple parents is placed on the step after all of its blocking parents complete, including parents that belong to another origin. Archived tickets stay in the path and are drawn in muted type. A ticket with no parent and no children draws nothing. A cycle stops at the repeated ticket. Separate paths that never meet keep their own step counts.
 
 ## Dashboard and calendar reads
 
