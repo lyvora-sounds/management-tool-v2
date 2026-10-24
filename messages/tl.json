@@ -731,7 +731,7 @@
     "moveToList": "Ilipat sa list",
     "noComments": "Wala pang comments",
     "commentPlaceholder": "Sumulat ng comment...",
-    "selectParent": "Pumili ng parent ticket...",
+    "selectParent": "Pumili ng parent ticket(s)...",
     "selectChildren": "Pumili ng child ticket(s)...",
     "hierarchyKicker": "LANDAS",
     "hierarchyNote": "Ang mga tickets sa parehong hakbang ay sabay umuusad.",
@@ -1566,11 +1566,11 @@
       "step4": "Simulan ang Grok CLI at hilinging gamitin ang Kikiboard. Para sa xAI API, ilagay ang MCP URL at Authorization header sa remote MCP tool."
     },
     "gemini": {
-      "intro": "Gumamit ng Gemini CLI sa Streamable HTTP configuration sa ibaba. Para sa CLI ang mga hakbang na ito, hindi sa Gemini chat website.",
+      "intro": "Gumamit ng Antigravity o Gemini CLI sa Streamable HTTP configuration sa ibaba. Para sa mga MCP client ang mga hakbang na ito, hindi sa Gemini chat website.",
       "step1": "Pumili ng organisasyon o board sa itaas at gumawa ng scoped token.",
-      "step2": "Idagdag ang configuration sa iyong pribadong ~/.gemini/settings.json nang pinapanatili ang kasalukuyang settings.",
-      "step3": "Palitan ang kiki_YOUR_TOKEN ng nakopyang token. Gumamit ng httpUrl para sa Streamable HTTP endpoint na ito.",
-      "step4": "I-restart ang Gemini CLI, patakbuhin ang /mcp upang suriin ang Kikiboard, at hilinging ilista ang iyong mga pending tickets."
+      "step2": "Idagdag ang configuration sa iyong pribadong ~/.gemini/config/mcp_config.json (o ~/.gemini/settings.json) nang pinapanatili ang kasalukuyang settings.",
+      "step3": "Palitan ang kiki_YOUR_TOKEN ng nakopyang token. Gumamit ng url para sa Streamable HTTP endpoint na ito.",
+      "step4": "I-refresh ang mga MCP server (o patakbuhin ang /mcp sa Gemini CLI) upang suriin ang Kikiboard, at hilinging ilista ang iyong mga pending tickets."
     },
     "allowWrite": "Humiling ng read/write access (kailangan mo ring aprubahan ito sa sign-in)",
     "troubleshootingTitle": "Nabigo ang koneksyon o nagbalik ng 401?",

@@ -17,16 +17,28 @@ function initialOpen() {
   }
 }
 
-function StepRow({ node, current, onNavigate }: { node: HierarchyNode; current?: boolean; onNavigate: (taskId: string) => void }) {
+function StepRow({
+  node,
+  current,
+  parallel,
+  onNavigate,
+}: {
+  node: HierarchyNode;
+  current?: boolean;
+  parallel?: boolean;
+  onNavigate: (taskId: string) => void;
+}) {
   const t = useTranslations("task");
   return (
     <button
       type="button"
       onClick={() => onNavigate(node.id)}
       aria-current={current ? "step" : undefined}
+      title={parallel ? node.title : undefined}
       className={cn(
-        "flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted",
-        current && "bg-primary/10 ring-1 ring-primary/30",
+        "flex w-full items-start gap-2 rounded-lg text-left transition-colors hover:bg-muted",
+        parallel ? "h-full border border-border/60 bg-background/40 px-3 py-2" : "px-2 py-1.5",
+        current && "border-primary/20 bg-primary/10 ring-1 ring-primary/30",
         node.archived && "opacity-60",
       )}
     >
@@ -36,7 +48,16 @@ function StepRow({ node, current, onNavigate }: { node: HierarchyNode; current?:
         <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", getStatusTheme(node.listTitle ?? "").dot)} aria-hidden />
       )}
       <span className="min-w-0 flex-1">
-        <span className={cn("block text-sm leading-snug", current && "font-semibold", node.completed && "text-muted-foreground")}>{node.title}</span>
+        <span
+          className={cn(
+            "block text-sm leading-snug",
+            parallel && "line-clamp-2",
+            current && "font-semibold",
+            node.completed && "text-muted-foreground",
+          )}
+        >
+          {node.title}
+        </span>
         {node.listTitle && <span className="block text-[11px] text-muted-foreground">{node.listTitle}</span>}
       </span>
     </button>
@@ -92,15 +113,27 @@ export function TaskHierarchy({
             <span className="truncate text-xs text-muted-foreground">{root.title}</span>
           </span>
           <span className="mt-1.5 flex gap-1" aria-hidden>
-            {ranks.map((rank, index) => (
-              <span
-                key={index}
-                className={cn(
-                  "h-1 flex-1 rounded-full",
-                  index === currentRank ? "bg-primary" : rank.every((node) => node.completed) ? "bg-emerald-500" : "bg-muted-foreground/25",
-                )}
-              />
-            ))}
+            {ranks.map((rank, index) => {
+              const completedCount = rank.filter((node) => node.completed).length;
+              const allDone = completedCount === rank.length;
+              const partialDone = completedCount > 0 && !allDone;
+              return (
+                <span
+                  key={index}
+                  className={cn(
+                    "relative h-1 flex-1 overflow-hidden rounded-full",
+                    index === currentRank ? "bg-primary" : allDone ? "bg-emerald-500" : "bg-muted-foreground/25",
+                  )}
+                >
+                  {index !== currentRank && partialDone && (
+                    <span
+                      className="block h-full rounded-full bg-emerald-500"
+                      style={{ width: `${Math.round((completedCount / rank.length) * 100)}%` }}
+                    />
+                  )}
+                </span>
+              );
+            })}
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-[11px] font-medium tabular-nums ring-1 ring-border">{summary}</span>
@@ -118,9 +151,20 @@ export function TaskHierarchy({
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 {index < ranks.length - 1 && <span aria-hidden className="absolute left-3 top-8 -bottom-1 w-px bg-border" />}
-                <div className="min-w-0 flex-1">
+                <div
+                  className={cn(
+                    "min-w-0 flex-1",
+                    rank.length > 1 && "grid grid-cols-1 gap-2 sm:grid-cols-2",
+                  )}
+                >
                   {rank.map((node) => (
-                    <StepRow key={node.id} node={node} current={node.id === focusId} onNavigate={onNavigate} />
+                    <StepRow
+                      key={node.id}
+                      node={node}
+                      parallel={rank.length > 1}
+                      current={node.id === focusId}
+                      onNavigate={onNavigate}
+                    />
                   ))}
                 </div>
               </li>

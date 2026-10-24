@@ -442,7 +442,7 @@ export function McpSettings() {
         )}
       </div>
 
-      <McpConnectionGuide endpoint={endpoint} />
+      <McpConnectionGuide endpoint={endpoint} scopeName={scope === "board" ? board?.title : organization?.name} />
       {organization && allowed && (
         <McpChangeHistory key={`${organization.id}:${scope}:${board?.id ?? ""}`} organizationId={organization.id} boardId={scope === "board" ? board?.id ?? null : null} />
       )}

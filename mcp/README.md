@@ -189,7 +189,7 @@ Settings → MCP includes separate guides for:
 
 - **Claude custom connectors:** use No sign in and a fixed Authorization bearer request header. Create a scoped token in Kikiboard first, then enable the connector in the conversation. See [Claude instructions](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
 - **Grok CLI / xAI API:** use a scoped bearer token. The guide supplies the Grok CLI add command, connection diagnostics and an API alternative. See [Grok MCP instructions](https://docs.x.ai/build/features/mcp-servers).
-- **Gemini CLI:** use a scoped bearer token and an `httpUrl` Streamable HTTP entry in private Gemini CLI settings. The guide supplies the JSON and `/mcp` verification step. These instructions target Gemini CLI. See [Gemini MCP instructions](https://geminicli.com/docs/tools/mcp-server/).
+- **Antigravity / Gemini CLI:** use a scoped bearer token and a `url` Streamable HTTP entry in `~/.gemini/config/mcp_config.json` (or `~/.gemini/settings.json`). The guide supplies the JSON and verification step. See [Gemini MCP instructions](https://geminicli.com/docs/tools/mcp-server/).
 
 Guides include a test prompt, copyable endpoint/configuration and official documentation links. OAuth client secrets and scoped bearer tokens are separate credentials.
 

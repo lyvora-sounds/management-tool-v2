@@ -5,7 +5,7 @@ import { canEditBoard, getBoardRole } from "@/lib/boardAccess";
 import { canEditBoard as roleCanEdit, canReadBoard as roleCanRead } from "@/lib/boardRoles";
 import { ensureDefaultCustomFields } from "@/lib/ensureDefaultCustomFields";
 import { syncParentChildRelationships } from "@/lib/customValuesSync";
-import { isParentFieldKey, isTicketRefKey } from "@/lib/customFieldsDefaults";
+import { isTicketRefKey } from "@/lib/customFieldsDefaults";
 import { parseListValue } from "@/lib/customValueUtils";
 
 export async function GET(
@@ -107,9 +107,7 @@ export async function PATCH(
   // acepta texto libre, y la UI acaba mostrando cuids en crudo donde debería
   // ir el título de un ticket.
   if (isTicketRefKey(customField.defaultKey) && valStr) {
-    const referencedIds = isParentFieldKey(customField.defaultKey)
-      ? [valStr]
-      : parseListValue(valStr);
+    const referencedIds = parseListValue(valStr);
 
     if (referencedIds.includes(taskId)) {
       return NextResponse.json(

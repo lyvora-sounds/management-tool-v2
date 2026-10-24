@@ -136,15 +136,15 @@ export async function applyTicketRelations(tx: Prisma.TransactionClient, boardId
     }
     const oldValue = (await tx.customFieldValue.findUnique({ where: { taskId_customFieldId: { taskId: task.id, customFieldId: field.id } } }))?.value ?? null;
     if (isTicketRefKey(field.defaultKey)) {
-      const newIds = isParentFieldKey(field.defaultKey) ? row.value ? [row.value] : [] : parseListValue(row.value);
+      const newIds = parseListValue(row.value);
       if (newIds.includes(task.id) || new Set(newIds).size !== newIds.length) throw new McpWriteError("Invalid ticket references");
       if ((await tx.task.count({ where: { id: { in: newIds }, list: { boardId } } })) !== newIds.length) throw new McpWriteError("Referenced tickets must belong to the same board");
-      const oldIds = isParentFieldKey(field.defaultKey) ? oldValue ? [oldValue] : [] : parseListValue(oldValue);
+      const oldIds = parseListValue(oldValue);
       for (const relatedId of new Set([...oldIds, ...newIds])) {
         const related = await tx.task.findFirst({ where: { id: relatedId, list: { boardId } }, select: { id: true, customValues: { where: { customField: { defaultKey: "parent" } }, select: { value: true } } } });
         if (!related) continue;
         await capture(relatedId);
-        if (!isParentFieldKey(field.defaultKey)) for (const value of related.customValues) if (value.value) await capture(value.value);
+        if (!isParentFieldKey(field.defaultKey)) for (const value of related.customValues) for (const parentId of parseListValue(value.value)) await capture(parentId);
       }
     }
     await tx.customFieldValue.upsert({ where: { taskId_customFieldId: { taskId: task.id, customFieldId: field.id } }, update: { value: row.value }, create: { taskId: task.id, customFieldId: field.id, value: row.value } });

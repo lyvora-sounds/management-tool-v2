@@ -19,7 +19,19 @@ const docs = {
   gemini: "https://geminicli.com/docs/tools/mcp-server/",
 };
 
-export function McpConnectionGuide({ endpoint }: { endpoint: string }) {
+function toServerKey(scopeName?: string) {
+  if (!scopeName) return "kikiboard";
+  const slug = scopeName
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+  return slug ? `kikiboard-${slug}` : "kikiboard";
+}
+
+export function McpConnectionGuide({ endpoint, scopeName }: { endpoint: string; scopeName?: string }) {
   const t = useTranslations("mcpGuide");
   const [provider, setProvider] = useState<Provider>("chatgpt");
   const [activeStep, setActiveStep] = useState<number | null>(1);
@@ -78,10 +90,11 @@ export function McpConnectionGuide({ endpoint }: { endpoint: string }) {
     finally { setBusy(false); }
   }
 
+  const serverKey = toServerKey(scopeName);
   const snippet = provider === "grok"
-    ? `grok mcp add --transport http kikiboard ${endpoint} --header "Authorization: Bearer \${KIKIBOARD_TOKEN}"`
+    ? `grok mcp add --transport http ${serverKey} ${endpoint} --header "Authorization: Bearer \${KIKIBOARD_TOKEN}"`
     : provider === "gemini"
-      ? JSON.stringify({ mcpServers: { kikiboard: { httpUrl: endpoint, headers: { Authorization: "Bearer kiki_YOUR_TOKEN" } } } }, null, 2)
+      ? JSON.stringify({ mcpServers: { [serverKey]: { url: endpoint, headers: { Authorization: "Bearer kiki_YOUR_TOKEN" } } } }, null, 2)
       : `Authorization: Bearer kiki_YOUR_TOKEN`;
 
   return <section className="overflow-hidden rounded-xl border bg-card" aria-label={t("title")}>

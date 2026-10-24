@@ -45,10 +45,12 @@ export async function GET(
   const nodes: HierarchyNode[] = tasks.map((row) => {
     const parent = row.customValues.find((value) => value.customField.defaultKey === "parent")?.value ?? null;
     const child = row.customValues.find((value) => value.customField.defaultKey === "child")?.value ?? null;
+    const parentIds = parseListValue(parent);
     return {
       id: row.id,
       title: row.title,
-      parentId: parent || null,
+      parentId: parentIds[0] ?? null,
+      parentIds,
       childIds: parseListValue(child),
       archived: row.archived,
     };

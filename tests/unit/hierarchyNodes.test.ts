@@ -9,12 +9,20 @@ describe("hierarchyNodesFromLists", () => {
       { title: "To do", tasks: [{ id: "a", title: "A", completed: false, archived: false, customValues: [cv("parent", "root"), cv("child", '["b","c"]')] }] },
       { title: "Done", tasks: [{ id: "b", title: "B", completed: true, archived: true }] },
     ]);
-    expect(nodes[0]).toEqual({ id: "a", title: "A", parentId: "root", childIds: ["b", "c"], archived: false, completed: false, listTitle: "To do" });
-    expect(nodes[1]).toMatchObject({ id: "b", parentId: null, childIds: [], archived: true, completed: true, listTitle: "Done" });
+    expect(nodes[0]).toEqual({ id: "a", title: "A", parentId: "root", parentIds: ["root"], childIds: ["b", "c"], archived: false, completed: false, listTitle: "To do" });
+    expect(nodes[1]).toMatchObject({ id: "b", parentId: null, parentIds: [], childIds: [], archived: true, completed: true, listTitle: "Done" });
+  });
+  it("parses multiple parent ticket IDs when a task is blocked by parallel tasks", () => {
+    const [node] = hierarchyNodesFromLists([
+      { title: "To do", tasks: [{ id: "release", title: "Release", customValues: [cv("parent", '["net","docker","secrets"]')] }] },
+    ]);
+    expect(node.parentId).toBe("net");
+    expect(node.parentIds).toEqual(["net", "docker", "secrets"]);
   });
   it("treats empty relation values as no relation and ignores other custom fields", () => {
     const [node] = hierarchyNodesFromLists([{ title: "L", tasks: [{ id: "a", title: "A", customValues: [cv("parent", ""), cv("child", ""), cv("story_points", "5")] }] }]);
     expect(node.parentId).toBeNull();
+    expect(node.parentIds).toEqual([]);
     expect(node.childIds).toEqual([]);
   });
 });
