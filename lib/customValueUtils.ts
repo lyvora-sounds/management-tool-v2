@@ -1,3 +1,7 @@
+export function hasRepeatedTicketRef(ids: string[]): boolean {
+  return new Set(ids).size !== ids.length;
+}
+
 export function parseListValue(val: string | null | undefined): string[] {
   if (!val) return [];
   try {
@@ -25,10 +29,7 @@ export function displayCustomFieldValue(
   defaultKey: string | null | undefined,
   titleById?: Map<string, string>,
 ): string {
-  if (defaultKey === "parent") {
-    return titleById?.get(value) ?? value;
-  }
-  if (defaultKey === "child") {
+  if (defaultKey === "parent" || defaultKey === "child") {
     return parseListValue(value)
       .map((id) => titleById?.get(id) ?? id)
       .join(", ");

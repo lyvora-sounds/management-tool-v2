@@ -15,10 +15,12 @@ export function hierarchyNodesFromLists(lists: ListLike[]): HierarchyNode[] {
   return lists.flatMap((list) =>
     list.tasks.map((task) => {
       const value = (key: string) => task.customValues?.find((cv) => cv.customField?.defaultKey === key)?.value ?? null;
+      const parentIds = parseListValue(value("parent"));
       return {
         id: task.id,
         title: task.title,
-        parentId: value("parent") || null,
+        parentId: parentIds[0] ?? null,
+        parentIds,
         childIds: parseListValue(value("child")),
         archived: Boolean(task.archived),
         completed: Boolean(task.completed),

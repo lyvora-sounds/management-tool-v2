@@ -2,6 +2,7 @@ export type HierarchyNode = {
   id: string;
   title: string;
   parentId: string | null;
+  parentIds?: string[];
   childIds: string[];
   archived?: boolean;
   completed?: boolean;
@@ -37,6 +38,37 @@ function fitText(value: string, maxChars: number) {
   return `${chars.slice(0, Math.max(1, maxChars - 1)).join("").trimEnd()}…`;
 }
 
+function directParentIds(node: HierarchyNode): string[] {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  const add = (id: string | null | undefined) => {
+    if (!id || id === node.id || seen.has(id)) return;
+    seen.add(id);
+    ids.push(id);
+  };
+  for (const id of node.parentIds ?? []) add(id);
+  add(node.parentId);
+  return ids;
+}
+
+function parentsOf(
+  node: HierarchyNode,
+  byId: Map<string, HierarchyNode>,
+) {
+  const ordered: HierarchyNode[] = [];
+  const seen = new Set<string>();
+  const add = (parent: HierarchyNode | undefined) => {
+    if (!parent || parent.id === node.id || seen.has(parent.id)) return;
+    seen.add(parent.id);
+    ordered.push(parent);
+  };
+  for (const id of directParentIds(node)) add(byId.get(id));
+  for (const candidate of byId.values()) {
+    if (candidate.childIds.includes(node.id)) add(candidate);
+  }
+  return ordered;
+}
+
 function childrenOf(
   node: HierarchyNode,
   byId: Map<string, HierarchyNode>,
@@ -51,20 +83,69 @@ function childrenOf(
   };
   for (const id of node.childIds) add(byId.get(id));
   for (const candidate of byId.values()) {
-    if (candidate.parentId === node.id) add(candidate);
+    if (directParentIds(candidate).includes(node.id)) add(candidate);
   }
   return ordered;
 }
 
-function climb(start: HierarchyNode, byId: Map<string, HierarchyNode>) {
-  const seen = new Set<string>([start.id]);
-  let current = start;
-  while (current.parentId && byId.has(current.parentId)) {
-    if (seen.has(current.parentId)) return { root: current, cyclic: true };
-    seen.add(current.parentId);
-    current = byId.get(current.parentId)!;
+function linkedNodes(start: HierarchyNode, byId: Map<string, HierarchyNode>) {
+  const members: HierarchyNode[] = [];
+  const seen = new Set<string>();
+  const queue = [start];
+  while (queue.length) {
+    const node = queue.shift()!;
+    if (seen.has(node.id)) continue;
+    seen.add(node.id);
+    members.push(node);
+    for (const next of [...parentsOf(node, byId), ...childrenOf(node, byId, new Set())]) {
+      if (!seen.has(next.id)) queue.push(next);
+    }
   }
-  return { root: current, cyclic: false };
+  return members;
+}
+
+function ranksForMembers(
+  members: HierarchyNode[],
+  byId: Map<string, HierarchyNode>,
+  order: HierarchyNode[],
+  focus: HierarchyNode,
+) {
+  const memberIds = new Set(members.map((node) => node.id));
+  const roots = order.filter((node) => memberIds.has(node.id) && parentsOf(node, byId).length === 0);
+  if (!roots.length) {
+    return { roots: [focus], root: focus, cyclic: true, ranks: ranksFrom([focus], byId, new Set()) };
+  }
+  const placed = new Set(roots.map((node) => node.id));
+  const seen = new Set<string>();
+  const frontier: HierarchyNode[] = [];
+  for (const root of roots) {
+    for (const child of childrenOf(root, byId, placed)) {
+      if (seen.has(child.id)) continue;
+      seen.add(child.id);
+      frontier.push(child);
+    }
+  }
+  return { roots, root: roots[0], cyclic: false, ranks: ranksFrom(frontier, byId, placed) };
+}
+
+function collectReachable(
+  frontier: HierarchyNode[],
+  byId: Map<string, HierarchyNode>,
+  initialPlaced: Set<string>,
+) {
+  const reachable = new Set<string>();
+  const visited = new Set<string>(initialPlaced);
+  const queue = [...frontier];
+  while (queue.length) {
+    const node = queue.shift()!;
+    if (visited.has(node.id)) continue;
+    visited.add(node.id);
+    reachable.add(node.id);
+    for (const child of childrenOf(node, byId, visited)) {
+      queue.push(child);
+    }
+  }
+  return reachable;
 }
 
 function ranksFrom(
@@ -72,54 +153,66 @@ function ranksFrom(
   byId: Map<string, HierarchyNode>,
   placed: Set<string>,
 ) {
+  const reachable = collectReachable(frontier, byId, placed);
   const ranks: HierarchyNode[][] = [];
   let current = frontier;
   while (current.length) {
-    const rank = current.filter((node) => !placed.has(node.id));
-    if (!rank.length) break;
+    const seen = new Set<string>();
+    const pending = current.filter((node) => {
+      if (placed.has(node.id) || seen.has(node.id)) return false;
+      seen.add(node.id);
+      return true;
+    });
+    if (!pending.length) break;
+
+    const ready = pending.filter((node) =>
+      parentsOf(node, byId).every((parent) => !reachable.has(parent.id) || placed.has(parent.id)),
+    );
+    const rank = ready.length > 0 ? ready : pending;
+    const rankIds = new Set(rank.map((node) => node.id));
     for (const node of rank) placed.add(node.id);
     ranks.push(rank);
-    current = rank.flatMap((node) => childrenOf(node, byId, placed));
+
+    const waiting = pending.filter((node) => !rankIds.has(node.id));
+    current = [
+      ...waiting,
+      ...rank.flatMap((node) => childrenOf(node, byId, placed)),
+    ];
   }
   return ranks;
 }
 
 /**
- * Camino de un ticket: la raíz de su árbol y los pasos (rangos) bajo ella. Los hermanos comparten
- * paso y un hijo anidado es el paso siguiente. La raíz no es un paso: es el título del recorrido.
- * Con un ciclo, la raíz es el primer ticket repetido y `cyclic` es true.
+ * Camino de un ticket: las raíces de su grafo y los pasos bajo ellas. Los hermanos comparten
+ * paso. Un ticket espera a todos sus padres, también si esos padres cuelgan de otra raíz.
+ * Las raíces no son un paso: son el título del recorrido. Sin raíz (ciclo puro), `cyclic` es true.
  */
 export function hierarchyRanks(nodes: HierarchyNode[], focusId: string | undefined) {
   const focus = focusId ? nodes.find((node) => node.id === focusId) : undefined;
   if (!focus) return null;
   const byId = new Map(nodes.map((node) => [node.id, node]));
-  const { root, cyclic } = climb(focus, byId);
-  const placed = new Set<string>();
-  let ranks: HierarchyNode[][];
-  if (cyclic) {
-    ranks = ranksFrom([root], byId, placed);
-  } else {
-    placed.add(root.id);
-    ranks = ranksFrom(childrenOf(root, byId, placed), byId, placed);
-  }
-  return { focus, root, cyclic, ranks };
+  const members = linkedNodes(focus, byId);
+  return { focus, ...ranksForMembers(members, byId, nodes, focus) };
 }
 
 export type HierarchyStep = { step: number; total: number; rootId: string };
 
 /**
- * Número de paso de cada ticket del tablero que cuelga de una raíz, el mismo que dibuja el diagrama.
- * Las raíces no se numeran. Si un ticket aparece bajo dos raíces, vale la primera.
+ * Número de paso de cada ticket, el mismo que dibuja el diagrama de su grafo.
+ * Las raíces no se numeran. Si un ticket está bloqueado desde otra raíz, el paso es el más largo.
  */
 export function hierarchySteps(nodes: HierarchyNode[]): Map<string, HierarchyStep> {
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const steps = new Map<string, HierarchyStep>();
-  for (const root of nodes) {
-    if (root.parentId && byId.has(root.parentId)) continue;
-    const placed = new Set<string>([root.id]);
-    const ranks = ranksFrom(childrenOf(root, byId, placed), byId, placed);
+  const seen = new Set<string>();
+  for (const start of nodes) {
+    if (seen.has(start.id)) continue;
+    const members = linkedNodes(start, byId);
+    for (const member of members) seen.add(member.id);
+    const { root, cyclic, ranks } = ranksForMembers(members, byId, nodes, start);
+    if (cyclic) continue;
     ranks.forEach((rank, index) => {
-      for (const node of rank) if (!steps.has(node.id)) steps.set(node.id, { step: index + 1, total: ranks.length, rootId: root.id });
+      for (const node of rank) steps.set(node.id, { step: index + 1, total: ranks.length, rootId: root.id });
     });
   }
   return steps;
@@ -128,14 +221,14 @@ export function hierarchySteps(nodes: HierarchyNode[]): Map<string, HierarchySte
 export function hierarchySvg(nodes: HierarchyNode[], options: DiagramOptions = {}): string | null {
   const layout = hierarchyRanks(nodes, options.focusId);
   if (!layout) return null;
-  const { focus, root, cyclic, ranks } = layout;
+  const { focus, roots, cyclic, ranks } = layout;
   if (!ranks.length) return null;
 
   const kicker = options.kicker ?? "PATH";
   const note = options.note ?? "Siblings on one step run together.";
-  const heading = cyclic ? focus : root;
-  const title = heading.title;
-  const titleFill = heading.archived ? "#5E7695" : "#13233C";
+  const heading = cyclic ? [focus] : roots;
+  const title = heading.map((node) => node.title).join(" · ");
+  const titleFill = heading.every((node) => node.archived) ? "#5E7695" : "#13233C";
   const nodeWidth = 200;
   const nodeGap = 28;
   const rankHeight = 118;

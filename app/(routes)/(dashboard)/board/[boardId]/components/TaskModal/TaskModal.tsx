@@ -449,7 +449,7 @@ export function TaskModal({
       />
 
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="sm:max-w-6xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-7xl xl:max-w-[88rem] p-0 overflow-hidden">
           <DialogHeader className="flex flex-row items-center gap-2 px-4 py-3 border-b bg-muted/50">
             <DialogTitle className="text-sm font-medium text-muted-foreground flex-1 truncate flex items-center gap-2">
               <DropdownMenu>

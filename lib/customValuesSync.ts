@@ -49,7 +49,8 @@ async function patchChildList(
 
 /**
  * Keep parent/child custom values consistent across tasks.
- * Values are task IDs (single ID for parent, JSON array of IDs for child).
+ * Values are task IDs. Parent and child both store a JSON array of IDs;
+ * a legacy parent value may still be a single raw ID.
  * Does not rewrite the field that was just saved.
  *
  * Recibe el cliente de transacción del llamante en lugar de abrir la suya:
@@ -90,90 +91,27 @@ export async function syncParentChildRelationships(
 
     if (!parentField || !childField) return;
 
-    if (isParentFieldKey(customField.defaultKey)) {
-      const oldParentId = oldValue || null;
-      const newParentId = newValue || null;
-      if (oldParentId === newParentId) return;
+    const oldIds = parseListValue(oldValue);
+    const newIds = parseListValue(newValue);
+    const removed = oldIds.filter((id) => !newIds.includes(id));
+    const added = newIds.filter((id) => !oldIds.includes(id));
+    const targetFieldId = isParentFieldKey(customField.defaultKey)
+      ? childField.id
+      : parentField.id;
 
-      if (oldParentId && (await taskOnBoard(tx, oldParentId, boardId))) {
-        await patchChildList(tx, oldParentId, childField.id, (ids) =>
-          ids.filter((id) => id !== currentTaskId),
-        );
-      }
-
-      if (
-        newParentId &&
-        newParentId !== currentTaskId &&
-        (await taskOnBoard(tx, newParentId, boardId))
-      ) {
-        await patchChildList(tx, newParentId, childField.id, (ids) =>
-          ids.includes(currentTaskId) ? ids : [...ids, currentTaskId],
-        );
-      }
-      return;
+    for (const relatedId of removed) {
+      if (!(await taskOnBoard(tx, relatedId, boardId))) continue;
+      await patchChildList(tx, relatedId, targetFieldId, (ids) =>
+        ids.filter((id) => id !== currentTaskId),
+      );
     }
 
-    const oldChildren = parseListValue(oldValue);
-    const newChildren = parseListValue(newValue);
-    const removed = oldChildren.filter((id) => !newChildren.includes(id));
-    const added = newChildren.filter((id) => !oldChildren.includes(id));
-
-    for (const childId of removed) {
-      if (!(await taskOnBoard(tx, childId, boardId))) continue;
-      const parentVal = await tx.customFieldValue.findUnique({
-        where: {
-          taskId_customFieldId: {
-            taskId: childId,
-            customFieldId: parentField.id,
-          },
-        },
-      });
-      if (parentVal?.value === currentTaskId) {
-        await tx.customFieldValue.update({
-          where: { id: parentVal.id },
-          data: { value: null },
-        });
-      }
-    }
-
-    for (const childId of added) {
-      if (childId === currentTaskId) continue;
-      if (!(await taskOnBoard(tx, childId, boardId))) continue;
-
-      const parentVal = await tx.customFieldValue.findUnique({
-        where: {
-          taskId_customFieldId: {
-            taskId: childId,
-            customFieldId: parentField.id,
-          },
-        },
-      });
-      const previousParentId = parentVal?.value ?? null;
-
-      await tx.customFieldValue.upsert({
-        where: {
-          taskId_customFieldId: {
-            taskId: childId,
-            customFieldId: parentField.id,
-          },
-        },
-        update: { value: currentTaskId },
-        create: {
-          taskId: childId,
-          customFieldId: parentField.id,
-          value: currentTaskId,
-        },
-      });
-
-      if (
-        previousParentId &&
-        previousParentId !== currentTaskId &&
-        (await taskOnBoard(tx, previousParentId, boardId))
-      ) {
-        await patchChildList(tx, previousParentId, childField.id, (ids) =>
-          ids.filter((id) => id !== childId),
-        );
-      }
+    for (const relatedId of added) {
+      if (relatedId === currentTaskId) continue;
+      if (!(await taskOnBoard(tx, relatedId, boardId))) continue;
+      await patchChildList(tx, relatedId, targetFieldId, (ids) =>
+        ids.includes(currentTaskId) ? ids : [...ids, currentTaskId],
+      );
     }
   }
 }
