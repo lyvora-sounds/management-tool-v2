@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import db from "@/lib/db";
+import { credentialMatchesAudience, mcpResourceUrl, type McpAudience } from "@/lib/mcp/oauthConfig";
 
 export const TICKETS_READ_SCOPE = "tickets:read";
 export const TICKETS_WRITE_SCOPE = "tickets:write";
@@ -64,6 +65,7 @@ export function readTokenRequest(body: unknown): TokenRequest | { error: string 
 export async function authenticateExternalAccess(
   request: Request,
   requiredScope = TICKETS_READ_SCOPE,
+  audience: McpAudience = { kind: "canonical" },
 ): Promise<ExternalAccessContext | null> {
   const rawToken = readBearerToken(request);
   if (!rawToken?.startsWith(TOKEN_PREFIX)) return null;
@@ -79,9 +81,9 @@ export async function authenticateExternalAccess(
       where: { accessTokenHash: hashExternalAccessToken(rawToken) },
       select: { clientId: true, resource: true, accessExpiresAt: true, externalAccessToken: { select: credentialSelect } },
     });
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (!appUrl || !grant?.accessExpiresAt || grant.accessExpiresAt <= new Date() ||
-      grant.resource !== `${new URL(appUrl).origin}/api/mcp`) return null;
+    let expectedResource: string;
+    try { expectedResource = mcpResourceUrl(audience); } catch { return null; }
+    if (!grant?.accessExpiresAt || grant.accessExpiresAt <= new Date() || grant.resource !== expectedResource) return null;
     if (grant.clientId?.startsWith("kiki_client_")) {
       const client = await db.mcpOAuthClient.findUnique({ where: { id: grant.clientId }, select: { revokedAt: true } });
       if (!client || client.revokedAt) return null;
@@ -108,6 +110,7 @@ export async function authenticateExternalAccess(
       return null;
     }
   }
+  if (!credentialMatchesAudience(credential, audience)) return null;
 
   return {
     tokenId: credential.id,

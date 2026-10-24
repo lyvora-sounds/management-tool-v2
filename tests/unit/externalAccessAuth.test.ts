@@ -124,6 +124,51 @@ describe("authenticateExternalAccess", () => {
     expect(findUniqueToken).not.toHaveBeenCalled();
   });
 
+  it("accepts a bearer token only on its matching organization or board path", async () => {
+    const generated = createExternalAccessToken();
+    const org = "c".repeat(25);
+    const other = "d".repeat(25);
+    const board = "b".repeat(25);
+    findUniqueToken.mockResolvedValue(credential({ organizationId: org, boardId: null, board: null }));
+    await expect(authenticateExternalAccess(request(generated.token), undefined, { kind: "organization", organizationId: org })).resolves.toMatchObject({ organizationId: org, boardId: null });
+    await expect(authenticateExternalAccess(request(generated.token), undefined, { kind: "organization", organizationId: other })).resolves.toBeNull();
+    await expect(authenticateExternalAccess(request(generated.token), undefined, { kind: "board", boardId: board })).resolves.toBeNull();
+    await expect(authenticateExternalAccess(request(generated.token))).resolves.toMatchObject({ organizationId: org, boardId: null });
+
+    findUniqueToken.mockResolvedValue(credential({ organizationId: org, boardId: board, board: { title: "Checkout", organizationId: org } }));
+    await expect(authenticateExternalAccess(request(generated.token), undefined, { kind: "board", boardId: board })).resolves.toMatchObject({ boardId: board });
+    await expect(authenticateExternalAccess(request(generated.token), undefined, { kind: "organization", organizationId: org })).resolves.toBeNull();
+    await expect(authenticateExternalAccess(request(generated.token), undefined, { kind: "board", boardId: other })).resolves.toBeNull();
+  });
+
+  it("keeps an OAuth access token on the resource URL it was issued for", async () => {
+    const org = "c".repeat(25);
+    const board = "b".repeat(25);
+    const scoped = `https://kikiboard.test/api/mcp/org/${org}`;
+    findOAuthGrant.mockResolvedValue({
+      resource: scoped,
+      accessExpiresAt: new Date(Date.now() + 60000),
+      externalAccessToken: credential({ organizationId: org, boardId: null, board: null }),
+    });
+    await expect(authenticateExternalAccess(request("kiki_oauth_test"), undefined, { kind: "organization", organizationId: org })).resolves.toMatchObject({ organizationId: org, boardId: null });
+    await expect(authenticateExternalAccess(request("kiki_oauth_test"))).resolves.toBeNull();
+
+    findOAuthGrant.mockResolvedValue({
+      resource: "https://kikiboard.test/api/mcp",
+      accessExpiresAt: new Date(Date.now() + 60000),
+      externalAccessToken: credential({ organizationId: org, boardId: null, board: null }),
+    });
+    await expect(authenticateExternalAccess(request("kiki_oauth_test"), undefined, { kind: "organization", organizationId: org })).resolves.toBeNull();
+    await expect(authenticateExternalAccess(request("kiki_oauth_test"))).resolves.toMatchObject({ organizationId: org, boardId: null });
+
+    findOAuthGrant.mockResolvedValue({
+      resource: scoped,
+      accessExpiresAt: new Date(Date.now() + 60000),
+      externalAccessToken: credential({ organizationId: org, boardId: board, board: { title: "Checkout", organizationId: org } }),
+    });
+    await expect(authenticateExternalAccess(request("kiki_oauth_test"), undefined, { kind: "organization", organizationId: org })).resolves.toBeNull();
+  });
+
   it("records use without failing the caller when the write fails", async () => {
     updateToken.mockRejectedValue(new Error("database unavailable"));
     await expect(recordExternalAccessUse("credential-1")).resolves.toBeUndefined();
