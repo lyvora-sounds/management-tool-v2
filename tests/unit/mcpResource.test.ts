@@ -7,6 +7,7 @@ import {
 } from "@/lib/mcp/oauthConfig";
 
 const orgId = "c".repeat(25);
+const clerkOrgId = `org_${"c".repeat(24)}`;
 const boardId = "b".repeat(25);
 
 beforeEach(() => {
@@ -17,9 +18,9 @@ describe("MCP resource URLs", () => {
   it("accepts the canonical URL and one organization or board path", () => {
     expect(parseMcpResource("https://kikiboard.test/api/mcp")).toEqual({ kind: "canonical" });
     expect(parseMcpResource(`https://kikiboard.test/api/mcp/org/${orgId}`)).toEqual({ kind: "organization", organizationId: orgId });
-    expect(parseMcpResource("https://kikiboard.test/api/mcp/org/org_3932da12d4d3de1180391f30")).toEqual({
+    expect(parseMcpResource(`https://kikiboard.test/api/mcp/org/${clerkOrgId}`)).toEqual({
       kind: "organization",
-      organizationId: "org_3932da12d4d3de1180391f30",
+      organizationId: clerkOrgId,
     });
     expect(parseMcpResource(`https://kikiboard.test/api/mcp/board/${boardId}`)).toEqual({ kind: "board", boardId });
   });
