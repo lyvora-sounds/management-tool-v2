@@ -1,3 +1,7 @@
+export function hasRepeatedTicketRef(ids: string[]): boolean {
+  return new Set(ids).size !== ids.length;
+}
+
 export function parseListValue(val: string | null | undefined): string[] {
   if (!val) return [];
   try {

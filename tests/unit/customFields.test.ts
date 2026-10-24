@@ -8,6 +8,7 @@ import {
 } from "@/lib/customFieldsDefaults";
 import {
   displayCustomFieldValue,
+  hasRepeatedTicketRef,
   parseListValue,
   stringifyListValue,
 } from "@/lib/customValueUtils";
@@ -66,6 +67,11 @@ describe("custom value list helpers", () => {
 
   it("mantiene la ida y vuelta con la lista vacía", () => {
     expect(parseListValue(stringifyListValue([]))).toEqual([]);
+  });
+
+  it("flags a repeated ticket id before an existence check can misread it", () => {
+    expect(hasRepeatedTicketRef(["a", "b"])).toBe(false);
+    expect(hasRepeatedTicketRef(["a", "a"])).toBe(true);
   });
 
   it("resolves parent/child ids to titles when a lookup is provided", () => {

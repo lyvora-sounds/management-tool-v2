@@ -6,7 +6,7 @@ import { canEditBoard as roleCanEdit, canReadBoard as roleCanRead } from "@/lib/
 import { ensureDefaultCustomFields } from "@/lib/ensureDefaultCustomFields";
 import { syncParentChildRelationships } from "@/lib/customValuesSync";
 import { isTicketRefKey } from "@/lib/customFieldsDefaults";
-import { parseListValue } from "@/lib/customValueUtils";
+import { hasRepeatedTicketRef, parseListValue } from "@/lib/customValueUtils";
 
 export async function GET(
   req: Request,
@@ -112,6 +112,13 @@ export async function PATCH(
     if (referencedIds.includes(taskId)) {
       return NextResponse.json(
         { error: "Una tarea no puede referenciarse a sí misma" },
+        { status: 400 }
+      );
+    }
+
+    if (hasRepeatedTicketRef(referencedIds)) {
+      return NextResponse.json(
+        { error: "Una tarea no puede referenciarse más de una vez" },
         { status: 400 }
       );
     }

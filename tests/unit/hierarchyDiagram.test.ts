@@ -201,4 +201,39 @@ describe("hierarchySteps and hierarchyRanks", () => {
       ["join"],
     ]);
   });
+  it("waits for blockers that belong to another path", () => {
+    const dag: HierarchyNode[] = [
+      { id: "rootA", title: "Root A", parentId: null, childIds: ["a"] },
+      { id: "a", title: "Short", parentId: "rootA", childIds: ["join"] },
+      { id: "rootB", title: "Root B", parentId: null, childIds: ["b"] },
+      { id: "b", title: "Long", parentId: "rootB", childIds: ["b2"] },
+      { id: "b2", title: "Longer", parentId: "b", childIds: ["join"] },
+      { id: "join", title: "Join", parentId: "a", parentIds: ["a", "b2"], childIds: [] },
+      { id: "other", title: "Other", parentId: null, childIds: ["leaf"] },
+      { id: "leaf", title: "Leaf", parentId: "other", childIds: [] },
+    ];
+    const layout = hierarchyRanks(dag, "join")!;
+    expect(layout.roots.map((node) => node.id)).toEqual(["rootA", "rootB"]);
+    expect(layout.ranks.map((rank) => rank.map((item) => item.id))).toEqual([
+      ["a", "b"],
+      ["b2"],
+      ["join"],
+    ]);
+    const numbered = hierarchySteps(dag);
+    expect(numbered.get("join")).toEqual({ step: 3, total: 3, rootId: "rootA" });
+    expect(numbered.get("a")?.step).toBe(1);
+    expect(numbered.get("b2")?.step).toBe(2);
+    expect(numbered.get("leaf")).toEqual({ step: 1, total: 1, rootId: "other" });
+    const fromShort = hierarchyRanks(dag, "a")!;
+    const joinRow = fromShort.ranks.findIndex((rank) => rank.some((node) => node.id === "join"));
+    expect(joinRow + 1).toBe(numbered.get("join")?.step);
+    const svg = hierarchySvg(dag, { focusId: "join" });
+    expect(svg).toContain("Root A · Root B");
+    expect(steps(svg!)).toEqual([
+      ["a", "1"],
+      ["b", "1"],
+      ["b2", "2"],
+      ["join", "3"],
+    ]);
+  });
 });
