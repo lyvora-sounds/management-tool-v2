@@ -77,3 +77,13 @@ Deletes cascade. Six links use `SetNull`: `Organization.createdById`, `ExternalA
 - **My tasks** — `/dashboard/tasks`.
 - **Settings** — per-user AI credentials, custom fields, Google Calendar OAuth.
 - **Cmd+K search** — `/api/search` over boards and tasks the user can see.
+
+## Container image
+
+Besides Vercel, the app builds as a container for Cloud Run (`Dockerfile`, infrastructure in the `kiki-infra` repo).
+
+- **Standalone output.** The image build sets `BUILD_STANDALONE=1`, which turns on `output: "standalone"` in `next.config.ts`. Vercel builds do not set it and are unchanged.
+- **No secrets at build.** `next build` must succeed with none of the runtime secrets. Anything that needs a key at import time breaks that (the Resend client used to; it is now created on first use in `lib/resend.ts`). Only the two `NEXT_PUBLIC_*` values are build arguments, because Next inlines them into the browser bundle: `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`. Neither is secret.
+- **Migrations are not in the image.** They run as a release step against `DATABASE_URL_UNPOOLED`, never inside the container start or the build.
+- **Health check.** `GET /api/health` returns `{"status":"ok"}` without a session and without touching the database. It is excluded from the Clerk middleware matcher in `middleware.ts` so a Clerk outage or a development-instance handshake redirect cannot make the platform restart a healthy container.
+- **CI.** `.github/workflows/image.yml` builds the image on pull requests that touch it and starts it with no secrets, calling the health check.
