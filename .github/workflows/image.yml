@@ -142,6 +142,9 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
 
+      - name: Reject unpatched Node.js
+        run: node scripts/check-node-patch.mjs
+
       - run: pnpm install --frozen-lockfile
 
       - uses: google-github-actions/auth@v2
