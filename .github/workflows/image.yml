@@ -157,6 +157,8 @@ jobs:
         run: |
           DATABASE_URL_UNPOOLED="$(gcloud secrets versions access latest --secret DATABASE_URL_UNPOOLED --project "$PROJECT")"
           echo "::add-mask::$DATABASE_URL_UNPOOLED"
+          # Prisma prints the database host on its own. The repository is public, so mask the host too.
+          echo "::add-mask::$(printf '%s' "$DATABASE_URL_UNPOOLED" | sed -E 's#^[a-z+]+://[^@]*@([^/:?]+).*#\1#')"
           export DATABASE_URL_UNPOOLED
           bash scripts/ci-migrate.sh
 
