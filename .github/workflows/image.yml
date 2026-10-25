@@ -2,7 +2,8 @@ name: Container image
 
 # Builds the production image and starts it with no secrets and no database. It proves the image builds,
 # boots and answers /api/health, which is all Cloud Run needs from it. On a push to dev the image is also
-# pushed to Artifact Registry with OIDC (no stored keys), as the kikiboard-image-push identity from kiki-infra.
+# pushed to Artifact Registry and rolled out to the staging Cloud Run service, with OIDC (no stored keys), as the
+# kikiboard-image-push identity from kiki-infra.
 on:
   push:
     branches: [dev]
@@ -20,7 +21,8 @@ on:
 
 concurrency:
   group: image-${{ github.ref }}
-  cancel-in-progress: true
+  # Only pull requests cancel an older run. A push to dev never cancels one that may be halfway through a deploy.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -115,3 +117,41 @@ jobs:
           build-args: |
             NEXT_PUBLIC_APP_URL=${{ vars.STAGING_APP_URL }}
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ vars.STAGING_CLERK_PUBLISHABLE_KEY }}
+
+  deploy:
+    name: Deploy to Cloud Run
+    needs: push
+    if: github.event_name == 'push' && vars.GCP_IMAGE_PUSH_SERVICE_ACCOUNT != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_RUN_REGION || 'europe-west1' }}
+      SERVICE: kikiboard
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_IMAGE_PUSH_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      # Rolls out the image this run just pushed, by commit SHA, so the revision is traceable to a commit.
+      # Only the image changes: the secrets, the service account and the scaling set by Terraform are kept.
+      - name: Roll out the image
+        run: |
+          gcloud run services update "$SERVICE" \
+            --project "$PROJECT" --region "$REGION" \
+            --image "$REGION-docker.pkg.dev/$PROJECT/kikiboard/kikiboard:${{ github.sha }}"
+
+      - name: Check the new revision answers
+        run: |
+          url="$(gcloud run services describe "$SERVICE" --project "$PROJECT" --region "$REGION" --format='value(status.url)')"
+          for i in $(seq 1 30); do
+            if curl -fsS "$url/api/health"; then echo; exit 0; fi
+            sleep 3
+          done
+          echo "::error::$url/api/health did not answer after the deploy"
+          exit 1
