@@ -14,7 +14,7 @@ Kikiboard is a Next.js 16 App Router app. The browser talks to Route Handlers un
 | Files | Vercel Blob (`access: "private"`) |
 | Email | Resend |
 | Deploy | Vercel |
-| Runtime | Node.js 22.23.4 (see below) |
+| Runtime | Node.js 24.22.1 (see below) |
 
 ## Node.js runtime
 
@@ -22,10 +22,10 @@ Production and CI must run a binary that includes the 21 Oct 2026 Node.js securi
 
 How this repo pins it:
 
-- `.node-version` is `22.23.4`. GitHub Actions reads that file in `ci.yml` and `docker.yml`.
-- `package.json` `engines.node` is `22.x` so Vercel cannot stay on Node 20. Vercel rolls 22.x patches itself; do not pin a patch version there.
+- `.node-version` is `24.22.1`. GitHub Actions reads that file in `ci.yml`, `docker.yml`, and `image.yml`.
+- `package.json` `engines.node` is `24.x` so Vercel matches the project setting (`24.x`) and cannot stay on Node 20. Vercel rolls 24.x patches itself; do not pin a patch version there.
 - `scripts/check-node-patch.mjs` fails the workflow if the installed binary is below those floors.
-- Rebase feature branches onto `main` before merge so they do not replace `node-version-file` with a floating `node-version: 22`.
+- Rebase feature branches onto `main` before merge so they do not replace `node-version-file` with a floating `node-version`.
 
 A Vercel project still on Node 20 is exposed even with these files. Set the project to 22.x or 24.x and redeploy.
 
@@ -88,3 +88,5 @@ Besides Vercel, the app builds as a container for Cloud Run (`Dockerfile`, infra
 - **Health check.** `GET /api/health` returns `{"status":"ok"}` without a session and without touching the database. It is excluded from the Clerk middleware matcher in `middleware.ts` so a Clerk outage or a development-instance handshake redirect cannot make the platform restart a healthy container.
 - **CI.** `.github/workflows/image.yml` builds the image on pull requests that touch it and starts it with no secrets, calling the health check.
 - **Registry.** On a push to `dev` the same workflow pushes the image to Artifact Registry as `<sha>` and `dev`, authenticating with GitHub OIDC as the `kikiboard-image-push` identity from `kiki-infra` (no stored keys; only `dev` can use it). It needs the repository variables `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_IMAGE_PUSH_SERVICE_ACCOUNT`, `STAGING_APP_URL` and `STAGING_CLERK_PUBLISHABLE_KEY`, and is skipped until they exist.
+- **Deploy.** After the push, a second job rolls the image out to the staging Cloud Run service (`kikiboard`, europe-west1) with `gcloud run services update --image`, by commit SHA, then calls `/api/health` on the service URL. Only the image changes: secrets, the runtime identity and scaling stay as Terraform set them.
+- **Migrations.** Before the deploy, a `migrate` job runs `scripts/ci-migrate.sh`, which applies pending Prisma migrations against the direct Neon URL (`DATABASE_URL_UNPOOLED`, read from Secret Manager, masked in the logs). If it fails, nothing is deployed. It reads the migration status first and fails if it cannot (it never assumes there is nothing to do), and it blocks a pending migration with a destructive statement (`DROP TABLE/COLUMN/SCHEMA`, `TRUNCATE`, `DELETE FROM`, a column type change) because old instances keep running against the new schema while a deploy rolls out: split it into two releases, or add `[allow-destructive-migration]` to the commit message. `prisma migrate deploy` is idempotent, so it coexists with the migration Vercel still runs in its own build. Migrations never run inside `next build` or when the container starts.

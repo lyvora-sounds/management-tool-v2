@@ -1,6 +1,6 @@
 # Production image for Cloud Run. Migrations are NOT run here: they are a release step against the direct
 # (unpooled) Neon URL, so the image never needs a database at build time.
-ARG NODE_VERSION=22.23.4
+ARG NODE_VERSION=24.22.1
 
 FROM node:${NODE_VERSION}-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm \
