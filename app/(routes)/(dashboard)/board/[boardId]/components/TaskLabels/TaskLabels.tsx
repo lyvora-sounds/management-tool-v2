@@ -35,8 +35,12 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
   useEffect(() => {
     if (!open) return;
     apiFetch(`/api/labels/${boardId}`)
-      .then((r) => r.json())
-      .then(setLabels);
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        // An error body is not a list of labels: keep what is on screen instead of breaking it.
+        if (Array.isArray(data)) setLabels(data);
+      })
+      .catch(() => {});
   }, [open, boardId]);
 
   const toggleLabel = async (labelId: string) => {
