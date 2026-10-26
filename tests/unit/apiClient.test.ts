@@ -18,7 +18,7 @@ describe("apiPathFor", () => {
   });
 
   it("leaves other methods and other routes on this app", () => {
-    expect(apiPathFor("POST", "/api/labels/board_1")).toBeNull();
+    expect(apiPathFor("PUT", "/api/labels/board_1")).toBeNull();
     expect(apiPathFor("GET", "/api/labels/label/l1")).toBeNull();
     expect(apiPathFor("GET", "/api/boards")).toBeNull();
   });
@@ -89,5 +89,33 @@ describe("apiFetch", () => {
       expect(res.status).toBe(404);
       expect(fetchImpl).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe("apiFetch with a write and a query", () => {
+  it("sends a migrated write to the API with the token and does not repeat it when the API fails", async () => {
+    const fetchImpl = vi.fn(async () => new Response("{}", { status: 503 }));
+    const apiFetch = createApiFetch({ baseUrl: "https://api.example.com", getToken: async () => "tok", fetchImpl });
+    const res = await apiFetch("/api/lists/updateList/li1", { method: "PATCH", body: "{}" });
+    expect(res.status).toBe(503);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://api.example.com/v1/lists/li1");
+    expect(init.method).toBe("PATCH");
+    expect(new Headers(init.headers).get("Authorization")).toBe("Bearer tok");
+  });
+
+  it("keeps the query string of a migrated read", async () => {
+    const fetchImpl = vi.fn(async () => new Response("{}"));
+    const apiFetch = createApiFetch({ baseUrl: "https://api.example.com", getToken: async () => "tok", fetchImpl });
+    await apiFetch("/api/search?q=plan%20b");
+    expect((fetchImpl.mock.calls[0] as unknown as [string])[0]).toBe("https://api.example.com/v1/search?q=plan%20b");
+  });
+
+  it("sends a write to this app when there is no session token yet", async () => {
+    const fetchImpl = vi.fn(async () => new Response("{}"));
+    const apiFetch = createApiFetch({ baseUrl: "https://api.example.com", getToken: async () => null, fetchImpl });
+    await apiFetch("/api/lists/createList", { method: "POST", body: "{}" });
+    expect((fetchImpl.mock.calls[0] as unknown as [string])[0]).toBe("/api/lists/createList");
   });
 });
