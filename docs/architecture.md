@@ -98,7 +98,8 @@ The backend is moving route by route to `kiki-api` (a separate Fastify service o
 - `lib/apiRoutes.ts` lists the routes already served by `kiki-api`, by method and path. Everything else still goes to this app's own `/api` routes. Moving a route is one line there, plus the route in `kiki-api`.
 - A migrated route is sent to `NEXT_PUBLIC_API_URL` with the Clerk session token as `Authorization: Bearer`, and `/api/...` becomes `/v1/...`.
 - **`NEXT_PUBLIC_API_URL` unset means nothing changes**: every call is the plain same-origin fetch. Local development and Vercel previews do not need it. It is a build-time value (inlined into the browser bundle) and not a secret.
-- If Clerk has no session token yet, the call falls back to the same-origin route, which still exists here.
+- Clerk's SDK loads a moment after the page, so the first migrated call waits (up to 3 seconds, once per page) for it to finish loading before it asks for a token. Without that wait, the first call of a page (the notification bell asks as soon as it mounts) found no session and went to this app's own route.
+- If there is still no session token (a signed-out visitor, or Clerk never loaded), the call falls back to the same-origin route, which still exists here.
 - A **read** that the API cannot serve (unreachable, blocked by CORS, a 401, a 5xx) is answered by the route this app still has. A 404 is a real answer and is kept. A write is never repeated. Remove the fallback when the route is deleted from this app.
 - The API accepts the token only from the frontend origins listed in its `CORS_ORIGINS`.
 
@@ -116,6 +117,8 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | Search | `GET /api/search` | `GET /v1/search` |
 
 A write is never repeated: if the API fails, the action fails and the user sees the screen's own error.
+
+**Do not delete the old handlers in `app/api` yet.** Production (`main`) serves these routes from this app, and the Vercel variable `NEXT_PUBLIC_API_URL` exists only for the `dev` branch. The next promotion of `dev` to `main` would bring `apiFetch` to production without it, and production would call its own routes. Until the production API exists (ticket "production environment"), the old handlers stay, and so does the fallback. Previews of other branches and local development also rely on them when the variable is unset.
 
 ### The API contract
 
