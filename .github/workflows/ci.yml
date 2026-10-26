@@ -46,6 +46,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # The API types are generated from kiki-api's OpenAPI document. If the API changed and the types here were
+      # not regenerated, fail with the instruction. An unreachable API is skipped, not failed.
+      - name: API types are current
+        run: node scripts/api-types.mjs --check
+
       - name: Typecheck
         run: pnpm exec tsc --noEmit
 
