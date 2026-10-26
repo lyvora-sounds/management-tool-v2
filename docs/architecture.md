@@ -102,7 +102,20 @@ The backend is moving route by route to `kiki-api` (a separate Fastify service o
 - A **read** that the API cannot serve (unreachable, blocked by CORS, a 401, a 5xx) is answered by the route this app still has. A 404 is a real answer and is kept. A write is never repeated. Remove the fallback when the route is deleted from this app.
 - The API accepts the token only from the frontend origins listed in its `CORS_ORIGINS`.
 
-Migrated so far: `GET /api/labels/[boardId]`.
+Migrated so far (the old handler is still in `app/api` until the comparison on staging is done, then it is deleted):
+
+| Group | Old path (app) | kiki-api |
+|---|---|---|
+| Labels | `GET`/`POST /api/labels/[boardId]` | `GET`/`POST /v1/labels/:boardId` |
+| | `PATCH`/`DELETE /api/labels/label/[labelId]` | `PATCH`/`DELETE /v1/labels/:labelId` |
+| Lists | `POST /api/lists/createList` | `POST /v1/lists` |
+| | `PATCH /api/lists/updateOrder` | `PATCH /v1/lists/order` |
+| | `PATCH /api/lists/updateList/[listId]` | `PATCH /v1/lists/:listId` |
+| | `DELETE /api/lists/deleteList/[listId]` | `DELETE /v1/lists/:listId` |
+| Notifications | `GET`/`PATCH /api/notifications`, `PATCH /api/notifications/[id]` | same names under `/v1` |
+| Search | `GET /api/search` | `GET /v1/search` |
+
+A write is never repeated: if the API fails, the action fails and the user sees the screen's own error.
 
 ### The API contract
 
