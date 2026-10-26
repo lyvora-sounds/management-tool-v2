@@ -104,3 +104,12 @@ The backend is moving route by route to `kiki-api` (a separate Fastify service o
 
 Migrated so far: `GET /api/labels/[boardId]`.
 
+### The API contract
+
+`kiki-api` declares a zod schema for what each route accepts and returns, and publishes an OpenAPI document built from those schemas (`GET /openapi.json`). This app generates its types from it:
+
+- `lib/api/schema.d.ts` is generated (do not edit). `pnpm api:types` rewrites it from the staging API; `pnpm api:types ./openapi.json` reads a local file (`pnpm openapi > openapi.json` in `kiki-api`).
+- `lib/api/types.ts` exports `ApiLabel`, `ApiError` and `ApiGetResponse<Path>`, the JSON body of a GET route. Read a migrated route's response through them (see `TaskLabels`), and map it to the screen's model by field name in `lib/api/`, as `labelFromApi` does. If the API changes a field, `tsc` fails in the pull request, not in production.
+- CI runs `node scripts/api-types.mjs --check`: it fails when the committed types differ from the API, and says to run `pnpm api:types`. If the API cannot be reached the check is skipped.
+- **Order:** merge and deploy the `kiki-api` change first, then regenerate here. Every API error is `{ error, message }` (`ApiError`).
+
