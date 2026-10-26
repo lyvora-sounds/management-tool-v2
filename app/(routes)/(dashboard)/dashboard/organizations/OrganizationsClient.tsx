@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CSSProperties, FormEvent, useCallback, useEffect, useState } from "react";
+import { CSSProperties, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowRightLeft, Building2, Check, ChevronDown, ChevronRight, ChevronsUpDown, FolderKanban, Loader2, Plus, Search, Trash2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreateBoardModal } from "../components/boards/CreateBoardModal/CreateBoardModal";
 import { useBoardPolling } from "@/hooks/use-board-polling";
+import { GithubConnection } from "./GithubConnection";
 
 type Board = { id: string; title: string; color: string | null; canMove: boolean };
 type Organization = {
@@ -27,7 +28,15 @@ type Member = { role: string; user: { id: string; name: string | null; email: st
 type AvailablePerson = Member["user"] & { organizations: { id: string; name: string }[] };
 type Team = { id: string; name: string; members: { user: Member["user"] }[]; boardAccess: { role: string; board: { id: string; title: string } }[] };
 
-export function OrganizationsClient() {
+export function OrganizationsClient({
+  githubNotice = null,
+  githubOrganizationId = null,
+  githubResultToken = null,
+}: {
+  githubNotice?: "connected" | "error" | "requested" | "updated" | "waiting" | "choose" | null;
+  githubOrganizationId?: string | null;
+  githubResultToken?: string | null;
+}) {
   const t = useTranslations("organizations");
   const tCommon = useTranslations("common");
   const router = useRouter();
@@ -36,7 +45,9 @@ export function OrganizationsClient() {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(
+    githubNotice && githubNotice !== "error" ? githubOrganizationId : null,
+  );
   const [members, setMembers] = useState<Record<string, Member[]>>({});
   const [teams, setTeams] = useState<Record<string, Team[]>>({});
   const [availablePeople, setAvailablePeople] = useState<Record<string, AvailablePerson[]>>({});
@@ -56,6 +67,7 @@ export function OrganizationsClient() {
   const [moveStep, setMoveStep] = useState<"select" | "confirm">("select");
   const [moveConfirmation, setMoveConfirmation] = useState("");
   const [moving, setMoving] = useState(false);
+  const noticedGithub = useRef(false);
 
   const loadOrganizations = useCallback(async () => {
     const response = await fetch("/api/organizations", { cache: "no-store" });
@@ -101,6 +113,28 @@ export function OrganizationsClient() {
     setTeams((value) => ({ ...value, [organizationId]: teamData }));
     setAvailablePeople((value) => ({ ...value, [organizationId]: peopleData }));
   }, []);
+
+  useEffect(() => {
+    if (!githubNotice || noticedGithub.current) return;
+    noticedGithub.current = true;
+    if (githubResultToken) {
+      void fetch("/api/integrations/github/result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: githubResultToken }),
+      });
+    }
+    if (githubNotice === "connected") toast.success(t("githubConnected"));
+    else if (githubNotice === "updated") toast.success(t("githubUpdated"));
+    else if (githubNotice === "requested") toast.info(t("githubRequested"));
+    else if (githubNotice === "waiting") toast.info(t("githubWaiting"));
+    else if (githubNotice === "choose") toast.info(t("githubChoose"));
+    else toast.error(t("githubConnectError"));
+    if (githubNotice !== "error" && githubOrganizationId) {
+      queueMicrotask(() => { void loadDetails(githubOrganizationId); });
+    }
+    router.replace("/dashboard/organizations");
+  }, [githubNotice, githubOrganizationId, githubResultToken, loadDetails, router, t]);
 
   const refreshOrganizations = useCallback(async () => {
     await Promise.all([
@@ -325,6 +359,7 @@ export function OrganizationsClient() {
                 </div>
 
                 {open && (
+                  <>
                   <div className="grid gap-5 border-t p-4 lg:grid-cols-2">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-sm font-semibold"><Users size={16} />{t("members")}</div>
@@ -441,6 +476,8 @@ export function OrganizationsClient() {
                       <div className="flex gap-2"><Input value={teamName} onChange={(event) => setTeamName(event.target.value)} placeholder={t("teamName")} /><Button type="button" size="sm" onClick={() => void addTeam(organization.id)} disabled={!teamName.trim()}>{tCommon("create")}</Button></div>
                     </div>
                   </div>
+                  <GithubConnection organizationId={organization.id} canManage={canManage} />
+                  </>
                 )}
               </section>
             );

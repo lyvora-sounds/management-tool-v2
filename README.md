@@ -120,6 +120,15 @@ RESEND_API_KEY=
 
 # App
 NEXT_PUBLIC_APP_URL=https://kikiboard.xyz
+
+# GitHub App (one app for all organizations; not a Marketplace listing).
+# Webhook secret and OAuth client secret must each be at least 16 characters.
+GITHUB_APP_ID=
+GITHUB_APP_SLUG=
+GITHUB_APP_PRIVATE_KEY=
+GITHUB_APP_WEBHOOK_SECRET=
+GITHUB_APP_CLIENT_ID=
+GITHUB_APP_CLIENT_SECRET=
 ```
 
 ---

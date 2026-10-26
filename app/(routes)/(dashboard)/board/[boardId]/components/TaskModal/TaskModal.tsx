@@ -442,6 +442,7 @@ export function TaskModal({
   return (
     <>
       <TaskShareModal
+        boardId={boardId}
         taskId={currentTask.id}
         taskTitle={savedTitle}
         open={shareModalOpen}

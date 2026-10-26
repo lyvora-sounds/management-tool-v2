@@ -8,6 +8,7 @@ import { BoardVisitTracker } from "./components/BoardVisitTracker/BoardVisitTrac
 import { BoardTour } from "./components/BoardTour/BoardTour";
 import { getBoardRole, readableBoardWhere } from "@/lib/boardAccess";
 import { canEditBoard } from "@/lib/boardRoles";
+import { ACCESS_DENIED_HREF } from "@/lib/ticketShare";
 
 interface BoardPageProps {
   params: Promise<{ boardId: string }>;
@@ -54,7 +55,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
     },
   });
 
-  if (!board) redirect("/dashboard");
+  if (!board) redirect(ACCESS_DENIED_HREF);
 
   const isOwner = board.userId === user.id;
 

@@ -17,10 +17,17 @@ import { Greeting } from "./components/Greeting/Greeting";
 import { OnboardingChecklist } from "./components/OnboardingChecklist/OnboardingChecklist";
 import { getOnboardingState } from "@/lib/onboardingState";
 import { readableBoardWhere } from "@/lib/boardAccess";
+import { AccessDeniedNotice } from "./components/AccessDeniedNotice/AccessDeniedNotice";
+import { isAccessDeniedAccess } from "@/lib/ticketShare";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ access?: string }>;
+}) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+  const { access } = await searchParams;
 
   const user = await getOrCreateUser(userId);
   if (!user) {
@@ -246,6 +253,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-3 sm:p-6 flex flex-col gap-6">
+      {isAccessDeniedAccess(access) && <AccessDeniedNotice />}
       <Greeting name={user.name} />
 
       {showOnboarding && (
