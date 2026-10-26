@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PRESET_COLORS } from "./TaskLabels.data";
 import { useTranslations } from "next-intl";
 import { useBoardAccess } from "../BoardAccess";
+import { apiFetch } from "@/lib/apiClient";
 
 export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: TaskLabelsProps) {
   const { canEdit } = useBoardAccess();
@@ -33,7 +34,7 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
 
   useEffect(() => {
     if (!open) return;
-    fetch(`/api/labels/${boardId}`)
+    apiFetch(`/api/labels/${boardId}`)
       .then((r) => r.json())
       .then(setLabels);
   }, [open, boardId]);

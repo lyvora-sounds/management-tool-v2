@@ -90,3 +90,16 @@ Besides Vercel, the app builds as a container for Cloud Run (`Dockerfile`, infra
 - **Registry.** On a push to `dev` the same workflow pushes the image to Artifact Registry as `<sha>` and `dev`, authenticating with GitHub OIDC as the `kikiboard-image-push` identity from `kiki-infra` (no stored keys; only `dev` can use it). It needs the repository variables `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_IMAGE_PUSH_SERVICE_ACCOUNT`, `STAGING_APP_URL` and `STAGING_CLERK_PUBLISHABLE_KEY`, and is skipped until they exist.
 - **Deploy.** After the push, a second job rolls the image out to the staging Cloud Run service (`kikiboard`, europe-west1) with `gcloud run services update --image`, by commit SHA, then calls `/api/health` on the service URL. Only the image changes: secrets, the runtime identity and scaling stay as Terraform set them.
 - **Migrations.** Before the deploy, a `migrate` job runs `scripts/ci-migrate.sh`, which applies pending Prisma migrations against the direct Neon URL (`DATABASE_URL_UNPOOLED`, read from Secret Manager, masked in the logs). If it fails, nothing is deployed. It reads the migration status first and fails if it cannot (it never assumes there is nothing to do), and it blocks a pending migration with a destructive statement (`DROP TABLE/COLUMN/SCHEMA`, `TRUNCATE`, `DELETE FROM`, a column type change) because old instances keep running against the new schema while a deploy rolls out: split it into two releases, or add `[allow-destructive-migration]` to the commit message. `prisma migrate deploy` is idempotent, so it coexists with the migration Vercel still runs in its own build. Migrations never run inside `next build` or when the container starts.
+
+## Routes served by kiki-api
+
+The backend is moving route by route to `kiki-api` (a separate Fastify service on Google Cloud). While it moves, the browser calls the API through one helper, `apiFetch` in `lib/apiClient.ts`:
+
+- `lib/apiRoutes.ts` lists the routes already served by `kiki-api`, by method and path. Everything else still goes to this app's own `/api` routes. Moving a route is one line there, plus the route in `kiki-api`.
+- A migrated route is sent to `NEXT_PUBLIC_API_URL` with the Clerk session token as `Authorization: Bearer`, and `/api/...` becomes `/v1/...`.
+- **`NEXT_PUBLIC_API_URL` unset means nothing changes**: every call is the plain same-origin fetch. Local development and Vercel previews do not need it. It is a build-time value (inlined into the browser bundle) and not a secret.
+- If Clerk has no session token yet, the call falls back to the same-origin route, which still exists here.
+- The API accepts the token only from the frontend origins listed in its `CORS_ORIGINS`.
+
+Migrated so far: `GET /api/labels/[boardId]`.
+
