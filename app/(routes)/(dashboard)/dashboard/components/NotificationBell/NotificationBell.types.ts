@@ -1,9 +1,4 @@
-export type Notification = {
-  id: string;
-  type: string;
-  message: string;
-  read: boolean;
-  boardId: string | null;
-  taskId: string | null;
-  createdAt: string;
-};
+import type { ApiSchemas } from "@/lib/api/types";
+
+/** What GET /v1/notifications sends for one notification. */
+export type Notification = ApiSchemas["Notification"];
