@@ -16,7 +16,7 @@ import { useTranslations } from "next-intl";
 import { useBoardAccess } from "../BoardAccess";
 import { apiFetch } from "@/lib/apiClient";
 import { labelFromApi } from "@/lib/api/labels";
-import type { ApiGetResponse } from "@/lib/api/types";
+import type { ApiGetResponse, ApiLabel } from "@/lib/api/types";
 
 export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: TaskLabelsProps) {
   const { canEdit } = useBoardAccess();
@@ -79,22 +79,22 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
 
   const saveLabel = async () => {
     if (editingLabel) {
-      const res = await fetch(`/api/labels/label/${editingLabel.id}`, {
+      const res = await apiFetch(`/api/labels/label/${editingLabel.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: formTitle, color: formColor }),
       });
       if (!res.ok) return;
-      const updated = await res.json();
+      const updated = labelFromApi((await res.json()) as ApiLabel);
       setLabels((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
     } else {
-      const res = await fetch(`/api/labels/${boardId}`, {
+      const res = await apiFetch(`/api/labels/${boardId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: formTitle, color: formColor }),
       });
       if (!res.ok) return;
-      const created = await res.json();
+      const created = labelFromApi((await res.json()) as ApiLabel);
       setLabels((prev) => [...prev, created]);
     }
     setShowForm(false);
@@ -103,7 +103,7 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
   if (!canEdit) return null;
 
   const deleteLabel = async (labelId: string) => {
-    const res = await fetch(`/api/labels/label/${labelId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/labels/label/${labelId}`, { method: "DELETE" });
     if (!res.ok) return;
     const nextLabels = labels.filter((l) => l.id !== labelId);
     setLabels(nextLabels);

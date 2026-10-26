@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useBoardStore } from "../../store/useBoardStore";
 import { CreateListFormProps } from "./CreateListForm.types";
+import { apiFetch } from "@/lib/apiClient";
 
 export function CreateListForm({ boardId }: CreateListFormProps) {
   const t = useTranslations("board");
@@ -32,7 +33,7 @@ export function CreateListForm({ boardId }: CreateListFormProps) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/lists/createList", {
+      const res = await apiFetch("/api/lists/createList", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, boardId }),
