@@ -47,17 +47,42 @@ export function createApiFetch({ baseUrl, getToken, fetchImpl }: Options) {
   };
 }
 
+type ClerkLike = { loaded?: boolean; session?: { getToken: () => Promise<string | null> } | null };
+
 declare global {
   interface Window {
-    Clerk?: { session?: { getToken: () => Promise<string | null> } | null };
+    Clerk?: ClerkLike;
   }
 }
 
-/** Clerk's browser SDK is loaded by ClerkProvider; outside a React tree it is reachable on window. */
-async function clerkToken(): Promise<string | null> {
-  if (typeof window === "undefined") return null;
-  return (await window.Clerk?.session?.getToken()) ?? null;
+type WaitOptions = { timeoutMs?: number; pollMs?: number };
+
+/**
+ * Clerk's browser SDK is loaded by ClerkProvider, a moment after the page. A call made in that gap (the
+ * notification bell asks as soon as it mounts) would find no session and go to this app's own route. So the
+ * first call waits, briefly, for Clerk to finish loading. Later calls do not wait again: a page that never
+ * loads Clerk pays the delay once, not on every request.
+ */
+export function createClerkTokenSource(getClerk: () => ClerkLike | undefined, { timeoutMs = 3000, pollMs = 50 }: WaitOptions = {}) {
+  let waited: Promise<void> | null = null;
+
+  const waitUntilLoaded = () => {
+    waited ??= (async () => {
+      const deadline = Date.now() + timeoutMs;
+      while (!getClerk()?.loaded && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, pollMs));
+      }
+    })();
+    return waited;
+  };
+
+  return async function getToken(): Promise<string | null> {
+    await waitUntilLoaded();
+    return (await getClerk()?.session?.getToken()) ?? null;
+  };
 }
+
+const clerkToken = createClerkTokenSource(() => (typeof window === "undefined" ? undefined : window.Clerk));
 
 export const apiFetch = createApiFetch({
   baseUrl: process.env.NEXT_PUBLIC_API_URL,
