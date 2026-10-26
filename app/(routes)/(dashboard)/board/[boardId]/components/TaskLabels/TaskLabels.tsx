@@ -15,6 +15,8 @@ import { PRESET_COLORS } from "./TaskLabels.data";
 import { useTranslations } from "next-intl";
 import { useBoardAccess } from "../BoardAccess";
 import { apiFetch } from "@/lib/apiClient";
+import { labelFromApi } from "@/lib/api/labels";
+import type { ApiGetResponse } from "@/lib/api/types";
 
 export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: TaskLabelsProps) {
   const { canEdit } = useBoardAccess();
@@ -35,10 +37,10 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
   useEffect(() => {
     if (!open) return;
     apiFetch(`/api/labels/${boardId}`)
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => (r.ok ? (r.json() as Promise<ApiGetResponse<"/v1/labels/{boardId}">>) : null))
       .then((data) => {
         // An error body is not a list of labels: keep what is on screen instead of breaking it.
-        if (Array.isArray(data)) setLabels(data);
+        if (Array.isArray(data)) setLabels(data.map(labelFromApi));
       })
       .catch(() => {});
   }, [open, boardId]);
