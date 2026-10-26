@@ -43,6 +43,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        id="language-switcher"
         disabled={isPending}
         className={cn(
           "inline-flex items-center gap-1.5 px-2.5 h-8 text-xs font-medium rounded-lg border border-border/40 bg-background/60 hover:bg-accent/60 transition-colors cursor-pointer select-none outline-none disabled:opacity-50",

@@ -1,6 +1,6 @@
 # Integrations
 
-Boards can fan out to chat. Users can sync due dates to Google Calendar. Anyone with a share token can read a task without signing in. Agents can drive the HTTP API through MCP.
+Boards can fan out to chat. Users can sync due dates to Google Calendar. An organization can link a GitHub account, repository, and branch. Anyone with a share token can read a task without signing in. Agents can drive the HTTP API through MCP.
 
 ![Outbound integrations](./diagrams/integrations.svg)
 
@@ -29,7 +29,42 @@ Per-user `UserCalendarSync` (encrypted access + refresh tokens).
 3. `syncTaskToGoogleCalendar` can create an all-day `[Kikiboard] {title}` event on the primary calendar and store `Task.googleEventId`. Expired access tokens are refreshed first.
 4. **Dormant:** nothing in task create/update calls the sync helper, and Settings has no calendar tab that starts the OAuth flow. The in-app `/dashboard/calendar` is Neon due dates (`GET /api/calendar`), not Google.
 
-## Public task share
+## GitHub
+
+One GitHub App, owned by Kikiboard, serves every organization. Registering it, installing it, and calling the API are free on GitHub Free. Do not list the app on GitHub Marketplace. A Marketplace paid plan is what makes GitHub charge the installer.
+
+The app id, slug, private key, webhook secret, OAuth client id, and OAuth client secret are deployment secrets (`GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_APP_WEBHOOK_SECRET`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`). The webhook secret and client secret must each be at least 16 characters. The private key may be a PEM with newlines written as `\n`, or a base64-encoded PEM. Installation access tokens last one hour and are minted when listing repositories or branches. They are not stored. User access tokens from the install check are not stored either.
+
+Register the app under the Kikiboard GitHub account (Settings → Developer settings → GitHub Apps → New GitHub App):
+
+- Homepage URL: `NEXT_PUBLIC_APP_URL`.
+- Callback URL: `{APP_URL}/api/integrations/github/setup`. Leave **Request user authorization (OAuth) during installation** off. That option removes the Setup URL. Kikiboard starts the user-authorization flow itself after the install redirect.
+- Setup URL: `{APP_URL}/api/integrations/github/setup`. Enable redirect on update.
+- Webhook URL: `{APP_URL}/api/webhooks/github`. Secret: `GITHUB_APP_WEBHOOK_SECRET`.
+- Repository permission: Contents, Read-only. Metadata is granted automatically.
+- Subscribe to Installation and Installation repositories.
+- Installation visibility: Any account. `GITHUB_APP_SLUG` is the slug in `https://github.com/apps/{slug}`.
+
+`OrganizationGithubConnection` stores one installation per Kikiboard organization: GitHub account login and type (`Organization` or `User`), the selected `owner/name` repository, and the selected branch. Organization owners and admins connect and change it. Other members can see the saved account, repository, and branch. The GitHub settings link, which contains the installation id, is returned only to owners and admins.
+
+1. `GET /api/organizations/{organizationId}/github/install` (owner or admin) stores a single-use attempt and redirects to the GitHub install screen with a signed `state` that expires after 10 minutes.
+2. GitHub redirects to `/api/integrations/github/setup`, which is public in the Clerk matcher so the browser can land there. The handler requires the Clerk session to be the manager who started the attempt. It does not trust `installation_id`. It redirects that same user through GitHub's OAuth flow (PKCE, verifier stored on the attempt) and accepts the installation only when `GET /user/installations` for that user token includes it. An installation already linked to another Kikiboard organization, or one that was retired when a previous installation was replaced, is rejected. The previous installation id is retired in the database before GitHub is asked to uninstall it.
+3. If GitHub sends `setup_action=request`, no installation is stored. The organizations page shows that an owner still has to approve the app. `GET /api/organizations/{organizationId}/github/finish` (owner or admin) starts a new OAuth flow. When the approving user's token can see exactly one claimable installation, it is saved. When it can see several, the user picks one; the choices are the installations that token returned, not ids from the query string. `installation.created` webhooks are ignored, because they do not identify the Kikiboard organization.
+4. `setup_action=update` refreshes the account on an installation this signed-in manager already owns. It never creates a row for an installation id that is not already stored.
+5. The organizations page lists repositories and branches for that installation, following GitHub's `Link` header until it ends, with a safety cap of 100 pages. `PATCH` then checks the chosen repository with `GET /repositories/{id}` and the branch with `GET /repos/{owner}/{repo}/branches/{branch}`, so a repository past the page cap can still be saved.
+6. `DELETE` uninstalls the GitHub App installation, retires that installation id, and deletes the row. If the server secrets are missing, it leaves the row in place.
+7. Successful and failed setup redirects carry a one-time `githubResult` token bound to the signed-in user. The organizations page consumes it before showing a toast. A copied `?github=connected` query does nothing.
+8. `POST /api/webhooks/github` checks `X-Hub-Signature-256`. `installation` `deleted` removes the row. `installation_repositories` `removed` clears the repository and branch when the saved repository was removed.
+
+Pull request linking, commit status, issue sync, and branch creation are not part of this connection.
+
+## Sharing a ticket
+
+The share dialog offers two links.
+
+The private link is `/board/{boardId}?taskId={taskId}`. It is the normal ticket URL, so nothing is created or stored. Only someone who can read the board can open it. A signed-in person who cannot read that board is sent to `/dashboard?access=denied`, and the dashboard says they do not have access. A missing board uses the same redirect, so the warning does not reveal whether the board exists.
+
+The public link is separate and still has to be created:
 
 `POST /api/tasks/[taskId]/share` — mint or reuse a UUID `shareToken`.
 
