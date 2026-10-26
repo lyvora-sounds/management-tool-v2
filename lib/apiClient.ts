@@ -31,7 +31,19 @@ export function createApiFetch({ baseUrl, getToken, fetchImpl }: Options) {
     const query = path.includes("?") ? path.slice(path.indexOf("?")) : "";
     const headers = new Headers(init.headers);
     headers.set("Authorization", `Bearer ${token}`);
-    return fetchImpl(`${base}${apiPath}${query}`, { ...init, headers });
+    const toApi = () => fetchImpl(`${base}${apiPath}${query}`, { ...init, headers });
+
+    // A write is never repeated: if the API answered badly we cannot know whether it applied. A read can be,
+    // so while routes are moving over, a read that the API cannot serve (unreachable, blocked by CORS, a token
+    // it rejects, a server error) is answered by the route this app still has. A 404 is a real answer and stays.
+    if ((init.method ?? "GET").toUpperCase() !== "GET") return toApi();
+    try {
+      const response = await toApi();
+      if (response.status !== 401 && response.status < 500) return response;
+    } catch {
+      // Network or CORS failure: fall through to the same-origin route.
+    }
+    return fetchImpl(path, init);
   };
 }
 

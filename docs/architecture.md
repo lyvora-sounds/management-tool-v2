@@ -99,6 +99,7 @@ The backend is moving route by route to `kiki-api` (a separate Fastify service o
 - A migrated route is sent to `NEXT_PUBLIC_API_URL` with the Clerk session token as `Authorization: Bearer`, and `/api/...` becomes `/v1/...`.
 - **`NEXT_PUBLIC_API_URL` unset means nothing changes**: every call is the plain same-origin fetch. Local development and Vercel previews do not need it. It is a build-time value (inlined into the browser bundle) and not a secret.
 - If Clerk has no session token yet, the call falls back to the same-origin route, which still exists here.
+- A **read** that the API cannot serve (unreachable, blocked by CORS, a 401, a 5xx) is answered by the route this app still has. A 404 is a real answer and is kept. A write is never repeated. Remove the fallback when the route is deleted from this app.
 - The API accepts the token only from the frontend origins listed in its `CORS_ORIGINS`.
 
 Migrated so far: `GET /api/labels/[boardId]`.

@@ -50,4 +50,44 @@ describe("apiFetch", () => {
     await apiFetch("/api/labels/board_1");
     expect(fetchImpl).toHaveBeenCalledWith("/api/labels/board_1", {});
   });
+
+  describe("when the API cannot serve a read", () => {
+    const apiUrl = "https://api.example.com/v1/labels/board_1";
+
+    function withApi(respond: () => Promise<Response>) {
+      const fetchImpl = vi.fn(async (url: string) =>
+        url.startsWith("https://api.example.com") ? respond() : new Response("[]", { status: 200 }),
+      );
+      const apiFetch = createApiFetch({ baseUrl: "https://api.example.com", getToken: async () => "tok", fetchImpl });
+      return { apiFetch, fetchImpl };
+    }
+
+    it("falls back to this app when the API is unreachable", async () => {
+      const { apiFetch, fetchImpl } = withApi(async () => {
+        throw new TypeError("Failed to fetch");
+      });
+      const res = await apiFetch("/api/labels/board_1");
+      expect(res.status).toBe(200);
+      expect(fetchImpl.mock.calls.map((c) => c[0])).toEqual([apiUrl, "/api/labels/board_1"]);
+    });
+
+    it("falls back when the API rejects the token", async () => {
+      const { apiFetch, fetchImpl } = withApi(async () => new Response("{}", { status: 401 }));
+      await apiFetch("/api/labels/board_1");
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+    });
+
+    it("falls back on a server error", async () => {
+      const { apiFetch, fetchImpl } = withApi(async () => new Response("{}", { status: 503 }));
+      await apiFetch("/api/labels/board_1");
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+    });
+
+    it("keeps a 404 from the API: it is a real answer", async () => {
+      const { apiFetch, fetchImpl } = withApi(async () => new Response("{}", { status: 404 }));
+      const res = await apiFetch("/api/labels/board_1");
+      expect(res.status).toBe(404);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+    });
+  });
 });
