@@ -1,21 +1,6 @@
-export type SearchBoard = {
-  id: string;
-  title: string;
-  color: string | null;
-};
+import type { ApiGetResponse } from "@/lib/api/types";
 
-export type SearchTask = {
-  id: string;
-  title: string;
-  completed: boolean;
-  list: {
-    title: string;
-    boardId: string;
-    board: { title: string };
-  };
-};
-
-export type SearchResults = {
-  boards: SearchBoard[];
-  tasks: SearchTask[];
-};
+/** What GET /v1/search sends. A change in the API's answer fails the build here. */
+export type SearchResults = ApiGetResponse<"/v1/search">;
+export type SearchBoard = SearchResults["boards"][number];
+export type SearchTask = SearchResults["tasks"][number];
