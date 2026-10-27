@@ -3,12 +3,17 @@
 //
 //   pnpm api:types                 reads ${NEXT_PUBLIC_API_URL}/openapi.json (or the staging API) and rewrites the file
 //   pnpm api:types ./openapi.json  reads a local file instead (kiki-api: `pnpm openapi > openapi.json`)
-//   pnpm api:types --check         changes nothing; exits 1 if the committed types differ from the API
+//   pnpm api:types --check         changes nothing; exits 1 only if something the app already knows BROKE
 //
 // A route that changes its response then fails `tsc` here, in the pull request, not in production.
+//
+// --check does not demand that the file is identical to the API. The API keeps growing, and every open pull
+// request would turn red at each deploy. It fails when a route or schema in the committed file was removed or
+// changed in a way that is not purely additive. New routes, new schemas and new fields are only reported.
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import openapiTS, { astToString } from "openapi-typescript";
+import { compareTypes } from "./apiTypesDiff.mjs";
 
 const OUT = fileURLToPath(new URL("../lib/api/schema.d.ts", import.meta.url));
 const DEFAULT_URL = "https://api-staging.kikiboard.xyz";
@@ -47,12 +52,23 @@ try {
 const generated = HEADER + astToString(await openapiTS(document));
 
 if (check) {
-  const current = readFileSync(OUT, "utf8");
-  if (current !== generated) {
-    console.error("api-types: lib/api/schema.d.ts is out of date with the API. Run `pnpm api:types` and fix what tsc reports.");
+  const { breaking, additive, added } = compareTypes(readFileSync(OUT, "utf8"), generated);
+
+  if (breaking.length > 0) {
+    console.error("api-types: the API changed something lib/api/schema.d.ts already knows:");
+    for (const b of breaking) console.error(`  ${b.reason.padEnd(8)} ${b.kind} ${b.name}`);
+    console.error("Run `pnpm api:types` and fix what tsc reports.");
     process.exit(1);
   }
-  console.log("api-types: up to date");
+
+  const news = added.paths.length + added.schemas.length + additive.length;
+  if (news === 0) {
+    console.log("api-types: up to date");
+  } else {
+    console.log(
+      `api-types: nothing the app uses has broken. The API also has ${added.paths.length} new route(s), ${added.schemas.length} new schema(s) and ${additive.length} schema/route(s) with new fields. Run \`pnpm api:types\` when you need them.`,
+    );
+  }
 } else {
   writeFileSync(OUT, generated);
   console.log(`api-types: wrote lib/api/schema.d.ts from ${source}`);
