@@ -5,6 +5,7 @@ import { ShieldCheck, X, UserCheck, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
 
 interface BoardPermissionsProps {
   boardId: string;
@@ -66,7 +67,7 @@ export function BoardPermissions({
     setSaving(true);
     const prev = memberCanAssign;
     setMemberCanAssign(value);
-    const res = await fetch(`/api/boards/${boardId}/permissions`, {
+    const res = await apiFetch(`/api/boards/${boardId}/permissions`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ memberCanAssign: value }),
@@ -84,7 +85,7 @@ export function BoardPermissions({
     const prev = kikiMode;
     setKikiMode(value);
     setSaving(true);
-    const res = await fetch(`/api/boards/${boardId}/permissions`, {
+    const res = await apiFetch(`/api/boards/${boardId}/permissions`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kikiMode: value }),
@@ -101,7 +102,7 @@ export function BoardPermissions({
     const prev = kikiTriage;
     setKikiTriage(value);
     setSaving(true);
-    const res = await fetch(`/api/boards/${boardId}/permissions`, {
+    const res = await apiFetch(`/api/boards/${boardId}/permissions`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kikiTriage: value }),

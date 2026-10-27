@@ -115,8 +115,18 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | | `DELETE /api/lists/deleteList/[listId]` | `DELETE /v1/lists/:listId` |
 | Notifications | `GET`/`PATCH /api/notifications`, `PATCH /api/notifications/[id]` | same names under `/v1` |
 | Search | `GET /api/search` | `GET /v1/search` |
+| Boards | `GET /api/boards/getBoards`, `POST /api/boards/createBoard` | `GET`, `POST /v1/boards` |
+| | `PATCH /api/boards/updateBoard/[boardId]`, `DELETE /api/boards/deleteBoard/[boardId]` | `PATCH`, `DELETE /v1/boards/:boardId` |
+| | `GET /api/boards/[boardId]/activity` | `GET /v1/boards/:boardId/activity` |
+| | `GET`, `PUT /api/boards/[boardId]/links` | same under `/v1` |
+| | `PATCH /api/boards/[boardId]/permissions`, `PATCH /api/boards/[boardId]/organization` | same under `/v1` |
+| Onboarding | `PATCH /api/onboarding` | `PATCH /v1/onboarding` |
 
 A write is never repeated: if the API fails, the action fails and the user sees the screen's own error.
+
+The API answers errors as `{ error: code, message }`; the app's own routes sent `{ error: text }`. A screen that shows the error to the user reads `message` first and falls back to `error` (`CreateBoardStepper`, `OrganizationsClient`).
+
+The API does not send the Slack and Discord webhook URLs in a board, so `boardFromApi` (`lib/api/boards.ts`) sets them to null. Types such as `ApiBoardLink` come from the contract, not from an old route file, so deleting the old handlers later does not break the build.
 
 **Do not delete the old handlers in `app/api` yet.** Production (`main`) serves these routes from this app, and the Vercel variable `NEXT_PUBLIC_API_URL` exists only for the `dev` branch. The next promotion of `dev` to `main` would bring `apiFetch` to production without it, and production would call its own routes. Until the production API exists (ticket "production environment"), the old handlers stay, and so does the fallback. Previews of other branches and local development also rely on them when the variable is unset.
 
