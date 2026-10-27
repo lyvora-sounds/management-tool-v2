@@ -19,6 +19,7 @@ import { useBoardsStore } from "@/store/useBoardsStore";
 import { formatRelativeTime } from "@/lib/i18nFormat";
 import { BoardCardProps } from "./BoardCard.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
+import { apiFetch } from "@/lib/apiClient";
 
 export function BoardCard({ board }: BoardCardProps) {
   const { id, title, color, updatedAt, isOwner, totalTasks, completedTasks, totalLists } = board;
@@ -50,7 +51,7 @@ export function BoardCard({ board }: BoardCardProps) {
       return;
     }
     setLoading(true);
-    const res = await fetch(`/api/boards/updateBoard/${id}`, {
+    const res = await apiFetch(`/api/boards/updateBoard/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: trimmed }),
@@ -69,7 +70,7 @@ export function BoardCard({ board }: BoardCardProps) {
 
   const handleDelete = async () => {
     setLoading(true);
-    const res = await fetch(`/api/boards/deleteBoard/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/boards/deleteBoard/${id}`, { method: "DELETE" });
     if (res.ok) {
       removeBoard(id);
       router.refresh();

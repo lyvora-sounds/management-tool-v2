@@ -15,6 +15,7 @@ import { FormattedLogMessage } from "@/components/Shared/FormattedLogMessage";
 import type { ActivityLog, BoardActivityProps } from "./BoardActivity.types";
 import { TYPE_ICON } from "./BoardActivity.constants";
 import { ActivitySkeleton } from "@/components/skeletons";
+import { apiFetch } from "@/lib/apiClient";
 
 export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
   const t = useTranslations("board");
@@ -27,7 +28,7 @@ export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
     if (!open) return;
     const t = setTimeout(() => setLoading(true), 0);
     const controller = new AbortController();
-    fetch(`/api/boards/${boardId}/activity`, { signal: controller.signal })
+    apiFetch(`/api/boards/${boardId}/activity`, { signal: controller.signal })
       .then((r) => r.json())
       .then((data) => {
         setLogs(Array.isArray(data) ? data : []);

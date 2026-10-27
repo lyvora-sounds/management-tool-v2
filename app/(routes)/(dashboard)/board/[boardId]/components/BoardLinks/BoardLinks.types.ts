@@ -1,4 +1,4 @@
-import type { BoardLink } from "@/app/api/boards/[boardId]/links/route";
+import type { ApiBoardLink as BoardLink } from "@/lib/api/types";
 
 export interface BoardLinksProps {
   boardId: string;
