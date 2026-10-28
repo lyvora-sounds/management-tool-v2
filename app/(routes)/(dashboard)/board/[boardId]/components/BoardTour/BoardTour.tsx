@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { SpotlightTour, type TourStep } from "@/components/Shared/SpotlightTour";
+import { apiFetch } from "@/lib/apiClient";
 
 /** Orden del recorrido: de lo que ya se ve a lo que hay que descubrir. */
 const TARGETS = [
@@ -29,7 +30,7 @@ export function BoardTour({ tourSeen }: { tourSeen: boolean }) {
 
   const finish = () => {
     setOpen(false);
-    fetch("/api/onboarding", {
+    apiFetch("/api/onboarding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tourSeen: true }),

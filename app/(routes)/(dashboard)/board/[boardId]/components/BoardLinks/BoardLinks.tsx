@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { BoardLinksProps } from "./BoardLinks.types";
-import type { BoardLink } from "@/app/api/boards/[boardId]/links/route";
+import type { ApiBoardLink as BoardLink } from "@/lib/api/types";
+import { apiFetch } from "@/lib/apiClient";
 
 export function BoardLinks({
   boardId,
@@ -35,7 +36,7 @@ export function BoardLinks({
 
   const save = async (next: BoardLink[]) => {
     setSaving(true);
-    const res = await fetch(`/api/boards/${boardId}/links`, {
+    const res = await apiFetch(`/api/boards/${boardId}/links`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(next),

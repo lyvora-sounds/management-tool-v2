@@ -36,6 +36,7 @@ import { ArchiveTasksModal } from "../ArchiveTasksModal/ArchiveTasksModal";
 import { BoardIntegrationsModal } from "../BoardIntegrationsModal/BoardIntegrationsModal";
 import { AiBrainDumpModal } from "../AiBrainDumpModal/AiBrainDumpModal";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
+import { apiFetch } from "@/lib/apiClient";
 
 export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initialLinks, memberCanAssign }: BoardHeaderProps) {
   const t = useTranslations("board");
@@ -77,7 +78,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
       return;
     }
     setLoading(true);
-    const res = await fetch(`/api/boards/updateBoard/${boardId}`, {
+    const res = await apiFetch(`/api/boards/updateBoard/${boardId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: trimmed }),
@@ -97,7 +98,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
 
   const handleDelete = async () => {
     setLoading(true);
-    const res = await fetch(`/api/boards/deleteBoard/${boardId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/boards/deleteBoard/${boardId}`, { method: "DELETE" });
     if (res.ok) {
       removeBoard(boardId);
       router.push("/dashboard/boards");

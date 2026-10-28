@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreateBoardModal } from "../components/boards/CreateBoardModal/CreateBoardModal";
 import { useBoardPolling } from "@/hooks/use-board-polling";
+import { apiFetch } from "@/lib/apiClient";
 import { GithubConnection } from "./GithubConnection";
 
 type Board = { id: string; title: string; color: string | null; canMove: boolean };
@@ -278,7 +279,7 @@ export function OrganizationsClient({
   const moveBoard = async () => {
     if (!movingBoard || !destinationId) return;
     setMoving(true);
-    const response = await fetch(`/api/boards/${movingBoard.board.id}/organization`, {
+    const response = await apiFetch(`/api/boards/${movingBoard.board.id}/organization`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ organizationId: destinationId, confirmation: moveConfirmation }),
@@ -290,7 +291,8 @@ export function OrganizationsClient({
       toast.success(t("boardMoved"));
     } else {
       const data = await response.json().catch(() => null);
-      toast.error(data?.error ?? t("moveError"));
+      // The API sends { error: code, message }; the app's own route sent { error: text }.
+      toast.error(data?.message ?? data?.error ?? t("moveError"));
     }
     setMoving(false);
   };

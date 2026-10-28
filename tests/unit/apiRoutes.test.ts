@@ -16,6 +16,16 @@ describe("apiPathFor: routes already served by kiki-api", () => {
     ["PATCH", "/api/notifications", "/v1/notifications"],
     ["PATCH", "/api/notifications/n1", "/v1/notifications/n1"],
     ["GET", "/api/search", "/v1/search"],
+    ["GET", "/api/boards/getBoards", "/v1/boards"],
+    ["POST", "/api/boards/createBoard", "/v1/boards"],
+    ["PATCH", "/api/boards/updateBoard/b1", "/v1/boards/b1"],
+    ["DELETE", "/api/boards/deleteBoard/b1", "/v1/boards/b1"],
+    ["GET", "/api/boards/b1/activity", "/v1/boards/b1/activity"],
+    ["GET", "/api/boards/b1/links", "/v1/boards/b1/links"],
+    ["PUT", "/api/boards/b1/links", "/v1/boards/b1/links"],
+    ["PATCH", "/api/boards/b1/permissions", "/v1/boards/b1/permissions"],
+    ["PATCH", "/api/boards/b1/organization", "/v1/boards/b1/organization"],
+    ["PATCH", "/api/onboarding", "/v1/onboarding"],
   ];
 
   it.each(migrated)("%s %s -> %s", (method, path, expected) => {
@@ -28,7 +38,7 @@ describe("apiPathFor: routes already served by kiki-api", () => {
 
   it("leaves every route that has not moved on this app", () => {
     const stays: [string, string][] = [
-      ["GET", "/api/boards/getBoards"],
+      ["PUT", "/api/boards/getBoards"],
       ["POST", "/api/tasks/createTask"],
       ["PATCH", "/api/tasks/updateOrder"],
       ["POST", "/api/tasks/t1/labels"],
@@ -36,6 +46,17 @@ describe("apiPathFor: routes already served by kiki-api", () => {
       ["PUT", "/api/lists/updateOrder"],
       ["DELETE", "/api/notifications/n1"],
       ["DELETE", "/api/search"],
+      // The rest of the board routes belong to later sub-batches.
+      ["GET", "/api/boards/b1/tasks"],
+      ["GET", "/api/boards/b1/access"],
+      ["PATCH", "/api/boards/b1/access"],
+      ["GET", "/api/boards/b1/archive"],
+      ["GET", "/api/boards/b1/epics"],
+      ["GET", "/api/boards/b1/invitations"],
+      ["PATCH", "/api/boards/b1/members/m1"],
+      ["GET", "/api/organizations"],
+      ["POST", "/api/boards/b1/links"],
+      ["GET", "/api/boards/b1/permissions"],
     ];
     for (const [method, path] of stays) expect(apiPathFor(method, path)).toBeNull();
   });

@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { ONBOARDING_STEPS, type OnboardingStep } from "@/lib/onboarding";
 import { guideHref } from "@/components/Shared/GuidePointer";
 import type { OnboardingChecklistProps } from "./OnboardingChecklist.types";
+import { apiFetch } from "@/lib/apiClient";
 
 const STEP_ICON: Record<OnboardingStep, React.ElementType> = {
   createBoard: LayoutDashboard,
@@ -35,7 +36,7 @@ export function OnboardingChecklist({ state, firstBoardId }: OnboardingChecklist
 
   const dismiss = async () => {
     setHidden(true);
-    await fetch("/api/onboarding", {
+    await apiFetch("/api/onboarding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ dismissed: true }),

@@ -31,6 +31,20 @@ const MIGRATED: Route[] = [
 
   // Search
   { method: "GET", pattern: /^\/api\/search$/, to: sameUnderV1 },
+
+  // Boards
+  { method: "GET", pattern: /^\/api\/boards\/getBoards$/, to: () => "/v1/boards" },
+  { method: "POST", pattern: /^\/api\/boards\/createBoard$/, to: () => "/v1/boards" },
+  { method: "PATCH", pattern: /^\/api\/boards\/updateBoard\/[^/]+$/, to: (p) => `/v1/boards/${id(p)}` },
+  { method: "DELETE", pattern: /^\/api\/boards\/deleteBoard\/[^/]+$/, to: (p) => `/v1/boards/${id(p)}` },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/activity$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/links$/, to: sameUnderV1 },
+  { method: "PUT", pattern: /^\/api\/boards\/[^/]+\/links$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/permissions$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/organization$/, to: sameUnderV1 },
+
+  // Onboarding
+  { method: "PATCH", pattern: /^\/api\/onboarding$/, to: sameUnderV1 },
 ];
 
 /** The kiki-api path for a request, or null when this app still serves it. */

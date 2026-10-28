@@ -115,8 +115,18 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | | `DELETE /api/lists/deleteList/[listId]` | `DELETE /v1/lists/:listId` |
 | Notifications | `GET`/`PATCH /api/notifications`, `PATCH /api/notifications/[id]` | same names under `/v1` |
 | Search | `GET /api/search` | `GET /v1/search` |
+| Boards | `GET /api/boards/getBoards`, `POST /api/boards/createBoard` | `GET`, `POST /v1/boards` |
+| | `PATCH /api/boards/updateBoard/[boardId]`, `DELETE /api/boards/deleteBoard/[boardId]` | `PATCH`, `DELETE /v1/boards/:boardId` |
+| | `GET /api/boards/[boardId]/activity` | `GET /v1/boards/:boardId/activity` |
+| | `GET`, `PUT /api/boards/[boardId]/links` | same under `/v1` |
+| | `PATCH /api/boards/[boardId]/permissions`, `PATCH /api/boards/[boardId]/organization` | same under `/v1` |
+| Onboarding | `PATCH /api/onboarding` | `PATCH /v1/onboarding` |
 
 A write is never repeated: if the API fails, the action fails and the user sees the screen's own error.
+
+The API answers errors as `{ error: code, message }`; the app's own routes sent `{ error: text }`. A screen that shows the error to the user reads `message` first and falls back to `error` (`CreateBoardStepper`, `OrganizationsClient`).
+
+The API does not send the Slack and Discord webhook URLs in a board, so `boardFromApi` (`lib/api/boards.ts`) sets them to null. Types such as `ApiBoardLink` come from the contract, not from an old route file, so deleting the old handlers later does not break the build.
 
 **Do not delete the old handlers in `app/api` yet.** Production (`main`) serves these routes from this app, and the Vercel variable `NEXT_PUBLIC_API_URL` exists only for the `dev` branch. The next promotion of `dev` to `main` would bring `apiFetch` to production without it, and production would call its own routes. Until the production API exists (ticket "production environment"), the old handlers stay, and so does the fallback. Previews of other branches and local development also rely on them when the variable is unset.
 
@@ -126,6 +136,6 @@ A write is never repeated: if the API fails, the action fails and the user sees 
 
 - `lib/api/schema.d.ts` is generated (do not edit). `pnpm api:types` rewrites it from the staging API; `pnpm api:types ./openapi.json` reads a local file (`pnpm openapi > openapi.json` in `kiki-api`).
 - `lib/api/types.ts` exports `ApiLabel`, `ApiError` and `ApiGetResponse<Path>`, the JSON body of a GET route. Read a migrated route's response through them (see `TaskLabels`), and map it to the screen's model by field name in `lib/api/`, as `labelFromApi` does. If the API changes a field, `tsc` fails in the pull request, not in production.
-- CI runs `node scripts/api-types.mjs --check`: it fails when the committed types differ from the API, and says to run `pnpm api:types`. If the API cannot be reached the check is skipped.
+- CI runs `node scripts/api-types.mjs --check`. It fails only when something `lib/api/schema.d.ts` already knows was **removed or changed in a way that is not purely additive** (a route that disappears, a field that is removed, retyped or becomes optional), and lists what broke. A new route, a new schema or a new field does not fail it, so deploying the API never turns the open pull requests of other people red; it prints a note and `pnpm api:types` picks the new things up when you need them. If the API cannot be reached the check is skipped. The comparison is `scripts/apiTypesDiff.mjs`, by route and by schema, regardless of order. Limit: a new *required* field in a request body is additive here, and the callers do not type their request bodies yet.
 - **Order:** merge and deploy the `kiki-api` change first, then regenerate here. Every API error is `{ error, message }` (`ApiError`).
 
