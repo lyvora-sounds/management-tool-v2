@@ -72,6 +72,18 @@ const MIGRATED: Route[] = [
   { method: "GET", pattern: /^\/api\/invite\/[^/]+$/, to: (p) => `/v1/invitations/${id(p)}`, public: true },
   { method: "POST", pattern: /^\/api\/invite\/[^/]+$/, to: (p) => `/v1/invitations/${id(p)}/accept` },
 
+  // Organizations, their members and teams (the GitHub routes under an organization are still served here)
+  { method: "GET", pattern: /^\/api\/organizations$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/organizations$/, to: sameUnderV1 },
+  ...["GET", "POST", "PATCH", "DELETE"].map((method) => ({ method, pattern: /^\/api\/organizations\/[^/]+\/members$/, to: sameUnderV1 })),
+  { method: "GET", pattern: /^\/api\/organizations\/[^/]+\/available-members$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/organizations\/[^/]+\/teams$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/organizations\/[^/]+\/teams$/, to: sameUnderV1 },
+  ...["POST", "DELETE"].flatMap((method) => [
+    { method, pattern: /^\/api\/organizations\/[^/]+\/teams\/[^/]+\/members$/, to: sameUnderV1 },
+    { method, pattern: /^\/api\/organizations\/[^/]+\/teams\/[^/]+\/boards$/, to: sameUnderV1 },
+  ]),
+
   // Onboarding
   { method: "PATCH", pattern: /^\/api\/onboarding$/, to: sameUnderV1 },
 ];
