@@ -43,6 +43,19 @@ const MIGRATED: Route[] = [
   { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/permissions$/, to: sameUnderV1 },
   { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/organization$/, to: sameUnderV1 },
 
+  // Board access, archive, epics and integrations
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/access$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/access$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/archive$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/boards\/[^/]+\/archive$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/archive$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/epics$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/boards\/[^/]+\/epics$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/epics$/, to: sameUnderV1 },
+  { method: "DELETE", pattern: /^\/api\/boards\/[^/]+\/epics$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/integrations$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/integrations$/, to: sameUnderV1 },
+
   // Onboarding
   { method: "PATCH", pattern: /^\/api\/onboarding$/, to: sameUnderV1 },
 ];
