@@ -241,6 +241,7 @@ const config = {
   slug: "kikiboard",
   privateKey: pem,
   webhookSecret: "webhook-secret-16",
+  stateSecret: "state-secret-16ch",
   clientId: "Iv1.clientid",
   clientSecret: "client-secret-16",
 };
@@ -350,6 +351,23 @@ describe("GitHub setup", () => {
       sessionUserId: "user_1",
     }, config);
     expect(finished).toMatchObject({ kind: "redirect", outcome: "error" });
+    expect(rows.connections).toHaveLength(0);
+  });
+
+  it("does not link an installation after the manager role is removed", async () => {
+    const { state } = await authorize("111");
+    rows.managers.delete("org_1:user_1");
+    userInstallations = [{ id: 111, account: { id: 9, login: "acme", type: "Organization" } }];
+    const finished = await handleGithubSetup({
+      state,
+      installationId: "111",
+      setupAction: null,
+      code: "oauth-code",
+      oauthError: null,
+      sessionUserId: "user_1",
+    }, config);
+    expect(finished).toMatchObject({ kind: "redirect", outcome: "error", organizationId: "org_1" });
+    expect(order.some((entry) => entry.includes("/login/oauth/access_token"))).toBe(false);
     expect(rows.connections).toHaveLength(0);
   });
 
@@ -522,8 +540,9 @@ describe("GitHub setup", () => {
     expect(managerView?.settingsUrl).toContain("/installations/50");
 
     const state = await startGithubInstall(config, "org_1", "user_1");
-    const parsed = readGithubState(config.webhookSecret, state);
+    const parsed = readGithubState(config.stateSecret, state);
     expect(parsed?.nonce).toBeTruthy();
+    expect(readGithubState(config.webhookSecret, state)).toBeNull();
     const requested = await handleGithubSetup({
       state,
       installationId: null,
@@ -552,6 +571,9 @@ describe("GitHub setup", () => {
       expiresAt: new Date(Date.now() + 60_000),
       createdAt: new Date(),
     });
+    rows.managers.delete("org_1:user_1");
+    expect(await chooseGithubInstallation(config, "org_1", "user_1", "111")).toEqual({ ok: false });
+    rows.managers.add("org_1:user_1");
     expect(await chooseGithubInstallation(config, "org_1", "user_1", "222")).toEqual({ ok: false });
     expect(rows.connections).toHaveLength(0);
     expect(await chooseGithubInstallation(config, "org_1", "user_1", "111")).toEqual({ ok: true });

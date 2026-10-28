@@ -14,6 +14,7 @@ import {
 } from "@/lib/integrations/githubApp";
 
 const RESULT_TTL_MS = 10 * 60 * 1000;
+export const GITHUB_RESULT_COOKIE = "github_setup_result";
 const OPEN_ATTEMPT_TTL_MS = 10 * 60 * 1000;
 const REQUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const RESULT_TOKEN_PATTERN = /^[A-Za-z0-9_-]{20,128}$/;
@@ -81,10 +82,37 @@ export function installationClaimBlock(input: {
   return "ok";
 }
 
+export function githubResultCookie(token: string) {
+  return {
+    name: GITHUB_RESULT_COOKIE,
+    value: token,
+    options: githubResultCookieOptions(RESULT_TTL_MS / 1000),
+  };
+}
+
+export function clearGithubResultCookie() {
+  return {
+    name: GITHUB_RESULT_COOKIE,
+    value: "",
+    options: githubResultCookieOptions(0),
+  };
+}
+
+function githubResultCookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge,
+  };
+}
+
 export async function saveGithubInstallation(
   input: { organizationId: string; userId: string; installation: GithubInstallation },
   config: GithubAppConfig | null,
 ) {
+  if (!(await canManageGithub(input.userId, input.organizationId))) return { ok: false as const };
   if (await db.retiredGithubInstallation.findUnique({ where: { installationId: input.installation.id } })) {
     return { ok: false as const };
   }

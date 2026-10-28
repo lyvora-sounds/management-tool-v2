@@ -2,14 +2,24 @@ import { NextResponse } from "next/server";
 import { applyGithubWebhookEffect } from "@/lib/integrations/githubConnection";
 import { githubWebhookEffect, readGithubAppConfig, verifyGithubWebhookSignature } from "@/lib/integrations/githubApp";
 
+const MAX_WEBHOOK_BYTES = 1_000_000;
+
 export async function POST(request: Request) {
-  const config = readGithubAppConfig();
-  if (!config) return NextResponse.json({ error: "GitHub App is not configured" }, { status: 500 });
+  const declared = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(declared) && declared > MAX_WEBHOOK_BYTES) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
 
   const body = await request.text();
+  if (body.length > MAX_WEBHOOK_BYTES) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
+
+  const config = readGithubAppConfig();
   const signature = request.headers.get("x-hub-signature-256");
-  if (!verifyGithubWebhookSignature(config.webhookSecret, body, signature)) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  const secret = config?.webhookSecret ?? "unconfigured-placeholder";
+  if (!config || !verifyGithubWebhookSignature(secret, body, signature)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   let payload: unknown;

@@ -4,7 +4,7 @@ import { canManageGithub, githubActor } from "@/lib/integrations/githubConnectio
 import { githubInstallUrl, readGithubAppConfig } from "@/lib/integrations/githubApp";
 import { startGithubInstall } from "@/lib/integrations/githubSetup";
 
-export async function GET(
+export async function POST(
   _request: Request,
   { params }: { params: Promise<{ organizationId: string }> },
 ) {
@@ -17,5 +17,5 @@ export async function GET(
   if (!config) return NextResponse.json({ error: "GitHub App is not configured" }, { status: 503 });
 
   const state = await startGithubInstall(config, organizationId, user.id);
-  return NextResponse.redirect(githubInstallUrl(config.slug, state));
+  return NextResponse.json({ url: githubInstallUrl(config.slug, state) });
 }

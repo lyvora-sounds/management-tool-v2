@@ -31,11 +31,9 @@ type Team = { id: string; name: string; members: { user: Member["user"] }[]; boa
 export function OrganizationsClient({
   githubNotice = null,
   githubOrganizationId = null,
-  githubResultToken = null,
 }: {
   githubNotice?: "connected" | "error" | "requested" | "updated" | "waiting" | "choose" | null;
   githubOrganizationId?: string | null;
-  githubResultToken?: string | null;
 }) {
   const t = useTranslations("organizations");
   const tCommon = useTranslations("common");
@@ -117,13 +115,7 @@ export function OrganizationsClient({
   useEffect(() => {
     if (!githubNotice || noticedGithub.current) return;
     noticedGithub.current = true;
-    if (githubResultToken) {
-      void fetch("/api/integrations/github/result", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: githubResultToken }),
-      });
-    }
+    void fetch("/api/integrations/github/result", { method: "POST" });
     if (githubNotice === "connected") toast.success(t("githubConnected"));
     else if (githubNotice === "updated") toast.success(t("githubUpdated"));
     else if (githubNotice === "requested") toast.info(t("githubRequested"));
@@ -134,7 +126,7 @@ export function OrganizationsClient({
       queueMicrotask(() => { void loadDetails(githubOrganizationId); });
     }
     router.replace("/dashboard/organizations");
-  }, [githubNotice, githubOrganizationId, githubResultToken, loadDetails, router, t]);
+  }, [githubNotice, githubOrganizationId, loadDetails, router, t]);
 
   const refreshOrganizations = useCallback(async () => {
     await Promise.all([

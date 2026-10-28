@@ -29,10 +29,12 @@ describe("readGithubAppConfig", () => {
       GITHUB_APP_SLUG: "kikiboard",
       GITHUB_APP_PRIVATE_KEY: pem.replace(/\n/g, "\\n"),
       GITHUB_APP_WEBHOOK_SECRET: SECRET,
+      GITHUB_APP_STATE_SECRET: "state-secret-16ch",
       GITHUB_APP_CLIENT_ID: "Iv1.clientid",
       GITHUB_APP_CLIENT_SECRET: SECRET,
     });
     expect(config?.appId).toBe("12345");
+    expect(config?.stateSecret).toBe("state-secret-16ch");
     expect(config?.privateKey).toContain("BEGIN PRIVATE KEY");
     expect(readGithubAppConfig({
       GITHUB_APP_ID: "12345",
@@ -55,6 +57,24 @@ describe("readGithubAppConfig", () => {
       GITHUB_APP_SLUG: "../evil",
       GITHUB_APP_PRIVATE_KEY: pem,
       GITHUB_APP_WEBHOOK_SECRET: SECRET,
+      GITHUB_APP_CLIENT_ID: "Iv1.clientid",
+      GITHUB_APP_CLIENT_SECRET: SECRET,
+    })).toBeNull();
+    expect(readGithubAppConfig({
+      GITHUB_APP_ID: "12345",
+      GITHUB_APP_SLUG: "kikiboard",
+      GITHUB_APP_PRIVATE_KEY: pem,
+      GITHUB_APP_WEBHOOK_SECRET: SECRET,
+      GITHUB_APP_STATE_SECRET: SECRET,
+      GITHUB_APP_CLIENT_ID: "Iv1.clientid",
+      GITHUB_APP_CLIENT_SECRET: SECRET,
+    })).toBeNull();
+    expect(readGithubAppConfig({
+      GITHUB_APP_ID: "12345",
+      GITHUB_APP_SLUG: "kikiboard",
+      GITHUB_APP_PRIVATE_KEY: pem,
+      GITHUB_APP_WEBHOOK_SECRET: SECRET,
+      GITHUB_APP_STATE_SECRET: "short",
       GITHUB_APP_CLIENT_ID: "Iv1.clientid",
       GITHUB_APP_CLIENT_SECRET: SECRET,
     })).toBeNull();
@@ -134,6 +154,8 @@ describe("GitHub payload parsers", () => {
       repositories: [
         { id: 3, full_name: "acme/app", default_branch: "develop" },
         { id: 4, full_name: "not a repo" },
+        { id: 5, full_name: "../evil" },
+        { id: 6, full_name: "acme/.." },
       ],
     })).toEqual([{ id: "3", fullName: "acme/app", defaultBranch: "develop" }]);
     expect(parseGithubBranches([{ name: "main" }, { name: "" }, { other: true }])).toEqual(["main"]);
@@ -153,6 +175,7 @@ describe("GitHub payload parsers", () => {
       "https://api.github.com/repos/acme/app/branches/feature%2Flogin",
     );
     expect(() => githubRepositoryBranchUrl("acme/app", "..")).toThrow(/Invalid branch/);
+    expect(() => githubRepositoryBranchUrl("../evil", "main")).toThrow(/Invalid repository/);
   });
 
   it("follows every GitHub page until the next link ends", async () => {
@@ -176,6 +199,7 @@ describe("GitHub payload parsers", () => {
       slug: "kikiboard",
       privateKey: pem,
       webhookSecret: SECRET,
+      stateSecret: "state-secret-16ch",
       clientId: "Iv1.clientid",
       clientSecret: SECRET,
     }, "15");

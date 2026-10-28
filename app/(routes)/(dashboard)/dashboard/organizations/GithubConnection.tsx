@@ -158,8 +158,8 @@ export function GithubConnection({
   const accountLabel = connection?.accountType === "Organization"
     ? t("githubOrganizationAccount")
     : t("githubUserAccount");
-  const installHref = `/api/organizations/${organizationId}/github/install`;
-  const finishHref = `/api/organizations/${organizationId}/github/finish`;
+  const installPath = `/api/organizations/${organizationId}/github/install`;
+  const finishPath = `/api/organizations/${organizationId}/github/finish`;
   const repoOptions = repositoryId && connection?.repositoryName && !repos.some((repo) => repo.id === repositoryId)
     ? [{ id: repositoryId, fullName: connection.repositoryName, defaultBranch: connection.branch ?? "" }, ...repos]
     : repos;
@@ -214,6 +214,24 @@ export function GithubConnection({
     }
   };
 
+  const openGithub = async (path: string) => {
+    setSaving(true);
+    try {
+      const response = await fetch(path, { method: "POST" });
+      const data = response.ok ? await response.json() as { url?: unknown } : null;
+      const target = typeof data?.url === "string" ? new URL(data.url) : null;
+      if (target?.origin === "https://github.com") {
+        window.location.assign(target.toString());
+        return;
+      }
+      toast.error(t("githubConnectError"));
+    } catch {
+      toast.error(t("githubConnectError"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const disconnect = async () => {
     if (!window.confirm(t("githubDisconnectConfirm"))) return;
     setSaving(true);
@@ -247,12 +265,12 @@ export function GithubConnection({
       {loading ? <Loader2 className="animate-spin text-muted-foreground" size={16} /> : null}
       {!loading && !configured ? <p className="text-xs text-muted-foreground">{t("githubNotConfigured")}</p> : null}
       {!loading && configured && !connection && canManage && choices.length === 0 && !pendingApproval ? (
-        <a className={buttonVariants({ size: "sm" })} href={installHref}>{t("githubConnect")}</a>
+        <Button size="sm" disabled={saving} onClick={() => { void openGithub(installPath); }}>{t("githubConnect")}</Button>
       ) : null}
       {!loading && configured && canManage && pendingApproval && choices.length === 0 ? (
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">{t("githubPending")}</p>
-          <a className={buttonVariants({ size: "sm", variant: "outline" })} href={finishHref}>{t("githubFinish")}</a>
+          <Button size="sm" variant="outline" disabled={saving} onClick={() => { void openGithub(finishPath); }}>{t("githubFinish")}</Button>
         </div>
       ) : null}
       {!loading && configured && canManage && choices.length > 0 ? (
