@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { canEditBoard, isBoardAdmin } from "@/lib/boardAccess";
+import { isBoardAdmin } from "@/lib/boardAccess";
 
 export async function GET(
   req: Request,
@@ -11,7 +11,8 @@ export async function GET(
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const hasAccess = await canEditBoard(userId, boardId);
+  // Quien tenga una URL de webhook puede publicar en el canal del equipo: leerla es tan restringido como escribirla.
+  const hasAccess = await isBoardAdmin(userId, boardId);
   if (!hasAccess) return NextResponse.json({ error: "Sin acceso" }, { status: 403 });
 
   const board = await db.board.findUnique({
