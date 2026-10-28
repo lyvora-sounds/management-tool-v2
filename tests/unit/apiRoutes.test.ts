@@ -25,6 +25,17 @@ describe("apiPathFor: routes already served by kiki-api", () => {
     ["PUT", "/api/boards/b1/links", "/v1/boards/b1/links"],
     ["PATCH", "/api/boards/b1/permissions", "/v1/boards/b1/permissions"],
     ["PATCH", "/api/boards/b1/organization", "/v1/boards/b1/organization"],
+    ["GET", "/api/boards/b1/access", "/v1/boards/b1/access"],
+    ["PATCH", "/api/boards/b1/access", "/v1/boards/b1/access"],
+    ["GET", "/api/boards/b1/archive", "/v1/boards/b1/archive"],
+    ["POST", "/api/boards/b1/archive", "/v1/boards/b1/archive"],
+    ["PATCH", "/api/boards/b1/archive", "/v1/boards/b1/archive"],
+    ["GET", "/api/boards/b1/epics", "/v1/boards/b1/epics"],
+    ["POST", "/api/boards/b1/epics", "/v1/boards/b1/epics"],
+    ["PATCH", "/api/boards/b1/epics", "/v1/boards/b1/epics"],
+    ["DELETE", "/api/boards/b1/epics", "/v1/boards/b1/epics"],
+    ["GET", "/api/boards/b1/integrations", "/v1/boards/b1/integrations"],
+    ["PATCH", "/api/boards/b1/integrations", "/v1/boards/b1/integrations"],
     ["PATCH", "/api/onboarding", "/v1/onboarding"],
   ];
 
@@ -39,6 +50,8 @@ describe("apiPathFor: routes already served by kiki-api", () => {
   it("leaves every route that has not moved on this app", () => {
     const stays: [string, string][] = [
       ["PUT", "/api/boards/getBoards"],
+      ["GET", "/api/boards/b1/hierarchy"], // drawn in the browser; nothing calls the route
+      ["PUT", "/api/boards/b1/epics"],
       ["POST", "/api/tasks/createTask"],
       ["PATCH", "/api/tasks/updateOrder"],
       ["POST", "/api/tasks/t1/labels"],
@@ -48,10 +61,6 @@ describe("apiPathFor: routes already served by kiki-api", () => {
       ["DELETE", "/api/search"],
       // The rest of the board routes belong to later sub-batches.
       ["GET", "/api/boards/b1/tasks"],
-      ["GET", "/api/boards/b1/access"],
-      ["PATCH", "/api/boards/b1/access"],
-      ["GET", "/api/boards/b1/archive"],
-      ["GET", "/api/boards/b1/epics"],
       ["GET", "/api/boards/b1/invitations"],
       ["PATCH", "/api/boards/b1/members/m1"],
       ["GET", "/api/organizations"],

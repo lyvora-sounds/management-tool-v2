@@ -1361,6 +1361,770 @@ export interface paths {
         };
         trace?: never;
     };
+    "/v1/boards/{boardId}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Access policy of a board and its team grants (owner or admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoardAccess"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Replace the access policy and the team grants of a board (owner or admin) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        accessMode: "organization" | "restricted";
+                        /** @enum {string} */
+                        defaultRole: "viewer" | "member";
+                        /** @default [] */
+                        teamGrants?: {
+                            teamId: string;
+                            /** @enum {string} */
+                            role: "admin" | "member" | "viewer";
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            accessMode: string;
+                            defaultRole: string;
+                            teamGrants: {
+                                teamId: string;
+                                /** @enum {string} */
+                                role: "admin" | "member" | "viewer";
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/boards/{boardId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Archived tasks of a board, most recently archived first */
+        get: {
+            parameters: {
+                query?: {
+                    quarter?: string;
+                };
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            tasks: components["schemas"]["ArchivedTask"][];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Archive tasks: the ones listed, or those matching the filters, or every active task */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        taskIds?: string[];
+                        completedOnly?: boolean;
+                        quarter?: string | null;
+                        /** @description Only tasks created on or before this moment */
+                        beforeDate?: string | null;
+                    } | null;
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            archivedCount: number;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Restore archived tasks to the board */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        taskIds: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            unarchivedCount: number;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/boards/{boardId}/epics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Epics of a board with the progress of their active tasks */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            epics: components["schemas"]["EpicProgress"][];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create an epic */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        title: string;
+                        description?: string | null;
+                        color?: string | null;
+                        quarter?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Epic"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Delete an epic; its tasks stay, without an epic */
+        delete: {
+            parameters: {
+                query: {
+                    epicId: string;
+                };
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Change an epic; only the fields sent change */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        id: string;
+                        title?: string;
+                        description?: string | null;
+                        color?: string;
+                        quarter?: string | null;
+                        /** @enum {string} */
+                        status?: "open" | "completed";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Epic"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/boards/{boardId}/hierarchy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** SVG diagram of a task's parent and child tasks */
+        get: {
+            parameters: {
+                query: {
+                    taskId: string;
+                    kicker?: string;
+                    note?: string;
+                };
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Null when the task has no hierarchy to draw */
+                            svg: string | null;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/boards/{boardId}/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Slack and Discord webhooks of a board and which events they announce */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoardIntegrations"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change the webhooks and notification switches of a board (owner or admin) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        slackWebhookUrl?: string | null;
+                        discordWebhookUrl?: string | null;
+                        notifyOnTaskCreated?: boolean;
+                        notifyOnTaskCompleted?: boolean;
+                        notifyOnTaskMoved?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoardIntegrations"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1370,6 +2134,65 @@ export interface components {
             error: string;
             /** @description Human-readable explanation */
             message: string;
+        };
+        BoardAccessInput: {
+            /** @description organization or restricted */
+            accessMode: string;
+            /** @description viewer or member */
+            defaultRole: string;
+            /** @description off, owner or member */
+            kikiMode: string;
+            kikiTriage: boolean;
+            organization: {
+                id: string;
+                name: string;
+                teams: {
+                    id: string;
+                    name: string;
+                }[];
+            };
+            teamAccess: {
+                teamId: string;
+                role: string;
+            }[];
+            /** @description Whether the caller manages the board's organization */
+            canCreateTeam: boolean;
+        };
+        LabelInput: {
+            id: string;
+            title: string;
+            /** @description CSS colour, e.g. #ef4444 */
+            color: string;
+            boardId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ArchivedTaskInput: {
+            id: string;
+            title: string;
+            description: string | null;
+            completed: boolean;
+            completedAt: string | null;
+            priority: string | null;
+            quarter: string | null;
+            archivedAt: string | null;
+            listId: string;
+            list: {
+                id: string;
+                title: string;
+            };
+            epic: {
+                id: string;
+                title: string;
+                color: string;
+            } | null;
+            labels: components["schemas"]["LabelInput"][];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         BoardLinkInput: {
             id: string;
@@ -1421,16 +2244,42 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        LabelInput: {
+        EpicProgressInput: {
             id: string;
             title: string;
-            /** @description CSS colour, e.g. #ef4444 */
+            description: string | null;
+            /** @description CSS colour, e.g. #3b82f6 */
             color: string;
+            /** @description e.g. 2026-Q1 */
+            quarter: string | null;
+            /** @description open or completed */
+            status: string;
+            totalTasks: number;
+            completedTasks: number;
+            /** @description Percentage of active tasks completed, 0 to 100 */
+            progress: number;
+        };
+        EpicInput: {
+            id: string;
+            title: string;
+            description: string | null;
+            color: string;
+            quarter: string | null;
+            /** @description open or completed */
+            status: string;
+            order: number;
             boardId: string;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        BoardIntegrationsInput: {
+            slackWebhookUrl: string | null;
+            discordWebhookUrl: string | null;
+            notifyOnTaskCreated: boolean;
+            notifyOnTaskCompleted: boolean;
+            notifyOnTaskMoved: boolean;
         };
         NotificationInput: {
             id: string;
@@ -1468,6 +2317,65 @@ export interface components {
             error: string;
             /** @description Human-readable explanation */
             message: string;
+        };
+        BoardAccess: {
+            /** @description organization or restricted */
+            accessMode: string;
+            /** @description viewer or member */
+            defaultRole: string;
+            /** @description off, owner or member */
+            kikiMode: string;
+            kikiTriage: boolean;
+            organization: {
+                id: string;
+                name: string;
+                teams: {
+                    id: string;
+                    name: string;
+                }[];
+            };
+            teamAccess: {
+                teamId: string;
+                role: string;
+            }[];
+            /** @description Whether the caller manages the board's organization */
+            canCreateTeam: boolean;
+        };
+        Label: {
+            id: string;
+            title: string;
+            /** @description CSS colour, e.g. #ef4444 */
+            color: string;
+            boardId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ArchivedTask: {
+            id: string;
+            title: string;
+            description: string | null;
+            completed: boolean;
+            completedAt: string | null;
+            priority: string | null;
+            quarter: string | null;
+            archivedAt: string | null;
+            listId: string;
+            list: {
+                id: string;
+                title: string;
+            };
+            epic: {
+                id: string;
+                title: string;
+                color: string;
+            } | null;
+            labels: components["schemas"]["Label"][];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         BoardLink: {
             id: string;
@@ -1519,16 +2427,42 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        Label: {
+        EpicProgress: {
             id: string;
             title: string;
-            /** @description CSS colour, e.g. #ef4444 */
+            description: string | null;
+            /** @description CSS colour, e.g. #3b82f6 */
             color: string;
+            /** @description e.g. 2026-Q1 */
+            quarter: string | null;
+            /** @description open or completed */
+            status: string;
+            totalTasks: number;
+            completedTasks: number;
+            /** @description Percentage of active tasks completed, 0 to 100 */
+            progress: number;
+        };
+        Epic: {
+            id: string;
+            title: string;
+            description: string | null;
+            color: string;
+            quarter: string | null;
+            /** @description open or completed */
+            status: string;
+            order: number;
             boardId: string;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        BoardIntegrations: {
+            slackWebhookUrl: string | null;
+            discordWebhookUrl: string | null;
+            notifyOnTaskCreated: boolean;
+            notifyOnTaskCompleted: boolean;
+            notifyOnTaskMoved: boolean;
         };
         Notification: {
             id: string;

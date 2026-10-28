@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import {
   Sparkles,
   Loader2,
@@ -103,7 +104,7 @@ export function AiBrainDumpModal({
 
   const loadEpics = async () => {
     try {
-      const res = await fetch(`/api/boards/${boardId}/epics`);
+      const res = await apiFetch(`/api/boards/${boardId}/epics`);
       if (res.ok) {
         const data = await res.json();
         setEpics(data.epics || []);
@@ -160,7 +161,7 @@ export function AiBrainDumpModal({
         ) {
           setNoApiKey(true);
         } else {
-          toast.error(data.error || t("processError"));
+          toast.error(data.message || data.error || t("processError"));
         }
       }
     } catch {
@@ -190,14 +191,14 @@ export function AiBrainDumpModal({
 
     setCreatingEpic(true);
     try {
-      const res = await fetch(`/api/boards/${boardId}/epics`, {
+      const res = await apiFetch(`/api/boards/${boardId}/epics`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, color: newEpicColor }),
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || tEpics("createError"));
+        toast.error(data.message || data.error || tEpics("createError"));
         return;
       }
 
@@ -253,7 +254,7 @@ export function AiBrainDumpModal({
         onSuccess();
         onClose();
       } else {
-        toast.error(data.error || t("saveError"));
+        toast.error(data.message || data.error || t("saveError"));
       }
     } catch {
       toast.error(tCommon("connectionError"));

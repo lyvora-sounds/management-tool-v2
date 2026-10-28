@@ -120,6 +120,8 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | | `GET /api/boards/[boardId]/activity` | `GET /v1/boards/:boardId/activity` |
 | | `GET`, `PUT /api/boards/[boardId]/links` | same under `/v1` |
 | | `PATCH /api/boards/[boardId]/permissions`, `PATCH /api/boards/[boardId]/organization` | same under `/v1` |
+| | `GET`, `PATCH /api/boards/[boardId]/access`, `GET`, `POST`, `PATCH /api/boards/[boardId]/archive` | same under `/v1` |
+| | `GET`, `POST`, `PATCH`, `DELETE /api/boards/[boardId]/epics`, `GET`, `PATCH /api/boards/[boardId]/integrations` | same under `/v1` |
 | Onboarding | `PATCH /api/onboarding` | `PATCH /v1/onboarding` |
 
 A write is never repeated: if the API fails, the action fails and the user sees the screen's own error.
