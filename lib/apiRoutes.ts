@@ -6,7 +6,8 @@
  * `to` gives the kiki-api path (the query string is added by apiFetch). The API uses REST names under /v1, so
  * the app's older action-style paths are mapped one by one.
  */
-type Route = { method: string; pattern: RegExp; to: (path: string) => string };
+/** `public` routes need no session: a signed-out visitor (the page behind an invitation link) still reaches kiki-api. */
+type Route = { method: string; pattern: RegExp; to: (path: string) => string; public?: true };
 
 const sameUnderV1 = (path: string) => path.replace(/^\/api\//, "/v1/");
 const id = (path: string) => path.slice(path.lastIndexOf("/") + 1);
@@ -56,6 +57,21 @@ const MIGRATED: Route[] = [
   { method: "GET", pattern: /^\/api\/boards\/[^/]+\/integrations$/, to: sameUnderV1 },
   { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/integrations$/, to: sameUnderV1 },
 
+  // Board members, invitations and external access
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/invitations$/, to: (p) => p.replace(/^\/api\/boards\/([^/]+)\/invitations$/, "/v1/boards/$1/members") },
+  { method: "POST", pattern: /^\/api\/boards\/[^/]+\/invitations$/, to: sameUnderV1 },
+  { method: "DELETE", pattern: /^\/api\/boards\/[^/]+\/invitations\/[^/]+$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/members\/[^/]+$/, to: sameUnderV1 },
+  { method: "DELETE", pattern: /^\/api\/boards\/[^/]+\/members\/[^/]+$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/external-access$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/boards\/[^/]+\/external-access$/, to: sameUnderV1 },
+  { method: "DELETE", pattern: /^\/api\/boards\/[^/]+\/external-access\/[^/]+$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/organizations\/[^/]+\/external-access$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/organizations\/[^/]+\/external-access$/, to: sameUnderV1 },
+  { method: "DELETE", pattern: /^\/api\/organizations\/[^/]+\/external-access\/[^/]+$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/invite\/[^/]+$/, to: (p) => `/v1/invitations/${id(p)}`, public: true },
+  { method: "POST", pattern: /^\/api\/invite\/[^/]+$/, to: (p) => `/v1/invitations/${id(p)}/accept` },
+
   // Onboarding
   { method: "PATCH", pattern: /^\/api\/onboarding$/, to: sameUnderV1 },
 ];
@@ -64,4 +80,9 @@ const MIGRATED: Route[] = [
 export function apiPathFor(method: string, path: string): string | null {
   const route = MIGRATED.find((r) => r.method === method.toUpperCase() && r.pattern.test(path));
   return route ? route.to(path) : null;
+}
+
+/** Whether kiki-api serves this route to someone who is not signed in. */
+export function isPublicRoute(method: string, path: string): boolean {
+  return MIGRATED.some((r) => r.public && r.method === method.toUpperCase() && r.pattern.test(path));
 }
