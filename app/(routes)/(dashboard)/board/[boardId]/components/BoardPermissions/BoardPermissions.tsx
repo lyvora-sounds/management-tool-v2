@@ -128,7 +128,7 @@ export function BoardPermissions({
     const name = teamName.trim();
     if (!name || !organizationId) return;
     setSaving(true);
-    const response = await fetch(`/api/organizations/${organizationId}/teams`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/teams`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),

@@ -69,13 +69,13 @@ export function OrganizationsClient({
   const noticedGithub = useRef(false);
 
   const loadOrganizations = useCallback(async () => {
-    const response = await fetch("/api/organizations", { cache: "no-store" });
+    const response = await apiFetch("/api/organizations", { cache: "no-store" });
     if (!response.ok) throw new Error();
     setOrganizations(await response.json());
   }, []);
 
   useEffect(() => {
-    fetch("/api/organizations")
+    apiFetch("/api/organizations")
       .then(async (response) => {
         if (!response.ok) throw new Error();
         setOrganizations(await response.json());
@@ -88,7 +88,7 @@ export function OrganizationsClient({
     if (!expanded) return;
     const timer = window.setTimeout(() => {
       setSearchingPeople(true);
-      fetch(`/api/organizations/${expanded}/available-members?q=${encodeURIComponent(memberSearch)}`)
+      apiFetch(`/api/organizations/${expanded}/available-members?q=${encodeURIComponent(memberSearch)}`)
         .then(async (response) => response.ok ? response.json() : [])
         .then((people) => setAvailablePeople((value) => ({ ...value, [expanded]: people })))
         .finally(() => setSearchingPeople(false));
@@ -98,9 +98,9 @@ export function OrganizationsClient({
 
   const loadDetails = useCallback(async (organizationId: string, search = "") => {
     const [membersResponse, teamsResponse, peopleResponse] = await Promise.all([
-      fetch(`/api/organizations/${organizationId}/members`, { cache: "no-store" }),
-      fetch(`/api/organizations/${organizationId}/teams`, { cache: "no-store" }),
-      fetch(`/api/organizations/${organizationId}/available-members?q=${encodeURIComponent(search)}`, { cache: "no-store" }),
+      apiFetch(`/api/organizations/${organizationId}/members`, { cache: "no-store" }),
+      apiFetch(`/api/organizations/${organizationId}/teams`, { cache: "no-store" }),
+      apiFetch(`/api/organizations/${organizationId}/available-members?q=${encodeURIComponent(search)}`, { cache: "no-store" }),
     ]);
     if ([membersResponse, teamsResponse, peopleResponse].some((response) => response.status >= 500)) {
       throw new Error("Unable to load organization details");
@@ -148,7 +148,7 @@ export function OrganizationsClient({
     event.preventDefault();
     if (!name.trim()) return;
     setCreating(true);
-    const response = await fetch("/api/organizations", {
+    const response = await apiFetch("/api/organizations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, description }),
@@ -164,7 +164,7 @@ export function OrganizationsClient({
   };
 
   const addMember = async (organizationId: string) => {
-    const response = await fetch(`/api/organizations/${organizationId}/members`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: memberEmail, role: memberRole }),
@@ -177,13 +177,13 @@ export function OrganizationsClient({
       toast.success(t("memberAdded"));
     } else {
       const data = await response.json().catch(() => null);
-      toast.error(data?.error ?? t("memberError"));
+      toast.error(data?.message ?? data?.error ?? t("memberError"));
     }
   };
 
   const updateMemberRole = async (organizationId: string, userId: string, role: "admin" | "member") => {
     setUpdatingMember(userId);
-    const response = await fetch(`/api/organizations/${organizationId}/members`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/members`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, role }),
@@ -193,7 +193,7 @@ export function OrganizationsClient({
       toast.success(t("memberRoleUpdated"));
     } else {
       const data = await response.json().catch(() => null);
-      toast.error(data?.error ?? t("memberRoleError"));
+      toast.error(data?.message ?? data?.error ?? t("memberRoleError"));
     }
     setUpdatingMember(null);
   };
@@ -202,7 +202,7 @@ export function OrganizationsClient({
     const displayName = member.user.name || member.user.email;
     if (!window.confirm(t("removeMemberConfirm", { name: displayName }))) return;
     setUpdatingMember(member.user.id);
-    const response = await fetch(`/api/organizations/${organizationId}/members`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/members`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: member.user.id }),
@@ -212,13 +212,13 @@ export function OrganizationsClient({
       toast.success(t("memberRemoved"));
     } else {
       const data = await response.json().catch(() => null);
-      toast.error(data?.error ?? t("memberRemoveError"));
+      toast.error(data?.message ?? data?.error ?? t("memberRemoveError"));
     }
     setUpdatingMember(null);
   };
 
   const addTeam = async (organizationId: string) => {
-    const response = await fetch(`/api/organizations/${organizationId}/teams`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/teams`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: teamName }),
@@ -233,7 +233,7 @@ export function OrganizationsClient({
   const addTeamMember = async (organizationId: string, teamId: string) => {
     const userId = teamMemberSelection[teamId];
     if (!userId) return;
-    const response = await fetch(`/api/organizations/${organizationId}/teams/${teamId}/members`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/teams/${teamId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId }),
@@ -248,7 +248,7 @@ export function OrganizationsClient({
   const assignTeamToBoard = async (organizationId: string, teamId: string) => {
     const boardId = teamBoardSelection[teamId];
     if (!boardId) return;
-    const response = await fetch(`/api/organizations/${organizationId}/teams/${teamId}/boards`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/teams/${teamId}/boards`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ boardId, role: teamBoardRole[teamId] ?? "member" }),

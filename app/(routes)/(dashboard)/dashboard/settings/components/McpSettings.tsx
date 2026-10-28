@@ -81,7 +81,7 @@ export function McpSettings() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/organizations");
+        const res = await apiFetch("/api/organizations");
         if (!res.ok) throw new Error("load");
         const data = (await res.json()) as OrganizationSummary[];
         if (cancelled) return;
