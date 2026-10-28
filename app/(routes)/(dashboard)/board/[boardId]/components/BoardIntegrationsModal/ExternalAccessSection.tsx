@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import { Copy, KeyRound, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,7 @@ export function ExternalAccessSection({
   const loadAccess = useCallback(async () => {
     setLoading(true);
     try {
-      const tokensRes = await fetch(`/api/boards/${boardId}/external-access`);
+      const tokensRes = await apiFetch(`/api/boards/${boardId}/external-access`);
       if (tokensRes.ok) setAccessTokens(await tokensRes.json());
     } catch {
       toast.error(t("loadError"));
@@ -57,13 +58,13 @@ export function ExternalAccessSection({
     if (!canCreate) return;
     setCreatingToken(true);
     try {
-      const res = await fetch(`/api/boards/${boardId}/external-access`, {
+      const res = await apiFetch(`/api/boards/${boardId}/external-access`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: tokenName }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.message ?? data.error);
       setCreatedToken(data.token);
       setTokenName("");
       setAccessTokens((current) => [data, ...current]);
@@ -76,7 +77,7 @@ export function ExternalAccessSection({
   };
 
   const revokeAccessToken = async (tokenId: string) => {
-    const res = await fetch(`/api/boards/${boardId}/external-access/${tokenId}`, {
+    const res = await apiFetch(`/api/boards/${boardId}/external-access/${tokenId}`, {
       method: "DELETE",
     });
     if (res.ok) {

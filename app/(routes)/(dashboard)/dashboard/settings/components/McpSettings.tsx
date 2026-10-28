@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import Link from "next/link";
 import { Bot, Check, Copy, Loader2, ShieldCheck, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -169,13 +170,13 @@ export function McpSettings() {
       const url = scope === "organization"
         ? `/api/organizations/${organization.id}/external-access`
         : `/api/boards/${board!.id}/external-access`;
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: tokenName.trim(), access }),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(typeof data?.error === "string" ? data.error : t("mcpTokenCreateError"));
+      if (!res.ok) throw new Error(typeof data?.message === "string" ? data.message : typeof data?.error === "string" ? data.error : t("mcpTokenCreateError"));
       setCreatedToken(data.token);
       setTokenName("");
       toast.success(t("mcpTokenCreated"));

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { apiFetch } from "@/lib/apiClient";
 
 type InviteInfo = {
   email: string;
@@ -26,10 +27,10 @@ export default function InvitePage() {
   const [accepting, setAccepting] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/invite/${token}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) setError(data.error);
+    apiFetch(`/api/invite/${token}`)
+      .then(async (r) => ({ ok: r.ok, data: await r.json() }))
+      .then(({ ok, data }) => {
+        if (!ok) setError(data.message ?? data.error);
         else setInfo(data);
       })
       .catch(() => setError(t("loadError")))
@@ -42,10 +43,10 @@ export default function InvitePage() {
       return;
     }
     setAccepting(true);
-    const res = await fetch(`/api/invite/${token}`, { method: "POST" });
+    const res = await apiFetch(`/api/invite/${token}`, { method: "POST" });
     const data = await res.json();
-    if (data.error) {
-      setError(data.error);
+    if (!res.ok) {
+      setError(data.message ?? data.error);
       setAccepting(false);
     } else {
       router.push(`/board/${data.boardId}`);
