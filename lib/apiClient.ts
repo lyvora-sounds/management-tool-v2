@@ -1,4 +1,4 @@
-import { apiPathFor } from "@/lib/apiRoutes";
+import { apiPathFor, isPublicRoute } from "@/lib/apiRoutes";
 
 type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -21,16 +21,18 @@ export function createApiFetch({ baseUrl, getToken, fetchImpl }: Options) {
   return async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
     if (!base) return fetchImpl(path, init);
 
-    const apiPath = apiPathFor(init.method ?? "GET", path.split("?")[0] ?? path);
+    const route = path.split("?")[0] ?? path;
+    const apiPath = apiPathFor(init.method ?? "GET", route);
     if (!apiPath) return fetchImpl(path, init);
 
     const token = await getToken();
-    // Clerk has not loaded or nobody is signed in: the route still exists here, with cookie auth.
-    if (!token) return fetchImpl(path, init);
+    // Clerk has not loaded or nobody is signed in: the route still exists here, with cookie auth. A public
+    // route (the page behind an invitation link) goes to the API anyway, without a token.
+    if (!token && !isPublicRoute(init.method ?? "GET", route)) return fetchImpl(path, init);
 
     const query = path.includes("?") ? path.slice(path.indexOf("?")) : "";
     const headers = new Headers(init.headers);
-    headers.set("Authorization", `Bearer ${token}`);
+    if (token) headers.set("Authorization", `Bearer ${token}`);
     const toApi = () => fetchImpl(`${base}${apiPath}${query}`, { ...init, headers });
 
     // A write is never repeated: if the API answered badly we cannot know whether it applied. A read can be,

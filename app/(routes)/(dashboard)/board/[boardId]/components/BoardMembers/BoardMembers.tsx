@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import { Users, Trash2, Mail, UserCheck, Clock, Crown, Shield } from "lucide-react";
 import {
   Dialog,
@@ -32,7 +33,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    fetch(`/api/boards/${boardId}/invitations`)
+    apiFetch(`/api/boards/${boardId}/invitations`)
       .then((r) => r.json())
       .then((data) => {
         setOwner(data.owner ?? null);
@@ -49,7 +50,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
     setError(null);
     setSuccess(false);
 
-    const res = await fetch(`/api/boards/${boardId}/invitations`, {
+    const res = await apiFetch(`/api/boards/${boardId}/invitations`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -57,7 +58,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? t("inviteError"));
+      setError(data.message ?? data.error ?? t("inviteError"));
     } else {
       setInvitations((prev) => [data, ...prev]);
       setEmail("");
@@ -70,7 +71,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
   const cancelInvitation = async (invitationId: string) => {
     const prev = invitations;
     setInvitations(prev.filter((i) => i.id !== invitationId));
-    const res = await fetch(`/api/boards/${boardId}/invitations/${invitationId}`, {
+    const res = await apiFetch(`/api/boards/${boardId}/invitations/${invitationId}`, {
       method: "DELETE",
     });
     if (!res.ok) setInvitations(prev);
@@ -79,7 +80,7 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
   const changeRole = async (memberId: string, role: string) => {
     const prev = members;
     setMembers((ms) => ms.map((m) => (m.id === memberId ? { ...m, role } : m)));
-    const res = await fetch(`/api/boards/${boardId}/members/${memberId}`, {
+    const res = await apiFetch(`/api/boards/${boardId}/members/${memberId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role }),
@@ -87,12 +88,12 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
     if (!res.ok) {
       setMembers(prev);
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? t("roleChangeError"));
+      setError(data.message ?? data.error ?? t("roleChangeError"));
     }
   };
 
   const removeMember = async (memberId: string) => {
-    const res = await fetch(`/api/boards/${boardId}/members/${memberId}`, {
+    const res = await apiFetch(`/api/boards/${boardId}/members/${memberId}`, {
       method: "DELETE",
     });
     if (res.ok) {
