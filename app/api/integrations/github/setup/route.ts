@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { githubActor } from "@/lib/integrations/githubConnection";
+import { githubActor, githubResultCookie } from "@/lib/integrations/githubConnection";
 import { handleGithubSetup } from "@/lib/integrations/githubSetup";
 import { readGithubAppConfig } from "@/lib/integrations/githubApp";
 
@@ -27,8 +27,12 @@ export async function GET(request: Request) {
 
 function organizationsRedirect(request: Request, resultToken: string | null) {
   const destination = appUrl(request, "/dashboard/organizations");
-  if (resultToken) destination.searchParams.set("githubResult", resultToken);
-  return NextResponse.redirect(destination);
+  const response = NextResponse.redirect(destination);
+  if (resultToken) {
+    const cookie = githubResultCookie(resultToken);
+    response.cookies.set(cookie.name, cookie.value, cookie.options);
+  }
+  return response;
 }
 
 function appUrl(request: Request, path: string) {

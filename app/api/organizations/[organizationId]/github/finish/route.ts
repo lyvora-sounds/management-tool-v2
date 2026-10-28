@@ -4,7 +4,7 @@ import { canManageGithub, githubActor } from "@/lib/integrations/githubConnectio
 import { readGithubAppConfig } from "@/lib/integrations/githubApp";
 import { startGithubFinish } from "@/lib/integrations/githubSetup";
 
-export async function GET(
+export async function POST(
   _request: Request,
   { params }: { params: Promise<{ organizationId: string }> },
 ) {
@@ -22,5 +22,5 @@ export async function GET(
   if (destination.origin !== "https://github.com") {
     return NextResponse.json({ error: "GitHub is unavailable" }, { status: 502 });
   }
-  return NextResponse.redirect(destination);
+  return NextResponse.json({ url: destination.toString() });
 }

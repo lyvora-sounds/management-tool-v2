@@ -14,6 +14,7 @@ import {
 } from "@/lib/integrations/githubApp";
 import {
   type GithubSetupOutcome,
+  canManageGithub,
   consumeGithubAttempt,
   createGithubAttempt,
   installationClaimBlock,
@@ -44,7 +45,7 @@ type Attempt = NonNullable<Awaited<ReturnType<typeof findAttempt>>>;
 export async function startGithubInstall(config: GithubAppConfig, organizationId: string, userId: string) {
   await supersedeGithubAttempts(organizationId);
   const attempt = await createGithubAttempt({ organizationId, userId, status: "open" });
-  return signGithubState(config.webhookSecret, {
+  return signGithubState(config.stateSecret, {
     organizationId,
     userId,
     nonce: attempt.nonce,
@@ -76,6 +77,7 @@ export async function chooseGithubInstallation(
   installationId: string,
 ) {
   if (!INSTALLATION_ID.test(installationId)) return { ok: false as const };
+  if (!(await canManageGithub(userId, organizationId))) return { ok: false as const };
   const attempt = await db.organizationGithubInstallAttempt.findFirst({
     where: { organizationId, userId, status: "choosing", expiresAt: { gt: new Date() } },
     orderBy: { createdAt: "desc" },
@@ -118,6 +120,9 @@ export async function handleGithubSetup(
 
   const attempt = await findAttempt(config, input.state, sessionUserId);
   if (!attempt) return result(sessionUserId, null, "error");
+  if (!(await canManageGithub(sessionUserId, attempt.organizationId))) {
+    return result(sessionUserId, attempt.organizationId, "error");
+  }
 
   if (input.code || input.oauthError) {
     return finishAuthorization(input, attempt, sessionUserId, config);
@@ -292,7 +297,7 @@ async function assertClaimable(installationId: string, userInstallationIds: stri
 
 async function findAttempt(config: GithubAppConfig, state: string | null, sessionUserId: string) {
   if (!state) return null;
-  const parsed = readGithubState(config.webhookSecret, state);
+  const parsed = readGithubState(config.stateSecret, state);
   if (!parsed || parsed.userId !== sessionUserId) return null;
   const attempt = await db.organizationGithubInstallAttempt.findUnique({ where: { nonce: parsed.nonce } });
   if (!attempt || attempt.status === "consumed" || attempt.expiresAt.getTime() <= Date.now()) return null;
@@ -308,7 +313,7 @@ function authorizeUrl(
   nonce: string,
   codeVerifier: string,
 ) {
-  const state = signGithubState(config.webhookSecret, { organizationId, userId, nonce });
+  const state = signGithubState(config.stateSecret, { organizationId, userId, nonce });
   return githubAuthorizeUrl(config.clientId, redirectUri, state, githubCodeChallenge(codeVerifier));
 }
 

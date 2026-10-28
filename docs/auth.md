@@ -38,7 +38,7 @@ See `mcp/README.md` for configuration and token lifetimes.
 | `/api/integrations/google-calendar/callback` | |
 | `/api/integrations/github/setup` | |
 
-`/api/integrations/github/setup` is public because GitHub sends the browser there. A missing Clerk session is sent to sign-in. A signed-in manager can complete the redirect only with the single-use `state` minted for them, and only after their GitHub user token lists that installation. `installation_id` alone is not accepted. The organizations page shows a result only for a one-time `githubResult` token stored for that user. `POST /api/webhooks/github` is covered by `/api/webhooks/*` and rejects a missing or invalid `X-Hub-Signature-256`.
+`/api/integrations/github/setup` is public because GitHub sends the browser there. A missing Clerk session is sent to sign-in. A signed-in manager can complete the redirect only with the single-use `state` minted for them, and only after their GitHub user token lists that installation. The callback checks the manager role again before saving. `installation_id` alone is not accepted. The organizations page shows a result only from the httpOnly `github_setup_result` cookie stored for that user. `POST /api/webhooks/github` is covered by `/api/webhooks/*`. A missing app configuration and an invalid `X-Hub-Signature-256` both return 401. Payloads over 1 MB are rejected.
 
 ## Clerk → Neon webhook
 

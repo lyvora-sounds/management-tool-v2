@@ -18,6 +18,7 @@ export type GithubAppConfig = {
   slug: string;
   privateKey: string;
   webhookSecret: string;
+  stateSecret: string;
   clientId: string;
   clientSecret: string;
 };
@@ -60,14 +61,16 @@ export function readGithubAppConfig(
   const slug = env.GITHUB_APP_SLUG?.trim() ?? "";
   const privateKey = normalizePrivateKey(env.GITHUB_APP_PRIVATE_KEY ?? "");
   const webhookSecret = env.GITHUB_APP_WEBHOOK_SECRET?.trim() ?? "";
+  const stateSecret = env.GITHUB_APP_STATE_SECRET?.trim() ?? "";
   const clientId = env.GITHUB_APP_CLIENT_ID?.trim() ?? "";
   const clientSecret = env.GITHUB_APP_CLIENT_SECRET?.trim() ?? "";
   if (!/^\d{1,20}$/.test(appId)) return null;
   if (!/^[a-z0-9-]{1,100}$/.test(slug)) return null;
   if (!privateKey.includes("BEGIN") || !privateKey.includes("PRIVATE KEY")) return null;
-  if (webhookSecret.length < 16 || clientSecret.length < 16) return null;
+  if (webhookSecret.length < 16 || stateSecret.length < 16 || clientSecret.length < 16) return null;
+  if (stateSecret === webhookSecret) return null;
   if (!/^[A-Za-z0-9._-]{8,100}$/.test(clientId)) return null;
-  return { appId, slug, privateKey, webhookSecret, clientId, clientSecret };
+  return { appId, slug, privateKey, webhookSecret, stateSecret, clientId, clientSecret };
 }
 
 export function githubInstallUrl(slug: string, state: string): string {
@@ -206,7 +209,7 @@ export function parseGithubRepository(body: unknown): GithubRepository | null {
   if (!body || typeof body !== "object") return null;
   const repo = body as { id?: unknown; full_name?: unknown; default_branch?: unknown };
   if (typeof repo.id !== "number" || !Number.isSafeInteger(repo.id) || repo.id <= 0) return null;
-  if (typeof repo.full_name !== "string" || !/^[^/\s]+\/[^/\s]+$/.test(repo.full_name)) return null;
+  if (typeof repo.full_name !== "string" || !isRepositoryFullName(repo.full_name)) return null;
   return {
     id: String(repo.id),
     fullName: repo.full_name,
@@ -475,8 +478,17 @@ async function collectPages<T>(
   return { items, truncated };
 }
 
+function isRepositoryPart(value: string) {
+  return value !== "." && value !== ".." && /^[A-Za-z0-9._-]+$/.test(value);
+}
+
+function isRepositoryFullName(fullName: string) {
+  const parts = fullName.split("/");
+  return parts.length === 2 && isRepositoryPart(parts[0]) && isRepositoryPart(parts[1]);
+}
+
 function repositoryNameParts(fullName: string): [string, string] {
-  if (!/^[^/\s]+\/[^/\s]+$/.test(fullName)) throw new GithubAppError("Invalid repository", 400);
+  if (!isRepositoryFullName(fullName)) throw new GithubAppError("Invalid repository", 400);
   const [owner, repo] = fullName.split("/");
   return [owner, repo];
 }
