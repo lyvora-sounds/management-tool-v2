@@ -81,6 +81,7 @@ export function NotificationBell() {
   return (
     <Popover open={open} onOpenChange={handleOpen}>
       <PopoverTrigger
+        id="notification-bell"
         render={
           <Button variant="ghost" size="icon" className="relative">
             <Bell size={18} />

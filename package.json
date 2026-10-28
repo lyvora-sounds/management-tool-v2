@@ -13,6 +13,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test -c playwright-ct.config.mts",
+    "test:e2e:headed": "SLOWMO=600 playwright test -c playwright-ct.config.mts --headed",
     "postinstall": "prisma generate",
     "i18n:check": "node scripts/translate.mjs --check",
     "api:types": "node scripts/api-types.mjs"
@@ -58,6 +60,8 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@playwright/experimental-ct-react": "1.62.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.18.0",

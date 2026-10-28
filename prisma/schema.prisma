@@ -35,6 +35,9 @@ model User {
   organizationMembers  OrganizationMember[]
   teamMembers          TeamMember[]
   mcpOAuthClients      McpOAuthClient[]
+  githubConnections    OrganizationGithubConnection[] @relation("GithubConnectionConnector")
+  githubInstallAttempts OrganizationGithubInstallAttempt[]
+  githubSetupResults   OrganizationGithubSetupResult[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -177,11 +180,82 @@ model Organization {
   boards               Board[]
   externalAccessTokens ExternalAccessToken[]
   mcpChanges           McpChange[]
+  githubConnection     OrganizationGithubConnection?
+  githubInstallAttempts OrganizationGithubInstallAttempt[]
+  githubSetupResults   OrganizationGithubSetupResult[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([createdById])
+}
+
+/// One GitHub App installation for the organization. Access tokens are minted
+/// from the app private key and are not stored.
+model OrganizationGithubConnection {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  installationId String
+  accountLogin   String
+  accountType    String // "Organization" | "User"
+  accountId      String
+
+  repositoryId   String?
+  repositoryName String?
+  branch         String?
+
+  connectedById String?
+  connectedBy   User?   @relation("GithubConnectionConnector", fields: [connectedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([installationId])
+  @@index([connectedById])
+}
+
+/// In-flight GitHub install. The nonce is single-use. `choices` are installations
+/// the authorizing GitHub user could access, and are never taken from the query string.
+model OrganizationGithubInstallAttempt {
+  id                      String   @id @default(cuid())
+  nonce                   String   @unique
+  organizationId          String
+  organization            Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status                  String // "open" | "requested" | "authorizing" | "choosing" | "consumed"
+  candidateInstallationId String?
+  codeVerifier            String?
+  choices                 Json?
+  expiresAt               DateTime
+  createdAt               DateTime @default(now())
+
+  @@index([organizationId, status])
+  @@index([userId])
+}
+
+/// One-time toast after GitHub redirects back. The query token is useless after it is consumed.
+model OrganizationGithubSetupResult {
+  id             String    @id @default(cuid())
+  token          String    @unique
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  outcome        String
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// An installation id that must not be linked again. Written before the old GitHub app is uninstalled.
+model RetiredGithubInstallation {
+  installationId String   @id
+  retiredAt      DateTime @default(now())
 }
 
 model OrganizationMember {
