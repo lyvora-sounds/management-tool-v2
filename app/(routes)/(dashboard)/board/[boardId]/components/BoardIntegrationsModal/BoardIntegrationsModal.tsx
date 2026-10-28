@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import {
   Webhook,
   Save,
@@ -49,7 +50,7 @@ export function BoardIntegrationsModal({
   const loadIntegrations = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/boards/${boardId}/integrations`);
+      const res = await apiFetch(`/api/boards/${boardId}/integrations`);
       if (res.ok) {
         const data = await res.json();
         setSlackWebhookUrl(data.slackWebhookUrl || "");
@@ -75,7 +76,7 @@ export function BoardIntegrationsModal({
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch(`/api/boards/${boardId}/integrations`, {
+      const res = await apiFetch(`/api/boards/${boardId}/integrations`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

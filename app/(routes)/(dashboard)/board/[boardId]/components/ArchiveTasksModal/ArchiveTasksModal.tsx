@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import {
   Archive,
   RotateCcw,
@@ -89,7 +90,7 @@ export function ArchiveTasksModal({
   const loadArchivedTasks = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/boards/${boardId}/archive`);
+      const res = await apiFetch(`/api/boards/${boardId}/archive`);
       if (res.ok) {
         const data = await res.json();
         setArchivedTasks(data.tasks || []);
@@ -124,7 +125,7 @@ export function ArchiveTasksModal({
 
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/boards/${boardId}/archive`, {
+      const res = await apiFetch(`/api/boards/${boardId}/archive`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskIds: idsToArchive }),
@@ -137,7 +138,7 @@ export function ArchiveTasksModal({
         onRefreshBoard();
         onClose();
       } else {
-        toast.error(data.error || t("archiveError"));
+        toast.error(data.message || data.error || t("archiveError"));
       }
     } catch {
       toast.error(tCommon("connectionError"));
@@ -150,7 +151,7 @@ export function ArchiveTasksModal({
     if (ids.length === 0) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/boards/${boardId}/archive`, {
+      const res = await apiFetch(`/api/boards/${boardId}/archive`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskIds: ids }),
@@ -163,7 +164,7 @@ export function ArchiveTasksModal({
         await loadArchivedTasks();
         onRefreshBoard();
       } else {
-        toast.error(data.error || t("archiveRestoreError"));
+        toast.error(data.message || data.error || t("archiveRestoreError"));
       }
     } catch {
       toast.error(tCommon("connectionError"));

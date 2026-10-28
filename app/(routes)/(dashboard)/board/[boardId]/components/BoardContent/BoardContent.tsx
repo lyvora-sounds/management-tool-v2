@@ -94,7 +94,7 @@ export function BoardContent({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/boards/${boardId}/epics`)
+    apiFetch(`/api/boards/${boardId}/epics`)
       .then(async (res) => {
         if (!res.ok) return null;
         return res.json();
