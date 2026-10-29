@@ -119,3 +119,32 @@ describe("apiFetch with a write and a query", () => {
     expect((fetchImpl.mock.calls[0] as unknown as [string])[0]).toBe("/api/lists/createList");
   });
 });
+
+describe("apiFetch with a public route", () => {
+  it("sends a signed-out visitor's call to the API with no Authorization header", async () => {
+    const { apiFetch, fetchImpl } = setup({ baseUrl: "https://api.example.com", token: null });
+    await apiFetch("/api/invite/tok_1");
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://api.example.com/v1/invitations/tok_1");
+    expect(new Headers(init.headers).has("Authorization")).toBe(false);
+  });
+
+  it("still falls back to this app if the API cannot be reached", async () => {
+    const fetchImpl = vi
+      .fn<(input: string, init?: RequestInit) => Promise<Response>>()
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce(new Response("{}"));
+    const apiFetch = createApiFetch({ baseUrl: "https://api.example.com", getToken: async () => null, fetchImpl });
+    await apiFetch("/api/invite/tok_1");
+    expect(fetchImpl).toHaveBeenLastCalledWith("/api/invite/tok_1", {});
+  });
+
+  it("does not do it for a route that needs a session", async () => {
+    const { apiFetch, fetchImpl } = setup({ baseUrl: "https://api.example.com", token: null });
+    await apiFetch("/api/invite/tok_1", { method: "POST" });
+    expect(fetchImpl).toHaveBeenCalledWith("/api/invite/tok_1", { method: "POST" });
+    await apiFetch("/api/boards/b1/members/m1", { method: "DELETE" });
+    expect(fetchImpl).toHaveBeenLastCalledWith("/api/boards/b1/members/m1", { method: "DELETE" });
+  });
+});
+

@@ -120,7 +120,19 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | | `GET /api/boards/[boardId]/activity` | `GET /v1/boards/:boardId/activity` |
 | | `GET`, `PUT /api/boards/[boardId]/links` | same under `/v1` |
 | | `PATCH /api/boards/[boardId]/permissions`, `PATCH /api/boards/[boardId]/organization` | same under `/v1` |
+| | `GET`, `PATCH /api/boards/[boardId]/access`, `GET`, `POST`, `PATCH /api/boards/[boardId]/archive` | same under `/v1` |
+| | `GET`, `POST`, `PATCH`, `DELETE /api/boards/[boardId]/epics`, `GET`, `PATCH /api/boards/[boardId]/integrations` | same under `/v1` |
+| | `GET /api/boards/[boardId]/invitations` (people and pending invitations), `PATCH`, `DELETE /api/boards/[boardId]/members/[memberId]` | `GET /v1/boards/:boardId/members`, `PATCH`, `DELETE /v1/boards/:boardId/members/:memberId` |
+| | `POST /api/boards/[boardId]/invitations`, `DELETE /api/boards/[boardId]/invitations/[invitationId]` | same under `/v1` |
+| | `GET /api/invite/[token]` (public), `POST /api/invite/[token]` | `GET /v1/invitations/:token`, `POST /v1/invitations/:token/accept` |
+| | `GET`, `POST`, `DELETE` `.../external-access` of a board and of an organization | same under `/v1` |
+| Organizations | `GET`, `POST /api/organizations`, `GET`, `POST`, `PATCH`, `DELETE /api/organizations/[organizationId]/members`, `GET .../available-members` | same under `/v1` |
+| | `GET`, `POST .../teams`, `POST`, `DELETE .../teams/[teamId]/members` and `.../teams/[teamId]/boards` | same under `/v1` |
 | Onboarding | `PATCH /api/onboarding` | `PATCH /v1/onboarding` |
+
+The GitHub routes under an organization (`/api/organizations/[organizationId]/github/...`) are not migrated yet: they move together with the GitHub setup callbacks, since they share the same libraries and secrets.
+
+A route marked `public` in `lib/apiRoutes.ts` (today only the page behind an invitation link) goes to the API even when nobody is signed in, without a token. That is what lets the old handler be deleted without breaking a signed-out visitor.
 
 A write is never repeated: if the API fails, the action fails and the user sees the screen's own error.
 

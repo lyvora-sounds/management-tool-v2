@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiPathFor } from "@/lib/apiRoutes";
+import { apiPathFor, isPublicRoute } from "@/lib/apiRoutes";
 
 describe("apiPathFor: routes already served by kiki-api", () => {
   // [method, the path the app calls, the path kiki-api serves]
@@ -25,6 +25,43 @@ describe("apiPathFor: routes already served by kiki-api", () => {
     ["PUT", "/api/boards/b1/links", "/v1/boards/b1/links"],
     ["PATCH", "/api/boards/b1/permissions", "/v1/boards/b1/permissions"],
     ["PATCH", "/api/boards/b1/organization", "/v1/boards/b1/organization"],
+    ["GET", "/api/boards/b1/access", "/v1/boards/b1/access"],
+    ["PATCH", "/api/boards/b1/access", "/v1/boards/b1/access"],
+    ["GET", "/api/boards/b1/archive", "/v1/boards/b1/archive"],
+    ["POST", "/api/boards/b1/archive", "/v1/boards/b1/archive"],
+    ["PATCH", "/api/boards/b1/archive", "/v1/boards/b1/archive"],
+    ["GET", "/api/boards/b1/epics", "/v1/boards/b1/epics"],
+    ["POST", "/api/boards/b1/epics", "/v1/boards/b1/epics"],
+    ["PATCH", "/api/boards/b1/epics", "/v1/boards/b1/epics"],
+    ["DELETE", "/api/boards/b1/epics", "/v1/boards/b1/epics"],
+    ["GET", "/api/boards/b1/integrations", "/v1/boards/b1/integrations"],
+    ["PATCH", "/api/boards/b1/integrations", "/v1/boards/b1/integrations"],
+    ["GET", "/api/boards/b1/invitations", "/v1/boards/b1/members"],
+    ["POST", "/api/boards/b1/invitations", "/v1/boards/b1/invitations"],
+    ["DELETE", "/api/boards/b1/invitations/i1", "/v1/boards/b1/invitations/i1"],
+    ["PATCH", "/api/boards/b1/members/m1", "/v1/boards/b1/members/m1"],
+    ["DELETE", "/api/boards/b1/members/m1", "/v1/boards/b1/members/m1"],
+    ["GET", "/api/boards/b1/external-access", "/v1/boards/b1/external-access"],
+    ["POST", "/api/boards/b1/external-access", "/v1/boards/b1/external-access"],
+    ["DELETE", "/api/boards/b1/external-access/t1", "/v1/boards/b1/external-access/t1"],
+    ["GET", "/api/organizations/o1/external-access", "/v1/organizations/o1/external-access"],
+    ["POST", "/api/organizations/o1/external-access", "/v1/organizations/o1/external-access"],
+    ["DELETE", "/api/organizations/o1/external-access/t1", "/v1/organizations/o1/external-access/t1"],
+    ["GET", "/api/invite/tok_1", "/v1/invitations/tok_1"],
+    ["POST", "/api/invite/tok_1", "/v1/invitations/tok_1/accept"],
+    ["GET", "/api/organizations", "/v1/organizations"],
+    ["POST", "/api/organizations", "/v1/organizations"],
+    ["GET", "/api/organizations/o1/members", "/v1/organizations/o1/members"],
+    ["POST", "/api/organizations/o1/members", "/v1/organizations/o1/members"],
+    ["PATCH", "/api/organizations/o1/members", "/v1/organizations/o1/members"],
+    ["DELETE", "/api/organizations/o1/members", "/v1/organizations/o1/members"],
+    ["GET", "/api/organizations/o1/available-members", "/v1/organizations/o1/available-members"],
+    ["GET", "/api/organizations/o1/teams", "/v1/organizations/o1/teams"],
+    ["POST", "/api/organizations/o1/teams", "/v1/organizations/o1/teams"],
+    ["POST", "/api/organizations/o1/teams/t1/members", "/v1/organizations/o1/teams/t1/members"],
+    ["DELETE", "/api/organizations/o1/teams/t1/members", "/v1/organizations/o1/teams/t1/members"],
+    ["POST", "/api/organizations/o1/teams/t1/boards", "/v1/organizations/o1/teams/t1/boards"],
+    ["DELETE", "/api/organizations/o1/teams/t1/boards", "/v1/organizations/o1/teams/t1/boards"],
     ["PATCH", "/api/onboarding", "/v1/onboarding"],
   ];
 
@@ -39,6 +76,8 @@ describe("apiPathFor: routes already served by kiki-api", () => {
   it("leaves every route that has not moved on this app", () => {
     const stays: [string, string][] = [
       ["PUT", "/api/boards/getBoards"],
+      ["GET", "/api/boards/b1/hierarchy"], // drawn in the browser; nothing calls the route
+      ["PUT", "/api/boards/b1/epics"],
       ["POST", "/api/tasks/createTask"],
       ["PATCH", "/api/tasks/updateOrder"],
       ["POST", "/api/tasks/t1/labels"],
@@ -48,13 +87,15 @@ describe("apiPathFor: routes already served by kiki-api", () => {
       ["DELETE", "/api/search"],
       // The rest of the board routes belong to later sub-batches.
       ["GET", "/api/boards/b1/tasks"],
-      ["GET", "/api/boards/b1/access"],
-      ["PATCH", "/api/boards/b1/access"],
-      ["GET", "/api/boards/b1/archive"],
-      ["GET", "/api/boards/b1/epics"],
-      ["GET", "/api/boards/b1/invitations"],
-      ["PATCH", "/api/boards/b1/members/m1"],
-      ["GET", "/api/organizations"],
+      ["PUT", "/api/boards/b1/members/m1"],
+      ["PUT", "/api/invite/tok_1"],
+      ["PUT", "/api/organizations/o1/members"],
+      ["PATCH", "/api/organizations"],
+      ["GET", "/api/organizations/o1/teams/t1/members"],
+      // GitHub keeps its own sub-batch: the routes and their library move together.
+      ["GET", "/api/organizations/o1/github"],
+      ["POST", "/api/organizations/o1/github/install"],
+      ["GET", "/api/organizations/o1/github/repositories"],
       ["POST", "/api/boards/b1/links"],
       ["GET", "/api/boards/b1/permissions"],
     ];
@@ -64,5 +105,15 @@ describe("apiPathFor: routes already served by kiki-api", () => {
   it("does not take a longer path for a shorter one", () => {
     expect(apiPathFor("GET", "/api/labels/label/l1")).toBeNull();
     expect(apiPathFor("GET", "/api/search/extra")).toBeNull();
+  });
+});
+
+describe("isPublicRoute", () => {
+  it("is only the page behind an invitation link, and only for reading it", () => {
+    expect(isPublicRoute("GET", "/api/invite/tok_1")).toBe(true);
+    expect(isPublicRoute("get", "/api/invite/tok_1")).toBe(true);
+    expect(isPublicRoute("POST", "/api/invite/tok_1")).toBe(false);
+    expect(isPublicRoute("GET", "/api/boards/b1/members")).toBe(false);
+    expect(isPublicRoute("GET", "/api/labels/b1")).toBe(false);
   });
 });

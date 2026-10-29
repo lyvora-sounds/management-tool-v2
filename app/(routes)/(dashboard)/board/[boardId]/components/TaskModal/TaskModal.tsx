@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import { useRouter } from "next/navigation";
 import {
   AlignLeft,
@@ -161,7 +162,7 @@ export function TaskModal({
   // Load board Epics
   useEffect(() => {
     if (open) {
-      fetch(`/api/boards/${boardId}/epics`)
+      apiFetch(`/api/boards/${boardId}/epics`)
         .then((res) => res.json())
         .then((data) => setEpics(data.epics || []))
         .catch(() => {});

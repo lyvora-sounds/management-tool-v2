@@ -41,7 +41,7 @@ export function BoardPermissions({
 
   useEffect(() => {
     if (!open) return;
-    fetch(`/api/boards/${boardId}/access`)
+    apiFetch(`/api/boards/${boardId}/access`)
       .then(async (response) => {
         if (!response.ok) throw new Error("load failed");
         return response.json();
@@ -128,7 +128,7 @@ export function BoardPermissions({
     const name = teamName.trim();
     if (!name || !organizationId) return;
     setSaving(true);
-    const response = await fetch(`/api/organizations/${organizationId}/teams`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/teams`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -146,7 +146,7 @@ export function BoardPermissions({
 
   const saveAccess = async () => {
     setSaving(true);
-    const response = await fetch(`/api/boards/${boardId}/access`, {
+    const response = await apiFetch(`/api/boards/${boardId}/access`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ accessMode, defaultRole, teamGrants }),
