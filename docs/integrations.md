@@ -58,7 +58,7 @@ Register the app under the Kikiboard GitHub account (Settings → Developer sett
 
 Each board has a two-letter key, unique in its organization, taken from the board title (`Lyvora sounds` becomes `LS`). The board owner can change that key until the first ticket on the board is numbered. After that, the key stays so existing ticket keys do not change. Each ticket receives the next number on its board, in creation order, and keeps it. The visible key is `{key}-{number}` with the number padded to five digits, for example `LY-00042`.
 
-Opening a ticket always shows a checkout command for `{key}-{slug of the title}`. The command does not depend on a GitHub connection. When the organization has a saved base branch, the command includes it:
+Opening a ticket always shows a checkout command for `{key}-{slug of the title}`. The explanation of that command sits in the info control beside it, not as extra copy on the ticket. The command does not depend on a GitHub connection. When the organization has a saved base branch, the command includes it:
 
 `git checkout -b LY-00042-ca-cd-cost-optimisation`
 

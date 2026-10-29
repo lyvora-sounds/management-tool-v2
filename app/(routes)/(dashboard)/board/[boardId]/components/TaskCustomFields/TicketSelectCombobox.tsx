@@ -143,7 +143,7 @@ export function TicketSelectCombobox({
           type="button"
           onClick={() => setOpen((prev) => !prev)}
           className={cn(
-            "w-full min-h-8 px-2.5 py-1 rounded-md border bg-background text-xs font-normal flex items-center justify-between gap-2 hover:bg-muted/40 transition-colors text-left outline-none focus:ring-1 focus:ring-ring",
+            "flex h-8 w-full min-w-0 items-center justify-between gap-2 rounded-4xl border bg-background px-2.5 text-left text-sm font-normal outline-none transition-colors hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
             (!value || (isMulti && selectedIds.length === 0)) && "text-muted-foreground",
           )}
         >
