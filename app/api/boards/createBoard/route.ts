@@ -4,6 +4,7 @@ import db from "@/lib/db";
 import { getOrCreateUser } from "@/lib/getOrCreateUser";
 import { defaultCustomFieldRows } from "@/lib/ensureDefaultCustomFields";
 import { ensureOrganizationForBoard } from "@/lib/organizations";
+import { allocateBoardKey } from "@/lib/integrations/ticketBranch";
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -33,32 +34,45 @@ export async function POST(req: Request) {
     ? lists.filter((l: unknown) => typeof l === "string" && l.trim())
     : [];
 
-  const board = await db.board.create({
-    data: {
-      title: title.trim(),
-      userId: user.id,
-      organizationId,
-      accessMode: "organization",
-      defaultRole: "member",
-      description: typeof description === "string" && description.trim() ? description.trim() : null,
-      color: typeof color === "string" && color ? color : null,
-      list: validLists.length > 0
-        ? {
-            createMany: {
-              data: validLists.map((l, i) => ({
-                title: l.trim(),
-                order: i,
-              })),
-            },
-          }
-        : undefined,
-      customFields: {
-        createMany: {
-          data: defaultCustomFieldRows(),
-        },
+  const trimmedTitle = title.trim();
+  const boardData = {
+    title: trimmedTitle,
+    userId: user.id,
+    organizationId,
+    accessMode: "organization" as const,
+    defaultRole: "member" as const,
+    description: typeof description === "string" && description.trim() ? description.trim() : null,
+    color: typeof color === "string" && color ? color : null,
+    list: validLists.length > 0
+      ? {
+          createMany: {
+            data: validLists.map((l, i) => ({
+              title: l.trim(),
+              order: i,
+            })),
+          },
+        }
+      : undefined,
+    customFields: {
+      createMany: {
+        data: defaultCustomFieldRows(),
       },
     },
+  };
+
+  const createBoard = () => db.$transaction(async (tx) => {
+    const key = await allocateBoardKey(tx, organizationId, trimmedTitle);
+    return tx.board.create({ data: { ...boardData, key } });
   });
+
+  let board;
+  try {
+    board = await createBoard();
+  } catch (error) {
+    const uniqueConflict = Boolean(error && typeof error === "object" && "code" in error && (error as { code: string }).code === "P2002");
+    if (!uniqueConflict) throw error;
+    board = await createBoard();
+  }
 
   return NextResponse.json(board, { status: 201 });
 }

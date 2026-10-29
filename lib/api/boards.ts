@@ -26,6 +26,9 @@ export function boardFromApi(board: ApiBoard): BoardModel {
     notifyOnTaskMoved: board.notifyOnTaskMoved,
     userId: board.userId,
     organizationId: board.organizationId,
+    // The API board does not carry the branch key. The board page reads it from the database.
+    key: "",
+    nextTicketNumber: 1,
     createdAt: new Date(board.createdAt),
     updatedAt: new Date(board.updatedAt),
   };

@@ -1,4 +1,5 @@
 import { createHash, createHmac, createSign, timingSafeEqual } from "node:crypto";
+import { branchesFromMatchingRefs, isTicketKey } from "@/lib/integrations/ticketBranch";
 
 const STATE_TTL_MS = 10 * 60 * 1000;
 const GITHUB_API = "https://api.github.com";
@@ -308,6 +309,24 @@ export async function listRepositoryBranches(
     `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches?per_page=100`,
     parseGithubBranches,
   );
+}
+
+export async function listMatchingBranches(
+  config: GithubAppConfig,
+  installationId: string,
+  fullName: string,
+  ticketKey: string,
+): Promise<string[]> {
+  if (!isTicketKey(ticketKey)) throw new GithubAppError("Invalid ticket key", 400);
+  const token = await createInstallationToken(config, installationId);
+  const [owner, repo] = repositoryNameParts(fullName);
+  const response = await fetch(
+    `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/matching-refs/heads/${encodeURIComponent(ticketKey)}`,
+    { headers: githubHeaders(token), signal: AbortSignal.timeout(10_000) },
+  );
+  if (response.status === 404) return [];
+  if (!response.ok) throw new GithubAppError("GitHub request failed", response.status);
+  return branchesFromMatchingRefs(await response.json(), ticketKey);
 }
 
 export async function fetchInstallationRepository(

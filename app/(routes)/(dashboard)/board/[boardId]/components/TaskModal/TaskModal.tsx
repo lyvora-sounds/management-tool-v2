@@ -64,6 +64,7 @@ import type { LabelModel } from "@/lib/generated/prisma/models/Label";
 import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { TaskModalProps } from "./TaskModal.types";
 import { toast } from "sonner";
+import { TaskDevelopment } from "./TaskDevelopment";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { getStatusTheme, isDoneList, targetListForCompletion } from "@/lib/statusTheme";
@@ -530,6 +531,8 @@ export function TaskModal({
               </div>
             </div>
           </DialogHeader>
+
+          <TaskDevelopment taskId={currentTask.id} />
 
           {/* Mobile tab switcher */}
           <div className="flex sm:hidden border-b">

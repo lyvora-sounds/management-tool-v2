@@ -143,6 +143,10 @@ model Board {
   notifyOnTaskCompleted Boolean @default(true)
   notifyOnTaskMoved     Boolean @default(false)
 
+  // Two letters, unique in the organization. Stays put after the first numbered ticket.
+  key              String
+  nextTicketNumber Int    @default(1)
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -163,6 +167,7 @@ model Board {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([organizationId, key])
   @@index([userId])
   @@index([organizationId])
 }
@@ -473,6 +478,8 @@ model List {
 
 model Task {
   id            String    @id @default(cuid())
+  // Handed out once, in creation order on the board. The visible key is Board.key plus this number.
+  number        Int
   title         String
   description   String?
   completed     Boolean   @default(false)
