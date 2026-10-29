@@ -56,7 +56,15 @@ Register the app under the Kikiboard GitHub account (Settings → Developer sett
 7. Successful and failed setup redirects set an httpOnly `github_setup_result` cookie bound to the signed-in user. The organizations page reads that cookie and the browser consumes it with `POST /api/integrations/github/result`, which clears the cookie. The token is not placed in the query string. The callback also checks again that the session user is still an owner or admin before it stores an installation.
 8. `POST /api/webhooks/github` checks `X-Hub-Signature-256`. A missing configuration and a bad signature both return 401, and a body over 1 MB is rejected. `installation` `deleted` removes the row. `installation_repositories` `removed` clears the repository and branch when the saved repository was removed. Deletes and repository clears are safe to retry.
 
-Pull request linking, commit status, issue sync, and branch creation are not part of this connection.
+Each board has a two-letter key, unique in its organization, taken from the board title (`Lyvora sounds` becomes `LS`). The board owner can change that key until the first ticket on the board is numbered. After that, the key stays so existing ticket keys do not change. Each ticket receives the next number on its board, in creation order, and keeps it. The visible key is `{key}-{number}` with the number padded to five digits, for example `LY-00042`.
+
+Opening a ticket always shows a checkout command for `{key}-{slug of the title}`. The command does not depend on a GitHub connection. When the organization has a saved base branch, the command includes it:
+
+`git checkout -b LY-00042-ca-cd-cost-optimisation`
+
+`git checkout -b LY-00042-ca-cd-cost-optimisation origin/dev`
+
+`GET /api/tasks/{taskId}/development` requires a signed-in reader of the board. When the organization has a saved repository, it asks GitHub for `GET /repos/{owner}/{repo}/git/matching-refs/heads/{key}` and lists the branches that are the key, or that start with the key followed by `-` or `/`. Those links open `https://github.com/{owner}/{repo}/tree/{branch}`. Nothing is stored. A missing GitHub App configuration looks the same as an organization with no repository: the ticket still shows the checkout command, and it shows no branch links. Creating the branch, pull requests, commits, and issue sync stay outside Kikiboard.
 
 ## Sharing a ticket
 

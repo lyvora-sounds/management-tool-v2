@@ -91,7 +91,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
     <div className="flex flex-col h-full p-3 sm:p-6 gap-4 sm:gap-6 min-w-0">
       <BoardVisitTracker boardId={board.id} />
       <BoardTour tourSeen={tourSeen} />
-      <BoardHeader boardId={board.id} title={board.title} isOwner={isOwner} canManage={canManage} canEdit={canEdit} initialLinks={initialLinks} memberCanAssign={board.memberCanAssign} />
+      <BoardHeader boardId={board.id} title={board.title} isOwner={isOwner} canManage={canManage} canEdit={canEdit} initialLinks={initialLinks} memberCanAssign={board.memberCanAssign} boardKey={board.key} keyLocked={board.nextTicketNumber > 1} />
       <Suspense fallback={null}>
         <BoardContent
           lists={board.list}

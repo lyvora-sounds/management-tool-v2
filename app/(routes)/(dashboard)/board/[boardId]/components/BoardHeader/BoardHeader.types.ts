@@ -10,4 +10,6 @@ export type BoardHeaderProps = {
   canEdit: boolean;
   initialLinks: BoardLink[];
   memberCanAssign: boolean;
+  boardKey: string;
+  keyLocked: boolean;
 };

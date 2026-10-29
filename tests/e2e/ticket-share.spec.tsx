@@ -21,10 +21,14 @@ test("the private link is always ready to copy, and the public link is created s
   await mount(<ShareStory />);
 
   const dialog = page.getByRole("dialog");
+  const privateHint = "Only people who can open this board can view the ticket. This link is always available.";
   await expect(dialog.getByRole("heading", { name: "Share ticket" })).toBeVisible();
   await expect(dialog.getByText("Private link")).toBeVisible();
-  await expect(dialog.getByText("Only people who can open this board can view the ticket. This link is always available.")).toBeVisible();
+  await expect(dialog.getByRole("tooltip", { name: privateHint })).toBeHidden();
+  await dialog.getByRole("button", { name: privateHint }).evaluate((button: HTMLButtonElement) => button.click());
+  await expect(dialog.getByRole("tooltip", { name: privateHint })).toBeVisible();
   await expect(dialog.getByRole("textbox").first()).toHaveValue(/\/board\/board-1\?taskId=task-1$/);
+  await expect(dialog.getByText("No public link yet. Generate one to let anyone view this ticket without signing in.")).toBeHidden();
   await expect(dialog.getByRole("button", { name: "Generate public link" })).toBeVisible();
   await hold(page);
 
