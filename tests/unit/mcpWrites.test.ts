@@ -15,7 +15,7 @@ const customWrite = vi.fn();
 const create = vi.fn();
 const epicCreate = vi.fn();
 const boardLookup = vi.fn();
-const boardUpdate = vi.fn(async () => ({ key: "LY", nextTicketNumber: 2 }));
+const boardUpdate = vi.fn(async (..._args: unknown[]) => ({ key: "LY", nextTicketNumber: 2 }));
 const tx = { board: { findUnique: async () => ({ memberCanAssign: true }), findFirst: (...args: unknown[]) => boardLookup(...args), update: (...args: unknown[]) => boardUpdate(...args) }, epic: { create: epicCreate }, notification: { create: notification }, customField: { findFirst: async () => ({ id: "env", type: "SELECT", defaultKey: "environment", options: ["production"] }) }, customFieldValue: { findUnique: async () => null, upsert: customWrite }, task: { create, findFirst: lookup, updateMany: update, findUniqueOrThrow: lookup }, list: { findFirst: list }, externalAccessToken: { findUnique: credential }, mcpChange: { create: journal, updateMany: marked }, activityLog: { create: logs } };
 vi.mock("@/lib/boardAccess", () => ({ canEditBoard: (...args: unknown[]) => editable(...args), canReadBoard: async () => true, isBoardAdmin: async () => true }));
 vi.mock("@/lib/notifications/webhooks", () => ({ sendBoardWebhookNotification: vi.fn() }));

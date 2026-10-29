@@ -42,9 +42,10 @@ function createPool() {
   return pool;
 }
 
-function createClient(pool: Pool) {
+function createClient(pool: Pool): PrismaClient {
   const adapter = new PrismaPg(pool as unknown as ConstructorParameters<typeof PrismaPg>[0]);
-  return new PrismaClient({ adapter }).$extends({
+  // The extension retries reads. Call sites keep using PrismaClient, so a transaction still matches.
+  const client = new PrismaClient({ adapter }).$extends({
     query: {
       $allModels: {
         async $allOperations({ operation, args, query }) {
@@ -60,6 +61,7 @@ function createClient(pool: Pool) {
       },
     },
   });
+  return client as unknown as PrismaClient;
 }
 
 function client() {
