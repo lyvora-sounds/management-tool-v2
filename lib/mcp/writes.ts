@@ -6,6 +6,7 @@ import { encodeLogMessage } from "@/lib/activityMessages";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
 import { cleanupTicketUploads, applyTicketRelations, parseRelationPatch, relationSelect, restoreTicketRelations, validateTicketRelations } from "./ticketRelations";
 import { isDoneList } from "@/lib/statusTheme";
+import { takeTicketNumber } from "@/lib/integrations/ticketBranch";
 
 export class McpWriteError extends Error {}
 
@@ -138,7 +139,8 @@ export async function createMcpTicket(context: ExternalAccessContext, args: Reco
       const last = await tx.task.findFirst({ where: { listId: scopedList.id }, orderBy: { order: "desc" }, select: { order: true } });
       if (patch.completed === undefined && isDoneList(scopedList.title)) patch.completed = true;
       const scalar = await validateTicketRelations(tx, list.boardId, actor, patch);
-      const task = await tx.task.create({ data: { ...scalar, title: patch.title!, listId: scopedList.id, order: patch.order ?? (last?.order ?? -1) + 1, completedAt: patch.completed ? new Date() : null, completedById: patch.completed ? actor.id : null, archivedAt: patch.archived ? new Date() : null }, select });
+      const { number } = await takeTicketNumber(tx, list.boardId);
+      const task = await tx.task.create({ data: { ...scalar, number, title: patch.title!, listId: scopedList.id, order: patch.order ?? (last?.order ?? -1) + 1, completedAt: patch.completed ? new Date() : null, completedById: patch.completed ? actor.id : null, archivedAt: patch.archived ? new Date() : null }, select });
       const relatedBefore = new Map<string, Snapshot>();
       const capture = async (id: string) => {
         if (id === task.id || relatedBefore.has(id)) return;

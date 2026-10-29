@@ -4,6 +4,7 @@ import db from "@/lib/db";
 import { canEditBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 import { runBatchTriage } from "@/lib/agent/triage";
+import { takeTicketNumber } from "@/lib/integrations/ticketBranch";
 
 // El triage de Kiki corre tras responder (after) y llama al modelo de IA.
 export const maxDuration = 60;
@@ -54,46 +55,57 @@ export async function POST(
     listOrderMap.set(c.listId, c._count.id);
   });
 
-  const createdTasks = [];
+  const listsOnBoard = await db.list.findMany({
+    where: { id: { in: listIds }, boardId },
+    select: { id: true },
+  });
+  if (listsOnBoard.length !== listIds.length) {
+    return NextResponse.json({ error: "Lista no encontrada" }, { status: 400 });
+  }
 
-  for (const item of tasks) {
-    const currentOrder = listOrderMap.get(item.listId) || 0;
-    listOrderMap.set(item.listId, currentOrder + 1);
+  const createdTasks = await db.$transaction(async (tx) => {
+    const created = [];
+    for (const item of tasks) {
+      const currentOrder = listOrderMap.get(item.listId) || 0;
+      listOrderMap.set(item.listId, currentOrder + 1);
+      const { number } = await takeTicketNumber(tx, boardId);
 
-    const task = await db.task.create({
-      data: {
-        title: item.title,
-        description: item.description || null,
-        priority: item.priority || "medium",
-        dueDate: item.dueDate ? new Date(item.dueDate) : null,
-        startDate: item.startDate ? new Date(item.startDate) : null,
-        quarter: item.quarter || null,
-        listId: item.listId,
-        epicId: item.epicId || null,
-        order: currentOrder,
-        subtasks: {
-          create: (item.subtasks || []).map((s, idx) => ({
-            title: s.title,
-            order: idx,
-          })),
-        },
-      },
-      include: {
-        labels: { include: { label: true } },
-        subtasks: true,
-        assignee: { select: { id: true, name: true, email: true } },
-        qa: { select: { id: true, name: true, email: true } },
-        collaborators: {
-          include: {
-            user: { select: { id: true, name: true, email: true } },
+      const task = await tx.task.create({
+        data: {
+          title: item.title,
+          description: item.description || null,
+          priority: item.priority || "medium",
+          dueDate: item.dueDate ? new Date(item.dueDate) : null,
+          startDate: item.startDate ? new Date(item.startDate) : null,
+          quarter: item.quarter || null,
+          listId: item.listId,
+          epicId: item.epicId || null,
+          order: currentOrder,
+          number,
+          subtasks: {
+            create: (item.subtasks || []).map((s, idx) => ({
+              title: s.title,
+              order: idx,
+            })),
           },
         },
-        epic: true,
-      },
-    });
-
-    createdTasks.push(task);
-  }
+        include: {
+          labels: { include: { label: true } },
+          subtasks: true,
+          assignee: { select: { id: true, name: true, email: true } },
+          qa: { select: { id: true, name: true, email: true } },
+          collaborators: {
+            include: {
+              user: { select: { id: true, name: true, email: true } },
+            },
+          },
+          epic: true,
+        },
+      });
+      created.push(task);
+    }
+    return created;
+  }, { timeout: 60_000 });
 
   await createActivity({
     boardId,
