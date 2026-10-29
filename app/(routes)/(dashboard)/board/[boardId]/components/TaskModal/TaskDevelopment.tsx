@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Copy, GitBranch, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -16,27 +16,27 @@ type Development = {
   branches: { name: string; url: string }[];
 };
 
-function InfoHint({ text }: { text: string }) {
+function InfoHint({ label, children }: { label: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <>
+    <span className="relative inline-flex">
       <button
         type="button"
         aria-expanded={open}
-        aria-label={text}
+        aria-label={label}
         onClick={() => setOpen((current) => !current)}
         className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
       >
         <Info size={13} aria-hidden />
       </button>
-      <p
+      <span
         role="tooltip"
         hidden={!open}
-        className="basis-full text-xs leading-relaxed text-muted-foreground"
+        className="absolute top-full right-0 z-20 mt-1 w-72 rounded-md bg-foreground px-2.5 py-1.5 text-left text-xs leading-relaxed font-normal text-background shadow-md"
       >
-        {text}
-      </p>
-    </>
+        {children}
+      </span>
+    </span>
   );
 }
 
@@ -73,10 +73,10 @@ function TaskDevelopmentBody({ taskId }: { taskId: string }) {
   };
 
   return (
-    <div className="mx-4 mb-2 flex flex-col gap-1.5 rounded-lg border bg-muted/30 px-2.5 py-2">
-      <div className="flex flex-wrap items-center gap-2 min-w-0">
-        <GitBranch size={14} className="shrink-0 text-muted-foreground" aria-hidden />
-        <code className="min-w-0 flex-1 truncate font-mono text-xs">
+    <div className="flex w-fit max-w-full min-w-0 flex-col gap-1">
+      <div className="inline-flex h-8 max-w-full min-w-0 items-center gap-1 rounded-4xl border bg-background px-2.5 shadow-2xs">
+        <GitBranch size={13} className="shrink-0 text-muted-foreground" aria-hidden />
+        <code className="min-w-0 truncate font-mono text-xs">
           {data.command ?? data.ticketKey}
         </code>
         {data.command && (
@@ -91,16 +91,25 @@ function TaskDevelopmentBody({ taskId }: { taskId: string }) {
             <Copy size={13} />
           </Button>
         )}
-        <InfoHint text={t("developmentHint")} />
+        <InfoHint
+          label={
+            data.connected
+              ? t("developmentHint")
+              : `${t("developmentHint")} ${t("developmentConnect")}`
+          }
+        >
+          {t("developmentHint")}
+          {!data.connected && (
+            <>
+              {" "}
+              {t("developmentConnect")}{" "}
+              <Link href="/dashboard/organizations" className="underline underline-offset-2">
+                {t("developmentOpenOrganizations")}
+              </Link>
+            </>
+          )}
+        </InfoHint>
       </div>
-      {!data.connected && (
-        <p className="text-xs text-muted-foreground">
-          {t("developmentConnect")}{" "}
-          <Link href="/dashboard/organizations" className="underline underline-offset-2 hover:text-foreground">
-            {t("developmentOpenOrganizations")}
-          </Link>
-        </p>
-      )}
       {data.branches.length > 0 && (
         <ul className="flex flex-col gap-0.5">
           {data.branches.map((branch) => (

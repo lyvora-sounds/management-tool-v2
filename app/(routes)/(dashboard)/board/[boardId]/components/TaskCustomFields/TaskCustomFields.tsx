@@ -37,6 +37,13 @@ interface TaskCustomFieldsProps {
   onTicketLinkChange?: () => void;
 }
 
+const FIELD_ORDER = ["story_points", "environment", "parent", "child", "customer"];
+
+function fieldOrder(field: CustomField) {
+  const index = FIELD_ORDER.indexOf(field.defaultKey ?? "");
+  return index === -1 ? FIELD_ORDER.length : index;
+}
+
 export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCustomFieldsProps) {
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
@@ -126,25 +133,23 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
   }
 
   return (
-    <div className="rounded-lg border bg-muted/20 p-3.5 space-y-3">
-      <div className="flex items-center justify-between border-b pb-2">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          <SlidersHorizontal size={14} className="text-primary" />
-          <span>{t("customValues")}</span>
-        </div>
+    <div className="@container rounded-xl border bg-background p-3.5 space-y-3">
+      <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+        <SlidersHorizontal size={15} className="text-muted-foreground" />
+        <span>{t("customFields")}</span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {fields.map((field) => {
+      <div className="grid grid-cols-1 gap-3 @min-[28rem]:grid-cols-2 @min-[44rem]:grid-cols-[6.25rem_10rem_minmax(8.75rem,1fr)_minmax(8.75rem,1fr)_minmax(8.75rem,1fr)]">
+        {[...fields].sort((a, b) => fieldOrder(a) - fieldOrder(b)).map((field) => {
           const val = values[field.id] ?? "";
           const isSaving = savingFieldId === field.id;
           const isSuccess = savedSuccessId === field.id;
           const isTicketRef = isTicketRefKey(field.defaultKey);
 
           return (
-            <div key={field.id} className="space-y-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium text-foreground truncate">
+            <div key={field.id} className="min-w-0 space-y-1.5">
+              <div className="flex items-center justify-between gap-1">
+                <Label className="truncate text-xs font-medium text-muted-foreground">
                   {field.name}
                 </Label>
                 {isSaving ? (
@@ -174,7 +179,7 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
                   value={val}
                   onValueChange={(v) => handleSaveValue(field.id, !v || v === "none" ? "" : v)}
                 >
-                  <SelectTrigger className="h-8 text-xs bg-background">
+                  <SelectTrigger className="h-8 w-full min-w-0 bg-background text-sm">
                     <SelectValue placeholder={t("select")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -195,7 +200,7 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
                   onChange={(e) => setValues({ ...values, [field.id]: e.target.value })}
                   onBlur={(e) => handleSaveValue(field.id, e.target.value)}
                   placeholder={t("numberPlaceholder")}
-                  className="h-8 text-xs bg-background"
+                  className="h-8 bg-background text-sm"
                 />
               ) : (
                 <Input
@@ -208,7 +213,7 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
                       ? t("customerPlaceholder")
                       : t("valuePlaceholder")
                   }
-                  className="h-8 text-xs bg-background"
+                  className="h-8 bg-background text-sm"
                 />
               )}
             </div>

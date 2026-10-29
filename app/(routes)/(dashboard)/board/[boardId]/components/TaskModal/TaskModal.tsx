@@ -532,8 +532,6 @@ export function TaskModal({
             </div>
           </DialogHeader>
 
-          <TaskDevelopment taskId={currentTask.id} />
-
           {/* Mobile tab switcher */}
           <div className="flex sm:hidden border-b">
             <button
@@ -611,7 +609,7 @@ export function TaskModal({
                     onClick={() => {
                       if (canEdit) setEditingTitle(true);
                     }}
-                    className={`flex-1 text-2xl font-bold px-2 py-2 rounded-md transition-colors ${
+                    className={`flex-1 text-2xl font-bold tracking-tight px-2 py-2 rounded-md transition-colors ${
                       canEdit ? "cursor-pointer hover:bg-muted/50" : ""
                     } ${
                       completed ? "line-through text-muted-foreground" : ""
@@ -622,13 +620,17 @@ export function TaskModal({
                 )}
               </div>
 
-              {/* AI Improve Suggestion Trigger Panel */}
-              {canEdit && <TaskAiImprove
-                taskId={currentTask.id}
-                currentTitle={savedTitle}
-                currentDescription={savedDescription}
-                onApply={handleAiApply}
-              />}
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                {canEdit && (
+                  <TaskAiImprove
+                    taskId={currentTask.id}
+                    currentTitle={savedTitle}
+                    currentDescription={savedDescription}
+                    onApply={handleAiApply}
+                  />
+                )}
+                <TaskDevelopment taskId={currentTask.id} />
+              </div>
 
               {/* Labels + Dates + Priority + Epic + Quarter + Attachments row */}
               <div className="flex flex-col gap-2 [&_button]:font-bold [&_button]:font-sans [&_button]:text-sm [&_input]:font-bold [&_input]:font-sans [&_input]:text-sm">
@@ -842,9 +844,9 @@ export function TaskModal({
                 onTicketLinkChange={() => router.refresh()}
               />
 
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <AlignLeft size={15} />
+              <div className="flex flex-col gap-3 rounded-xl border bg-background p-3.5">
+                <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                  <AlignLeft size={15} className="text-muted-foreground" />
                   <span>{t("description")}</span>
                 </div>
 
