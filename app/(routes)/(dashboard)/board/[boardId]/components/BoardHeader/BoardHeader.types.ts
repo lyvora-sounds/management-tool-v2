@@ -1,4 +1,4 @@
-import type { BoardLink } from "@/app/api/boards/[boardId]/links/route";
+import type { ApiBoardLink as BoardLink } from "@/lib/api/types";
 
 export type BoardHeaderProps = {
   boardId: string;
@@ -10,4 +10,6 @@ export type BoardHeaderProps = {
   canEdit: boolean;
   initialLinks: BoardLink[];
   memberCanAssign: boolean;
+  boardKey: string;
+  keyLocked: boolean;
 };

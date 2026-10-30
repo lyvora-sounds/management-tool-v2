@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CSSProperties, FormEvent, useCallback, useEffect, useState } from "react";
+import { CSSProperties, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowRightLeft, Building2, Check, ChevronDown, ChevronRight, ChevronsUpDown, FolderKanban, Loader2, Plus, Search, Trash2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CreateBoardModal } from "../components/boards/CreateBoardModal/CreateBoardModal";
 import { useBoardPolling } from "@/hooks/use-board-polling";
+import { apiFetch } from "@/lib/apiClient";
+import { GithubConnection } from "./GithubConnection";
 
 type Board = { id: string; title: string; color: string | null; canMove: boolean };
 type Organization = {
@@ -27,7 +29,13 @@ type Member = { role: string; user: { id: string; name: string | null; email: st
 type AvailablePerson = Member["user"] & { organizations: { id: string; name: string }[] };
 type Team = { id: string; name: string; members: { user: Member["user"] }[]; boardAccess: { role: string; board: { id: string; title: string } }[] };
 
-export function OrganizationsClient() {
+export function OrganizationsClient({
+  githubNotice = null,
+  githubOrganizationId = null,
+}: {
+  githubNotice?: "connected" | "error" | "requested" | "updated" | "waiting" | "choose" | null;
+  githubOrganizationId?: string | null;
+}) {
   const t = useTranslations("organizations");
   const tCommon = useTranslations("common");
   const router = useRouter();
@@ -36,7 +44,9 @@ export function OrganizationsClient() {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(
+    githubNotice && githubNotice !== "error" ? githubOrganizationId : null,
+  );
   const [members, setMembers] = useState<Record<string, Member[]>>({});
   const [teams, setTeams] = useState<Record<string, Team[]>>({});
   const [availablePeople, setAvailablePeople] = useState<Record<string, AvailablePerson[]>>({});
@@ -56,15 +66,16 @@ export function OrganizationsClient() {
   const [moveStep, setMoveStep] = useState<"select" | "confirm">("select");
   const [moveConfirmation, setMoveConfirmation] = useState("");
   const [moving, setMoving] = useState(false);
+  const noticedGithub = useRef(false);
 
   const loadOrganizations = useCallback(async () => {
-    const response = await fetch("/api/organizations", { cache: "no-store" });
+    const response = await apiFetch("/api/organizations", { cache: "no-store" });
     if (!response.ok) throw new Error();
     setOrganizations(await response.json());
   }, []);
 
   useEffect(() => {
-    fetch("/api/organizations")
+    apiFetch("/api/organizations")
       .then(async (response) => {
         if (!response.ok) throw new Error();
         setOrganizations(await response.json());
@@ -77,7 +88,7 @@ export function OrganizationsClient() {
     if (!expanded) return;
     const timer = window.setTimeout(() => {
       setSearchingPeople(true);
-      fetch(`/api/organizations/${expanded}/available-members?q=${encodeURIComponent(memberSearch)}`)
+      apiFetch(`/api/organizations/${expanded}/available-members?q=${encodeURIComponent(memberSearch)}`)
         .then(async (response) => response.ok ? response.json() : [])
         .then((people) => setAvailablePeople((value) => ({ ...value, [expanded]: people })))
         .finally(() => setSearchingPeople(false));
@@ -87,9 +98,9 @@ export function OrganizationsClient() {
 
   const loadDetails = useCallback(async (organizationId: string, search = "") => {
     const [membersResponse, teamsResponse, peopleResponse] = await Promise.all([
-      fetch(`/api/organizations/${organizationId}/members`, { cache: "no-store" }),
-      fetch(`/api/organizations/${organizationId}/teams`, { cache: "no-store" }),
-      fetch(`/api/organizations/${organizationId}/available-members?q=${encodeURIComponent(search)}`, { cache: "no-store" }),
+      apiFetch(`/api/organizations/${organizationId}/members`, { cache: "no-store" }),
+      apiFetch(`/api/organizations/${organizationId}/teams`, { cache: "no-store" }),
+      apiFetch(`/api/organizations/${organizationId}/available-members?q=${encodeURIComponent(search)}`, { cache: "no-store" }),
     ]);
     if ([membersResponse, teamsResponse, peopleResponse].some((response) => response.status >= 500)) {
       throw new Error("Unable to load organization details");
@@ -101,6 +112,22 @@ export function OrganizationsClient() {
     setTeams((value) => ({ ...value, [organizationId]: teamData }));
     setAvailablePeople((value) => ({ ...value, [organizationId]: peopleData }));
   }, []);
+
+  useEffect(() => {
+    if (!githubNotice || noticedGithub.current) return;
+    noticedGithub.current = true;
+    void fetch("/api/integrations/github/result", { method: "POST" });
+    if (githubNotice === "connected") toast.success(t("githubConnected"));
+    else if (githubNotice === "updated") toast.success(t("githubUpdated"));
+    else if (githubNotice === "requested") toast.info(t("githubRequested"));
+    else if (githubNotice === "waiting") toast.info(t("githubWaiting"));
+    else if (githubNotice === "choose") toast.info(t("githubChoose"));
+    else toast.error(t("githubConnectError"));
+    if (githubNotice !== "error" && githubOrganizationId) {
+      queueMicrotask(() => { void loadDetails(githubOrganizationId); });
+    }
+    router.replace("/dashboard/organizations");
+  }, [githubNotice, githubOrganizationId, loadDetails, router, t]);
 
   const refreshOrganizations = useCallback(async () => {
     await Promise.all([
@@ -121,7 +148,7 @@ export function OrganizationsClient() {
     event.preventDefault();
     if (!name.trim()) return;
     setCreating(true);
-    const response = await fetch("/api/organizations", {
+    const response = await apiFetch("/api/organizations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, description }),
@@ -137,7 +164,7 @@ export function OrganizationsClient() {
   };
 
   const addMember = async (organizationId: string) => {
-    const response = await fetch(`/api/organizations/${organizationId}/members`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: memberEmail, role: memberRole }),
@@ -150,13 +177,13 @@ export function OrganizationsClient() {
       toast.success(t("memberAdded"));
     } else {
       const data = await response.json().catch(() => null);
-      toast.error(data?.error ?? t("memberError"));
+      toast.error(data?.message ?? data?.error ?? t("memberError"));
     }
   };
 
   const updateMemberRole = async (organizationId: string, userId: string, role: "admin" | "member") => {
     setUpdatingMember(userId);
-    const response = await fetch(`/api/organizations/${organizationId}/members`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/members`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, role }),
@@ -166,7 +193,7 @@ export function OrganizationsClient() {
       toast.success(t("memberRoleUpdated"));
     } else {
       const data = await response.json().catch(() => null);
-      toast.error(data?.error ?? t("memberRoleError"));
+      toast.error(data?.message ?? data?.error ?? t("memberRoleError"));
     }
     setUpdatingMember(null);
   };
@@ -175,7 +202,7 @@ export function OrganizationsClient() {
     const displayName = member.user.name || member.user.email;
     if (!window.confirm(t("removeMemberConfirm", { name: displayName }))) return;
     setUpdatingMember(member.user.id);
-    const response = await fetch(`/api/organizations/${organizationId}/members`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/members`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: member.user.id }),
@@ -185,13 +212,13 @@ export function OrganizationsClient() {
       toast.success(t("memberRemoved"));
     } else {
       const data = await response.json().catch(() => null);
-      toast.error(data?.error ?? t("memberRemoveError"));
+      toast.error(data?.message ?? data?.error ?? t("memberRemoveError"));
     }
     setUpdatingMember(null);
   };
 
   const addTeam = async (organizationId: string) => {
-    const response = await fetch(`/api/organizations/${organizationId}/teams`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/teams`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: teamName }),
@@ -206,7 +233,7 @@ export function OrganizationsClient() {
   const addTeamMember = async (organizationId: string, teamId: string) => {
     const userId = teamMemberSelection[teamId];
     if (!userId) return;
-    const response = await fetch(`/api/organizations/${organizationId}/teams/${teamId}/members`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/teams/${teamId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId }),
@@ -221,7 +248,7 @@ export function OrganizationsClient() {
   const assignTeamToBoard = async (organizationId: string, teamId: string) => {
     const boardId = teamBoardSelection[teamId];
     if (!boardId) return;
-    const response = await fetch(`/api/organizations/${organizationId}/teams/${teamId}/boards`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/teams/${teamId}/boards`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ boardId, role: teamBoardRole[teamId] ?? "member" }),
@@ -244,7 +271,7 @@ export function OrganizationsClient() {
   const moveBoard = async () => {
     if (!movingBoard || !destinationId) return;
     setMoving(true);
-    const response = await fetch(`/api/boards/${movingBoard.board.id}/organization`, {
+    const response = await apiFetch(`/api/boards/${movingBoard.board.id}/organization`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ organizationId: destinationId, confirmation: moveConfirmation }),
@@ -256,7 +283,8 @@ export function OrganizationsClient() {
       toast.success(t("boardMoved"));
     } else {
       const data = await response.json().catch(() => null);
-      toast.error(data?.error ?? t("moveError"));
+      // The API sends { error: code, message }; the app's own route sent { error: text }.
+      toast.error(data?.message ?? data?.error ?? t("moveError"));
     }
     setMoving(false);
   };
@@ -325,6 +353,7 @@ export function OrganizationsClient() {
                 </div>
 
                 {open && (
+                  <>
                   <div className="grid gap-5 border-t p-4 lg:grid-cols-2">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-sm font-semibold"><Users size={16} />{t("members")}</div>
@@ -441,6 +470,8 @@ export function OrganizationsClient() {
                       <div className="flex gap-2"><Input value={teamName} onChange={(event) => setTeamName(event.target.value)} placeholder={t("teamName")} /><Button type="button" size="sm" onClick={() => void addTeam(organization.id)} disabled={!teamName.trim()}>{tCommon("create")}</Button></div>
                     </div>
                   </div>
+                  <GithubConnection organizationId={organization.id} canManage={canManage} />
+                  </>
                 )}
               </section>
             );

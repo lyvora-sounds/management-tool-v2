@@ -2,6 +2,20 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import db from "@/lib/db";
+import { canEditBoard, canReadBoard } from "@/lib/boardAccess";
+
+// A ticket the caller cannot reach answers like one that does not exist: they must not learn that it is there.
+async function reachableTask(userId: string, taskId: string, need: "read" | "edit") {
+  const user = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!user) return null;
+  const task = await db.task.findUnique({
+    where: { id: taskId },
+    select: { id: true, shareToken: true, list: { select: { boardId: true } } },
+  });
+  if (!task) return null;
+  const allowed = need === "edit" ? await canEditBoard(user.id, task.list.boardId) : await canReadBoard(user.id, task.list.boardId);
+  return allowed ? task : null;
+}
 
 export async function GET(
   req: Request,
@@ -13,11 +27,7 @@ export async function GET(
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const task = await db.task.findUnique({
-    where: { id: taskId },
-    select: { id: true, shareToken: true },
-  });
-
+  const task = await reachableTask(userId, taskId, "read");
   if (!task) {
     return NextResponse.json({ error: "Tarea no encontrada" }, { status: 404 });
   }
@@ -40,16 +50,7 @@ export async function POST(
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  if (!user) {
-    return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
-  }
-
-  const task = await db.task.findUnique({
-    where: { id: taskId },
-    include: { list: { include: { board: true } } },
-  });
-
+  const task = await reachableTask(userId, taskId, "edit");
   if (!task) {
     return NextResponse.json({ error: "Tarea no encontrada" }, { status: 404 });
   }
@@ -78,6 +79,10 @@ export async function DELETE(
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  if (!(await reachableTask(userId, taskId, "edit"))) {
+    return NextResponse.json({ error: "Tarea no encontrada" }, { status: 404 });
   }
 
   await db.task.update({

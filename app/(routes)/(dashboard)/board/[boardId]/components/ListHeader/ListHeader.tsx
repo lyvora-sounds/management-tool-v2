@@ -15,6 +15,7 @@ import { useBoardStore } from "../../store/useBoardStore";
 import { ListHeaderProps } from "./ListHeader.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 import { useBoardAccess } from "../BoardAccess";
+import { apiFetch } from "@/lib/apiClient";
 
 export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
   const t = useTranslations("list");
@@ -47,7 +48,7 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
       return;
     }
     setLoading(true);
-    const res = await fetch(`/api/lists/updateList/${listId}`, {
+    const res = await apiFetch(`/api/lists/updateList/${listId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: trimmed }),
@@ -65,7 +66,7 @@ export function ListHeader({ listId, title, taskCount }: ListHeaderProps) {
 
   const handleDelete = async () => {
     setLoading(true);
-    const res = await fetch(`/api/lists/deleteList/${listId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/lists/deleteList/${listId}`, { method: "DELETE" });
     if (res.ok) {
       removeList(listId);
       toast.success(t("deleted"));

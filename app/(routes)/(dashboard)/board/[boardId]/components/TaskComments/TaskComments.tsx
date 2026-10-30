@@ -289,8 +289,8 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
 
         {!fetching && comments.length === 0 && (
           <div className="m-auto flex max-w-60 flex-col items-center gap-2 py-8 text-center">
-            <span className="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">
-              <MessageSquare size={18} />
+            <span className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
+              <MessageSquare size={22} />
             </span>
             <p className="text-sm font-medium">{t("noComments")}</p>
             <p className="text-xs leading-relaxed text-muted-foreground">{t("emptyCommentsHint")}</p>
@@ -465,7 +465,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
                 onClick={submit}
                 disabled={loading || !value.trim()}
                 aria-label={t("send")}
-                className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+                className="grid size-8 place-items-center rounded-full bg-violet-600 text-white transition-opacity hover:bg-violet-700 disabled:opacity-40"
               >
                 <Send size={14} />
               </button>

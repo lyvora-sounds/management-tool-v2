@@ -10,6 +10,9 @@ import { StepBasicInfo } from "./steps/StepBasicInfo";
 import { StepColorPicker } from "./steps/StepColorPicker";
 import { StepInitialLists } from "./steps/StepInitialLists";
 import { useBoardsStore } from "@/store/useBoardsStore";
+import { apiFetch } from "@/lib/apiClient";
+import { boardFromApi } from "@/lib/api/boards";
+import type { ApiBoard } from "@/lib/api/types";
 
 interface CreateBoardStepperProps {
   onSuccess: () => void;
@@ -44,7 +47,7 @@ export function CreateBoardStepper({ onSuccess, organizationId = "" }: CreateBoa
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/boards/createBoard", {
+      const res = await apiFetch("/api/boards/createBoard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -58,11 +61,12 @@ export function CreateBoardStepper({ onSuccess, organizationId = "" }: CreateBoa
 
       if (!res.ok) {
         const body = await res.json();
-        setError(body.error || t("createError"));
+        // The API sends { error: code, message }; the app's own route sent { error: text }.
+        setError(body.message || body.error || t("createError"));
         return;
       }
 
-      const board = await res.json();
+      const board = boardFromApi((await res.json()) as ApiBoard);
       addBoard(board);
       setStep(0);
       setData({

@@ -33,6 +33,11 @@ export async function POST(
     await db.taskLabel.delete({ where: { taskId_labelId: { taskId, labelId } } });
     return NextResponse.json({ active: false });
   } else {
+    // A label of another board must not be attached: it would show that board's label name and colour here.
+    const label = await db.label.findUnique({ where: { id: String(labelId ?? "") }, select: { boardId: true } });
+    if (!label || label.boardId !== task.list.board.id) {
+      return NextResponse.json({ error: "Label not found" }, { status: 404 });
+    }
     await db.taskLabel.create({ data: { taskId, labelId } });
     return NextResponse.json({ active: true });
   }

@@ -8,6 +8,7 @@ import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { SearchResults } from "./GlobalSearch.types";
+import { apiFetch } from "@/lib/apiClient";
 import { SearchResultsSkeleton } from "@/components/skeletons";
 
 const DEBOUNCE_MS = 300;
@@ -57,12 +58,15 @@ export function GlobalSearch() {
       return;
     }
     setLoading(true);
-    fetch(`/api/search?q=${encodeURIComponent(q)}`)
-      .then((r) => r.json())
+    apiFetch(`/api/search?q=${encodeURIComponent(q)}`)
+      .then((r) => (r.ok ? (r.json() as Promise<SearchResults>) : null))
       .then((data) => {
+        // An error body is not a list of results: keep what is on screen.
+        if (!data) return;
         setResults(data);
         setActiveIndex(0);
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 

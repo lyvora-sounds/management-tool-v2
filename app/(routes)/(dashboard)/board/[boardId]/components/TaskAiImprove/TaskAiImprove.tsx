@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Loader2, Check, X, ArrowRight } from "lucide-react";
+import { Sparkles, Loader2, Check, X, ArrowRight, ChevronDown, Globe } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -99,43 +99,46 @@ export function TaskAiImprove({
 
   if (!open) {
     return (
-      <div className="inline-flex w-fit shrink-0 self-start items-center overflow-hidden rounded-full border border-primary/30 bg-input/30">
-        <Button
-          variant="outline"
-          size="sm"
+      <>
+        <button
+          type="button"
           onClick={startImprove}
           disabled={loading}
-          className="gap-1.5 h-8 rounded-none border-0 bg-transparent text-sm font-sans font-bold text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-violet-600 px-3 text-sm font-sans font-bold text-white hover:bg-violet-700 disabled:opacity-60"
         >
           <Sparkles size={13} />
           <span>{t("improveWithAi")}</span>
-        </Button>
-        <select
-          aria-label={t("descriptionLanguage")}
-          title={t("descriptionLanguage")}
-          value={descriptionLanguage}
-          onChange={(event) => {
-            const language = event.target.value;
-            if (language === "en" || language === "es" || language === "tl") {
-              setDescriptionLanguage(language);
-            }
-          }}
-          disabled={loading}
-          className="h-8 cursor-pointer rounded-none border-0 border-l border-primary/20 bg-transparent pl-3 pr-2 text-sm font-sans font-bold text-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-        >
-          <option value="en">English</option>
-          <option value="es">Español</option>
-          <option value="tl">Tagalog</option>
-        </select>
-      </div>
+        </button>
+        <span className="relative inline-flex h-8 shrink-0 items-center rounded-full border bg-background pl-2.5 pr-2 shadow-2xs">
+          <Globe size={13} className="shrink-0 text-muted-foreground" aria-hidden />
+          <select
+            aria-label={t("descriptionLanguage")}
+            title={t("descriptionLanguage")}
+            value={descriptionLanguage}
+            onChange={(event) => {
+              const language = event.target.value;
+              if (language === "en" || language === "es" || language === "tl") {
+                setDescriptionLanguage(language);
+              }
+            }}
+            disabled={loading}
+            className="h-8 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-1.5 pr-5 text-sm font-sans leading-8 font-medium text-foreground focus-visible:outline-none"
+          >
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="tl">Tagalog</option>
+          </select>
+          <ChevronDown size={14} className="pointer-events-none absolute right-2 text-muted-foreground" aria-hidden />
+        </span>
+      </>
     );
   }
 
   return (
-    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-4 my-2 transition-all">
+    <div className="w-full basis-full rounded-xl border border-violet-500/25 bg-violet-500/5 p-4 space-y-4 my-2 transition-all">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+          <div className="p-1.5 rounded-md bg-violet-500/15 text-violet-600 dark:text-violet-300">
             <Sparkles size={16} />
           </div>
           <h4 className="text-sm font-bold text-foreground">

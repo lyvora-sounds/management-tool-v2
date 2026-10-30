@@ -11,6 +11,7 @@ People on a card (assignee, QA, collaborators) plus comments drive the in-app in
 - Admins/owners can always assign.
 - Members only if `board.memberCanAssign`.
 - Clicking the current assignee **clears** them (toggle).
+- The new assignee must be able to open the board, or the answer is 400. Taking someone off never needs the check. The same applies to QA and collaborators, and to `assigneeId`, `qaId` and `epicId` in `PATCH /api/tasks/updateTask/[taskId]` (the epic must belong to the ticket's board). A label from another board is refused with 404.
 - If the new assignee is not the actor → `Notification { type: "assigned" }`.
 - Activity `task_assigned` or `task_unassigned`.
 

@@ -5,6 +5,7 @@ import { ShieldCheck, X, UserCheck, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
 
 interface BoardPermissionsProps {
   boardId: string;
@@ -40,7 +41,7 @@ export function BoardPermissions({
 
   useEffect(() => {
     if (!open) return;
-    fetch(`/api/boards/${boardId}/access`)
+    apiFetch(`/api/boards/${boardId}/access`)
       .then(async (response) => {
         if (!response.ok) throw new Error("load failed");
         return response.json();
@@ -66,7 +67,7 @@ export function BoardPermissions({
     setSaving(true);
     const prev = memberCanAssign;
     setMemberCanAssign(value);
-    const res = await fetch(`/api/boards/${boardId}/permissions`, {
+    const res = await apiFetch(`/api/boards/${boardId}/permissions`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ memberCanAssign: value }),
@@ -84,7 +85,7 @@ export function BoardPermissions({
     const prev = kikiMode;
     setKikiMode(value);
     setSaving(true);
-    const res = await fetch(`/api/boards/${boardId}/permissions`, {
+    const res = await apiFetch(`/api/boards/${boardId}/permissions`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kikiMode: value }),
@@ -101,7 +102,7 @@ export function BoardPermissions({
     const prev = kikiTriage;
     setKikiTriage(value);
     setSaving(true);
-    const res = await fetch(`/api/boards/${boardId}/permissions`, {
+    const res = await apiFetch(`/api/boards/${boardId}/permissions`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kikiTriage: value }),
@@ -127,7 +128,7 @@ export function BoardPermissions({
     const name = teamName.trim();
     if (!name || !organizationId) return;
     setSaving(true);
-    const response = await fetch(`/api/organizations/${organizationId}/teams`, {
+    const response = await apiFetch(`/api/organizations/${organizationId}/teams`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -145,7 +146,7 @@ export function BoardPermissions({
 
   const saveAccess = async () => {
     setSaving(true);
-    const response = await fetch(`/api/boards/${boardId}/access`, {
+    const response = await apiFetch(`/api/boards/${boardId}/access`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ accessMode, defaultRole, teamGrants }),

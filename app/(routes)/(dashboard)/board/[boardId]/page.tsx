@@ -8,6 +8,7 @@ import { BoardVisitTracker } from "./components/BoardVisitTracker/BoardVisitTrac
 import { BoardTour } from "./components/BoardTour/BoardTour";
 import { getBoardRole, readableBoardWhere } from "@/lib/boardAccess";
 import { canEditBoard } from "@/lib/boardRoles";
+import { ACCESS_DENIED_HREF } from "@/lib/ticketShare";
 
 interface BoardPageProps {
   params: Promise<{ boardId: string }>;
@@ -54,7 +55,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
     },
   });
 
-  if (!board) redirect("/dashboard");
+  if (!board) redirect(ACCESS_DENIED_HREF);
 
   const isOwner = board.userId === user.id;
 
@@ -90,7 +91,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
     <div className="flex flex-col h-full p-3 sm:p-6 gap-4 sm:gap-6 min-w-0">
       <BoardVisitTracker boardId={board.id} />
       <BoardTour tourSeen={tourSeen} />
-      <BoardHeader boardId={board.id} title={board.title} isOwner={isOwner} canManage={canManage} canEdit={canEdit} initialLinks={initialLinks} memberCanAssign={board.memberCanAssign} />
+      <BoardHeader boardId={board.id} title={board.title} isOwner={isOwner} canManage={canManage} canEdit={canEdit} initialLinks={initialLinks} memberCanAssign={board.memberCanAssign} boardKey={board.key} keyLocked={board.nextTicketNumber > 1} />
       <Suspense fallback={null}>
         <BoardContent
           lists={board.list}

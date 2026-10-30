@@ -36,8 +36,9 @@ import { ArchiveTasksModal } from "../ArchiveTasksModal/ArchiveTasksModal";
 import { BoardIntegrationsModal } from "../BoardIntegrationsModal/BoardIntegrationsModal";
 import { AiBrainDumpModal } from "../AiBrainDumpModal/AiBrainDumpModal";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
+import { apiFetch } from "@/lib/apiClient";
 
-export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initialLinks, memberCanAssign }: BoardHeaderProps) {
+export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initialLinks, memberCanAssign, boardKey, keyLocked }: BoardHeaderProps) {
   const t = useTranslations("board");
   const tCommon = useTranslations("common");
   const router = useRouter();
@@ -47,6 +48,8 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(title);
   const [savedTitle, setSavedTitle] = useState(title);
+  const [keyValue, setKeyValue] = useState(boardKey);
+  const [savedKey, setSavedKey] = useState(boardKey);
   const [loading, setLoading] = useState(false);
 
   const [membersOpen, setMembersOpen] = useState(false);
@@ -77,7 +80,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
       return;
     }
     setLoading(true);
-    const res = await fetch(`/api/boards/updateBoard/${boardId}`, {
+    const res = await apiFetch(`/api/boards/updateBoard/${boardId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: trimmed }),
@@ -95,9 +98,34 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
     setLoading(false);
   };
 
+  const saveKey = async () => {
+    const next = keyValue.trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(next) || next === savedKey) {
+      setKeyValue(savedKey);
+      return;
+    }
+    setLoading(true);
+    const res = await apiFetch(`/api/boards/updateBoard/${boardId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: savedTitle, key: next }),
+    });
+    const updated = await res.json().catch(() => null);
+    if (res.ok && updated?.key === next) {
+      setSavedKey(next);
+      setKeyValue(next);
+      toast.success(t("boardKeySaved"));
+      router.refresh();
+    } else {
+      setKeyValue(savedKey);
+      toast.error(updated?.error === "taken" ? t("boardKeyTaken") : t("boardKeyError"));
+    }
+    setLoading(false);
+  };
+
   const handleDelete = async () => {
     setLoading(true);
-    const res = await fetch(`/api/boards/deleteBoard/${boardId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/boards/deleteBoard/${boardId}`, { method: "DELETE" });
     if (res.ok) {
       removeBoard(boardId);
       router.push("/dashboard/boards");
@@ -166,6 +194,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
       )}
 
       <div className="flex items-center justify-between gap-2 min-w-0">
+      <div className="flex items-center gap-2 min-w-0">
         {isEditing ? (
           <Input
             ref={inputRef}
@@ -190,6 +219,27 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
             {value}
           </h1>
         )}
+        {isOwner && !keyLocked ? (
+          <Input
+            value={keyValue}
+            aria-label={t("boardKey")}
+            title={t("boardKeyHint")}
+            maxLength={2}
+            disabled={loading}
+            onChange={(event) => setKeyValue(event.target.value.toUpperCase())}
+            onBlur={saveKey}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur();
+              if (event.key === "Escape") setKeyValue(savedKey);
+            }}
+            className="h-7 w-12 shrink-0 px-1.5 text-center font-mono text-xs uppercase"
+          />
+        ) : (
+          <span title={t("boardKeyHint")} className="shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
+            {savedKey}
+          </span>
+        )}
+      </div>
 
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-wrap">
           {/* AI Brain Dump Button */}

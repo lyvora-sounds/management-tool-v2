@@ -37,6 +37,7 @@ import { DEFAULT_FILTERS } from "./BoardContent.constants";
 import { taskMatchesFilters } from "./taskMatchesFilters";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
 
 export function BoardContent({
   lists: initialLists,
@@ -93,7 +94,7 @@ export function BoardContent({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/boards/${boardId}/epics`)
+    apiFetch(`/api/boards/${boardId}/epics`)
       .then(async (res) => {
         if (!res.ok) return null;
         return res.json();
@@ -218,7 +219,7 @@ export function BoardContent({
       const newLists = arrayMove(lists, oldIndex, newIndex);
       reorderLists(oldIndex, newIndex);
 
-      await fetch("/api/lists/updateOrder", {
+      await apiFetch("/api/lists/updateOrder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

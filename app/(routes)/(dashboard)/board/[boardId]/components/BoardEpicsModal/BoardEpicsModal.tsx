@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import {
   Layers,
   Plus,
@@ -89,7 +90,7 @@ export function BoardEpicsModal({
   const loadEpics = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/boards/${boardId}/epics`);
+      const res = await apiFetch(`/api/boards/${boardId}/epics`);
       if (res.ok) {
         const data = await res.json();
         setEpics(data.epics || []);
@@ -107,7 +108,7 @@ export function BoardEpicsModal({
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/boards/${boardId}/epics`, {
+      const res = await apiFetch(`/api/boards/${boardId}/epics`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -127,7 +128,7 @@ export function BoardEpicsModal({
         onEpicsChange?.();
       } else {
         const err = await res.json();
-        toast.error(err.error || t("createError"));
+        toast.error(err.message || err.error || t("createError"));
       }
     } catch {
       toast.error(tCommon("connectionError"));
@@ -139,7 +140,7 @@ export function BoardEpicsModal({
   const handleUpdate = async (id: string) => {
     if (!editTitle.trim()) return;
     try {
-      const res = await fetch(`/api/boards/${boardId}/epics`, {
+      const res = await apiFetch(`/api/boards/${boardId}/epics`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -165,7 +166,7 @@ export function BoardEpicsModal({
     if (!confirm(t("deleteConfirm", { name }))) return;
 
     try {
-      const res = await fetch(`/api/boards/${boardId}/epics?epicId=${id}`, {
+      const res = await apiFetch(`/api/boards/${boardId}/epics?epicId=${id}`, {
         method: "DELETE",
       });
 

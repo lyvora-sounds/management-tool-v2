@@ -14,6 +14,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { dateLocale } from "@/i18n/routing";
 import { FormattedLogMessage } from "@/components/Shared/FormattedLogMessage";
 import { Notification } from "./NotificationBell.types";
+import { apiFetch } from "@/lib/apiClient";
 
 const POLL_INTERVAL = 30_000; // 30 seconds
 
@@ -27,7 +28,7 @@ export function NotificationBell() {
   const fetchNotifications = useCallback(async () => {
     if (typeof document !== "undefined" && document.hidden) return;
     try {
-      const res = await fetch("/api/notifications");
+      const res = await apiFetch("/api/notifications");
       if (!res.ok) return;
       const data = await res.json();
       setNotifications(data);
@@ -60,14 +61,14 @@ export function NotificationBell() {
   const markAllRead = async () => {
     const prev = notifications;
     setNotifications([]);
-    const res = await fetch("/api/notifications", { method: "PATCH" });
+    const res = await apiFetch("/api/notifications", { method: "PATCH" });
     if (!res.ok) setNotifications(prev);
   };
 
   const markOneRead = async (id: string) => {
     const prev = notifications;
     setNotifications((p) => p.filter((n) => n.id !== id));
-    const res = await fetch(`/api/notifications/${id}`, { method: "PATCH" });
+    const res = await apiFetch(`/api/notifications/${id}`, { method: "PATCH" });
     if (!res.ok) setNotifications(prev);
   };
 
@@ -80,6 +81,7 @@ export function NotificationBell() {
   return (
     <Popover open={open} onOpenChange={handleOpen}>
       <PopoverTrigger
+        id="notification-bell"
         render={
           <Button variant="ghost" size="icon" className="relative">
             <Bell size={18} />

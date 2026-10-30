@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { apiFetch } from "@/lib/apiClient";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { StepProps } from "../CreateBoardStepper.types";
@@ -11,7 +12,7 @@ export function StepBasicInfo({ data, onChange }: StepProps) {
   const [organizations, setOrganizations] = useState<{ id: string; name: string; role: string }[]>([]);
 
   useEffect(() => {
-    fetch("/api/organizations")
+    apiFetch("/api/organizations")
       .then((response) => response.ok ? response.json() : [])
       .then((items: { id: string; name: string; role: string }[]) => {
         setOrganizations(items);

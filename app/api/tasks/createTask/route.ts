@@ -4,6 +4,7 @@ import db from "@/lib/db";
 import { canEditBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 import { runTriage } from "@/lib/agent/triage";
+import { takeTicketNumber } from "@/lib/integrations/ticketBranch";
 
 // El triage de Kiki corre tras responder (after) y llama al modelo de IA.
 export const maxDuration = 60;
@@ -49,12 +50,16 @@ export async function POST(req: Request) {
     orderBy: { order: "desc" },
   });
 
-  const task = await db.task.create({
-    data: {
-      title: title.trim(),
-      listId,
-      order: lastTask ? lastTask.order + 1 : 0,
-    },
+  const task = await db.$transaction(async (tx) => {
+    const { number } = await takeTicketNumber(tx, list.boardId);
+    return tx.task.create({
+      data: {
+        title: title.trim(),
+        listId,
+        order: lastTask ? lastTask.order + 1 : 0,
+        number,
+      },
+    });
   });
 
   await createActivity({
