@@ -82,6 +82,10 @@ describe("apiPathFor: routes already served by kiki-api", () => {
     ["DELETE", "/api/tasks/t1/share", "/v1/tasks/t1/share"],
     ["GET", "/api/tasks/t1/comments", "/v1/tasks/t1/comments"],
     ["DELETE", "/api/tasks/t1/comments/c1", "/v1/tasks/t1/comments/c1"],
+    ["GET", "/api/tasks/t1/attachments", "/v1/tasks/t1/attachments"],
+    ["POST", "/api/tasks/t1/attachments", "/v1/tasks/t1/attachments"],
+    ["GET", "/api/tasks/t1/attachments/a1/download", "/v1/tasks/t1/attachments/a1/download"],
+    ["DELETE", "/api/tasks/t1/attachments/a1", "/v1/tasks/t1/attachments/a1"],
   ];
 
   it.each(migrated)("%s %s -> %s", (method, path, expected) => {
@@ -101,9 +105,9 @@ describe("apiPathFor: routes already served by kiki-api", () => {
       ["POST", "/api/tasks/t1/comments"], // Kiki answers after the response: it moves with the agent routes
       ["POST", "/api/tasks/t1/agent-apply"],
       ["POST", "/api/tasks/t1/agent-undo"],
-      ["GET", "/api/tasks/t1/attachments"],
-      ["POST", "/api/tasks/t1/attachments"],
-      ["DELETE", "/api/tasks/t1/attachments/a1"],
+      ["PUT", "/api/tasks/t1/attachments"],
+      ["GET", "/api/tasks/t1/attachments/a1"], // there is no single-attachment read; only the download
+      ["POST", "/api/tasks/t1/attachments/a1/download"],
       ["PUT", "/api/tasks/t1/share"],
       ["GET", "/api/tasks/updateTask/t1"],
       ["GET", "/api/lists/createList"], // the app only had the POST
