@@ -16,6 +16,7 @@ import { useTranslations } from "next-intl";
 import { TicketSelectCombobox } from "./TicketSelectCombobox";
 import { isChildFieldKey, isTicketRefKey } from "@/lib/customFieldsDefaults";
 import { useBoardAccess } from "../BoardAccess";
+import { apiFetch } from "@/lib/apiClient";
 
 interface CustomField {
   id: string;
@@ -62,7 +63,7 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
     const fetchTaskCustomValues = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/tasks/${taskId}/custom-values`);
+        const res = await apiFetch(`/api/tasks/${taskId}/custom-values`);
         if (!res.ok) return;
         const data = await res.json();
         setFields(data.fields || []);
@@ -94,7 +95,7 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
     setValues((prev) => ({ ...prev, [customFieldId]: newValue }));
 
     try {
-      const res = await fetch(`/api/tasks/${taskId}/custom-values`, {
+      const res = await apiFetch(`/api/tasks/${taskId}/custom-values`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customFieldId, value: newValue }),

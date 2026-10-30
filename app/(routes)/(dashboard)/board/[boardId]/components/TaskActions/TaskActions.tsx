@@ -18,6 +18,7 @@ import { useBoardStore } from "../../store/useBoardStore";
 import { TaskActionsProps } from "./TaskActions.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 import { useBoardAccess } from "../BoardAccess";
+import { apiFetch } from "@/lib/apiClient";
 
 export function TaskActions({ taskId, listId }: TaskActionsProps) {
   const { canEdit } = useBoardAccess();
@@ -53,7 +54,7 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
       );
 
     try {
-      const res = await fetch("/api/tasks/updateOrder", {
+      const res = await apiFetch("/api/tasks/updateOrder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -75,7 +76,7 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
 
   const handleDelete = async () => {
     setLoading(true);
-    const res = await fetch(`/api/tasks/deleteTask/${taskId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/tasks/deleteTask/${taskId}`, { method: "DELETE" });
     if (res.ok) {
       removeTask(listId, taskId);
       toast.success(t("deleted"));

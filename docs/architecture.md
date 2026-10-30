@@ -128,7 +128,15 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | | `GET`, `POST`, `DELETE` `.../external-access` of a board and of an organization | same under `/v1` |
 | Organizations | `GET`, `POST /api/organizations`, `GET`, `POST`, `PATCH`, `DELETE /api/organizations/[organizationId]/members`, `GET .../available-members` | same under `/v1` |
 | | `GET`, `POST .../teams`, `POST`, `DELETE .../teams/[teamId]/members` and `.../teams/[teamId]/boards` | same under `/v1` |
+| Tickets | `PATCH /api/tasks/updateTask/[taskId]`, `DELETE /api/tasks/deleteTask/[taskId]` | `PATCH`, `DELETE /v1/tasks/:taskId` |
+| | `PATCH /api/tasks/updateOrder`, `GET /api/boards/[boardId]/tasks` | `PATCH /v1/tasks/order`, `GET /v1/boards/:boardId/tasks` |
+| | `POST /api/tasks/[taskId]/labels`, `.../assignee`, `.../qa`, `.../collaborators` | same under `/v1` |
+| | `GET`, `POST .../subtasks`, `PATCH`, `DELETE .../subtasks/[subtaskId]` | same under `/v1` |
+| | `GET`, `PATCH .../custom-values`, `GET`, `POST`, `DELETE .../share` | same under `/v1` |
+| | `GET .../comments`, `DELETE .../comments/[commentId]` | same under `/v1` |
 | Onboarding | `PATCH /api/onboarding` | `PATCH /v1/onboarding` |
+
+Still served by this app: creating a ticket, posting a comment (Kiki answers after the response), attachments and the Kiki agent routes (`agent-apply`, `agent-undo`).
 
 The GitHub routes under an organization (`/api/organizations/[organizationId]/github/...`) are not migrated yet: they move together with the GitHub setup callbacks, since they share the same libraries and secrets.
 

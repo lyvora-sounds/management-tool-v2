@@ -11,6 +11,7 @@ import { mentionHandle } from "@/lib/mentions";
 import { CommentItem, TaskCommentsProps } from "./TaskComments.types";
 import { CommentsSkeleton } from "@/components/skeletons";
 import { useBoardAccess } from "../BoardAccess";
+import { apiFetch } from "@/lib/apiClient";
 
 type Candidate = { key: string; handle: string; agent?: boolean };
 
@@ -118,7 +119,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
   const selected = Math.min(activeIndex, Math.max(suggestions.length - 1, 0));
 
   useEffect(() => {
-    fetch(`/api/tasks/${taskId}/comments`)
+    apiFetch(`/api/tasks/${taskId}/comments`)
       .then((r) => r.json())
       .then((data) => {
         setComments(Array.isArray(data) ? data : []);
@@ -145,14 +146,14 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
         setWaitingFrom(null);
         return;
       }
-      const data = await fetch(`/api/tasks/${taskId}/comments`).then((r) => r.json()).catch(() => null);
+      const data = await apiFetch(`/api/tasks/${taskId}/comments`).then((r) => r.json()).catch(() => null);
       if (Array.isArray(data)) setComments(data);
     }, 2500);
     return () => clearInterval(timer);
   }, [waiting, taskId]);
 
   const refresh = async () => {
-    const data = await fetch(`/api/tasks/${taskId}/comments`).then((r) => r.json()).catch(() => null);
+    const data = await apiFetch(`/api/tasks/${taskId}/comments`).then((r) => r.json()).catch(() => null);
     if (Array.isArray(data)) setComments(data);
   };
 
@@ -221,7 +222,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
     const trimmed = value.trim();
     if (!trimmed) return;
     setLoading(true);
-    const res = await fetch(`/api/tasks/${taskId}/comments`, {
+    const res = await apiFetch(`/api/tasks/${taskId}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: trimmed }),
@@ -238,7 +239,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
   };
 
   const deleteComment = async (commentId: string) => {
-    const res = await fetch(`/api/tasks/${taskId}/comments/${commentId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/tasks/${taskId}/comments/${commentId}`, { method: "DELETE" });
     if (res.ok) setComments((prev) => prev.filter((c) => c.id !== commentId));
   };
 

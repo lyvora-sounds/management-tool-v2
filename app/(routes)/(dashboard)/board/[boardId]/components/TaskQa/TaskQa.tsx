@@ -12,6 +12,7 @@ import { Props } from "./TaskQa.types";
 import type { BoardUser } from "../TaskCard/TaskCard.types";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -41,7 +42,7 @@ export function TaskQa({
     onQaChange(nextUser);
     setOpen(false);
 
-    await fetch(`/api/tasks/${taskId}/qa`, {
+    await apiFetch(`/api/tasks/${taskId}/qa`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ qaId: nextUser ? nextUser.id : null }),
