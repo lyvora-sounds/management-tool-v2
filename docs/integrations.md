@@ -74,13 +74,13 @@ The private link is `/board/{boardId}?taskId={taskId}`. It is the normal ticket 
 
 The public link is separate and still has to be created:
 
-`POST /api/tasks/[taskId]/share` — mint or reuse a UUID `shareToken`.
+`POST /api/tasks/[taskId]/share` — mint or reuse a UUID `shareToken`. Needs edit access to the board; someone who cannot reach the board gets 404, as if the ticket did not exist.
 
 URL: `{APP_URL}/share/task/{token}` — listed as public in middleware. The page loads the task by token (labels, subtasks, epic, attachments, comments) and renders a read-only view.
 
-`DELETE` sets `shareToken` to null and kills the link.
+`DELETE` sets `shareToken` to null and kills the link (edit access to the board).
 
-`GET` returns the current token/url for the share UI.
+`GET` returns the current token/url for the share UI (read access to the board).
 
 ## Email
 
