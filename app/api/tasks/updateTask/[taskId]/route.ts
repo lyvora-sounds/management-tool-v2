@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { canEditBoard } from "@/lib/boardAccess";
+import { canEditBoard, canReadBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
 import { isDoneList } from "@/lib/statusTheme";
@@ -47,6 +47,18 @@ export async function PATCH(
   const allowed = await canEditBoard(user.id, task.list.board.id);
   if (!allowed)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // These ids come from the client. An epic of another board, or a person with no access to this one, must not
+  // be attached to the ticket: they would show up in the response and in the board.
+  if (epicId) {
+    const epic = await db.epic.findFirst({ where: { id: String(epicId), boardId: task.list.board.id }, select: { id: true } });
+    if (!epic) return NextResponse.json({ error: "The epic does not belong to this board" }, { status: 400 });
+  }
+  for (const [field, id] of [["assigneeId", assigneeId], ["qaId", qaId]] as const) {
+    if (id && !(await canReadBoard(String(id), task.list.board.id))) {
+      return NextResponse.json({ error: `${field}: that person has no access to this board` }, { status: 400 });
+    }
+  }
 
   let targetList = null;
   if (listId) {

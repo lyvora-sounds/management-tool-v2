@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { canEditBoard, isBoardAdmin } from "@/lib/boardAccess";
+import { canEditBoard, canReadBoard, isBoardAdmin } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 import { encodeLogMessage } from "@/lib/activityMessages";
 
@@ -66,6 +66,11 @@ export async function POST(
 
     return NextResponse.json({ active: false, userId: collaboratorId });
   } else {
+    // Only someone who can open the board can collaborate on its tickets. Taking someone off needs no check.
+    if (!collaboratorUser || !(await canReadBoard(collaboratorId, boardId))) {
+      return NextResponse.json({ error: "That person has no access to this board" }, { status: 400 });
+    }
+
     await db.taskCollaborator.create({
       data: { taskId, userId: collaboratorId },
     });

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
-import { canEditBoard, isBoardAdmin } from "@/lib/boardAccess";
+import { canEditBoard, canReadBoard, isBoardAdmin } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 import { encodeLogMessage } from "@/lib/activityMessages";
 
@@ -38,6 +38,11 @@ export async function POST(
 
   // Toggle if clicked same assignee, otherwise set new or null
   const targetAssigneeId = task.assigneeId === assigneeId ? null : assigneeId;
+
+  // Only someone who can open the board can be given its ticket (and the notification that comes with it).
+  if (targetAssigneeId && !(await canReadBoard(targetAssigneeId, boardId))) {
+    return NextResponse.json({ error: "That person has no access to this board" }, { status: 400 });
+  }
 
   const updated = await db.task.update({
     where: { id: taskId },
