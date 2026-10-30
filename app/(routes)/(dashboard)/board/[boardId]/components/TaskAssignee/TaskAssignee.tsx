@@ -12,6 +12,7 @@ import { Props } from "./TaskAssignee.types";
 import type { BoardUser } from "../TaskCard/TaskCard.types";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -42,7 +43,7 @@ export function TaskAssignee({
     onAssigneeChange(nextUser);
     setOpen(false);
 
-    await fetch(`/api/tasks/${taskId}/assignee`, {
+    await apiFetch(`/api/tasks/${taskId}/assignee`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ assigneeId: nextUser ? nextUser.id : null }),

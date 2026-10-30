@@ -24,6 +24,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useHierarchyStep } from "../TaskHierarchy/HierarchySteps";
 import { dateLocale } from "@/i18n/routing";
 import { useAppearance } from "@/components/Appearance/AppearanceProvider";
+import { apiFetch } from "@/lib/apiClient";
 
 function getInitials(name: string | null | undefined, email: string | undefined) {
   if (name)
@@ -102,7 +103,7 @@ export function TaskCard({
         .updateTask(targetList.id, task.id, { completed: next });
       setCompleted(next);
 
-      await fetch(`/api/tasks/updateTask/${task.id}`, {
+      await apiFetch(`/api/tasks/updateTask/${task.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -113,7 +114,7 @@ export function TaskCard({
     } else {
       setCompleted(next);
       updateTask(listId, task.id, { completed: next });
-      await fetch(`/api/tasks/updateTask/${task.id}`, {
+      await apiFetch(`/api/tasks/updateTask/${task.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: next }),
