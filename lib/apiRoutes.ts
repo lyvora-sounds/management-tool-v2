@@ -84,7 +84,7 @@ const MIGRATED: Route[] = [
     { method, pattern: /^\/api\/organizations\/[^/]+\/teams\/[^/]+\/boards$/, to: sameUnderV1 },
   ]),
 
-  // Tickets. Creating a ticket, the batch endpoint, comments (POST), attachments and the agent routes are still served here.
+  // Tickets. Creating a ticket, the batch endpoint, comments (POST) and the agent routes are still served here.
   { method: "PATCH", pattern: /^\/api\/tasks\/updateTask\/[^/]+$/, to: (p) => `/v1/tasks/${id(p)}` },
   { method: "PATCH", pattern: /^\/api\/tasks\/updateOrder$/, to: () => "/v1/tasks/order" },
   { method: "DELETE", pattern: /^\/api\/tasks\/deleteTask\/[^/]+$/, to: (p) => `/v1/tasks/${id(p)}` },
@@ -99,6 +99,12 @@ const MIGRATED: Route[] = [
   ...["GET", "POST", "DELETE"].map((method) => ({ method, pattern: /^\/api\/tasks\/[^/]+\/share$/, to: sameUnderV1 })),
   { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/comments$/, to: sameUnderV1 },
   { method: "DELETE", pattern: /^\/api\/tasks\/[^/]+\/comments\/[^/]+$/, to: sameUnderV1 },
+
+  // Attachments: the file itself is read through the API (it holds the storage token), so a link cannot be used
+  { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/attachments$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/attachments$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/attachments\/[^/]+\/download$/, to: sameUnderV1 },
+  { method: "DELETE", pattern: /^\/api\/tasks\/[^/]+\/attachments\/[^/]+$/, to: sameUnderV1 },
 
   // Onboarding
   { method: "PATCH", pattern: /^\/api\/onboarding$/, to: sameUnderV1 },

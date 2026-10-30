@@ -7,6 +7,7 @@ export type ApiError = ApiSchemas["Error"];
 export type ApiBoard = ApiSchemas["Board"];
 export type ApiBoardLink = ApiSchemas["BoardLink"];
 export type ApiActivityLog = ApiSchemas["ActivityLog"];
+export type ApiAttachment = ApiSchemas["Attachment"];
 
 type JsonBody<T> = T extends { content: { "application/json": infer Body } } ? Body : never;
 
@@ -14,10 +15,12 @@ type JsonBody<T> = T extends { content: { "application/json": infer Body } } ? B
  * The JSON body a GET route answers with, straight from the API's OpenAPI document. When the API changes
  * what a route returns, every place that reads it through this type stops compiling after `pnpm api:types`.
  */
-export type ApiGetResponse<
-  Path extends keyof paths,
-  Status extends keyof NonNullable<paths[Path]["get"]>["responses"] = 200,
-> = JsonBody<NonNullable<paths[Path]["get"]>["responses"][Status]>;
+export type ApiGetResponse<Path extends keyof paths, Status extends number = 200> =
+  NonNullable<paths[Path]["get"]>["responses"] extends infer Responses
+    ? Status extends keyof Responses
+      ? JsonBody<Responses[Status]>
+      : never
+    : never;
 
 type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
 

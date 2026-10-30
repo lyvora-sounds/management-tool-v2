@@ -2,7 +2,11 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Trash2, FileText, ImageIcon } from "lucide-react";
-import type { AttachmentModel } from "@/lib/generated/prisma/models/Attachment";
+import { toast } from "sonner";
+import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
+import type { ApiAttachment, ApiError } from "@/lib/api/types";
+import { looksInline, showAttachment } from "@/lib/openAttachment";
 import { AttachmentsSkeleton } from "@/components/skeletons";
 import { useBoardAccess } from "../BoardAccess";
 
@@ -27,7 +31,8 @@ export type TaskAttachmentsHandle = {
 
 export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: string }>(
   function TaskAttachments({ taskId }, ref) {
-    const [attachments, setAttachments] = useState<AttachmentModel[]>([]);
+    const t = useTranslations("task");
+    const [attachments, setAttachments] = useState<ApiAttachment[]>([]);
     const [uploading, setUploading] = useState(false);
     const [fetching, setFetching] = useState(true); // true = loading until first fetch completes
     const inputRef = useRef<HTMLInputElement>(null);
@@ -41,7 +46,7 @@ export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: strin
     }));
 
     useEffect(() => {
-      fetch(`/api/tasks/${taskId}/attachments`)
+      apiFetch(`/api/tasks/${taskId}/attachments`)
         .then((r) => r.json())
         .then((data) => {
           setAttachments(Array.isArray(data) ? data : []);
@@ -55,13 +60,22 @@ export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: strin
       setUploading(true);
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch(`/api/tasks/${taskId}/attachments`, {
-        method: "POST",
-        body: formData,
-      });
-      if (res.ok) {
-        const attachment = await res.json();
-        setAttachments((prev) => [...prev, attachment]);
+      try {
+        const res = await apiFetch(`/api/tasks/${taskId}/attachments`, {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          const attachment: ApiAttachment = await res.json();
+          setAttachments((prev) => [...prev, attachment]);
+        } else if (res.status === 413) {
+          toast.error(t("attachmentTooLarge"));
+        } else {
+          const body: Partial<ApiError> | null = await res.json().catch(() => null);
+          toast.error(body?.message ?? body?.error ?? t("attachmentUploadError"));
+        }
+      } catch {
+        toast.error(t("attachmentUploadError"));
       }
       setUploading(false);
     };
@@ -75,10 +89,27 @@ export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: strin
       if (!canEdit) return;
       const prev = attachments;
       setAttachments(prev.filter((a) => a.id !== attachmentId));
-      const res = await fetch(`/api/tasks/${taskId}/attachments/${attachmentId}`, {
+      const res = await apiFetch(`/api/tasks/${taskId}/attachments/${attachmentId}`, {
         method: "DELETE",
-      });
-      if (!res.ok) setAttachments(prev);
+      }).catch(() => null);
+      if (!res?.ok) {
+        setAttachments(prev);
+        toast.error(t("attachmentDeleteError"));
+      }
+    };
+
+    // The file is read through the API with the session token, so a plain link cannot open it: the browser asks
+    // for it, then shows or saves what it got. The tab is opened first because a click allows it and a later
+    // callback does not.
+    const openAttachment = async (attachment: ApiAttachment) => {
+      const tab = looksInline(attachment.filename) ? window.open("", "_blank") : null;
+      try {
+        const res = await apiFetch(`/api/tasks/${taskId}/attachments/${attachment.id}/download`);
+        if (!(await showAttachment(res, attachment.filename, tab))) throw new Error(String(res.status));
+      } catch {
+        tab?.close();
+        toast.error(t("attachmentOpenError"));
+      }
     };
 
     return (
@@ -97,14 +128,13 @@ export const TaskAttachments = forwardRef<TaskAttachmentsHandle, { taskId: strin
             className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition-colors"
           >
             {getFileIcon(attachment.filename)}
-            <a
-              href={`/api/tasks/${taskId}/attachments/${attachment.id}/download`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 min-w-0 text-sm hover:underline truncate"
+            <button
+              type="button"
+              onClick={() => openAttachment(attachment)}
+              className="flex-1 min-w-0 text-left text-sm hover:underline truncate"
             >
               {attachment.filename}
-            </a>
+            </button>
             <span className="text-xs text-muted-foreground shrink-0">
               {formatBytes(attachment.size)}
             </span>
