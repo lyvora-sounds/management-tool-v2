@@ -134,9 +134,12 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | | `GET`, `POST .../subtasks`, `PATCH`, `DELETE .../subtasks/[subtaskId]` | same under `/v1` |
 | | `GET`, `PATCH .../custom-values`, `GET`, `POST`, `DELETE .../share` | same under `/v1` |
 | | `GET .../comments`, `DELETE .../comments/[commentId]` | same under `/v1` |
+| | `GET`, `POST .../attachments`, `GET .../attachments/[attachmentId]/download`, `DELETE .../attachments/[attachmentId]` | same under `/v1` |
 | Onboarding | `PATCH /api/onboarding` | `PATCH /v1/onboarding` |
 
-Still served by this app: creating a ticket, posting a comment (Kiki answers after the response), attachments and the Kiki agent routes (`agent-apply`, `agent-undo`).
+Still served by this app: creating a ticket, posting a comment (Kiki answers after the response) and the Kiki agent routes (`agent-apply`, `agent-undo`).
+
+An attachment is read through the API, so it cannot be a plain link: another origin has no session cookie. `TaskAttachments` asks for the file with the session token, then opens it in a tab or saves it (`lib/openAttachment.ts`). Only plain images, PDFs and text open; anything else is saved, whatever type the server claims, so an uploaded page can never run on this origin. Uploads are limited to 25 MB (413).
 
 The GitHub routes under an organization (`/api/organizations/[organizationId]/github/...`) are not migrated yet: they move together with the GitHub setup callbacks, since they share the same libraries and secrets.
 

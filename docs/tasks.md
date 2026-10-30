@@ -49,7 +49,7 @@ All tasks and lists must belong to **one** board (cross-board updates 400). On a
 | Subtasks | `/api/tasks/[taskId]/subtasks` |
 | Comments | `/api/tasks/[taskId]/comments` |
 | Custom field values | `/api/tasks/[taskId]/custom-values` |
-| Attachments | `POST /api/tasks/[taskId]/attachments` → Vercel Blob `attachments/{taskId}/{name}` |
+| Attachments | `POST /api/tasks/[taskId]/attachments` → Vercel Blob `attachments/{taskId}/{name}`, up to 25 MB on the API |
 | Private link | `/board/{boardId}?taskId={taskId}` — always available; no access redirects to `/dashboard?access=denied` |
 | Public share link | `/api/tasks/[taskId]/share` (session required; reading needs read access to the board, switching the link on or off needs edit access; anyone else gets 404) |
 
