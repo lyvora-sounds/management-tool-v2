@@ -16,6 +16,8 @@ Stored on the board (`slackWebhookUrl`, `discordWebhookUrl`) plus three flags:
 
 `sendBoardWebhookNotification` in `lib/notifications/webhooks.ts` loads those fields, bails if the flag is off, then POSTs Slack `blocks` and/or a Discord embed.
 
+The server makes that request, so the address is limited: `https` only, no credentials in it, and the host must be `hooks.slack.com` for Slack or `discord.com`, `discordapp.com`, `canary.discord.com` or `ptb.discord.com` for Discord (`isSlackWebhookUrl`, `isDiscordWebhookUrl`). `PATCH /api/boards/[boardId]/integrations` answers 400 for any other address, and the dispatcher skips (and logs) one that was stored before the check. Redirects are refused, so a Slack or Discord host cannot bounce the request to an internal address.
+
 **Wired today:** `PATCH /api/tasks/updateTask/[taskId]` fires `task_completed` when `completed` flips to true. The dispatcher also understands created and moved, and the board UI can store those flags, but create/move handlers do not call it yet.
 
 Admins configure URLs at `/api/boards/[boardId]/integrations`.

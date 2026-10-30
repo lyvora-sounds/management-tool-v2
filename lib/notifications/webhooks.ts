@@ -1,5 +1,23 @@
 import db from "@/lib/db";
 
+// A webhook is only called when its URL points at Slack or Discord. The address is typed by a board admin and
+// the request is made from our server, so anything else is a way to reach internal addresses (SSRF).
+const SLACK_HOSTS = ["hooks.slack.com"];
+const DISCORD_HOSTS = ["discord.com", "discordapp.com", "canary.discord.com", "ptb.discord.com"];
+
+/** True for an https URL on one of the given hosts, with no credentials in it. */
+export function isWebhookUrlFor(url: string, hosts: string[]): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" && !u.username && !u.password && hosts.includes(u.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+export const isSlackWebhookUrl = (url: string) => isWebhookUrlFor(url, SLACK_HOSTS);
+export const isDiscordWebhookUrl = (url: string) => isWebhookUrlFor(url, DISCORD_HOSTS);
+
 interface WebhookNotificationPayload {
   boardId: string;
   eventType: "task_created" | "task_completed" | "task_moved";
@@ -42,8 +60,11 @@ export async function sendBoardWebhookNotification(
     const actionText = eventLabels[payload.eventType] || "Actualización de tarea";
 
     // 1. Send to Slack
-    if (board.slackWebhookUrl) {
+    if (board.slackWebhookUrl && !isSlackWebhookUrl(board.slackWebhookUrl)) {
+      console.warn("Skipped a Slack webhook that is not on Slack", payload.boardId);
+    } else if (board.slackWebhookUrl) {
       await fetch(board.slackWebhookUrl, {
+        redirect: "error",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -64,7 +85,9 @@ export async function sendBoardWebhookNotification(
     }
 
     // 2. Send to Discord
-    if (board.discordWebhookUrl) {
+    if (board.discordWebhookUrl && !isDiscordWebhookUrl(board.discordWebhookUrl)) {
+      console.warn("Skipped a Discord webhook that is not on Discord", payload.boardId);
+    } else if (board.discordWebhookUrl) {
       const colors = {
         task_created: 0x3b82f6, // Blue
         task_completed: 0x10b981, // Green
@@ -72,6 +95,7 @@ export async function sendBoardWebhookNotification(
       };
 
       await fetch(board.discordWebhookUrl, {
+        redirect: "error",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

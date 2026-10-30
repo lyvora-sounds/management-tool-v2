@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { isBoardAdmin } from "@/lib/boardAccess";
+import { isDiscordWebhookUrl, isSlackWebhookUrl } from "@/lib/notifications/webhooks";
 
 export async function GET(
   req: Request,
@@ -50,6 +51,19 @@ export async function PATCH(
   }
 
   const body = await req.json();
+
+  // Only Slack and Discord addresses are stored: the server posts to them, and anything else would let an admin
+  // aim the server at an internal address. An empty value clears the integration.
+  for (const [field, isAllowed, name] of [
+    ["slackWebhookUrl", isSlackWebhookUrl, "Slack"],
+    ["discordWebhookUrl", isDiscordWebhookUrl, "Discord"],
+  ] as const) {
+    const value = body[field];
+    if (typeof value === "string" && value.trim() && !isAllowed(value.trim())) {
+      return NextResponse.json({ error: `The ${name} webhook URL must be an https address on ${name}` }, { status: 400 });
+    }
+  }
+
   const {
     slackWebhookUrl,
     discordWebhookUrl,
