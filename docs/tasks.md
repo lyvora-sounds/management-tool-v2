@@ -57,7 +57,7 @@ Priority values used in the UI: Urgent, High, Medium, Low.
 
 Subtasks are a checklist (`completed` + `order`). The card shows `completed/total`.
 
-Attachments are private blobs. Download goes through `/api/tasks/[taskId]/attachments/[attachmentId]/download`.
+Attachments are private blobs. Download goes through `/api/tasks/[taskId]/attachments/[attachmentId]/download`. The file type is the one its uploader chose, so only plain images, PDFs and text open in the tab; anything else (HTML, SVG, scripts) is served as a download, with `nosniff` and a sandboxing CSP, so an uploaded page cannot run on the app's origin (`lib/attachmentHeaders.ts`).
 
 ## Archive and epics
 
