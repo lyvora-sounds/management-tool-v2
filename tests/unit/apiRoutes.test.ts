@@ -86,6 +86,11 @@ describe("apiPathFor: routes already served by kiki-api", () => {
     ["POST", "/api/tasks/t1/attachments", "/v1/tasks/t1/attachments"],
     ["GET", "/api/tasks/t1/attachments/a1/download", "/v1/tasks/t1/attachments/a1/download"],
     ["DELETE", "/api/tasks/t1/attachments/a1", "/v1/tasks/t1/attachments/a1"],
+    ["POST", "/api/tasks/createTask", "/v1/tasks"],
+    ["POST", "/api/boards/b1/batchTasks", "/v1/boards/b1/tasks/batch"],
+    ["POST", "/api/tasks/t1/comments", "/v1/tasks/t1/comments"],
+    ["POST", "/api/tasks/t1/agent-apply", "/v1/tasks/t1/agent-apply"],
+    ["POST", "/api/tasks/t1/agent-undo", "/v1/tasks/t1/agent-undo"],
   ];
 
   it.each(migrated)("%s %s -> %s", (method, path, expected) => {
@@ -101,10 +106,11 @@ describe("apiPathFor: routes already served by kiki-api", () => {
       ["PUT", "/api/boards/getBoards"],
       ["GET", "/api/boards/b1/hierarchy"], // drawn in the browser; nothing calls the route
       ["PUT", "/api/boards/b1/epics"],
-      ["POST", "/api/tasks/createTask"],
-      ["POST", "/api/tasks/t1/comments"], // Kiki answers after the response: it moves with the agent routes
-      ["POST", "/api/tasks/t1/agent-apply"],
-      ["POST", "/api/tasks/t1/agent-undo"],
+      ["GET", "/api/tasks/createTask"], // the app only had the POST
+      ["PUT", "/api/tasks/t1/comments"],
+      ["GET", "/api/boards/b1/batchTasks"],
+      ["GET", "/api/tasks/t1/agent-apply"],
+      ["DELETE", "/api/tasks/t1/agent-undo"],
       ["PUT", "/api/tasks/t1/attachments"],
       ["GET", "/api/tasks/t1/attachments/a1"], // there is no single-attachment read; only the download
       ["POST", "/api/tasks/t1/attachments/a1/download"],
