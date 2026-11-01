@@ -84,7 +84,13 @@ const MIGRATED: Route[] = [
     { method, pattern: /^\/api\/organizations\/[^/]+\/teams\/[^/]+\/boards$/, to: sameUnderV1 },
   ]),
 
-  // Tickets. Creating a ticket, the batch endpoint, comments (POST) and the agent routes are still served here.
+  // Tickets, and what Kiki does on them: creating one (alone or a batch), adding a comment (a mention makes Kiki
+  // answer) and applying or undoing Kiki's suggestions.
+  { method: "POST", pattern: /^\/api\/tasks\/createTask$/, to: () => "/v1/tasks" },
+  { method: "POST", pattern: /^\/api\/boards\/[^/]+\/batchTasks$/, to: (p) => p.replace(/^\/api\/boards\/([^/]+)\/batchTasks$/, "/v1/boards/$1/tasks/batch") },
+  { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/comments$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/agent-apply$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/agent-undo$/, to: sameUnderV1 },
   { method: "PATCH", pattern: /^\/api\/tasks\/updateTask\/[^/]+$/, to: (p) => `/v1/tasks/${id(p)}` },
   { method: "PATCH", pattern: /^\/api\/tasks\/updateOrder$/, to: () => "/v1/tasks/order" },
   { method: "DELETE", pattern: /^\/api\/tasks\/deleteTask\/[^/]+$/, to: (p) => `/v1/tasks/${id(p)}` },

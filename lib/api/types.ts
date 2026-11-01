@@ -8,6 +8,7 @@ export type ApiBoard = ApiSchemas["Board"];
 export type ApiBoardLink = ApiSchemas["BoardLink"];
 export type ApiActivityLog = ApiSchemas["ActivityLog"];
 export type ApiAttachment = ApiSchemas["Attachment"];
+export type ApiCreatedTask = ApiSchemas["CreatedTask"];
 
 type JsonBody<T> = T extends { content: { "application/json": infer Body } } ? Body : never;
 

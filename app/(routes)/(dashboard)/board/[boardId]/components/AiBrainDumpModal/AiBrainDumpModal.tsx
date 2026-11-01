@@ -240,7 +240,7 @@ export function AiBrainDumpModal({
         subtasks: t.subtasks,
       }));
 
-      const res = await fetch(`/api/boards/${boardId}/batchTasks`, {
+      const res = await apiFetch(`/api/boards/${boardId}/batchTasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tasks: payload }),

@@ -158,7 +158,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
   };
 
   const applySuggestion = async (commentId: string) => {
-    const res = await fetch(`/api/tasks/${taskId}/agent-apply`, {
+    const res = await apiFetch(`/api/tasks/${taskId}/agent-apply`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ commentId }),
@@ -169,7 +169,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
   };
 
   const undo = async (changeId: string) => {
-    const res = await fetch(`/api/tasks/${taskId}/agent-undo`, {
+    const res = await apiFetch(`/api/tasks/${taskId}/agent-undo`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ changeId }),
