@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
+import type { ApiCreatedTask } from "@/lib/api/types";
+import { taskFromApi } from "@/lib/api/tasks";
 import { useBoardStore } from "../../store/useBoardStore";
 import { CreateTaskFormProps } from "./CreateTaskForm.types";
 
@@ -33,14 +36,14 @@ export function CreateTaskForm({ listId }: CreateTaskFormProps) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/tasks/createTask", {
+      const res = await apiFetch("/api/tasks/createTask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, listId }),
       });
 
       if (res.ok) {
-        const task = await res.json();
+        const task = taskFromApi((await res.json()) as ApiCreatedTask);
         addTask(listId, { ...task, labels: [], collaborators: [], assignee: null, qa: null });
         handleClose();
       } else {
