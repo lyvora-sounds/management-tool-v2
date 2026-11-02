@@ -243,7 +243,7 @@ export function BoardContent({
         })),
       );
 
-      await fetch("/api/tasks/updateOrder", {
+      await apiFetch("/api/tasks/updateOrder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -128,7 +128,20 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | | `GET`, `POST`, `DELETE` `.../external-access` of a board and of an organization | same under `/v1` |
 | Organizations | `GET`, `POST /api/organizations`, `GET`, `POST`, `PATCH`, `DELETE /api/organizations/[organizationId]/members`, `GET .../available-members` | same under `/v1` |
 | | `GET`, `POST .../teams`, `POST`, `DELETE .../teams/[teamId]/members` and `.../teams/[teamId]/boards` | same under `/v1` |
+| Tickets | `PATCH /api/tasks/updateTask/[taskId]`, `DELETE /api/tasks/deleteTask/[taskId]` | `PATCH`, `DELETE /v1/tasks/:taskId` |
+| | `PATCH /api/tasks/updateOrder`, `GET /api/boards/[boardId]/tasks` | `PATCH /v1/tasks/order`, `GET /v1/boards/:boardId/tasks` |
+| | `POST /api/tasks/[taskId]/labels`, `.../assignee`, `.../qa`, `.../collaborators` | same under `/v1` |
+| | `GET`, `POST .../subtasks`, `PATCH`, `DELETE .../subtasks/[subtaskId]` | same under `/v1` |
+| | `GET`, `PATCH .../custom-values`, `GET`, `POST`, `DELETE .../share` | same under `/v1` |
+| | `GET .../comments`, `DELETE .../comments/[commentId]` | same under `/v1` |
+| | `POST /api/tasks/createTask`, `POST /api/boards/[boardId]/batchTasks` | `POST /v1/tasks`, `POST /v1/boards/:boardId/tasks/batch` |
+| | `POST .../comments`, `POST .../agent-apply`, `POST .../agent-undo` | same under `/v1` |
+| | `GET`, `POST .../attachments`, `GET .../attachments/[attachmentId]/download`, `DELETE .../attachments/[attachmentId]` | same under `/v1` |
 | Onboarding | `PATCH /api/onboarding` | `PATCH /v1/onboarding` |
+
+Batch 3 (tickets) is entirely served by `kiki-api` now.
+
+An attachment is read through the API, so it cannot be a plain link: another origin has no session cookie. `TaskAttachments` asks for the file with the session token, then opens it in a tab or saves it (`lib/openAttachment.ts`). Only plain images, PDFs and text open; anything else is saved, whatever type the server claims, so an uploaded page can never run on this origin. Uploads are limited to 25 MB (413).
 
 The GitHub routes under an organization (`/api/organizations/[organizationId]/github/...`) are not migrated yet: they move together with the GitHub setup callbacks, since they share the same libraries and secrets.
 

@@ -84,6 +84,34 @@ const MIGRATED: Route[] = [
     { method, pattern: /^\/api\/organizations\/[^/]+\/teams\/[^/]+\/boards$/, to: sameUnderV1 },
   ]),
 
+  // Tickets, and what Kiki does on them: creating one (alone or a batch), adding a comment (a mention makes Kiki
+  // answer) and applying or undoing Kiki's suggestions.
+  { method: "POST", pattern: /^\/api\/tasks\/createTask$/, to: () => "/v1/tasks" },
+  { method: "POST", pattern: /^\/api\/boards\/[^/]+\/batchTasks$/, to: (p) => p.replace(/^\/api\/boards\/([^/]+)\/batchTasks$/, "/v1/boards/$1/tasks/batch") },
+  { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/comments$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/agent-apply$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/agent-undo$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/tasks\/updateTask\/[^/]+$/, to: (p) => `/v1/tasks/${id(p)}` },
+  { method: "PATCH", pattern: /^\/api\/tasks\/updateOrder$/, to: () => "/v1/tasks/order" },
+  { method: "DELETE", pattern: /^\/api\/tasks\/deleteTask\/[^/]+$/, to: (p) => `/v1/tasks/${id(p)}` },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/tasks$/, to: sameUnderV1 },
+  ...["labels", "assignee", "qa", "collaborators"].map((part) => ({ method: "POST", pattern: new RegExp(`^/api/tasks/[^/]+/${part}$`), to: sameUnderV1 })),
+  { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/subtasks$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/subtasks$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/tasks\/[^/]+\/subtasks\/[^/]+$/, to: sameUnderV1 },
+  { method: "DELETE", pattern: /^\/api\/tasks\/[^/]+\/subtasks\/[^/]+$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/custom-values$/, to: sameUnderV1 },
+  { method: "PATCH", pattern: /^\/api\/tasks\/[^/]+\/custom-values$/, to: sameUnderV1 },
+  ...["GET", "POST", "DELETE"].map((method) => ({ method, pattern: /^\/api\/tasks\/[^/]+\/share$/, to: sameUnderV1 })),
+  { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/comments$/, to: sameUnderV1 },
+  { method: "DELETE", pattern: /^\/api\/tasks\/[^/]+\/comments\/[^/]+$/, to: sameUnderV1 },
+
+  // Attachments: the file itself is read through the API (it holds the storage token), so a link cannot be used
+  { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/attachments$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/attachments$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/attachments\/[^/]+\/download$/, to: sameUnderV1 },
+  { method: "DELETE", pattern: /^\/api\/tasks\/[^/]+\/attachments\/[^/]+$/, to: sameUnderV1 },
+
   // Onboarding
   { method: "PATCH", pattern: /^\/api\/onboarding$/, to: sameUnderV1 },
 ];

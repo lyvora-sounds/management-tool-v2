@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { getStatusTheme } from "@/lib/statusTheme";
 import { parseListValue, stringifyListValue } from "@/lib/customValueUtils";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
 
 interface BoardTaskItem {
   id: string;
@@ -62,7 +63,7 @@ export function TicketSelectCombobox({
           return;
         }
 
-        const res = await fetch(`/api/boards/${boardId}/tasks`);
+        const res = await apiFetch(`/api/boards/${boardId}/tasks`);
         if (!res.ok) return;
         const data = await res.json();
         setBoardTasks(

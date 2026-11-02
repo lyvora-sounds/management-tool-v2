@@ -56,7 +56,7 @@ export function TaskLabels({ taskId, boardId, activeLabels, onLabelsChange }: Ta
       onLabelsChange(nextActive);
     }
 
-    await fetch(`/api/tasks/${taskId}/labels`, {
+    await apiFetch(`/api/tasks/${taskId}/labels`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ labelId }),

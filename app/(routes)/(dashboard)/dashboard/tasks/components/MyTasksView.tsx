@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { isDoneList } from "@/lib/statusTheme";
 import { PRIORITY_CONFIG } from "@/lib/taskDisplay";
 import { DashboardTaskRow } from "../../components/DashboardTaskRow/DashboardTaskRow";
+import { apiFetch } from "@/lib/apiClient";
 
 interface BoardListInfo {
   id: string;
@@ -131,7 +132,7 @@ export function MyTasksView({ initialTasks, userId, boards }: Props) {
 
     setUpdatingTaskId(task.id);
     try {
-      const res = await fetch(`/api/tasks/updateTask/${task.id}`, {
+      const res = await apiFetch(`/api/tasks/updateTask/${task.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ listId: targetListId }),

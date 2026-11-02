@@ -49,7 +49,7 @@ All tasks and lists must belong to **one** board (cross-board updates 400). On a
 | Subtasks | `/api/tasks/[taskId]/subtasks` |
 | Comments | `/api/tasks/[taskId]/comments` |
 | Custom field values | `/api/tasks/[taskId]/custom-values` |
-| Attachments | `POST /api/tasks/[taskId]/attachments` → Vercel Blob `attachments/{taskId}/{name}` |
+| Attachments | `POST /api/tasks/[taskId]/attachments` → Vercel Blob `attachments/{taskId}/{name}`, up to 25 MB on the API |
 | Private link | `/board/{boardId}?taskId={taskId}` — always available; no access redirects to `/dashboard?access=denied` |
 | Public share link | `/api/tasks/[taskId]/share` (session required; reading needs read access to the board, switching the link on or off needs edit access; anyone else gets 404) |
 
@@ -57,7 +57,7 @@ Priority values used in the UI: Urgent, High, Medium, Low.
 
 Subtasks are a checklist (`completed` + `order`). The card shows `completed/total`.
 
-Attachments are private blobs. Download goes through `/api/tasks/[taskId]/attachments/[attachmentId]/download`.
+Attachments are private blobs. Download goes through `/api/tasks/[taskId]/attachments/[attachmentId]/download`. The file type is the one its uploader chose, so only plain images, PDFs and text open in the tab; anything else (HTML, SVG, scripts) is served as a download, with `nosniff` and a sandboxing CSP, so an uploaded page cannot run on the app's origin (`lib/attachmentHeaders.ts`).
 
 ## Archive and epics
 

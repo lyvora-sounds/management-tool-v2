@@ -18,6 +18,7 @@ import type { ListWithTasks, BoardUser } from "../TaskCard/TaskCard.types";
 import { useLocale, useTranslations } from "next-intl";
 import { dateLocale } from "@/i18n/routing";
 import { useBoardAccess } from "../BoardAccess";
+import { apiFetch } from "@/lib/apiClient";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -73,7 +74,7 @@ function TaskRow({
     if (!canEdit) return;
     const next = !completed;
     setCompleted(next);
-    await fetch(`/api/tasks/updateTask/${task.id}`, {
+    await apiFetch(`/api/tasks/updateTask/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: next }),

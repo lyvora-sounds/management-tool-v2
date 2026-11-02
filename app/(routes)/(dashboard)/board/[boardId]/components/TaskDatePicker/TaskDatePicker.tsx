@@ -15,6 +15,7 @@ import {
 import { useBoardStore } from "../../store/useBoardStore";
 import { TaskDatePickerProps } from "./TaskDatePicker.types";
 import { useBoardAccess } from "../BoardAccess";
+import { apiFetch } from "@/lib/apiClient";
 
 export function TaskDatePicker({
   taskId,
@@ -59,7 +60,7 @@ export function TaskDatePicker({
     const finalStart = startEnabled ? start : undefined;
     const finalDue = dueEnabled ? buildDueWithTime(due) : undefined;
 
-    await fetch(`/api/tasks/updateTask/${taskId}`, {
+    await apiFetch(`/api/tasks/updateTask/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

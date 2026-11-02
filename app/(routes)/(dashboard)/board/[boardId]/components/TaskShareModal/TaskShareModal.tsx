@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { copyToClipboard } from "@/lib/copyText";
 import { privateTicketUrl } from "@/lib/ticketShare";
+import { apiFetch } from "@/lib/apiClient";
 
 function InfoHint({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
@@ -81,7 +82,7 @@ export function TaskShareModal({
     let cancelled = false;
     setShareUrl(null);
     setLoading(true);
-    fetch(`/api/tasks/${taskId}/share`)
+    apiFetch(`/api/tasks/${taskId}/share`)
       .then(async (res) => {
         if (!res.ok || cancelled) return;
         const data = await res.json();
@@ -99,13 +100,13 @@ export function TaskShareModal({
   const generateLink = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/tasks/${taskId}/share`, { method: "POST" });
+      const res = await apiFetch(`/api/tasks/${taskId}/share`, { method: "POST" });
       const data = await res.json();
       if (res.ok && data.shareUrl) {
         setShareUrl(data.shareUrl);
         toast.success(t("shareGenerated"));
       } else {
-        toast.error(data.error || t("shareError"));
+        toast.error(data.message ?? data.error ?? t("shareError"));
       }
     } catch {
       toast.error(tCommon("connectionError"));
@@ -117,7 +118,7 @@ export function TaskShareModal({
   const revokeLink = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/tasks/${taskId}/share`, { method: "DELETE" });
+      const res = await apiFetch(`/api/tasks/${taskId}/share`, { method: "DELETE" });
       if (res.ok) {
         setShareUrl(null);
         toast.success(t("shareRevoked"));

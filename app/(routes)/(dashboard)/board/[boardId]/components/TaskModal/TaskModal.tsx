@@ -254,7 +254,7 @@ export function TaskModal({
     }
 
     try {
-      const res = await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+      const res = await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ listId: targetListId }),
@@ -286,7 +286,7 @@ export function TaskModal({
       setCompleted(next);
       updateTask(targetList.id, currentTask.id, { completed: next });
 
-      const res = await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+      const res = await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ listId: targetList.id, completed: next }),
@@ -301,7 +301,7 @@ export function TaskModal({
     } else {
       setCompleted(next);
       updateTask(currentListId, currentTask.id, { completed: next });
-      const res = await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+      const res = await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: next }),
@@ -320,7 +320,7 @@ export function TaskModal({
       return;
     }
     setLoading(true);
-    const res = await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+    const res = await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: trimmed }),
@@ -343,7 +343,7 @@ export function TaskModal({
       return;
     }
     setLoading(true);
-    const res = await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+    const res = await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ description: html }),
@@ -362,7 +362,7 @@ export function TaskModal({
   const saveEpic = async (epicId: string | null) => {
     if (!canEdit) return;
     setCurrentEpicId(epicId);
-    await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+    await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ epicId }),
@@ -373,7 +373,7 @@ export function TaskModal({
   const saveQuarter = async (quarterVal: string) => {
     if (!canEdit) return;
     setCurrentQuarter(quarterVal);
-    await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+    await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ quarter: quarterVal.trim() || null }),
@@ -396,7 +396,7 @@ export function TaskModal({
       setSavedDescription(newDescription);
     }
 
-    await fetch(`/api/tasks/updateTask/${currentTask.id}`, {
+    await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -412,7 +412,7 @@ export function TaskModal({
     // 2. Add accepted subtasks
     for (const subTitle of acceptedSubtasks) {
       try {
-        const res = await fetch(`/api/tasks/${currentTask.id}/subtasks`, {
+        const res = await apiFetch(`/api/tasks/${currentTask.id}/subtasks`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title: subTitle }),

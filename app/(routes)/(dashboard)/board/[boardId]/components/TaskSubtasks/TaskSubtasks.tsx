@@ -11,6 +11,7 @@ import { useBoardStore } from "../../store/useBoardStore";
 import { SubtasksSkeleton } from "@/components/skeletons";
 import { useTranslations } from "next-intl";
 import { useBoardAccess } from "../BoardAccess";
+import { apiFetch } from "@/lib/apiClient";
 
 export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
   const { canEdit } = useBoardAccess();
@@ -26,7 +27,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch(`/api/tasks/${taskId}/subtasks`)
+    apiFetch(`/api/tasks/${taskId}/subtasks`)
       .then((r) => r.json())
       .then((data) => {
         setSubtasks(Array.isArray(data) ? data : []);
@@ -55,7 +56,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
       setAdding(false);
       return;
     }
-    const res = await fetch(`/api/tasks/${taskId}/subtasks`, {
+    const res = await apiFetch(`/api/tasks/${taskId}/subtasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: newTitle.trim() }),
@@ -79,7 +80,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
     );
     setSubtasks(updated);
     syncStore(updated);
-    const res = await fetch(`/api/tasks/${taskId}/subtasks/${subtask.id}`, {
+    const res = await apiFetch(`/api/tasks/${taskId}/subtasks/${subtask.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: next }),
@@ -105,7 +106,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
       prev.map((s) => (s.id === id ? { ...s, title: editingTitle.trim() } : s)),
     );
     setEditingId(null);
-    const res = await fetch(`/api/tasks/${taskId}/subtasks/${id}`, {
+    const res = await apiFetch(`/api/tasks/${taskId}/subtasks/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: editingTitle.trim() }),
@@ -118,7 +119,7 @@ export function TaskSubtasks({ taskId, listId }: TaskSubtasksProps) {
     const updated = prev.filter((s) => s.id !== id);
     setSubtasks(updated);
     syncStore(updated);
-    const res = await fetch(`/api/tasks/${taskId}/subtasks/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/tasks/${taskId}/subtasks/${id}`, { method: "DELETE" });
     if (!res.ok) {
       setSubtasks(prev);
       syncStore(prev);

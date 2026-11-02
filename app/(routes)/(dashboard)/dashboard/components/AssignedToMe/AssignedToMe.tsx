@@ -10,6 +10,7 @@ import { isDoneList } from "@/lib/statusTheme";
 import { useTranslations } from "next-intl";
 import { AssignedTask, AssignedToMeProps } from "./AssignedToMe.types";
 import { DashboardTaskRow } from "../DashboardTaskRow/DashboardTaskRow";
+import { apiFetch } from "@/lib/apiClient";
 
 function groupByBoard(tasks: AssignedTask[]) {
   const map = new Map<
@@ -61,7 +62,7 @@ export function AssignedToMe({ tasks: initialTasks, userId }: AssignedToMeProps)
 
     setUpdatingTaskId(task.id);
     try {
-      const res = await fetch(`/api/tasks/updateTask/${task.id}`, {
+      const res = await apiFetch(`/api/tasks/updateTask/${task.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ listId: targetListId }),

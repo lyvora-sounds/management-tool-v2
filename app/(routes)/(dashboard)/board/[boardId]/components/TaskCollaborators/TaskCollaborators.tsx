@@ -13,6 +13,7 @@ import { Props } from "./TaskCollaborators.types";
 import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -51,7 +52,7 @@ export function TaskCollaborators({
 
     onCollaboratorsChange(nextCollaborators);
 
-    await fetch(`/api/tasks/${taskId}/collaborators`, {
+    await apiFetch(`/api/tasks/${taskId}/collaborators`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ collaboratorId: user.id }),

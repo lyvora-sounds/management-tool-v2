@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { canReadBoard } from "@/lib/boardAccess";
+import { attachmentHeaders } from "@/lib/attachmentHeaders";
 
 export async function GET(
   _req: Request,
@@ -42,12 +43,9 @@ export async function GET(
     return NextResponse.json({ error: "Failed to fetch file" }, { status: 502 });
   }
 
-  const contentType = response.headers.get("content-type") ?? "application/octet-stream";
-
+  // The type was chosen by whoever uploaded the file and this route is on the app's own origin: only plain
+  // images, PDFs and text open in the tab, everything else downloads.
   return new Response(response.body, {
-    headers: {
-      "Content-Type": contentType,
-      "Content-Disposition": `inline; filename="${attachment.filename}"`,
-    },
+    headers: attachmentHeaders(attachment.filename, response.headers.get("content-type")),
   });
 }

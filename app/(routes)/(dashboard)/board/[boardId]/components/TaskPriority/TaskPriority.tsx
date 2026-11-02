@@ -18,6 +18,7 @@ import {
   TaskPriorityProps,
   type Priority,
 } from "./TaskPriority.constants";
+import { apiFetch } from "@/lib/apiClient";
 
 export function TaskPriority({ taskId, priority, onSaved }: TaskPriorityProps) {
   const tPriority = useTranslations("priority");
@@ -31,7 +32,7 @@ export function TaskPriority({ taskId, priority, onSaved }: TaskPriorityProps) {
     setOpen(false);
     const prev = priority;
     onSaved(value);
-    const res = await fetch(`/api/tasks/updateTask/${taskId}`, {
+    const res = await apiFetch(`/api/tasks/updateTask/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ priority: value }),
