@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import {
   SlidersHorizontal,
   Plus,
@@ -103,7 +104,7 @@ export function CustomFieldsSettings() {
   const fetchBoards = async () => {
     try {
       setLoadingBoards(true);
-      const res = await fetch("/api/settings/custom-fields/boards");
+      const res = await apiFetch("/api/settings/custom-fields/boards");
       if (res.ok) {
         const data: BoardOption[] = await res.json();
         setBoards(data);
@@ -121,7 +122,7 @@ export function CustomFieldsSettings() {
   const fetchCustomFields = async (boardId: string) => {
     try {
       setLoadingFields(true);
-      const res = await fetch(`/api/settings/custom-fields?boardId=${boardId}`);
+      const res = await apiFetch(`/api/settings/custom-fields?boardId=${boardId}`);
       if (res.ok) {
         const data = await res.json();
         setCustomFields(data.customFields || []);
@@ -145,7 +146,7 @@ export function CustomFieldsSettings() {
     setSavingFieldId(field.id);
 
     try {
-      const res = await fetch(`/api/settings/custom-fields/${field.id}`, {
+      const res = await apiFetch(`/api/settings/custom-fields/${field.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enabled: nextState }),
@@ -210,7 +211,7 @@ export function CustomFieldsSettings() {
     try {
       if (editingField) {
         // Update existing field
-        const res = await fetch(`/api/settings/custom-fields/${editingField.id}`, {
+        const res = await apiFetch(`/api/settings/custom-fields/${editingField.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -230,11 +231,11 @@ export function CustomFieldsSettings() {
           setDialogOpen(false);
         } else {
           const data = await res.json();
-          toast.error(data.error || t("updateFieldError"));
+          toast.error(data.message || data.error || t("updateFieldError"));
         }
       } else {
         // Create new custom field
-        const res = await fetch("/api/settings/custom-fields", {
+        const res = await apiFetch("/api/settings/custom-fields", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -253,7 +254,7 @@ export function CustomFieldsSettings() {
           setDialogOpen(false);
         } else {
           const data = await res.json();
-          toast.error(data.error || t("createFieldError"));
+          toast.error(data.message || data.error || t("createFieldError"));
         }
       }
     } catch {
@@ -265,7 +266,7 @@ export function CustomFieldsSettings() {
 
   const handleDeleteField = async (fieldId: string) => {
     try {
-      const res = await fetch(`/api/settings/custom-fields/${fieldId}`, {
+      const res = await apiFetch(`/api/settings/custom-fields/${fieldId}`, {
         method: "DELETE",
       });
 
@@ -274,7 +275,7 @@ export function CustomFieldsSettings() {
         toast.success(t("fieldDeleted"));
       } else {
         const data = await res.json();
-        toast.error(data.error || t("deleteFieldError"));
+        toast.error(data.message || data.error || t("deleteFieldError"));
       }
     } catch {
       toast.error(tCommon("connectionError"));
