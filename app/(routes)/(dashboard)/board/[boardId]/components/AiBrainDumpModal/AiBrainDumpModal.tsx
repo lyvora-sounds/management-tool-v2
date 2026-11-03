@@ -129,7 +129,7 @@ export function AiBrainDumpModal({
     setCreatingFor(null);
     setEpicAssignees([]);
     try {
-      const res = await fetch("/api/ai/parse", {
+      const res = await apiFetch("/api/ai/parse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: inputText }),
@@ -156,8 +156,9 @@ export function AiBrainDumpModal({
         toast.success(t("extracted", { count: prepared.length }));
       } else {
         if (
-          data.error &&
-          (data.error.includes("Ajustes") || data.error.includes("Settings"))
+          data.error === "ai_not_configured" ||
+          (data.error &&
+            (data.error.includes("Ajustes") || data.error.includes("Settings")))
         ) {
           setNoApiKey(true);
         } else {

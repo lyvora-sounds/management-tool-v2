@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import { Loader2, Mail, QrCode, ShieldCheck, Smartphone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ type Setup =
   | { kind: "totp"; secret: string; qr: string };
 
 async function postSecurity(body: Record<string, string>) {
-  const res = await fetch("/api/settings/security", {
+  const res = await apiFetch("/api/settings/security", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -42,7 +43,7 @@ export function TwoFactorSettings() {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    fetch("/api/settings/security")
+    apiFetch("/api/settings/security")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) setStatus(data);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import { Sparkles, Loader2, Check, X, ArrowRight, ChevronDown, Globe } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,7 @@ export function TaskAiImprove({
     setOpen(true);
     setNoApiKey(false);
     try {
-      const res = await fetch("/api/ai/improve", {
+      const res = await apiFetch("/api/ai/improve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -62,12 +63,13 @@ export function TaskAiImprove({
         setSelectedSubtasks(data.suggestedSubtasks.map(() => true));
       } else {
         if (
-          data.error &&
-          (data.error.includes("Ajustes") || data.error.includes("Settings"))
+          data.error === "ai_not_configured" ||
+          (data.error &&
+            (data.error.includes("Ajustes") || data.error.includes("Settings")))
         ) {
           setNoApiKey(true);
         } else {
-          toast.error(data.error || t("improveError"));
+          toast.error(data.message || data.error || t("improveError"));
           setOpen(false);
         }
       }

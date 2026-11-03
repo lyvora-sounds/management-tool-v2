@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/apiClient";
 import { toast } from "sonner";
 import {
   APPEARANCE_COOKIE,
@@ -144,7 +145,7 @@ export function AppearanceProvider({
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(async () => {
         try {
-          const res = await fetch("/api/settings/appearance", {
+          const res = await apiFetch("/api/settings/appearance", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(next),
