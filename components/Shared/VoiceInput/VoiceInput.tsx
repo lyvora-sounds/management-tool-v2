@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import { Mic, Square, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -131,7 +132,7 @@ export function VoiceInput({
       formData.append("file", blob, "recording.webm");
       formData.append("language", lang === "es-ES" ? "es" : "en");
 
-      const res = await fetch("/api/ai/transcribe", {
+      const res = await apiFetch("/api/ai/transcribe", {
         method: "POST",
         body: formData,
       });
@@ -139,8 +140,8 @@ export function VoiceInput({
       const data = await res.json();
       if (res.ok && data.text) {
         onTranscript(data.text);
-      } else if (data.error) {
-        toast.error(data.error);
+      } else if (data.message || data.error) {
+        toast.error(data.message || data.error);
       }
     } catch (err: any) {
       toast.error(t("transcribeError"));

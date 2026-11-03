@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import {
   Sparkles,
   Key,
@@ -179,7 +180,7 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/settings/ai");
+      const res = await apiFetch("/api/settings/ai");
       if (res.ok) {
         const data = await res.json();
         setProvider(data.provider || "openai");
@@ -208,7 +209,7 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/settings/ai", {
+      const res = await apiFetch("/api/settings/ai", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -228,7 +229,7 @@ export default function SettingsPage() {
         setApiKey("");
         toast.success(t("saveSuccess"));
       } else {
-        toast.error(data.error || t("saveError"));
+        toast.error(data.message || data.error || t("saveError"));
       }
     } catch {
       toast.error(tCommon("connectionError"));

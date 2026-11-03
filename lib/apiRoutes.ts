@@ -114,6 +114,14 @@ const MIGRATED: Route[] = [
 
   // Onboarding
   { method: "PATCH", pattern: /^\/api\/onboarding$/, to: sameUnderV1 },
+
+  // AI (the caller's own key) and personal settings
+  ...["parse", "improve", "transcribe"].map((part) => ({ method: "POST", pattern: new RegExp(`^/api/ai/${part}$`), to: sameUnderV1 })),
+  ...["GET", "PUT"].flatMap((method) => ["ai", "appearance"].map((part) => ({ method, pattern: new RegExp(`^/api/settings/${part}$`), to: sameUnderV1 }))),
+  ...["GET", "POST"].map((method) => ({ method, pattern: /^\/api\/settings\/security$/, to: sameUnderV1 })),
+  ...["GET", "POST"].map((method) => ({ method, pattern: /^\/api\/settings\/custom-fields$/, to: sameUnderV1 })),
+  { method: "GET", pattern: /^\/api\/settings\/custom-fields\/boards$/, to: sameUnderV1 },
+  ...["PATCH", "DELETE"].map((method) => ({ method, pattern: /^\/api\/settings\/custom-fields\/[^/]+$/, to: sameUnderV1 })),
 ];
 
 /** The kiki-api path for a request, or null when this app still serves it. */
