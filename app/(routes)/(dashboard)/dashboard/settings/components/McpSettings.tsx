@@ -124,7 +124,7 @@ export function McpSettings() {
   );
 
   const loadMyTokens = async () => {
-    const res = await fetch("/api/settings/mcp/tokens");
+    const res = await apiFetch("/api/settings/mcp/tokens");
     if (!res.ok) throw new Error("load");
     setTokens(await res.json());
   };
@@ -133,7 +133,7 @@ export function McpSettings() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/settings/mcp/tokens");
+        const res = await apiFetch("/api/settings/mcp/tokens");
         if (!res.ok) throw new Error("load");
         const data = (await res.json()) as AccessTokenSummary[];
         if (!cancelled) setTokens(data);
@@ -212,7 +212,7 @@ export function McpSettings() {
 
   const revokeToken = async (token: AccessTokenSummary) => {
     if (!window.confirm(t("mcpRevokeConfirm", { name: token.name }))) return;
-    const res = await fetch("/api/settings/mcp/tokens", {
+    const res = await apiFetch("/api/settings/mcp/tokens", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: token.id }),
@@ -444,7 +444,7 @@ export function McpSettings() {
                         ? t("mcpTokenBoardScope", { title: token.board.title, name: token.organization.name })
                         : token.organization
                           ? t("mcpTokenOrgScope", { name: token.organization.name })
-                          : t("mcpTokenFullScope")}
+                          : token.tokenPrefix}
                     {" · "}
                     {t(token.scopes.includes("tickets:write") ? "mcpReadWrite" : "mcpReadOnly")}
                   </p>

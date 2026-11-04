@@ -95,6 +95,8 @@ Besides Vercel, the app builds as a container for Cloud Run (`Dockerfile`, infra
 
 The backend is moving route by route to `kiki-api` (a separate Fastify service on Google Cloud). While it moves, the browser calls the API through one helper, `apiFetch` in `lib/apiClient.ts`:
 
+**New API work:** implement the handler in `kiki-api` first (`/v1/...`), open a PR there, merge and deploy, then wire this app. Do not grow `app/api` for a new feature that can live on the API. Keep schema/migrations in sync in both repos while ownership is still shared; a schema-only change in `kiki-api` without the route is incomplete. Never push straight to `main`.
+
 - `lib/apiRoutes.ts` lists the routes already served by `kiki-api`, by method and path. Everything else still goes to this app's own `/api` routes. Moving a route is one line there, plus the route in `kiki-api`.
 - A migrated route is sent to `NEXT_PUBLIC_API_URL` with the Clerk session token as `Authorization: Bearer`, and `/api/...` becomes `/v1/...`.
 - **`NEXT_PUBLIC_API_URL` unset means nothing changes**: every call is the plain same-origin fetch. Local development and Vercel previews do not need it. It is a build-time value (inlined into the browser bundle) and not a secret.
@@ -126,6 +128,7 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | | `POST /api/boards/[boardId]/invitations`, `DELETE /api/boards/[boardId]/invitations/[invitationId]` | same under `/v1` |
 | | `GET /api/invite/[token]` (public), `POST /api/invite/[token]` | `GET /v1/invitations/:token`, `POST /v1/invitations/:token/accept` |
 | | `GET`, `POST`, `DELETE` `.../external-access` of a board and of an organization | same under `/v1` |
+| | `GET`, `POST`, `DELETE /api/settings/mcp/tokens` (list/create full-access / revoke own) | same under `/v1` |
 | Organizations | `GET`, `POST /api/organizations`, `GET`, `POST`, `PATCH`, `DELETE /api/organizations/[organizationId]/members`, `GET .../available-members` | same under `/v1` |
 | | `GET`, `POST .../teams`, `POST`, `DELETE .../teams/[teamId]/members` and `.../teams/[teamId]/boards` | same under `/v1` |
 | Tickets | `PATCH /api/tasks/updateTask/[taskId]`, `DELETE /api/tasks/deleteTask/[taskId]` | `PATCH`, `DELETE /v1/tasks/:taskId` |

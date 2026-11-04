@@ -101,6 +101,8 @@ async function writeActor(context: ExternalAccessContext, boardId: string, sessi
     const credential = await db.externalAccessToken.findUnique({ where: { id: context.tokenId }, select: { createdById: true } });
     actorId = credential?.createdById ?? undefined;
   }
+  // Full-access reach is admin boards only, so writes re-check admin (not member edit).
+  // Org/board tokens keep canEditBoard so an issued write credential still works for members.
   const allowed = actorId
     ? context.fullAccess
       ? await isBoardAdmin(actorId, boardId)

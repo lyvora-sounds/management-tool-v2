@@ -112,4 +112,9 @@ describe("personal MCP tokens", () => {
     expect((await DELETE(request("DELETE", { id: "token-1" }))).status).toBe(401);
     expect(revokeTokens).not.toHaveBeenCalled();
   });
+
+  it("blocks cross-origin full-access creation", async () => {
+    expect((await POST(request("POST", { name: "Cursor", access: "write" }, "https://evil.test"))).status).toBe(403);
+    expect(createToken).not.toHaveBeenCalled();
+  });
 });

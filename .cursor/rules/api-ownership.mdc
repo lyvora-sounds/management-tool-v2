@@ -1,0 +1,13 @@
+---
+description: New HTTP API work belongs in kiki-api, not Next.js app/api
+alwaysApply: true
+---
+
+# API ownership
+
+`kiki-api` is the backend. `management-tool-v2` is the frontend.
+
+- Implement new HTTP API endpoints in `kiki-api` (`/v1/...`) with tests, via a pull request. Never push straight to `main`.
+- Do not add new feature handlers under `app/api/**` when the work can live on the API. Wire the UI with `apiFetch` and `lib/apiRoutes.ts` after the API ships.
+- Schema/migration changes must land in both repos when still duplicated; a schema-only change in `kiki-api` without the route is incomplete.
+- Temporary exception: Streamable HTTP MCP (`/api/mcp` + OAuth) still runs in this app. Token mint/list/revoke (board, organization, full-access) belongs in `kiki-api`.
