@@ -7,6 +7,15 @@ export function isTicketKey(value: string) {
   return /^[A-Z]{2}-\d{5,}$/.test(value);
 }
 
+/** Branch `KI-00068-slug` or `topic/KI-00068` belongs to board key KI, ticket 68. */
+export function ticketIdentityFromBranch(branch: string): { boardKey: string; number: number } | null {
+  const match = branch.match(/(?:^|\/)([A-Za-z]{2})-(\d{5,})(?=$|[-/])/);
+  if (!match) return null;
+  const number = Number(match[2]);
+  if (!Number.isSafeInteger(number) || number < 1) return null;
+  return { boardKey: match[1].toUpperCase(), number };
+}
+
 export function formatTicketKey(boardKey: string, number: number) {
   return `${boardKey.toUpperCase()}-${String(number).padStart(5, "0")}`;
 }

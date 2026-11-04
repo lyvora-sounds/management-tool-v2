@@ -135,6 +135,24 @@ describe("GitHub webhook", () => {
     expect(githubWebhookEffect("installation", { action: "created", installation: { id: 7 } })).toEqual({
       action: "ignore",
     });
+    expect(githubWebhookEffect("pull_request", {
+      action: "closed",
+      installation: { id: 7 },
+      repository: { id: 99 },
+      pull_request: { id: 5, merged: false, head: { ref: "KI-00068-slug" } },
+    })).toEqual({ action: "ignore" });
+    expect(githubWebhookEffect("pull_request", {
+      action: "closed",
+      installation: { id: 7 },
+      repository: { id: 99 },
+      pull_request: { id: 5, merged: true, head: { ref: "KI-00068-slug" } },
+    })).toEqual({
+      action: "pull-request-merged",
+      installationId: "7",
+      repositoryId: "99",
+      pullRequestId: "5",
+      headRef: "KI-00068-slug",
+    });
   });
 });
 

@@ -53,6 +53,7 @@ export type GithubRepository = {
 export type GithubWebhookEffect =
   | { action: "delete"; installationId: string }
   | { action: "repositories-removed"; installationId: string; repositoryIds: string[] }
+  | { action: "pull-request-merged"; installationId: string; repositoryId: string; pullRequestId: string; headRef: string }
   | { action: "ignore" };
 
 export function readGithubAppConfig(
@@ -184,6 +185,28 @@ export function githubWebhookEffect(event: string, payload: unknown): GithubWebh
     });
     if (repositoryIds.length === 0) return { action: "ignore" };
     return { action: "repositories-removed", installationId, repositoryIds };
+  }
+
+  if (event === "pull_request" && action === "closed") {
+    const record = payload as {
+      repository?: { id?: unknown };
+      pull_request?: { merged?: unknown; id?: unknown; head?: { ref?: unknown } };
+    };
+    const repositoryId = record.repository?.id;
+    const pullRequest = record.pull_request;
+    const headRef = pullRequest?.head?.ref;
+    const pullRequestId = pullRequest?.id;
+    if (pullRequest?.merged !== true) return { action: "ignore" };
+    if (typeof repositoryId !== "number" || !Number.isSafeInteger(repositoryId) || repositoryId <= 0) return { action: "ignore" };
+    if (typeof pullRequestId !== "number" || !Number.isSafeInteger(pullRequestId) || pullRequestId <= 0) return { action: "ignore" };
+    if (typeof headRef !== "string" || headRef.length === 0 || headRef.length > 255) return { action: "ignore" };
+    return {
+      action: "pull-request-merged",
+      installationId,
+      repositoryId: String(repositoryId),
+      pullRequestId: String(pullRequestId),
+      headRef,
+    };
   }
 
   return { action: "ignore" };

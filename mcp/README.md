@@ -121,13 +121,24 @@ Every connection exposes these read-only tools:
 - `get_project` — the organization and its boards, or the single bound board,
   including accessible people (IDs, names and emails), labels, epics, lists and
   all custom-field definitions, options and enabled state;
-- `list_tickets` — ticket summaries with assignee and QA identities; filter by
-  `assigneeId`, `qaId` or assignee name/email (`person`). Use the final ticket ID
-  as `cursor` for the next page (maximum 100 tickets per call);
+- `list_tickets` — ticket summaries with assignee and QA identities plus
+  `createdAt` / `updatedAt` and `development` (`ticketKey`, `suggestedBranch`,
+  checkout `command`); newest created first. Filter by `assigneeId`,
+  `qaId` or assignee name/email (`person`). Use the final ticket ID as `cursor`
+  for the next page (maximum 100 tickets per call);
 - `get_ticket` — all ticket details inside the credential's scope, including
   people, collaborators, labels, epic, checklist, comments with authors,
-  attachment metadata, sharing state, timestamps and every custom field
-  (unset values are null);
+  attachment metadata, sharing state, timestamps, every custom field
+  (unset values are null), and `development`. When implementing a ticket, use
+  `development.suggestedBranch` as the git branch and PR head; PR title
+  defaults to the ticket title. When the ticket is solved and a PR is opened,
+  the PR body must follow `development.prDescriptionTemplate` (ISO
+  change-management sections; ask the user before opening if any section is
+  unknown). As work progresses, move the ticket with `update_tickets` `listId`
+  to that board's in-progress, review, then done list. Titles differ by board
+  (`In progress` / `En progreso`, `To Review` / `Revisión`, `Done` / `Hecho`);
+  match by meaning from `get_project` and ask the user if no list matches.
+  After the pull request is created, the next chat message must include its URL;
 - `get_attachment` — a scoped attachment's file contents as base64, up to 5 MiB;
 - `get_change_history` — the latest 50 MCP operations and their revert status.
 

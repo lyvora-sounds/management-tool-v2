@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { Prisma } from "@/lib/generated/prisma/client";
 import db from "@/lib/db";
+import { nextListAfterMerge } from "@/lib/statusTheme";
+import { ticketIdentityFromBranch } from "@/lib/integrations/ticketBranch";
 import { requireOrganizationManager, requireOrganizationMember } from "@/lib/organizations";
 import {
   type GithubAccountType,
@@ -209,6 +211,48 @@ export async function applyGithubWebhookEffect(effect: GithubWebhookEffect) {
       data: { repositoryId: null, repositoryName: null, branch: null },
     });
   }
+  if (effect.action === "pull-request-merged") await advanceTicketAfterMerge(effect);
+}
+
+async function advanceTicketAfterMerge(effect: Extract<GithubWebhookEffect, { action: "pull-request-merged" }>) {
+  const identity = ticketIdentityFromBranch(effect.headRef);
+  if (!identity) return;
+  const connection = await db.organizationGithubConnection.findFirst({
+    where: { installationId: effect.installationId, repositoryId: effect.repositoryId },
+    select: { organizationId: true, connectedById: true },
+  });
+  if (!connection) return;
+  const board = await db.board.findFirst({
+    where: { organizationId: connection.organizationId, key: identity.boardKey },
+    select: { id: true, userId: true, list: { select: { id: true, title: true, order: true } } },
+  });
+  if (!board) return;
+  const task = await db.task.findFirst({
+    where: { number: identity.number, archived: false, list: { boardId: board.id } },
+    select: { id: true, listId: true, completed: true },
+  });
+  if (!task) return;
+  const marker = `github-pr-merged:${effect.repositoryId}:${effect.pullRequestId}`;
+  const already = await db.activityLog.findFirst({ where: { boardId: board.id, type: "github_pr_merged", message: marker }, select: { id: true } });
+  if (already) return;
+  const move = nextListAfterMerge(board.list, task.listId);
+  const actorId = connection.connectedById ?? board.userId;
+  await db.$transaction(async (tx) => {
+    const raced = await tx.activityLog.findFirst({ where: { boardId: board.id, type: "github_pr_merged", message: marker }, select: { id: true } });
+    if (raced) return;
+    if (move.listId || (move.complete && !task.completed)) {
+      await tx.task.update({
+        where: { id: task.id },
+        data: {
+          ...(move.listId ? { listId: move.listId } : {}),
+          ...(move.complete && !task.completed ? { completed: true, completedAt: new Date(), completedById: actorId } : {}),
+        },
+      });
+    }
+    await tx.activityLog.create({
+      data: { boardId: board.id, userId: actorId, type: "github_pr_merged", message: marker },
+    });
+  });
 }
 
 export async function githubInstallationForOrganization(organizationId: string) {
