@@ -54,20 +54,24 @@ Claude, and other MCP-capable clients. An organization owner or admin creates
 an organization credential at
 `POST /api/organizations/{organizationId}/external-access`. A board owner or
 admin, including an organization owner or admin, creates a board credential at
-`POST /api/boards/{boardId}/external-access`. The body is a name and an optional
-expiration. Environment fields are ignored.
+`POST /api/boards/{boardId}/external-access`. A user who admins at least one
+board can create a **full-access** credential at
+`POST /api/settings/mcp/tokens` (`fullAccess: true`, no organization or board).
+The body is a name and an optional expiration. Environment fields are ignored.
 
-Every credential belongs to one organization. A null `boardId` reads every
+Organization credentials belong to one organization. A null `boardId` reads every
 board in that organization. A set `boardId` reads only that board, and
 authentication rejects the credential if the board no longer belongs to the
-same organization. One credential cannot read a second organization. A second
-organization or board is another connection. Organization tokens use
+same organization. Full-access credentials follow the creator’s current
+owner/admin rights across boards and organizations; they only work on
+`POST /api/mcp` (not scoped org/board URLs). Organization tokens use
 `POST /api/mcp/org/{organizationId}` and board tokens use
 `POST /api/mcp/board/{boardId}`. Those routes reject a token for a different
 scope. `POST /api/mcp` remains valid for an existing single connection.
-Read tools never accept a board id: `get_project`, `list_tickets`, and `get_ticket` derive
-the organization and board from the credential. `create_epic` on an organization
-token is the exception: it requires `boardId` from `get_project`. Tickets are not filtered by
+`get_project` and `get_ticket` derive scope from the credential (full-access
+`get_project` lists every admin board). `list_tickets` accepts an optional
+`boardId` from `get_project` (recommended for full-access). `create_epic` on an
+organization or full-access token requires `boardId`. Tickets are not filtered by
 environment.
 
 Credentials always expose `tickets:read`; Settings can opt into `tickets:write`. Plaintext tokens are returned

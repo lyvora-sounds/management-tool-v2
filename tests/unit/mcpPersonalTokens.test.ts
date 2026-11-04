@@ -4,16 +4,20 @@ const auth = vi.fn();
 const findUser = vi.fn();
 const listTokens = vi.fn();
 const revokeTokens = vi.fn();
+const createToken = vi.fn();
+const findAdminBoard = vi.fn();
 vi.mock("@clerk/nextjs/server", () => ({ auth: (...args: unknown[]) => auth(...args) }));
 vi.mock("@/lib/db", () => ({ default: {
   user: { findUnique: (...args: unknown[]) => findUser(...args) },
+  board: { findFirst: (...args: unknown[]) => findAdminBoard(...args) },
   externalAccessToken: {
     findMany: (...args: unknown[]) => listTokens(...args),
+    create: (...args: unknown[]) => createToken(...args),
     updateMany: (...args: unknown[]) => revokeTokens(...args),
   },
 } }));
 
-const { GET, DELETE } = await import("@/app/api/settings/mcp/tokens/route");
+const { GET, POST, DELETE } = await import("@/app/api/settings/mcp/tokens/route");
 
 function request(method: string, data?: unknown, origin = "https://kikiboard.test") {
   return new Request("https://kikiboard.test/api/settings/mcp/tokens", {
@@ -30,6 +34,19 @@ beforeEach(() => {
   findUser.mockResolvedValue({ id: "user-1" });
   listTokens.mockResolvedValue([]);
   revokeTokens.mockResolvedValue({ count: 1 });
+  findAdminBoard.mockResolvedValue({ id: "board-1" });
+  createToken.mockResolvedValue({
+    id: "token-1",
+    name: "Cursor",
+    tokenPrefix: "kiki_abc",
+    scopes: ["tickets:read", "tickets:write"],
+    fullAccess: true,
+    expiresAt: null,
+    lastUsedAt: null,
+    createdAt: new Date().toISOString(),
+    organization: null,
+    board: null,
+  });
 });
 
 describe("personal MCP tokens", () => {
@@ -44,6 +61,7 @@ describe("personal MCP tokens", () => {
       name: true,
       tokenPrefix: true,
       scopes: true,
+      fullAccess: true,
       lastUsedAt: true,
       createdAt: true,
     });
@@ -53,6 +71,27 @@ describe("personal MCP tokens", () => {
     auth.mockResolvedValue({ userId: null });
     expect((await GET()).status).toBe(401);
     expect(listTokens).not.toHaveBeenCalled();
+  });
+
+  it("creates a full-access token for an admin", async () => {
+    const response = await POST(request("POST", { name: "Cursor", access: "write" }));
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.token).toMatch(/^kiki_/);
+    expect(createToken.mock.calls[0][0].data).toMatchObject({
+      name: "Cursor",
+      fullAccess: true,
+      organizationId: null,
+      boardId: null,
+      createdById: "user-1",
+      scopes: ["tickets:read", "tickets:write"],
+    });
+  });
+
+  it("rejects full-access creation when the user admins no boards", async () => {
+    findAdminBoard.mockResolvedValue(null);
+    expect((await POST(request("POST", { name: "Cursor", access: "write" }))).status).toBe(403);
+    expect(createToken).not.toHaveBeenCalled();
   });
 
   it("revokes only a token the current user created", async () => {

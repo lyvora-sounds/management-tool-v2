@@ -20,11 +20,17 @@ organization, or for one board inside that organization.
 
 ## Security boundary
 
-An external-access token belongs to exactly one organization. Leave the board
+Most external-access tokens belong to exactly one organization. Leave the board
 unset and the token reads every board in that organization. Set a board and the
 token reads only that board. If the board later moves to another organization,
 the token stops working. The client cannot supply or switch a board id, and the
-same token cannot read a second organization.
+same organization/board token cannot read a second organization.
+
+A **full-access** token is different: Settings → MCP can create one for a user
+who owns or admins at least one board. It has no fixed organization or board.
+At call time it reaches every board the creator currently owns or admins, and
+only on the canonical `/api/mcp` endpoint. Losing admin on a board removes that
+board from the token’s reach without revoking the token.
 
 A token also contains:
 

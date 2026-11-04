@@ -17,30 +17,35 @@ const epicCreate = vi.fn();
 const boardLookup = vi.fn();
 const boardUpdate = vi.fn(async (..._args: unknown[]) => ({ key: "LY", nextTicketNumber: 2 }));
 const tx = { board: { findUnique: async () => ({ memberCanAssign: true }), findFirst: (...args: unknown[]) => boardLookup(...args), update: (...args: unknown[]) => boardUpdate(...args) }, epic: { create: epicCreate }, notification: { create: notification }, customField: { findFirst: async () => ({ id: "env", type: "SELECT", defaultKey: "environment", options: ["production"] }) }, customFieldValue: { findUnique: async () => null, upsert: customWrite }, task: { create, findFirst: lookup, updateMany: update, findUniqueOrThrow: lookup }, list: { findFirst: list }, externalAccessToken: { findUnique: credential }, mcpChange: { create: journal, updateMany: marked }, activityLog: { create: logs } };
-vi.mock("@/lib/boardAccess", () => ({ canEditBoard: (...args: unknown[]) => editable(...args), canReadBoard: async () => true, isBoardAdmin: async () => true }));
+vi.mock("@/lib/boardAccess", () => ({
+  canEditBoard: (...args: unknown[]) => editable(...args),
+  canReadBoard: async () => true,
+  isBoardAdmin: async () => true,
+  adminBoardWhere: (userId: string) => ({ OR: [{ userId }] }),
+}));
 vi.mock("@/lib/notifications/webhooks", () => ({ sendBoardWebhookNotification: vi.fn() }));
 vi.mock("@/lib/db", () => ({ default: {
   list: { findFirst: (...args: unknown[]) => list(...args) },
   board: { findFirst: (...args: unknown[]) => boardLookup(...args) },
-  task: { findFirst: async () => ({ list: { boardId: "board-1" } }) },
+  task: { findFirst: async () => ({ list: { boardId: "board-1", board: { organizationId: "org-1" } } }) },
   user: { findUnique: async () => ({ id: "user-1", name: "Owner", email: "owner@test.invalid" }) },
   externalAccessToken: { findUnique: async () => ({ createdById: "user-1" }) },
   mcpChange: { findFirst: (...args: unknown[]) => history(...args) },
   $transaction: (callback: (client: unknown) => unknown) => callback(tx),
 } }));
 const { createMcpTicket, createMcpEpic, updateMcpTickets, revertMcpChange, taskSnapshot, snapshotsMatch, parseTaskPatch } = await import("@/lib/mcp/writes");
-const context: ExternalAccessContext = { tokenId: "token-1", organizationId: "org-1", boardId: "board-1", boardTitle: "Board", scopes: ["tickets:read", "tickets:write"] };
+const context: ExternalAccessContext = { tokenId: "token-1", organizationId: "org-1", boardId: "board-1", boardTitle: "Board", scopes: ["tickets:read", "tickets:write"], fullAccess: false, createdById: "user-1" };
 const task = { id: "task-1", title: "Original", description: null, listId: "list-1", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, assigneeId: null, qaId: null, epicId: null, quarter: null, shareToken: null, collaborators: [], labels: [], customValues: [], subtasks: [], comments: [], attachments: [], startDate: null, dueDate: null, updatedAt: new Date("2026-10-09T10:00:00.000Z") };
 beforeEach(() => {
   vi.clearAllMocks(); editable.mockResolvedValue(true);
-  credential.mockResolvedValue({ scopes: context.scopes, organizationId: context.organizationId, boardId: context.boardId });
+  credential.mockResolvedValue({ scopes: context.scopes, organizationId: context.organizationId, boardId: context.boardId, fullAccess: false, createdById: "user-1" });
   create.mockResolvedValue(task);
   epicCreate.mockResolvedValue({ id: "epic-1", title: "kiki-infra-migration", description: null, color: "#3b82f6", quarter: null, status: "open", boardId: "board-1" });
   boardLookup.mockResolvedValue({ id: "board-1" });
   lookup.mockResolvedValue(task); update.mockResolvedValue({ count: 1 });
-  list.mockResolvedValue({ id: "list-1", boardId: "board-1", title: "Todo" });
+  list.mockResolvedValue({ id: "list-1", boardId: "board-1", title: "Todo", board: { organizationId: "org-1" } });
   journal.mockResolvedValue({ id: "change-1" }); marked.mockResolvedValue({ count: 1 });
-  history.mockResolvedValue({ id: "change-0", boardId: "board-1", kind: "update", before: [taskSnapshot({ ...task, title: "Before" })], after: [taskSnapshot(task)] });
+  history.mockResolvedValue({ id: "change-0", boardId: "board-1", organizationId: "org-1", kind: "update", before: [taskSnapshot({ ...task, title: "Before" })], after: [taskSnapshot(task)] });
 });
 describe("MCP task writes and revert guards", () => {
   it("rejects read-only credentials and users who lost board editing permission", async () => {

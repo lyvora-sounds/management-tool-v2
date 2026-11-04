@@ -322,9 +322,10 @@ model BoardTeamAccess {
   @@index([teamId])
 }
 
-/// Read-only MCP credential bound to one organization.
-/// boardId null reads every board in that organization. A set boardId reads only
-/// that board, which must still belong to the same organization.
+/// MCP credential. Three shapes:
+/// - organization: organizationId set, boardId null → every board in that org
+/// - board: organizationId + boardId → that board only (must stay in the org)
+/// - fullAccess: both null → every board the creator currently admins (dynamic)
 /// allEnvironments and environments are stored for old rows and are not used.
 model ExternalAccessToken {
   id              String    @id @default(cuid())
@@ -332,14 +333,15 @@ model ExternalAccessToken {
   tokenHash       String    @unique
   tokenPrefix     String
   scopes          String[]  @default(["tickets:read"])
+  fullAccess      Boolean   @default(false)
   allEnvironments Boolean   @default(true)
   environments    String[]  @default([])
   expiresAt       DateTime?
   revokedAt       DateTime?
   lastUsedAt      DateTime?
 
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   boardId String?
   board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
