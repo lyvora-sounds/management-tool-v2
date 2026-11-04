@@ -98,6 +98,19 @@ afterEach(async () => {
 });
 
 describe("scoped MCP server", () => {
+  it("advertises instructions to use development.suggestedBranch and ISO PR bodies", async () => {
+    const instructions = client.getInstructions() ?? "";
+    expect(instructions).toContain("development.suggestedBranch");
+    expect(instructions).toContain("PR title defaults to the ticket title");
+    expect(instructions).toContain("ISO change-management template");
+    expect(instructions).toContain("Security / Privacy Impact");
+    expect(instructions).toContain("development.prDescriptionTemplate");
+    expect(instructions).toContain("match the board's lists by meaning");
+    expect(instructions).toContain("ask the user which list");
+    expect(instructions).toContain("next chat message MUST include the PR URL");
+    expect(instructions).toContain("next list by column order");
+  });
+
   it("completes the MCP handshake and keeps board id optional on list_tickets only", async () => {
     const result = await client.listTools();
     expect(result.tools.map((tool) => tool.name)).toEqual([
@@ -239,13 +252,23 @@ describe("scoped MCP server", () => {
   it("returns a ticket contract instead of the join-table shape", async () => {
     findTask.mockResolvedValue({
       id: "ticket-1",
-      title: "Pay",
+      title: "Pay invoice",
+      number: 42,
       qaId: "mario", qa: { id: "mario", name: "Mario Ruby", email: "mario@test.invalid" },
       assigneeId: "daniel", assignee: { id: "daniel", name: "Daniel Alvarez", email: "daniel@test.invalid" },
       collaborators: [{ user: { id: "watcher", name: "Watcher", email: "watcher@test.invalid" } }],
       subtasks: [{ id: "subtask", title: "Verify", completed: false, order: 0 }],
       comments: [], attachments: [],
-      list: { id: "list-1", title: "Doing", board: { id: "board-allowed", title: "Checkout" } },
+      list: {
+        id: "list-1",
+        title: "Doing",
+        board: {
+          id: "board-allowed",
+          title: "Checkout",
+          key: "KI",
+          organization: { githubConnection: { branch: "dev" } },
+        },
+      },
       labels: [{ label: { id: "label-1", title: "bug", color: "#f00" } }],
       customValues: [{
         value: "production",
@@ -257,6 +280,13 @@ describe("scoped MCP server", () => {
     const body = JSON.parse((result.content as { text: string }[])[0].text);
     expect(body.board).toEqual({ id: "board-allowed", title: "Checkout" });
     expect(body.list).toEqual({ id: "list-1", title: "Doing" });
+    expect(body.development).toMatchObject({
+      ticketKey: "KI-00042",
+      suggestedBranch: "KI-00042-pay-invoice",
+      command: "git checkout -b KI-00042-pay-invoice origin/dev",
+      baseBranch: "dev",
+    });
+    expect(body.development.prDescriptionTemplate).toContain("## Security / Privacy Impact");
     expect(body.labels).toEqual([{ id: "label-1", title: "bug", color: "#f00" }]);
     expect(body.customFields).toEqual([{
       name: "Environment",
@@ -272,7 +302,18 @@ describe("scoped MCP server", () => {
   });
 
   it("exposes unset field definitions and options on ticket reads", async () => {
-    findTask.mockResolvedValue({ id: "ticket", list: { id: "list", title: "Draft", board: { id: "board-allowed", title: "Board" } }, labels: [], customValues: [] });
+    findTask.mockResolvedValue({
+      id: "ticket",
+      title: "Unset fields",
+      number: 1,
+      list: {
+        id: "list",
+        title: "Draft",
+        board: { id: "board-allowed", title: "Board", key: "KI", organization: { githubConnection: null } },
+      },
+      labels: [],
+      customValues: [],
+    });
     findFields.mockResolvedValue([{ id: "env", name: "Environment", defaultKey: "environment", type: "SELECT", options: ["production"], enabled: true }]);
     const result = await client.callTool({ name: "get_ticket", arguments: { ticketId: "ticket", presentation: { format: "text" } } });
     const body = JSON.parse((result.content as { text: string }[])[0].text);
@@ -281,15 +322,37 @@ describe("scoped MCP server", () => {
   });
 
   it("filters assignments by name/email and paginates inside the credential scope", async () => {
+    const createdAt = new Date("2026-11-04T00:00:00.000Z");
+    findTask.mockResolvedValue({ id: "last-ticket", createdAt });
     await client.callTool({ name: "list_tickets", arguments: { person: "Daniel Alvarez", qaId: "mario", cursor: "last-ticket", limit: 10 } });
-    expect(findTasks.mock.calls[0][0]).toMatchObject({ where: { list: { boardId: "board-allowed" }, qaId: "mario", assignee: { OR: [{ name: { contains: "Daniel Alvarez", mode: "insensitive" } }, { email: { contains: "Daniel Alvarez", mode: "insensitive" } }] } }, cursor: { id: "last-ticket" }, skip: 1, take: 10 });
+    expect(findTasks.mock.calls[0][0]).toMatchObject({
+      where: {
+        list: { boardId: "board-allowed" },
+        qaId: "mario",
+        assignee: { OR: [{ name: { contains: "Daniel Alvarez", mode: "insensitive" } }, { email: { contains: "Daniel Alvarez", mode: "insensitive" } }] },
+        OR: [{ createdAt: { lt: createdAt } }, { createdAt, id: { gt: "last-ticket" } }],
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+      take: 10,
+      select: expect.objectContaining({ createdAt: true, updatedAt: true }),
+    });
+    expect(findTasks.mock.calls[0][0].cursor).toBeUndefined();
   });
 
   it("exposes SVG preferences only for information tools and preserves ticket scope", async () => {
     const tools = (await client.listTools()).tools;
     expect(tools.find(tool => tool.name === "list_tickets")?.inputSchema.properties).toHaveProperty("presentation");
     expect(tools.find(tool => tool.name === "get_attachment")?.inputSchema.properties).not.toHaveProperty("presentation");
-    findTasks.mockResolvedValue([{ id: "ticket", title: "Test", list: { id: "list", title: "Draft", board: { id: "board-allowed", title: "Board" } } }]);
+    findTasks.mockResolvedValue([{
+      id: "ticket",
+      title: "Test",
+      number: 7,
+      list: {
+        id: "list",
+        title: "Draft",
+        board: { id: "board-allowed", title: "Board", key: "KI", organization: { githubConnection: null } },
+      },
+    }]);
     const result = await client.callTool({ name: "list_tickets", arguments: { presentation: { format: "svg" } } });
     expect(result.content).toEqual(expect.arrayContaining([expect.objectContaining({ type: "resource", resource: expect.objectContaining({ mimeType: "image/svg+xml" }) })]));
     expect(findTasks.mock.calls[0][0].where.list).toEqual({ boardId: "board-allowed" });

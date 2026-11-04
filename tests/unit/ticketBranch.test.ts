@@ -6,7 +6,9 @@ import {
   formatTicketKey,
   nextBoardKey,
   suggestedBranch,
+  ticketIdentityFromBranch,
 } from "@/lib/integrations/ticketBranch";
+import { nextListAfterMerge } from "@/lib/statusTheme";
 
 describe("ticket branch names", () => {
   it("pads the ticket number to five digits", () => {
@@ -28,6 +30,23 @@ describe("ticket branch names", () => {
     expect(first).toBe("LY-00042-ca-cd-cost-optimisation");
     expect(renamed.startsWith("LY-00042-")).toBe(true);
     expect(renamed).not.toBe(first);
+  });
+
+  it("reads a ticket key from a branch and ignores other names", () => {
+    expect(ticketIdentityFromBranch("KI-00068-mcp-suggested-branch")).toEqual({ boardKey: "KI", number: 68 });
+    expect(ticketIdentityFromBranch("topic/ly-00042")).toEqual({ boardKey: "LY", number: 42 });
+    expect(ticketIdentityFromBranch("feat/not-a-ticket")).toBeNull();
+  });
+
+  it("advances a merged ticket to the next column", () => {
+    const lists = [
+      { id: "todo", title: "To do", order: 0 },
+      { id: "review", title: "To Review", order: 1 },
+      { id: "done", title: "Done", order: 2 },
+    ];
+    expect(nextListAfterMerge(lists, "todo")).toEqual({ listId: "review", complete: false });
+    expect(nextListAfterMerge(lists, "review")).toEqual({ listId: "done", complete: true });
+    expect(nextListAfterMerge(lists, "done")).toEqual({ listId: null, complete: true });
   });
 
   it("builds a checkout command with or without the saved base branch", () => {

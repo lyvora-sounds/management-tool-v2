@@ -68,7 +68,7 @@ Opening a ticket always shows a checkout command for `{key}-{slug of the title}`
 
 `git checkout -b LY-00042-ca-cd-cost-optimisation origin/dev`
 
-`GET /api/tasks/{taskId}/development` requires a signed-in reader of the board. When the organization has a saved repository, it asks GitHub for `GET /repos/{owner}/{repo}/git/matching-refs/heads/{key}` and lists the branches that are the key, or that start with the key followed by `-` or `/`. Those links open `https://github.com/{owner}/{repo}/tree/{branch}`. Nothing is stored. A missing GitHub App configuration looks the same as an organization with no repository: the ticket still shows the checkout command, and it shows no branch links. Creating the branch, pull requests, commits, and issue sync stay outside Kikiboard.
+`GET /api/tasks/{taskId}/development` requires a signed-in reader of the board. When the organization has a saved repository, it asks GitHub for `GET /repos/{owner}/{repo}/git/matching-refs/heads/{key}` and lists the branches that are the key, or that start with the key followed by `-` or `/`. Those links open `https://github.com/{owner}/{repo}/tree/{branch}`. Nothing is stored. A missing GitHub App configuration looks the same as an organization with no repository: the ticket still shows the checkout command, and it shows no branch links. Creating the branch and the pull request stays outside Kikiboard. When a merged `pull_request` webhook arrives for the saved repository, and the head branch carries a ticket key (`KI-00068` or `KI-00068-slug`), Kikiboard moves that ticket to the next list by column order. The last column, or a column whose title means done, marks the ticket completed. The same delivery is applied once.
 
 ## Sharing a ticket
 
