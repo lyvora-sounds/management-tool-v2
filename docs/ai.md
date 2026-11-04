@@ -132,6 +132,18 @@ tool refresh after deployment.
 
 MCP information tools default to Markdown with colored emoji status/priority
 labels, canonical ticket links, and full data in `structuredContent.data`.
+`list_tickets` returns newest-created first and includes `createdAt` on each
+summary so agents can track creation time when batching updates.
+`get_ticket` and `list_tickets` include `development` (`ticketKey`,
+`suggestedBranch`, checkout `command`, `prDescriptionTemplate`). Server
+instructions require agents to use `suggestedBranch` as the git branch and PR
+head when implementing a ticket; PR title defaults to the ticket title. When
+opening a PR after solving a ticket, the body must follow the ISO
+change-management template in `prDescriptionTemplate` (every section filled, or
+ask the user first). Agents must move the ticket between the board's existing
+lists as work progresses (in progress, review, done). List titles are not
+fixed; match them by meaning from `get_project`, and ask the user if none match.
+After the pull request is created, the next chat message must include its URL.
 Clients can explicitly request `presentation.format: "svg"` for SVG resources
 with JSON text fallback, or `"text"` for legacy JSON text. SVG capabilities never
 override the Markdown default; link capabilities apply on each stateless call.
