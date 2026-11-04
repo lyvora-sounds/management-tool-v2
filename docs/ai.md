@@ -144,6 +144,8 @@ ask the user first). Agents must move the ticket between the board's existing
 lists as work progresses (in progress, review, done). List titles are not
 fixed; match them by meaning from `get_project`, and ask the user if none match.
 After the pull request is created, the next chat message must include its URL.
+A merged pull request on the linked repository moves the ticket to the next
+list by column order; agents do not move it again on merge.
 Clients can explicitly request `presentation.format: "svg"` for SVG resources
 with JSON text fallback, or `"text"` for legacy JSON text. SVG capabilities never
 override the Markdown default; link capabilities apply on each stateless call.

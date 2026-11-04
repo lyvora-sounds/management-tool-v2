@@ -18,7 +18,7 @@ export const MCP_SERVER_INSTRUCTIONS = [
   "Move the ticket with update_tickets listId as work changes. List titles differ by board, so call get_project and match the board's lists by meaning, never by a fixed English name.",
   "Starting work: move to the in-progress list (titles like In progress, Doing, En progreso, En curso, Desarrollo).",
   "Pull request open for review: move to the review list (titles like To Review, Code review, Revisión, QA).",
-  "Merged or finished: move to the done list (titles like Done, Hecho, Completado) and set completed true.",
+  "When the pull request merges, Kikiboard moves the ticket to the next list by column order. Do not also move it. The last column, or a done-titled column, marks it completed.",
   "If no list matches that meaning, ask the user which list to use. Do not create a list.",
   "list_tickets returns newest created first (createdAt descending) and includes createdAt on each summary.",
 ].join(" ");
