@@ -54,25 +54,27 @@ Claude, and other MCP-capable clients. An organization owner or admin creates
 an organization credential at
 `POST /api/organizations/{organizationId}/external-access`. A board owner or
 admin, including an organization owner or admin, creates a board credential at
-`POST /api/boards/{boardId}/external-access`. A user who admins at least one
-board can create a **full-access** credential at
+`POST /api/boards/{boardId}/external-access`. A user who can open at least one
+board can create a **personal** (full-access) credential at
 `POST /api/settings/mcp/tokens` (`fullAccess: true`, no organization or board).
 The body is a name and an optional expiration. Environment fields are ignored.
 
 Organization credentials belong to one organization. A null `boardId` reads every
 board in that organization. A set `boardId` reads only that board, and
 authentication rejects the credential if the board no longer belongs to the
-same organization. Full-access credentials follow the creator’s current
-owner/admin rights across boards and organizations; they only work on
-`POST /api/mcp` (not scoped org/board URLs). Organization tokens use
+same organization. Personal credentials follow the creator’s current board
+membership across organizations — never more rights than the app — and only work
+on `POST /api/mcp` (not scoped org/board URLs). Organization tokens use
 `POST /api/mcp/org/{organizationId}` and board tokens use
 `POST /api/mcp/board/{boardId}`. Those routes reject a token for a different
 scope. `POST /api/mcp` remains valid for an existing single connection.
-`get_project` and `get_ticket` derive scope from the credential (full-access
-`get_project` lists every admin board). `list_tickets` accepts an optional
-`boardId` from `get_project` (recommended for full-access). `create_epic` on an
-organization or full-access token requires `boardId`. Tickets are not filtered by
-environment.
+`get_project` and `get_ticket` derive scope from the credential (personal
+`get_project` lists every readable board with `role`, `canEdit`, `canAssign`,
+and `canManage`). `list_tickets` accepts an optional `boardId` from
+`get_project` (recommended for personal tokens). `create_epic` on an
+organization or personal token requires `boardId`. Ticket writes require
+`canEditBoard`; history and revert on personal tokens require board admin.
+Tickets are not filtered by environment.
 
 Credentials always expose `tickets:read`; Settings can opt into `tickets:write`. Plaintext tokens are returned
 once, while only their SHA-256 hashes are stored. They can expire and can be

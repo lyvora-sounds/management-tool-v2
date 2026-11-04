@@ -5,11 +5,11 @@ const findUser = vi.fn();
 const listTokens = vi.fn();
 const revokeTokens = vi.fn();
 const createToken = vi.fn();
-const findAdminBoard = vi.fn();
+const findAccessibleBoard = vi.fn();
 vi.mock("@clerk/nextjs/server", () => ({ auth: (...args: unknown[]) => auth(...args) }));
 vi.mock("@/lib/db", () => ({ default: {
   user: { findUnique: (...args: unknown[]) => findUser(...args) },
-  board: { findFirst: (...args: unknown[]) => findAdminBoard(...args) },
+  board: { findFirst: (...args: unknown[]) => findAccessibleBoard(...args) },
   externalAccessToken: {
     findMany: (...args: unknown[]) => listTokens(...args),
     create: (...args: unknown[]) => createToken(...args),
@@ -34,7 +34,7 @@ beforeEach(() => {
   findUser.mockResolvedValue({ id: "user-1" });
   listTokens.mockResolvedValue([]);
   revokeTokens.mockResolvedValue({ count: 1 });
-  findAdminBoard.mockResolvedValue({ id: "board-1" });
+  findAccessibleBoard.mockResolvedValue({ id: "board-1" });
   createToken.mockResolvedValue({
     id: "token-1",
     name: "Cursor",
@@ -73,11 +73,12 @@ describe("personal MCP tokens", () => {
     expect(listTokens).not.toHaveBeenCalled();
   });
 
-  it("creates a full-access token for an admin", async () => {
+  it("creates a personal token for a member with board access", async () => {
     const response = await POST(request("POST", { name: "Cursor", access: "write" }));
     expect(response.status).toBe(201);
     const body = await response.json();
     expect(body.token).toMatch(/^kiki_/);
+    expect(findAccessibleBoard.mock.calls[0][0].where).toMatchObject({ OR: expect.any(Array) });
     expect(createToken.mock.calls[0][0].data).toMatchObject({
       name: "Cursor",
       fullAccess: true,
@@ -88,9 +89,13 @@ describe("personal MCP tokens", () => {
     });
   });
 
-  it("rejects full-access creation when the user admins no boards", async () => {
-    findAdminBoard.mockResolvedValue(null);
-    expect((await POST(request("POST", { name: "Cursor", access: "write" }))).status).toBe(403);
+  it("rejects personal token creation when the user can open no boards", async () => {
+    findAccessibleBoard.mockResolvedValue(null);
+    const response = await POST(request("POST", { name: "Cursor", access: "write" }));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({
+      error: "You need access to at least one board to create a personal MCP token",
+    });
     expect(createToken).not.toHaveBeenCalled();
   });
 

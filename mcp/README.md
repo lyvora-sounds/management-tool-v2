@@ -26,11 +26,14 @@ token reads only that board. If the board later moves to another organization,
 the token stops working. The client cannot supply or switch a board id, and the
 same organization/board token cannot read a second organization.
 
-A **full-access** token is different: Settings → MCP can create one for a user
-who owns or admins at least one board. It has no fixed organization or board.
-At call time it reaches every board the creator currently owns or admins, and
-only on the canonical `/api/mcp` endpoint. Losing admin on a board removes that
-board from the token’s reach without revoking the token.
+A **personal** (full-access) token is different: Settings → MCP can create one
+for a user who can open at least one board. It has no fixed organization or
+board. At call time it reaches every board the creator can currently open in
+Kikiboard, with the same role rights as in the app, and only on the canonical
+`/api/mcp` endpoint. Losing access to a board removes that board from the
+token’s reach without revoking the token. Viewers stay read-only; members can
+edit tickets (assignments still honor `memberCanAssign`); history and revert
+remain owner/admin only on each board.
 
 A token also contains:
 

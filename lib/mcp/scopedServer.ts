@@ -6,7 +6,11 @@ import { createMcpTicket, createMcpEpic, updateMcpTickets, listMcpChanges, rever
 
 import { relationSchema } from "./ticketRelations";
 import { informationResponse, presentationSchema, SVG_CAPABILITY } from "./presentation";
-import { canReadBoard } from "@/lib/boardAccess";
+import { canReadBoard, getBoardRole } from "@/lib/boardAccess";
+import {
+  canEditBoard as roleCanEditBoard,
+  canManageBoard as roleCanManageBoard,
+} from "@/lib/boardRoles";
 
 const userSelect = { id: true, name: true, email: true } as const;
 async function boardPeople(board: { id: string }, organizationId: string) {
@@ -22,12 +26,26 @@ async function boardPeople(board: { id: string }, organizationId: string) {
   return people;
 }
 const boardMetadata = {
-  accessMode: true, defaultRole: true,
+  accessMode: true, defaultRole: true, memberCanAssign: true,
   user: { select: userSelect },
   labels: { select: { id: true, title: true, color: true } },
   epics: { select: { id: true, title: true, status: true, quarter: true } },
   customFields: { orderBy: { order: "asc" }, select: { id: true, name: true, defaultKey: true, type: true, options: true, enabled: true } },
 } as const;
+
+async function personalBoardCapabilities(
+  board: { id: string; memberCanAssign: boolean },
+  createdById: string,
+) {
+  const role = await getBoardRole(createdById, board.id);
+  const canManage = roleCanManageBoard(role);
+  return {
+    role,
+    canEdit: roleCanEditBoard(role),
+    canAssign: canManage || board.memberCanAssign,
+    canManage,
+  };
+}
 const PRIORITIES = new Set(["urgent", "high", "medium", "low"]);
 const taskChangesSchema = { type: "object", additionalProperties: false, properties: {
   title: { type: "string", maxLength: 500 }, description: { type: ["string", "null"], maxLength: 50000 },
@@ -92,7 +110,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
   const scopeDescription = context.boardId
     ? "the single board bound to this connection"
     : context.fullAccess
-      ? "every board the connection creator currently owns or admins"
+      ? "every board the connection creator can currently open in Kikiboard, with the same rights as in the app"
       : "every board in the organization bound to this connection";
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -122,7 +140,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
             cursor: { type: "string", description: "Last ticket ID from the previous page" },
             archived: { type: "boolean", default: false },
             query: { type: "string", description: "Case-insensitive title search" },
-            boardId: { type: "string", description: "Optional board filter from get_project. Recommended for full-access connections." },
+            boardId: { type: "string", description: "Optional board filter from get_project. Recommended for personal connections." },
             limit: { type: "integer", minimum: 1, maximum: 100, default: 50 },
           },
         },
@@ -148,7 +166,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         inputSchema: { type: "object", additionalProperties: false, required: ["ticketId", "attachmentId"], properties: { ticketId: { type: "string" }, attachmentId: { type: "string" } } },
       },
       {
-        name: "get_change_history", description: "List the latest 50 MCP task operations in this connection, including change IDs and revert status.",
+        name: "get_change_history", description: "List the latest 50 MCP task operations in this connection, including change IDs and revert status. On a personal connection, only boards you own or admin are included (same as Settings history).",
         securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
         _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
         inputSchema: { type: "object", properties: {}, additionalProperties: false },
@@ -157,11 +175,11 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       ...(context.scopes.includes("tickets:write") ? [
         { name: "create_ticket", description: "Create a ticket in a list in this connection. Returns a change ID; reverting creation archives the ticket and preserves its content.", ...writeMetadata,
           inputSchema: { type: "object", additionalProperties: false, required: ["title", "listId"], properties: { ...taskChangesSchema.properties, summary: { type: "string", maxLength: 500 } } } },
-        { name: "create_epic", description: "Create an epic on a board in this connection. A board-scoped token uses that board; organization and full-access tokens must pass boardId from get_project. Returns the epic so tickets can be attached with update_tickets. Epic creation is not in change history and cannot be reverted.", ...writeMetadata,
-          inputSchema: { type: "object", additionalProperties: false, required: ["title"], properties: { title: { type: "string", maxLength: 500 }, description: { type: ["string", "null"], maxLength: 50000 }, color: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" }, quarter: { type: ["string", "null"], pattern: "^\\d{4}-Q[1-4]$" }, boardId: { type: "string", description: "Required for organization and full-access connections. On a board-scoped token it must match the bound board if supplied." } } } },
+        { name: "create_epic", description: "Create an epic on a board in this connection. A board-scoped token uses that board; organization and personal tokens must pass boardId from get_project. Returns the epic so tickets can be attached with update_tickets. Epic creation is not in change history and cannot be reverted. Requires edit rights on that board (member or above).", ...writeMetadata,
+          inputSchema: { type: "object", additionalProperties: false, required: ["title"], properties: { title: { type: "string", maxLength: 500 }, description: { type: ["string", "null"], maxLength: 50000 }, color: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" }, quarter: { type: ["string", "null"], pattern: "^\\d{4}-Q[1-4]$" }, boardId: { type: "string", description: "Required for organization and personal connections. On a board-scoped token it must match the bound board if supplied." } } } },
         { name: "update_tickets", description: "Edit, move, complete or archive up to 50 tickets on one board atomically. Every batch has a change ID and before/after history. Supports people, QA, collaborators, labels, epics, custom fields, checklist, comments, attachments and public sharing. IDs and custom-field options are available from get_project. Server-generated IDs, timestamps and calendar integration IDs cannot be supplied.", ...writeMetadata, annotations: { ...writeMetadata.annotations, destructiveHint: true },
           inputSchema: { type: "object", additionalProperties: false, required: ["updates"], properties: { updates: { type: "array", minItems: 1, maxItems: 50, items: { type: "object", required: ["ticketId", "changes"], additionalProperties: false, properties: { ticketId: { type: "string" }, changes: taskChangesSchema } } }, summary: { type: "string", maxLength: 500 } } } },
-        { name: "revert_change", description: "Preview undo with confirm=false first. After user approval, set confirm=true to revert an entire MCP change. Conflicts with later task edits reject the whole revert. Creation is undone by archiving.", ...writeMetadata,
+        { name: "revert_change", description: "Preview undo with confirm=false first. After user approval, set confirm=true to revert an entire MCP change. Conflicts with later task edits reject the whole revert. Creation is undone by archiving. On a personal connection, only a board owner or admin can revert.", ...writeMetadata,
           inputSchema: { type: "object", additionalProperties: false, required: ["changeId"], properties: { changeId: { type: "string" }, confirm: { type: "boolean", default: false } } } },
       ] : []),
     ].map(tool => ["get_project", "list_tickets", "get_ticket", "get_change_history"].includes(tool.name) ? { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...tool.inputSchema.properties, presentation: presentationSchema } } } : tool),
@@ -236,6 +254,10 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
 
       if (context.fullAccess) {
         try {
+          if (!context.createdById) {
+            return { isError: true, content: [{ type: "text", text: "Personal connection is missing its creator" }] };
+          }
+          const createdById = context.createdById;
           const boards = await db.board.findMany({
             where: boardScope(context),
             orderBy: { createdAt: "asc" },
@@ -251,9 +273,10 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
           });
           const detailed = await Promise.all(boards.map(async (board) => ({
             ...board,
+            ...(await personalBoardCapabilities(board, createdById)),
             people: await boardPeople(board, board.organizationId),
           })));
-          return information({ scope: "admin", boards: detailed });
+          return information({ scope: "personal", boards: detailed });
         } catch (error) {
           return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "Project not found" }] };
         }

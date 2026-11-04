@@ -18,11 +18,13 @@ const epicCreate = vi.fn();
 const boardLookup = vi.fn();
 const boardUpdate = vi.fn(async (..._args: unknown[]) => ({ key: "LY", nextTicketNumber: 2 }));
 const tx = { board: { findUnique: async () => ({ memberCanAssign: true }), findFirst: (...args: unknown[]) => boardLookup(...args), update: (...args: unknown[]) => boardUpdate(...args) }, epic: { create: epicCreate }, notification: { create: notification }, customField: { findFirst: async () => ({ id: "env", type: "SELECT", defaultKey: "environment", options: ["production"] }) }, customFieldValue: { findUnique: async () => null, upsert: customWrite }, task: { create, findFirst: lookup, updateMany: update, findUniqueOrThrow: lookup }, list: { findFirst: list }, externalAccessToken: { findUnique: credential }, mcpChange: { create: journal, updateMany: marked }, activityLog: { create: logs } };
+const historyList = vi.fn();
 vi.mock("@/lib/boardAccess", () => ({
   canEditBoard: (...args: unknown[]) => editable(...args),
   canReadBoard: async () => true,
   isBoardAdmin: (...args: unknown[]) => admin(...args),
   adminBoardWhere: (userId: string) => ({ OR: [{ userId }] }),
+  readableBoardWhere: (userId: string) => ({ OR: [{ userId }, { members: { some: { userId } } }] }),
 }));
 vi.mock("@/lib/notifications/webhooks", () => ({ sendBoardWebhookNotification: vi.fn() }));
 vi.mock("@/lib/db", () => ({ default: {
@@ -31,10 +33,13 @@ vi.mock("@/lib/db", () => ({ default: {
   task: { findFirst: async () => ({ list: { boardId: "board-1", board: { organizationId: "org-1" } } }) },
   user: { findUnique: async () => ({ id: "user-1", name: "Owner", email: "owner@test.invalid" }) },
   externalAccessToken: { findUnique: async () => ({ createdById: "user-1" }) },
-  mcpChange: { findFirst: (...args: unknown[]) => history(...args) },
+  mcpChange: {
+    findFirst: (...args: unknown[]) => history(...args),
+    findMany: (...args: unknown[]) => historyList(...args),
+  },
   $transaction: (callback: (client: unknown) => unknown) => callback(tx),
 } }));
-const { createMcpTicket, createMcpEpic, updateMcpTickets, revertMcpChange, taskSnapshot, snapshotsMatch, parseTaskPatch } = await import("@/lib/mcp/writes");
+const { createMcpTicket, createMcpEpic, updateMcpTickets, revertMcpChange, listMcpChanges, taskSnapshot, snapshotsMatch, parseTaskPatch } = await import("@/lib/mcp/writes");
 const context: ExternalAccessContext = { tokenId: "token-1", organizationId: "org-1", boardId: "board-1", boardTitle: "Board", scopes: ["tickets:read", "tickets:write"], fullAccess: false, createdById: "user-1" };
 const task = { id: "task-1", title: "Original", description: null, listId: "list-1", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, assigneeId: null, qaId: null, epicId: null, quarter: null, shareToken: null, collaborators: [], labels: [], customValues: [], subtasks: [], comments: [], attachments: [], startDate: null, dueDate: null, updatedAt: new Date("2026-10-09T10:00:00.000Z") };
 beforeEach(() => {
@@ -47,7 +52,18 @@ beforeEach(() => {
   list.mockResolvedValue({ id: "list-1", boardId: "board-1", title: "Todo", board: { organizationId: "org-1" } });
   journal.mockResolvedValue({ id: "change-1" }); marked.mockResolvedValue({ count: 1 });
   history.mockResolvedValue({ id: "change-0", boardId: "board-1", organizationId: "org-1", kind: "update", before: [taskSnapshot({ ...task, title: "Before" })], after: [taskSnapshot(task)] });
+  historyList.mockResolvedValue([]);
 });
+
+const personalContext: ExternalAccessContext = {
+  tokenId: "token-personal",
+  organizationId: null,
+  boardId: null,
+  boardTitle: null,
+  scopes: ["tickets:read", "tickets:write"],
+  fullAccess: true,
+  createdById: "user-1",
+};
 describe("MCP task writes and revert guards", () => {
   it("rejects read-only credentials and users who lost board editing permission", async () => {
     const args = { updates: [{ ticketId: task.id, changes: { title: "Changed" } }] };
@@ -148,28 +164,66 @@ describe("MCP epic creation", () => {
     expect(epicCreate).not.toHaveBeenCalled();
   });
 
-  it("creates an epic on a full-access connection with boardId and admin checks", async () => {
-    const full = {
-      ...context,
-      organizationId: null,
-      boardId: null,
-      boardTitle: null,
-      fullAccess: true,
-    };
+  it("creates an epic on a personal connection with boardId and edit rights", async () => {
     credential.mockResolvedValue({
-      scopes: full.scopes,
+      scopes: personalContext.scopes,
       organizationId: null,
       boardId: null,
       fullAccess: true,
       createdById: "user-1",
     });
-    await expect(createMcpEpic(full, { title: "Migration" })).rejects.toThrow("boardId");
-    const result = await createMcpEpic(full, { title: "Migration", boardId: "board-1" });
-    expect(boardLookup.mock.calls[0][0].where).toMatchObject({ id: "board-1", OR: [{ userId: "user-1" }] });
+    await expect(createMcpEpic(personalContext, { title: "Migration" })).rejects.toThrow("boardId");
+    const result = await createMcpEpic(personalContext, { title: "Migration", boardId: "board-1" });
+    expect(boardLookup.mock.calls[0][0].where).toMatchObject({
+      id: "board-1",
+      OR: [{ userId: "user-1" }, { members: { some: { userId: "user-1" } } }],
+    });
     expect(result.epic).toMatchObject({ id: "epic-1", boardId: "board-1" });
-    expect(admin).toHaveBeenCalled();
-    expect(editable).not.toHaveBeenCalled();
+    expect(editable).toHaveBeenCalled();
+    expect(admin).not.toHaveBeenCalled();
+    editable.mockResolvedValue(false);
+    await expect(createMcpEpic(personalContext, { title: "Migration", boardId: "board-1" })).rejects.toThrow("permission");
+  });
+});
+
+describe("personal MCP membership rights", () => {
+  beforeEach(() => {
+    credential.mockResolvedValue({
+      scopes: personalContext.scopes,
+      organizationId: null,
+      boardId: null,
+      fullAccess: true,
+      createdById: "user-1",
+    });
+  });
+
+  it("lets a member create and update tickets on a personal connection", async () => {
+    await createMcpTicket(personalContext, { title: "New ticket", listId: "list-1" });
+    expect(create).toHaveBeenCalled();
+    expect(editable).toHaveBeenCalled();
+    await updateMcpTickets(personalContext, { updates: [{ ticketId: task.id, changes: { title: "Changed" } }] });
+    expect(update).toHaveBeenCalled();
+  });
+
+  it("blocks viewers from writing on a personal connection", async () => {
+    editable.mockResolvedValue(false);
+    await expect(
+      createMcpTicket(personalContext, { title: "New ticket", listId: "list-1" }),
+    ).rejects.toThrow("permission");
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("lists personal history only for boards the creator currently admins", async () => {
+    historyList.mockResolvedValue([{ id: "change-1" }]);
+    await listMcpChanges(personalContext);
+    expect(historyList.mock.calls[0][0].where).toEqual({ board: { OR: [{ userId: "user-1" }] } });
+  });
+
+  it("requires board admin to revert on a personal connection", async () => {
     admin.mockResolvedValue(false);
-    await expect(createMcpEpic(full, { title: "Migration", boardId: "board-1" })).rejects.toThrow("permission");
+    await expect(revertMcpChange(personalContext, "change-0", false)).rejects.toThrow("owner or admin");
+    expect(marked).not.toHaveBeenCalled();
+    admin.mockResolvedValue(true);
+    expect(await revertMcpChange(personalContext, "change-0", false)).toMatchObject({ preview: true });
   });
 });

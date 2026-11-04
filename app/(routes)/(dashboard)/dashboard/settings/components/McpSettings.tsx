@@ -48,7 +48,7 @@ type AccessTokenSummary = {
   board: { id: string; title: string } | null;
 };
 
-// Three distinct MCP scopes, narrow → broad: one board, one organization, or every board you admin.
+// Three distinct MCP scopes, narrow → broad: one board, one organization, or every board you can open.
 const SCOPES: { id: McpScope; labelKey: "mcpScopeOrganization" | "mcpScopeBoard" | "mcpScopeFull" }[] = [
   { id: "board", labelKey: "mcpScopeBoard" },
   { id: "organization", labelKey: "mcpScopeOrganization" },
@@ -92,9 +92,7 @@ export function McpSettings() {
         setOrganizations(data);
         setOrganizationId(data[0]?.id ?? "");
         setBoardId(data[0]?.boards[0]?.id ?? "");
-        setCanCreateFull(
-          data.some((org) => canManage(org.role) || org.boards.some((board) => board.canIssueToken)),
-        );
+        setCanCreateFull(data.some((org) => org.boards.length > 0));
       } catch {
         if (!cancelled) toast.error(t("mcpLoadError"));
       } finally {
@@ -117,7 +115,7 @@ export function McpSettings() {
   const endpoint = mcpScopeEndpoint(origin, scope, organization?.id, scope === "board" ? board?.id : undefined);
   const connectionName = mcpConnectionName(
     scope === "full"
-      ? "admin-access"
+      ? "my-boards"
       : scope === "board" && board
         ? board.title
         : organization?.name ?? "",
@@ -412,7 +410,7 @@ export function McpSettings() {
                   {creating && <Loader2 size={14} className="animate-spin" />}
                   {t("mcpCreateToken")}
                 </Button>
-                <p className="text-xs text-muted-foreground">{t("mcpAdminHint")}</p>
+                <p className="text-xs text-muted-foreground">{t(scope === "full" ? "mcpPersonalHint" : "mcpAdminHint")}</p>
               </div>
             </form>
 

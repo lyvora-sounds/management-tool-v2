@@ -11,6 +11,13 @@ const findTask = vi.fn();
 const findFields = vi.fn();
 const findAttachment = vi.fn();
 
+const getBoardRole = vi.fn();
+vi.mock("@/lib/boardAccess", () => ({
+  canReadBoard: async () => true,
+  getBoardRole: (...args: unknown[]) => getBoardRole(...args),
+  readableBoardWhere: (userId: string) => ({ OR: [{ userId }, { members: { some: { userId } } }] }),
+  adminBoardWhere: (userId: string) => ({ OR: [{ userId }] }),
+}));
 vi.mock("@/lib/db", () => ({
   default: {
     customField: { findMany: (...args: unknown[]) => findFields(...args) },
@@ -81,6 +88,7 @@ beforeEach(async () => {
   findTasks.mockResolvedValue([]);
   findFields.mockReset().mockResolvedValue([]);
   findAttachment.mockReset().mockResolvedValue(null);
+  getBoardRole.mockReset().mockResolvedValue("member");
   ({ client, server } = await connect(boardContext));
 });
 
@@ -146,9 +154,10 @@ describe("scoped MCP server", () => {
     }
   });
 
-  it("lists every admin board for a full-access credential and accepts an optional board filter", async () => {
+  it("lists every readable board for a personal credential with role capabilities and accepts an optional board filter", async () => {
     const extra = await connect(fullAccessContext);
     try {
+      getBoardRole.mockResolvedValueOnce("member").mockResolvedValueOnce("viewer");
       findBoards.mockResolvedValue([
         {
           id: "board-a",
@@ -158,11 +167,27 @@ describe("scoped MCP server", () => {
           organization: { id: "org-1", name: "Org" },
           accessMode: "organization",
           defaultRole: "member",
-          user: { id: "user-1", name: "Owner", email: "owner@test.invalid" },
+          memberCanAssign: false,
+          user: { id: "owner-1", name: "Owner", email: "owner@test.invalid" },
           labels: [],
           epics: [],
           customFields: [],
           list: [{ id: "list-1", title: "Todo" }],
+        },
+        {
+          id: "board-b",
+          title: "Beta",
+          description: null,
+          organizationId: "org-1",
+          organization: { id: "org-1", name: "Org" },
+          accessMode: "organization",
+          defaultRole: "viewer",
+          memberCanAssign: false,
+          user: { id: "owner-1", name: "Owner", email: "owner@test.invalid" },
+          labels: [],
+          epics: [],
+          customFields: [],
+          list: [{ id: "list-2", title: "Todo" }],
         },
       ]);
       const project = await extra.client.callTool({ name: "get_project", arguments: { presentation: { format: "text" } } });
@@ -171,7 +196,13 @@ describe("scoped MCP server", () => {
         where: expect.objectContaining({ OR: expect.any(Array) }),
       }));
       const body = JSON.parse(String((project.content as { type: string; text?: string }[])[0]?.text ?? "{}"));
-      expect(body).toMatchObject({ scope: "admin", boards: [{ id: "board-a" }] });
+      expect(body).toMatchObject({
+        scope: "personal",
+        boards: [
+          { id: "board-a", role: "member", canEdit: true, canAssign: false, canManage: false },
+          { id: "board-b", role: "viewer", canEdit: false, canAssign: false, canManage: false },
+        ],
+      });
 
       await extra.client.callTool({ name: "list_tickets", arguments: {} });
       expect(findTasks.mock.calls[0][0].where.list).toEqual({

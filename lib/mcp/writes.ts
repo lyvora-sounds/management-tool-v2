@@ -1,6 +1,6 @@
 import db from "@/lib/db";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { adminBoardWhere, canEditBoard, isBoardAdmin } from "@/lib/boardAccess";
+import { adminBoardWhere, canEditBoard, isBoardAdmin, readableBoardWhere } from "@/lib/boardAccess";
 import { type ExternalAccessContext, TICKETS_WRITE_SCOPE } from "@/lib/externalAccess";
 import { encodeLogMessage } from "@/lib/activityMessages";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
@@ -88,27 +88,40 @@ export function changeScope(context: ExternalAccessContext, organizationId?: str
 export function boardScope(context: ExternalAccessContext) {
   if (context.fullAccess) {
     if (!context.createdById) throw new McpWriteError("Full-access connection is missing its creator");
-    return adminBoardWhere(context.createdById);
+    return readableBoardWhere(context.createdById);
   }
   if (!context.organizationId) throw new McpWriteError("Connection is missing an organization");
   return { organizationId: context.organizationId, ...(context.boardId ? { id: context.boardId } : {}) };
 }
 
-async function writeActor(context: ExternalAccessContext, boardId: string, sessionActorId?: string) {
+/** Personal MCP history/revert mirrors Settings: only boards the creator currently admins. */
+function historyBoardScope(context: ExternalAccessContext) {
+  if (context.fullAccess) {
+    if (!context.createdById) throw new McpWriteError("Full-access connection is missing its creator");
+    return adminBoardWhere(context.createdById);
+  }
+  return boardScope(context);
+}
+
+async function writeActor(context: ExternalAccessContext, boardId: string, sessionActorId?: string, requireAdmin = false) {
   if (!context.scopes.includes(TICKETS_WRITE_SCOPE)) throw new McpWriteError("This connection is read-only. Create a read/write connection first.");
   let actorId = sessionActorId;
   if (!actorId) {
     const credential = await db.externalAccessToken.findUnique({ where: { id: context.tokenId }, select: { createdById: true } });
     actorId = credential?.createdById ?? undefined;
   }
-  // Full-access reach is admin boards only, so writes re-check admin (not member edit).
-  // Org/board tokens keep canEditBoard so an issued write credential still works for members.
   const allowed = actorId
-    ? context.fullAccess
+    ? requireAdmin
       ? await isBoardAdmin(actorId, boardId)
       : await canEditBoard(actorId, boardId)
     : false;
-  if (!actorId || !allowed) throw new McpWriteError("The connection creator no longer has permission to edit this board");
+  if (!actorId || !allowed) {
+    throw new McpWriteError(
+      requireAdmin
+        ? "Only a board owner or admin can revert MCP changes on this board"
+        : "The connection creator no longer has permission to edit this board",
+    );
+  }
   const user = await db.user.findUnique({ where: { id: actorId }, select: { id: true, name: true, email: true } });
   if (!user) throw new McpWriteError("Connection creator not found");
   return { id: user.id, name: user.name ?? user.email };
@@ -283,10 +296,9 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
 }
 
 function historyScope(context: ExternalAccessContext) {
-  // Same idea as org/board tokens: every MCP change in the reachable boards, not only this token.
+  // Org/board: every MCP change in the token scope. Personal: admin boards only (Settings ACL).
   if (context.fullAccess) {
-    if (!context.createdById) throw new McpWriteError("Full-access connection is missing its creator");
-    return { board: boardScope(context) };
+    return { board: historyBoardScope(context) };
   }
   return changeScope(context);
 }
@@ -303,7 +315,8 @@ export async function revertMcpChange(context: ExternalAccessContext, changeId: 
   });
   if (!change) throw new McpWriteError("Change not found in this connection");
   if (change.revertedAt) throw new McpWriteError("This change has already been reverted");
-  const actor = await writeActor(context, change.boardId, sessionActorId);
+  // Personal tokens: revert requires admin on that board (same as Settings history).
+  const actor = await writeActor(context, change.boardId, sessionActorId, context.fullAccess);
   const before = change.before as unknown as Snapshot[];
   const after = change.after as unknown as Snapshot[];
   if (!confirm) return { changeId: change.id, preview: true, operation: change.kind === "create" ? "Archive created tickets" : "Restore previous task fields", before, after };

@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import db from "@/lib/db";
-import { adminBoardWhere } from "@/lib/boardAccess";
+import { readableBoardWhere } from "@/lib/boardAccess";
 import {
   createExternalAccessToken,
   readTokenRequest,
@@ -51,13 +51,13 @@ export async function POST(request: Request) {
     return Response.json({ error: parsed.error }, { status: 400, headers });
   }
 
-  const adminBoard = await db.board.findFirst({
-    where: adminBoardWhere(user.id),
+  const accessibleBoard = await db.board.findFirst({
+    where: readableBoardWhere(user.id),
     select: { id: true },
   });
-  if (!adminBoard) {
+  if (!accessibleBoard) {
     return Response.json(
-      { error: "Only an owner or admin can create a full-access token" },
+      { error: "You need access to at least one board to create a personal MCP token" },
       { status: 403, headers },
     );
   }
