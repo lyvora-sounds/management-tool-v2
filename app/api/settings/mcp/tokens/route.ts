@@ -1,5 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
 import db from "@/lib/db";
+import { readableBoardWhere } from "@/lib/boardAccess";
+import {
+  createExternalAccessToken,
+  readTokenRequest,
+  TICKETS_READ_SCOPE,
+  TICKETS_WRITE_SCOPE,
+} from "@/lib/externalAccess";
 import { isValidRequestOrigin } from "@/lib/mcp/oauthConfig";
 
 const headers = { "cache-control": "no-store" };
@@ -8,6 +15,7 @@ const select = {
   name: true,
   tokenPrefix: true,
   scopes: true,
+  fullAccess: true,
   expiresAt: true,
   lastUsedAt: true,
   createdAt: true,
@@ -29,6 +37,50 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
   return Response.json(tokens, { headers });
+}
+
+export async function POST(request: Request) {
+  const user = await actor();
+  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers });
+  if (!isValidRequestOrigin(request)) {
+    return Response.json({ error: "Invalid origin" }, { status: 403, headers });
+  }
+
+  const parsed = readTokenRequest(await request.json().catch(() => null));
+  if ("error" in parsed) {
+    return Response.json({ error: parsed.error }, { status: 400, headers });
+  }
+
+  const accessibleBoard = await db.board.findFirst({
+    where: readableBoardWhere(user.id),
+    select: { id: true },
+  });
+  if (!accessibleBoard) {
+    return Response.json(
+      { error: "You need access to at least one board to create a personal MCP token" },
+      { status: 403, headers },
+    );
+  }
+
+  const generated = createExternalAccessToken();
+  const created = await db.externalAccessToken.create({
+    data: {
+      name: parsed.name,
+      tokenHash: generated.hash,
+      tokenPrefix: generated.prefix,
+      scopes: parsed.access === "write" ? [TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE] : [TICKETS_READ_SCOPE],
+      fullAccess: true,
+      allEnvironments: true,
+      environments: [],
+      expiresAt: parsed.expiresAt,
+      organizationId: null,
+      boardId: null,
+      createdById: user.id,
+    },
+    select,
+  });
+
+  return Response.json({ ...created, token: generated.token }, { status: 201, headers });
 }
 
 export async function DELETE(request: Request) {

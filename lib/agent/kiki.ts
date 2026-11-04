@@ -2,7 +2,7 @@ import db from "@/lib/db";
 import { queryLlm } from "@/lib/ai/engine";
 import { getUserAiCredentials } from "@/lib/ai/getUserAiCredentials";
 import { encodeLogMessage } from "@/lib/activityMessages";
-import { TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE, type ExternalAccessContext } from "@/lib/externalAccess";
+import { sessionAccessContext } from "@/lib/externalAccess";
 import { McpWriteError, updateMcpTickets } from "@/lib/mcp/writes";
 import { buildPatch, KIKI_NAME, MENTION, parseReply, type Reply } from "./parse";
 
@@ -145,7 +145,7 @@ export async function runKiki({ taskId, invokerId }: { taskId: string; invokerId
     try {
       const patch = buildPatch(result.changes, { lists, labels, members, task });
       if (patch) {
-        const context: ExternalAccessContext = { tokenId: "", organizationId: board.organizationId, boardId: board.id, boardTitle: board.title, scopes: [TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE] };
+        const context = sessionAccessContext({ organizationId: board.organizationId, boardId: board.id, boardTitle: board.title });
         const applied = await updateMcpTickets(context, { updates: [{ ticketId: taskId, changes: patch }], summary: `Kiki: ${result.summary || task.title}`.slice(0, 500) }, invokerId);
         // SQL directo: un update de Prisma movería `updatedAt` y la instantánea del cambio ya no coincidiría.
         await db.$executeRaw`UPDATE "Comment" SET "agentChangeId" = ${applied.changeId} WHERE "id" = ${comment.id}`;

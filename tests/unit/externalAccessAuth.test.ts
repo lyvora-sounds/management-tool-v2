@@ -31,6 +31,8 @@ function credential(overrides: Record<string, unknown> = {}) {
     organizationId: "org-1",
     boardId: "board-1",
     scopes: ["tickets:read"],
+    fullAccess: false,
+    createdById: "user-1",
     expiresAt: null,
     revokedAt: null,
     board: { title: "Checkout", organizationId: "org-1" },
@@ -71,8 +73,39 @@ describe("authenticateExternalAccess", () => {
       boardId: "board-1",
       boardTitle: "Checkout",
       scopes: ["tickets:read"],
+      fullAccess: false,
+      createdById: "user-1",
     });
     expect(updateToken).not.toHaveBeenCalled();
+  });
+
+  it("accepts a full-access credential only on the canonical MCP endpoint", async () => {
+    const generated = createExternalAccessToken();
+    findUniqueToken.mockResolvedValue(credential({
+      fullAccess: true,
+      organizationId: null,
+      boardId: null,
+      board: null,
+    }));
+    await expect(authenticateExternalAccess(request(generated.token))).resolves.toMatchObject({
+      fullAccess: true,
+      organizationId: null,
+      boardId: null,
+      createdById: "user-1",
+    });
+    await expect(authenticateExternalAccess(request(generated.token), undefined, { kind: "organization", organizationId: "org-1" })).resolves.toBeNull();
+  });
+
+  it("rejects a full-access credential without a creator", async () => {
+    const generated = createExternalAccessToken();
+    findUniqueToken.mockResolvedValue(credential({
+      fullAccess: true,
+      organizationId: null,
+      boardId: null,
+      board: null,
+      createdById: null,
+    }));
+    await expect(authenticateExternalAccess(request(generated.token))).resolves.toBeNull();
   });
 
   it("accepts an organization credential that has no board", async () => {

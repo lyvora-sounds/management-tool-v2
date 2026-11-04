@@ -8,11 +8,31 @@ const TOKEN_PREFIX = "kiki_";
 
 export type ExternalAccessContext = {
   tokenId: string;
-  organizationId: string;
+  organizationId: string | null;
   boardId: string | null;
   boardTitle: string | null;
   scopes: string[];
+  fullAccess: boolean;
+  createdById: string | null;
 };
+
+/** Session/agent writes that are not bound to an MCP credential. */
+export function sessionAccessContext(input: {
+  organizationId: string;
+  boardId: string | null;
+  boardTitle?: string | null;
+  scopes?: string[];
+}): ExternalAccessContext {
+  return {
+    tokenId: "",
+    organizationId: input.organizationId,
+    boardId: input.boardId,
+    boardTitle: input.boardTitle ?? null,
+    scopes: input.scopes ?? [TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE],
+    fullAccess: false,
+    createdById: null,
+  };
+}
 
 export type TokenRequest = {
   name: string;
@@ -71,8 +91,8 @@ export async function authenticateExternalAccess(
   if (!rawToken?.startsWith(TOKEN_PREFIX)) return null;
 
   const credentialSelect = {
-    id: true, organizationId: true, boardId: true, scopes: true,
-    expiresAt: true, revokedAt: true,
+    id: true, organizationId: true, boardId: true, scopes: true, fullAccess: true,
+    createdById: true, expiresAt: true, revokedAt: true,
     board: { select: { title: true, organizationId: true } },
   } as const;
   let credential;
@@ -105,7 +125,11 @@ export async function authenticateExternalAccess(
     return null;
   }
 
-  if (credential.boardId) {
+  if (credential.fullAccess) {
+    if (credential.organizationId || credential.boardId || !credential.createdById) return null;
+  } else if (!credential.organizationId) {
+    return null;
+  } else if (credential.boardId) {
     if (!credential.board || credential.board.organizationId !== credential.organizationId) {
       return null;
     }
@@ -118,6 +142,8 @@ export async function authenticateExternalAccess(
     boardId: credential.boardId,
     boardTitle: credential.board?.title ?? null,
     scopes: credential.scopes,
+    fullAccess: credential.fullAccess,
+    createdById: credential.createdById,
   };
 }
 

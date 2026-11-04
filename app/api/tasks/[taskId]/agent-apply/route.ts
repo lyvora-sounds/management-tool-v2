@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { canEditBoard } from "@/lib/boardAccess";
-import { TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE, type ExternalAccessContext } from "@/lib/externalAccess";
+import { sessionAccessContext } from "@/lib/externalAccess";
 import { McpWriteError, updateMcpTickets } from "@/lib/mcp/writes";
 
 const headers = { "cache-control": "no-store" };
@@ -36,7 +36,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ taskId:
   const claimed = await db.$executeRaw`UPDATE "Comment" SET "agentSuggestion" = jsonb_set("agentSuggestion", '{applied}', 'true') WHERE "id" = ${body.commentId} AND ("agentSuggestion"->>'applied') = 'false'`;
   if (claimed !== 1) return NextResponse.json({ error: "Already applied" }, { status: 409, headers });
 
-  const context: ExternalAccessContext = { tokenId: "", organizationId: board.organizationId, boardId: board.id, boardTitle: board.title, scopes: [TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE] };
+  const context = sessionAccessContext({ organizationId: board.organizationId, boardId: board.id, boardTitle: board.title });
   try {
     const applied = await updateMcpTickets(context, { updates: [{ ticketId: taskId, changes: suggestion.changes }], summary: "Kiki: triage" }, user.id);
     await db.$executeRaw`UPDATE "Comment" SET "agentChangeId" = ${applied.changeId} WHERE "id" = ${body.commentId}`;

@@ -92,9 +92,11 @@ export function mcpProtectedResourceDocument(audience: McpAudience) {
 }
 
 export function credentialMatchesAudience(
-  credential: { organizationId: string; boardId: string | null },
+  credential: { organizationId: string | null; boardId: string | null; fullAccess?: boolean },
   audience: McpAudience,
 ) {
+  // Full-access tokens only use the canonical /api/mcp endpoint; scoped URLs keep a single org/board bound.
+  if (credential.fullAccess) return audience.kind === "canonical";
   if (audience.kind === "canonical") return true;
   if (audience.kind === "organization") return credential.organizationId === audience.organizationId && credential.boardId == null;
   return credential.boardId === audience.boardId;

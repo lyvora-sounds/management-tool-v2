@@ -1,6 +1,6 @@
 import db from "@/lib/db";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { canEditBoard } from "@/lib/boardAccess";
+import { adminBoardWhere, canEditBoard, isBoardAdmin, readableBoardWhere } from "@/lib/boardAccess";
 import { type ExternalAccessContext, TICKETS_WRITE_SCOPE } from "@/lib/externalAccess";
 import { encodeLogMessage } from "@/lib/activityMessages";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
@@ -76,22 +76,52 @@ export function parseTaskPatch(value: unknown): Patch {
   return patch;
 }
 
-export function changeScope(context: ExternalAccessContext) {
+export function changeScope(context: ExternalAccessContext, organizationId?: string) {
+  if (context.fullAccess) {
+    if (!organizationId) throw new McpWriteError("Board organization is required for a full-access connection");
+    return { organizationId };
+  }
+  if (!context.organizationId) throw new McpWriteError("Connection is missing an organization");
   return { organizationId: context.organizationId, ...(context.boardId ? { boardId: context.boardId } : {}) };
 }
 
-function boardScope(context: ExternalAccessContext) {
+export function boardScope(context: ExternalAccessContext) {
+  if (context.fullAccess) {
+    if (!context.createdById) throw new McpWriteError("Full-access connection is missing its creator");
+    return readableBoardWhere(context.createdById);
+  }
+  if (!context.organizationId) throw new McpWriteError("Connection is missing an organization");
   return { organizationId: context.organizationId, ...(context.boardId ? { id: context.boardId } : {}) };
 }
 
-async function writeActor(context: ExternalAccessContext, boardId: string, sessionActorId?: string) {
+/** Personal MCP history/revert mirrors Settings: only boards the creator currently admins. */
+function historyBoardScope(context: ExternalAccessContext) {
+  if (context.fullAccess) {
+    if (!context.createdById) throw new McpWriteError("Full-access connection is missing its creator");
+    return adminBoardWhere(context.createdById);
+  }
+  return boardScope(context);
+}
+
+async function writeActor(context: ExternalAccessContext, boardId: string, sessionActorId?: string, requireAdmin = false) {
   if (!context.scopes.includes(TICKETS_WRITE_SCOPE)) throw new McpWriteError("This connection is read-only. Create a read/write connection first.");
   let actorId = sessionActorId;
   if (!actorId) {
     const credential = await db.externalAccessToken.findUnique({ where: { id: context.tokenId }, select: { createdById: true } });
     actorId = credential?.createdById ?? undefined;
   }
-  if (!actorId || !(await canEditBoard(actorId, boardId))) throw new McpWriteError("The connection creator no longer has permission to edit this board");
+  const allowed = actorId
+    ? requireAdmin
+      ? await isBoardAdmin(actorId, boardId)
+      : await canEditBoard(actorId, boardId)
+    : false;
+  if (!actorId || !allowed) {
+    throw new McpWriteError(
+      requireAdmin
+        ? "Only a board owner or admin can revert MCP changes on this board"
+        : "The connection creator no longer has permission to edit this board",
+    );
+  }
   const user = await db.user.findUnique({ where: { id: actorId }, select: { id: true, name: true, email: true } });
   if (!user) throw new McpWriteError("Connection creator not found");
   return { id: user.id, name: user.name ?? user.email };
@@ -100,8 +130,16 @@ async function writeActor(context: ExternalAccessContext, boardId: string, sessi
 async function validateCredential(tx: Prisma.TransactionClient, context: ExternalAccessContext, sessionActorId?: string) {
   if (sessionActorId) return;
   const token = await tx.externalAccessToken.findUnique({ where: { id: context.tokenId } });
-  if (!token || token.revokedAt || (token.expiresAt && token.expiresAt <= new Date()) ||
-    !token.scopes.includes(TICKETS_WRITE_SCOPE) || token.organizationId !== context.organizationId || token.boardId !== context.boardId) {
+  if (!token || token.revokedAt || (token.expiresAt && token.expiresAt <= new Date()) || !token.scopes.includes(TICKETS_WRITE_SCOPE)) {
+    throw new McpWriteError("Write credential is expired, revoked or outside this scope");
+  }
+  if (context.fullAccess) {
+    if (!token.fullAccess || token.organizationId || token.boardId || token.createdById !== context.createdById) {
+      throw new McpWriteError("Write credential is expired, revoked or outside this scope");
+    }
+    return;
+  }
+  if (token.organizationId !== context.organizationId || token.boardId !== context.boardId || token.fullAccess) {
     throw new McpWriteError("Write credential is expired, revoked or outside this scope");
   }
 }
@@ -126,7 +164,10 @@ export async function createMcpTicket(context: ExternalAccessContext, args: Reco
   const patch = parseTaskPatch(input);
   if ((patch.attachments ?? []).reduce((size, attachment) => size + (attachment.contentBase64 ? Buffer.byteLength(attachment.contentBase64, "base64") : 0), 0) > 5 * 1024 * 1024) throw new McpWriteError("Total upload size must not exceed 5 MiB");
   if (!patch.title || !patch.listId) throw new McpWriteError("title and listId are required");
-  const list = await db.list.findFirst({ where: { id: patch.listId!, board: boardScope(context) }, select: { boardId: true } });
+  const list = await db.list.findFirst({
+    where: { id: patch.listId!, board: boardScope(context) },
+    select: { boardId: true, board: { select: { organizationId: true } } },
+  });
   if (!list) throw new McpWriteError("List not found in this connection");
   const actor = await writeActor(context, list.boardId);
   const uploaded: string[] = [];
@@ -151,7 +192,7 @@ export async function createMcpTicket(context: ExternalAccessContext, args: Reco
       await applyTicketRelations(tx, list.boardId, actor, { ...task, assigneeId: null, qaId: null }, patch, capture, uploaded);
       const created = await tx.task.findUniqueOrThrow({ where: { id: task.id }, select });
       const relatedAfter = await Promise.all([...relatedBefore.keys()].map(id => tx.task.findUniqueOrThrow({ where: { id }, select })));
-      const change = await tx.mcpChange.create({ data: { ...changeScope(context), boardId: list.boardId, tokenId: context.tokenId, actorId: actor.id, kind: "create", summary: summary(args.summary, `Create: ${task.title}`), before: [...relatedBefore.values()], after: [taskSnapshot(created), ...relatedAfter.map(taskSnapshot)] } });
+      const change = await tx.mcpChange.create({ data: { ...changeScope(context, list.board.organizationId), boardId: list.boardId, tokenId: context.tokenId, actorId: actor.id, kind: "create", summary: summary(args.summary, `Create: ${task.title}`), before: [...relatedBefore.values()], after: [taskSnapshot(created), ...relatedAfter.map(taskSnapshot)] } });
       await activity(tx, list.boardId, actor, "activity.mcpCreated", 1);
       return { changeId: change.id, ticket: taskSnapshot(created) };
     }, { isolationLevel: "Serializable", timeout: 60000 });
@@ -174,7 +215,7 @@ export async function createMcpEpic(context: ExternalAccessContext, args: Record
   if (args.boardId !== undefined && (typeof args.boardId !== "string" || !args.boardId.trim() || args.boardId.length > 200)) throw new McpWriteError("Invalid boardId");
   const requestedBoardId = typeof args.boardId === "string" ? args.boardId.trim() : undefined;
   const boardId = context.boardId ?? requestedBoardId;
-  if (!boardId) throw new McpWriteError("boardId is required for an organization connection");
+  if (!boardId) throw new McpWriteError("boardId is required for an organization or full-access connection");
   if (context.boardId && requestedBoardId && requestedBoardId !== context.boardId) throw new McpWriteError("Board not found in this connection");
   const board = await db.board.findFirst({ where: { id: boardId, ...boardScope(context) }, select: { id: true } });
   if (!board) throw new McpWriteError("Board not found in this connection");
@@ -203,9 +244,13 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
   const uploadBytes = updates.reduce((total, row) => total + (row.patch.attachments ?? []).reduce((size, attachment) => size + (attachment.contentBase64 ? Buffer.byteLength(attachment.contentBase64, "base64") : 0), 0), 0);
   if (uploadBytes > 5 * 1024 * 1024) throw new McpWriteError("Total upload size must not exceed 5 MiB per batch");
   if (new Set(updates.map((item) => item.id)).size !== updates.length) throw new McpWriteError("Duplicate ticket IDs");
-  const board = await db.task.findFirst({ where: { id: updates[0].id, list: { board: boardScope(context) } }, select: { list: { select: { boardId: true } } } });
+  const board = await db.task.findFirst({
+    where: { id: updates[0].id, list: { board: boardScope(context) } },
+    select: { list: { select: { boardId: true, board: { select: { organizationId: true } } } } },
+  });
   if (!board) throw new McpWriteError("Ticket not found in this connection");
   const boardId = board.list.boardId;
+  const organizationId = board.list.board.organizationId;
   const actor = await writeActor(context, boardId, sessionActorId);
   const uploaded: string[] = [];
   let result;
@@ -241,7 +286,7 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
       }
       const before = [...captured.values()];
       const after = await Promise.all(before.map(row => tx.task.findUniqueOrThrow({ where: { id: row.id }, select })));
-      const change = await tx.mcpChange.create({ data: { ...changeScope(context), boardId, tokenId: context.tokenId || null, actorId: actor.id, kind: "update", summary: summary(args.summary, `Update ${updates.length} tickets`), before, after: after.map(taskSnapshot) } });
+      const change = await tx.mcpChange.create({ data: { ...changeScope(context, organizationId), boardId, tokenId: context.tokenId || null, actorId: actor.id, kind: "update", summary: summary(args.summary, `Update ${updates.length} tickets`), before, after: after.map(taskSnapshot) } });
       await activity(tx, boardId, actor, "activity.mcpUpdated", updates.length);
       return { changeId: change.id, before, after };
     }, { isolationLevel: "Serializable", timeout: 60000 });
@@ -250,16 +295,28 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
   return { changeId: result.changeId, tickets: result.after.map(taskSnapshot) };
 }
 
+function historyScope(context: ExternalAccessContext) {
+  // Org/board: every MCP change in the token scope. Personal: admin boards only (Settings ACL).
+  if (context.fullAccess) {
+    return { board: historyBoardScope(context) };
+  }
+  return changeScope(context);
+}
+
 export async function listMcpChanges(context: ExternalAccessContext) {
-  return db.mcpChange.findMany({ where: changeScope(context), orderBy: { createdAt: "desc" }, take: 50,
+  return db.mcpChange.findMany({ where: historyScope(context), orderBy: { createdAt: "desc" }, take: 50,
     select: { id: true, boardId: true, kind: true, summary: true, createdAt: true, revertedAt: true, revertsChangeId: true } });
 }
 
 export async function revertMcpChange(context: ExternalAccessContext, changeId: string, confirm: boolean, sessionActorId?: string) {
-  const change = await db.mcpChange.findFirst({ where: { id: changeId, ...changeScope(context) } });
+  const change = await db.mcpChange.findFirst({
+    where: { id: changeId, ...historyScope(context) },
+    select: { id: true, boardId: true, kind: true, before: true, after: true, revertedAt: true, organizationId: true },
+  });
   if (!change) throw new McpWriteError("Change not found in this connection");
   if (change.revertedAt) throw new McpWriteError("This change has already been reverted");
-  const actor = await writeActor(context, change.boardId, sessionActorId);
+  // Personal tokens: revert requires admin on that board (same as Settings history).
+  const actor = await writeActor(context, change.boardId, sessionActorId, context.fullAccess);
   const before = change.before as unknown as Snapshot[];
   const after = change.after as unknown as Snapshot[];
   if (!confirm) return { changeId: change.id, preview: true, operation: change.kind === "create" ? "Archive created tickets" : "Restore previous task fields", before, after };
@@ -299,7 +356,7 @@ export async function revertMcpChange(context: ExternalAccessContext, changeId: 
       if (previous) await restoreTicketRelations(tx, change.boardId, actor, current, previous);
       restored.push(await tx.task.findUniqueOrThrow({ where: { id: expected.id }, select }));
     }
-    const undo = await tx.mcpChange.create({ data: { ...changeScope(context), boardId: change.boardId, tokenId: context.tokenId || null, actorId: actor.id, kind: "revert", summary: `Revert ${change.id}`, before: after, after: restored.map(taskSnapshot), revertsChangeId: change.id } });
+    const undo = await tx.mcpChange.create({ data: { ...changeScope(context, change.organizationId), boardId: change.boardId, tokenId: context.tokenId || null, actorId: actor.id, kind: "revert", summary: `Revert ${change.id}`, before: after, after: restored.map(taskSnapshot), revertsChangeId: change.id } });
     await activity(tx, change.boardId, actor, "activity.mcpReverted", after.length);
     return { changeId: undo.id, restored };
   }, { isolationLevel: "Serializable" });
