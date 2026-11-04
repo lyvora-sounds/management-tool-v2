@@ -6,6 +6,7 @@ import { createMcpTicket, createMcpEpic, updateMcpTickets, listMcpChanges, rever
 
 import { relationSchema } from "./ticketRelations";
 import { informationResponse, presentationSchema, SVG_CAPABILITY } from "./presentation";
+import { MCP_SERVER_INSTRUCTIONS, ticketDevelopment } from "./ticketDevelopment";
 import { canReadBoard, getBoardRole } from "@/lib/boardAccess";
 import {
   canEditBoard as roleCanEditBoard,
@@ -99,13 +100,23 @@ function toTicketDetail(task: {
 const listSelect = {
   id: true,
   title: true,
-  board: { select: { id: true, title: true } },
+  board: {
+    select: {
+      id: true,
+      title: true,
+      key: true,
+      organization: { select: { githubConnection: { select: { branch: true } } } },
+    },
+  },
 } as const;
 
 export function createScopedMcpServer(context: ExternalAccessContext) {
   const server = new Server(
     { name: "kikiboard", version: "1.2.0" },
-    { capabilities: { tools: {}, experimental: { [SVG_CAPABILITY]: { supported: true, links: true } } } },
+    {
+      capabilities: { tools: {}, experimental: { [SVG_CAPABILITY]: { supported: true, links: true } } },
+      instructions: MCP_SERVER_INSTRUCTIONS,
+    },
   );
   const scopeDescription = context.boardId
     ? "the single board bound to this connection"
@@ -128,7 +139,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
         annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
         _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
-        description: `List tickets on ${scopeDescription}. By default, returns a ready-to-display Markdown table grouped by board, with colored status and priority emoji, assignees, QA, due dates and ticket links. Present the returned table to the user, preserving its columns, links and emoji rather than replacing it with a plain list. Full original records are also available in structuredContent.data. Raw JSON text and SVG are explicit presentation options.`,
+        description: `List tickets on ${scopeDescription}. Returns the newest tickets first (createdAt descending). By default, returns a ready-to-display Markdown table grouped by board, with colored status and priority emoji, assignees, QA, created/due dates and ticket links. Each row includes createdAt so agents can track creation time when batching updates. Present the returned table to the user, preserving its columns, links and emoji rather than replacing it with a plain list. Full original records are also available in structuredContent.data. Raw JSON text and SVG are explicit presentation options.`,
         inputSchema: {
           type: "object",
           additionalProperties: false,
@@ -150,7 +161,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
         annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
         _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
-        description: `Get all ticket details, people, checklist, comments, attachment metadata and custom field definitions/values when the ticket belongs to ${scopeDescription}.`,
+        description: `Get all ticket details, people, checklist, comments, attachment metadata, custom field definitions/values, and development (ticketKey, suggestedBranch, checkout command) when the ticket belongs to ${scopeDescription}. When implementing the ticket, use development.suggestedBranch as the git branch and PR head; PR title defaults to the ticket title.`,
         inputSchema: {
           type: "object",
           additionalProperties: false,
@@ -338,25 +349,28 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
             ? { title: { contains: args.query.trim(), mode: "insensitive" as const } }
             : {}),
         },
-        orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
+        orderBy: [{ createdAt: "desc" }, { id: "asc" }],
         take: limit,
         ...(typeof args.cursor === "string" ? { cursor: { id: args.cursor }, skip: 1 } : {}),
         select: {
           id: true,
           title: true,
+          number: true,
           completed: true,
           priority: true,
           startDate: true,
           dueDate: true,
           quarter: true,
           assigneeId: true, qaId: true, assignee: { select: userSelect }, qa: { select: userSelect },
+          createdAt: true,
           updatedAt: true,
           list: { select: listSelect },
         },
       });
       return information(tasks.map(({ list, ...task }) => ({
         ...task,
-        board: list.board,
+        development: ticketDevelopment({ title: task.title, number: task.number, list }),
+        board: { id: list.board.id, title: list.board.title },
         list: { id: list.id, title: list.title },
       })));
     }
@@ -378,6 +392,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         select: {
           id: true,
           title: true,
+          number: true,
           description: true,
           completed: true,
           priority: true,
@@ -414,9 +429,10 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       const detail = toTicketDetail(ticket);
       return information({
         ...detail,
+        development: ticketDevelopment({ title: task.title, number: task.number, list }),
         customFields: definitions.length ? definitions.map(field => ({ id: field.id, name: field.name, key: field.defaultKey, type: field.type, options: field.options, enabled: field.enabled, value: task.customValues.find(row => row.customField.id === field.id)?.value ?? null })) : detail.customFields,
         collaborators: ticket.collaborators?.map(row => row.user) ?? [],
-        board: list.board,
+        board: { id: list.board.id, title: list.board.title },
         list: { id: list.id, title: list.title },
       });
     }

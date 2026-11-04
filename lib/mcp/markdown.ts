@@ -42,15 +42,22 @@ export function markdownInformation(tool: string, data: unknown, origin?: string
       if (!groups.has(key)) groups.set(key, { board: markdownText(board.title, "Board"), rows: [] });
       groups.get(key)!.rows.push(row);
     }
-    const rank: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+    const createdMs = (row: Row) => {
+      const parsed = new Date(String(row.createdAt ?? ""));
+      return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+    };
     const tables = [...groups.values()].map(group => {
-      group.rows.sort((a, b) => Number(a.completed === true) - Number(b.completed === true) || (rank[String(a.priority)] ?? 4) - (rank[String(b.priority)] ?? 4) || String(record(a.list).title ?? "").localeCompare(String(record(b.list).title ?? "")) || String(a.title ?? "").localeCompare(String(b.title ?? "")));
-      return `### 📋 ${group.board}\n\n| Ticket | Status | Priority | List | Assignee | QA | Due date |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n` + group.rows.map(row => `| ${ticketTitle(row, origin)} | ${status(row)} | ${priority(row.priority)} | ${markdownText(record(row.list).title)} | ${markdownText(record(row.assignee).name, "👤 Unassigned")} | ${markdownText(record(row.qa).name)} | ${date(row.dueDate)} |`).join("\n");
+      group.rows.sort((a, b) => Number(a.completed === true) - Number(b.completed === true) || createdMs(b) - createdMs(a) || String(a.title ?? "").localeCompare(String(b.title ?? "")));
+      return `### 📋 ${group.board}\n\n| Ticket | Status | Priority | List | Assignee | QA | Created | Due date |\n| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n` + group.rows.map(row => `| ${ticketTitle(row, origin)} | ${status(row)} | ${priority(row.priority)} | ${markdownText(record(row.list).title)} | ${markdownText(record(row.assignee).name, "👤 Unassigned")} | ${markdownText(record(row.qa).name)} | ${date(row.createdAt)} | ${date(row.dueDate)} |`).join("\n");
     });
-    body = `## 🎟️ Tickets\n\n**${rows.length} total** · 🟡 **${rows.length - done} pending** · 🟢 **${done} done**\n\n${tables.join("\n\n") || "No tickets match this request."}\n\n_Status includes the current workflow list; completed tickets always show Done. Showing this response only; use cursor for further pages._`;
+    body = `## 🎟️ Tickets\n\n**${rows.length} total** · 🟡 **${rows.length - done} pending** · 🟢 **${done} done**\n\n${tables.join("\n\n") || "No tickets match this request."}\n\n_Status includes the current workflow list; completed tickets always show Done. Newest created first within each board. Showing this response only; use cursor for further pages._`;
   } else if (tool === "get_ticket") {
     const row = record(data);
-    body = `## 🎟️ ${ticketTitle(row, origin)}\n\n${status(row)} · ${priority(row.priority)}\n\n**Board:** ${markdownText(record(row.board).title)} · **List:** ${markdownText(record(row.list).title)}\n\n**👤 Assignee:** ${markdownText(record(row.assignee).name, "Unassigned")} · **📅 Due:** ${date(row.dueDate)}\n\n### Ticket details\n\n${details(data).join("\n")}`;
+    const development = record(row.development);
+    const branchLine = development.suggestedBranch
+      ? `\n\n**🔑 Key:** ${markdownText(development.ticketKey)} · **🌿 Branch / PR head:** \`${markdownText(development.suggestedBranch)}\`${development.command ? ` · \`${markdownText(development.command)}\`` : ""}`
+      : "";
+    body = `## 🎟️ ${ticketTitle(row, origin)}\n\n${status(row)} · ${priority(row.priority)}${branchLine}\n\n**Board:** ${markdownText(record(row.board).title)} · **List:** ${markdownText(record(row.list).title)}\n\n**👤 Assignee:** ${markdownText(record(row.assignee).name, "Unassigned")} · **📅 Due:** ${date(row.dueDate)}\n\n### Ticket details\n\n${details(data).join("\n")}`;
   } else {
     body = `## ${tool === "get_project" ? "🏢 Project" : "🕘 Change history"}\n\n${details(data).join("\n")}`;
   }

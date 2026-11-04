@@ -7,6 +7,7 @@ import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
 import { cleanupTicketUploads, applyTicketRelations, parseRelationPatch, relationSelect, restoreTicketRelations, validateTicketRelations } from "./ticketRelations";
 import { isDoneList } from "@/lib/statusTheme";
 import { takeTicketNumber } from "@/lib/integrations/ticketBranch";
+import { ticketDevelopment } from "./ticketDevelopment";
 
 export class McpWriteError extends Error {}
 
@@ -198,7 +199,29 @@ export async function createMcpTicket(context: ExternalAccessContext, args: Reco
     }, { isolationLevel: "Serializable", timeout: 60000 });
   } catch (error) { await cleanupTicketUploads(uploaded); throw error; }
   if (result.ticket.completed) await sendBoardWebhookNotification({ boardId: list.boardId, eventType: "task_completed", taskTitle: result.ticket.title, priority: result.ticket.priority, userName: actor.name });
-  return result;
+  const createdMeta = await db.task.findUnique({
+    where: { id: result.ticket.id },
+    select: {
+      title: true,
+      number: true,
+      list: {
+        select: {
+          board: {
+            select: {
+              key: true,
+              organization: { select: { githubConnection: { select: { branch: true } } } },
+            },
+          },
+        },
+      },
+    },
+  });
+  return {
+    ...result,
+    development: createdMeta
+      ? ticketDevelopment({ title: createdMeta.title, number: createdMeta.number, list: createdMeta.list })
+      : null,
+  };
 }
 
 export async function createMcpEpic(context: ExternalAccessContext, args: Record<string, unknown>) {
