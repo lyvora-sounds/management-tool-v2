@@ -21,7 +21,7 @@ import { mcpConnectionName, mcpScopeEndpoint } from "@/lib/mcp/connectionName";
 import { McpConnectionGuide } from "./McpConnectionGuide";
 import { McpChangeHistory } from "./McpChangeHistory";
 
-type McpScope = "organization" | "board";
+type McpScope = "organization" | "board" | "full";
 
 type BoardSummary = {
   id: string;
@@ -43,13 +43,16 @@ type AccessTokenSummary = {
   lastUsedAt: string | null;
   createdAt: string;
   scopes: string[];
-  organization: { id: string; name: string };
+  fullAccess?: boolean;
+  organization: { id: string; name: string } | null;
   board: { id: string; title: string } | null;
 };
 
-const SCOPES: { id: McpScope; labelKey: "mcpScopeOrganization" | "mcpScopeBoard" }[] = [
-  { id: "organization", labelKey: "mcpScopeOrganization" },
+// Three distinct MCP scopes, narrow → broad: one board, one organization, or every board you can open.
+const SCOPES: { id: McpScope; labelKey: "mcpScopeOrganization" | "mcpScopeBoard" | "mcpScopeFull" }[] = [
   { id: "board", labelKey: "mcpScopeBoard" },
+  { id: "organization", labelKey: "mcpScopeOrganization" },
+  { id: "full", labelKey: "mcpScopeFull" },
 ];
 
 function canManage(role: string) {
@@ -71,6 +74,7 @@ export function McpSettings() {
   const [creating, setCreating] = useState(false);
   const [tokens, setTokens] = useState<AccessTokenSummary[]>([]);
   const [tokensLoading, setTokensLoading] = useState(true);
+  const [canCreateFull, setCanCreateFull] = useState(false);
 
   useEffect(() => {
     const configured = process.env.NEXT_PUBLIC_APP_URL;
@@ -88,6 +92,7 @@ export function McpSettings() {
         setOrganizations(data);
         setOrganizationId(data[0]?.id ?? "");
         setBoardId(data[0]?.boards[0]?.id ?? "");
+        setCanCreateFull(data.some((org) => org.boards.length > 0));
       } catch {
         if (!cancelled) toast.error(t("mcpLoadError"));
       } finally {
@@ -101,15 +106,23 @@ export function McpSettings() {
 
   const organization = organizations.find((item) => item.id === organizationId) ?? null;
   const board = organization?.boards.find((item) => item.id === boardId) ?? organization?.boards[0] ?? null;
-  const allowed = scope === "organization"
-    ? !!organization && canManage(organization.role)
-    : !!board?.canIssueToken;
+  const allowed = scope === "full"
+    ? canCreateFull
+    : scope === "organization"
+      ? !!organization && canManage(organization.role)
+      : !!board?.canIssueToken;
   const canCreate = tokenName.trim().length > 0 && allowed;
   const endpoint = mcpScopeEndpoint(origin, scope, organization?.id, scope === "board" ? board?.id : undefined);
-  const connectionName = mcpConnectionName(scope === "board" && board ? board.title : organization?.name ?? "");
+  const connectionName = mcpConnectionName(
+    scope === "full"
+      ? "my-boards"
+      : scope === "board" && board
+        ? board.title
+        : organization?.name ?? "",
+  );
 
   const loadMyTokens = async () => {
-    const res = await fetch("/api/settings/mcp/tokens");
+    const res = await apiFetch("/api/settings/mcp/tokens");
     if (!res.ok) throw new Error("load");
     setTokens(await res.json());
   };
@@ -118,7 +131,7 @@ export function McpSettings() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/settings/mcp/tokens");
+        const res = await apiFetch("/api/settings/mcp/tokens");
         if (!res.ok) throw new Error("load");
         const data = (await res.json()) as AccessTokenSummary[];
         if (!cancelled) setTokens(data);
@@ -163,13 +176,16 @@ export function McpSettings() {
   };
 
   const createToken = async () => {
-    if (!organization || !canCreate) return;
+    if (!canCreate) return;
+    if (scope !== "full" && !organization) return;
     if (scope === "board" && !board) return;
     setCreating(true);
     try {
-      const url = scope === "organization"
-        ? `/api/organizations/${organization.id}/external-access`
-        : `/api/boards/${board!.id}/external-access`;
+      const url = scope === "full"
+        ? "/api/settings/mcp/tokens"
+        : scope === "organization"
+          ? `/api/organizations/${organization!.id}/external-access`
+          : `/api/boards/${board!.id}/external-access`;
       const res = await apiFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -194,7 +210,7 @@ export function McpSettings() {
 
   const revokeToken = async (token: AccessTokenSummary) => {
     if (!window.confirm(t("mcpRevokeConfirm", { name: token.name }))) return;
-    const res = await fetch("/api/settings/mcp/tokens", {
+    const res = await apiFetch("/api/settings/mcp/tokens", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: token.id }),
@@ -208,6 +224,7 @@ export function McpSettings() {
   };
 
   const scopeHint = () => {
+    if (scope === "full") return t("mcpScopeFullHint");
     if (!organization) return "";
     if (scope === "board") {
       return board
@@ -238,11 +255,11 @@ export function McpSettings() {
         </div>
         <div className="flex items-start gap-2 text-xs text-muted-foreground">
           <ShieldCheck size={16} className="mt-0.5 shrink-0 text-primary" />
-          <p>{t("mcpOneOrgRule")}</p>
+          <p>{scope === "full" ? t("mcpFullAccessRule") : t("mcpOneOrgRule")}</p>
         </div>
       </div>
 
-      {organizations.length === 0 ? (
+      {organizations.length === 0 && !canCreateFull ? (
         <div className="rounded-xl border bg-card p-6 shadow-sm space-y-3">
           <p className="text-sm font-medium">{t("mcpNoOrganizations")}</p>
           <p className="text-sm text-muted-foreground">{t("mcpNoOrganizationsHint")}</p>
@@ -250,11 +267,13 @@ export function McpSettings() {
             {t("mcpOpenOrganizations")}
           </Button>
         </div>
-      ) : organization && (
+      ) : (
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
           <fieldset aria-label={t("mcpScopeTitle")} className="m-0 min-w-0 divide-y border-0 p-0">
             {SCOPES.map((item) => {
               const selected = scope === item.id;
+              const needsOrg = item.id !== "full";
+              if (needsOrg && !organization) return null;
               return (
                 <div key={item.id} className={selected ? "bg-primary/5" : undefined}>
                   <button
@@ -280,7 +299,7 @@ export function McpSettings() {
                       )}
                     </span>
                   </button>
-                  {selected && (
+                  {selected && item.id !== "full" && organization && (
                     <div className="grid gap-4 px-5 pb-5 sm:grid-cols-2 sm:px-6">
                       <div className="space-y-2">
                         <Label>{t("mcpChooseOrganization")}</Label>
@@ -391,7 +410,7 @@ export function McpSettings() {
                   {creating && <Loader2 size={14} className="animate-spin" />}
                   {t("mcpCreateToken")}
                 </Button>
-                <p className="text-xs text-muted-foreground">{t("mcpAdminHint")}</p>
+                <p className="text-xs text-muted-foreground">{t(scope === "full" ? "mcpPersonalHint" : "mcpAdminHint")}</p>
               </div>
             </form>
 
@@ -417,9 +436,13 @@ export function McpSettings() {
                 <div className="min-w-0">
                   <p className="truncate font-medium">{token.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {token.board
-                      ? t("mcpTokenBoardScope", { title: token.board.title, name: token.organization.name })
-                      : t("mcpTokenOrgScope", { name: token.organization.name })}
+                    {token.fullAccess
+                      ? t("mcpTokenFullScope")
+                      : token.board && token.organization
+                        ? t("mcpTokenBoardScope", { title: token.board.title, name: token.organization.name })
+                        : token.organization
+                          ? t("mcpTokenOrgScope", { name: token.organization.name })
+                          : token.tokenPrefix}
                     {" · "}
                     {t(token.scopes.includes("tickets:write") ? "mcpReadWrite" : "mcpReadOnly")}
                   </p>
@@ -447,7 +470,7 @@ export function McpSettings() {
       </div>
 
       <McpConnectionGuide endpoint={endpoint} connectionName={connectionName} />
-      {organization && allowed && (
+      {scope !== "full" && organization && allowed && (
         <McpChangeHistory key={`${organization.id}:${scope}:${board?.id ?? ""}`} organizationId={organization.id} boardId={scope === "board" ? board?.id ?? null : null} />
       )}
     </div>

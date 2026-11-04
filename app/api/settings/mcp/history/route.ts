@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import db from "@/lib/db";
 import { isBoardAdmin } from "@/lib/boardAccess";
 import { requireOrganizationManager } from "@/lib/organizations";
-import { type ExternalAccessContext, TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE } from "@/lib/externalAccess";
+import { sessionAccessContext } from "@/lib/externalAccess";
 import { changeScope, listMcpChanges, revertMcpChange, McpWriteError } from "@/lib/mcp/writes";
 import { historyUserIds, type HistorySnapshot } from "@/lib/mcp/historyPreview";
 import { isValidRequestOrigin } from "@/lib/mcp/oauthConfig";
@@ -20,7 +20,7 @@ async function scope(params: URLSearchParams) {
     const board = await db.board.findFirst({ where: { id: boardId, organizationId }, select: { id: true } });
     if (!board || !(await isBoardAdmin(user.id, boardId))) return null;
   } else if (!(await requireOrganizationManager(user.id, organizationId))) return null;
-  const context: ExternalAccessContext = { tokenId: "", organizationId, boardId: boardId || null, boardTitle: null, scopes: [TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE] };
+  const context = sessionAccessContext({ organizationId, boardId: boardId || null });
   return { userId: user.id, context };
 }
 

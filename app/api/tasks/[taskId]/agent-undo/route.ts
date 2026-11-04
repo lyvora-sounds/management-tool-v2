@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { canEditBoard } from "@/lib/boardAccess";
-import { TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE, type ExternalAccessContext } from "@/lib/externalAccess";
+import { sessionAccessContext } from "@/lib/externalAccess";
 import { McpWriteError, revertMcpChange } from "@/lib/mcp/writes";
 
 const headers = { "cache-control": "no-store" };
@@ -26,7 +26,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ taskId:
   const board = comment?.task.list.board;
   if (!board || !(await canEditBoard(user.id, board.id))) return NextResponse.json({ error: "Not found" }, { status: 404, headers });
 
-  const context: ExternalAccessContext = { tokenId: "", organizationId: board.organizationId, boardId: board.id, boardTitle: board.title, scopes: [TICKETS_READ_SCOPE, TICKETS_WRITE_SCOPE] };
+  const context = sessionAccessContext({ organizationId: board.organizationId, boardId: board.id, boardTitle: board.title });
   try {
     await revertMcpChange(context, body.changeId, true, user.id);
     return NextResponse.json({ ok: true }, { headers });
