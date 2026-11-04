@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiFetch } from "@/lib/apiClient";
 import { Github, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -51,7 +52,7 @@ export function GithubConnection({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/organizations/${organizationId}/github`, { cache: "no-store" })
+    apiFetch(`/api/organizations/${organizationId}/github`, { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error();
         return response.json() as Promise<{
@@ -87,7 +88,7 @@ export function GithubConnection({
   useEffect(() => {
     if (!configured || !canManage || !accountKey) return;
     let cancelled = false;
-    fetch(`/api/organizations/${organizationId}/github/repositories`, { cache: "no-store" })
+    apiFetch(`/api/organizations/${organizationId}/github/repositories`, { cache: "no-store" })
       .then(async (response) => {
         if (response.status === 409) {
           if (!cancelled) setReconnect(true);
@@ -119,7 +120,7 @@ export function GithubConnection({
     if (!configured || !canManage || !repositoryId || !reposLoaded) return;
     let cancelled = false;
     const preferred = defaultBranchByRepo.current[repositoryId] ?? "";
-    fetch(`/api/organizations/${organizationId}/github/branches?repositoryId=${encodeURIComponent(repositoryId)}`, { cache: "no-store" })
+    apiFetch(`/api/organizations/${organizationId}/github/branches?repositoryId=${encodeURIComponent(repositoryId)}`, { cache: "no-store" })
       .then(async (response) => {
         if (response.status === 409) {
           if (!cancelled) setReconnect(true);
@@ -167,7 +168,7 @@ export function GithubConnection({
   const save = async () => {
     setSaving(true);
     try {
-      const response = await fetch(`/api/organizations/${organizationId}/github`, {
+      const response = await apiFetch(`/api/organizations/${organizationId}/github`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ repositoryId, branch }),
@@ -191,7 +192,7 @@ export function GithubConnection({
   const chooseAccount = async () => {
     setSaving(true);
     try {
-      const response = await fetch(`/api/organizations/${organizationId}/github/choose`, {
+      const response = await apiFetch(`/api/organizations/${organizationId}/github/choose`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ installationId: choiceId }),
@@ -217,7 +218,7 @@ export function GithubConnection({
   const openGithub = async (path: string) => {
     setSaving(true);
     try {
-      const response = await fetch(path, { method: "POST" });
+      const response = await apiFetch(path, { method: "POST" });
       const data = response.ok ? await response.json() as { url?: unknown } : null;
       const target = typeof data?.url === "string" ? new URL(data.url) : null;
       if (target?.origin === "https://github.com") {
@@ -236,7 +237,7 @@ export function GithubConnection({
     if (!window.confirm(t("githubDisconnectConfirm"))) return;
     setSaving(true);
     try {
-      const response = await fetch(`/api/organizations/${organizationId}/github`, { method: "DELETE" });
+      const response = await apiFetch(`/api/organizations/${organizationId}/github`, { method: "DELETE" });
       if (response.ok) {
         setConnection(null);
         setRepositoryId("");
