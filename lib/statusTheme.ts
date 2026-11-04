@@ -19,6 +19,19 @@ export function isTodoList(title: string | null | undefined): boolean {
   );
 }
 
+/** The following column by `order`. The last column completes the ticket. A done-titled column completes it too. */
+export function nextListAfterMerge<T extends { id: string; order: number; title: string }>(
+  lists: T[],
+  currentListId: string,
+): { listId: string | null; complete: boolean } {
+  const ordered = [...lists].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+  const index = ordered.findIndex((list) => list.id === currentListId);
+  if (index < 0) return { listId: null, complete: false };
+  const next = ordered[index + 1];
+  if (!next) return { listId: null, complete: true };
+  return { listId: next.id, complete: isDoneList(next.title) };
+}
+
 export function targetListForCompletion<T extends { id: string; title: string }>(
   lists: T[],
   currentListId: string,

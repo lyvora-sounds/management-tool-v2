@@ -337,9 +337,22 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "Tickets not found" }] };
       }
       if (!scope) return { isError: true, content: [{ type: "text", text: "Board not found in this connection" }] };
+      let cursorFilter: { OR: object[] } | undefined;
+      if (typeof args.cursor === "string" && args.cursor) {
+        const cursorTask = await db.task.findFirst({
+          where: { id: args.cursor, ...scope },
+          select: { id: true, createdAt: true },
+        });
+        if (!cursorTask) return { isError: true, content: [{ type: "text", text: "Cursor not found" }] };
+        cursorFilter = { OR: [
+          { createdAt: { lt: cursorTask.createdAt } },
+          { createdAt: cursorTask.createdAt, id: { gt: cursorTask.id } },
+        ] };
+      }
       const tasks = await db.task.findMany({
         where: {
           ...scope,
+          ...(cursorFilter ?? {}),
           archived: args.archived === true,
           ...(typeof args.assigneeId === "string" ? { assigneeId: args.assigneeId } : {}),
           ...(typeof args.qaId === "string" ? { qaId: args.qaId } : {}),
@@ -353,7 +366,6 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         },
         orderBy: [{ createdAt: "desc" }, { id: "asc" }],
         take: limit,
-        ...(typeof args.cursor === "string" ? { cursor: { id: args.cursor }, skip: 1 } : {}),
         select: {
           id: true,
           title: true,

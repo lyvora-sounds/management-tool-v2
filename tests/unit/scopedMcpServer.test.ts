@@ -108,6 +108,7 @@ describe("scoped MCP server", () => {
     expect(instructions).toContain("match the board's lists by meaning");
     expect(instructions).toContain("ask the user which list");
     expect(instructions).toContain("next chat message MUST include the PR URL");
+    expect(instructions).toContain("next list by column order");
   });
 
   it("completes the MCP handshake and keeps board id optional on list_tickets only", async () => {
@@ -341,15 +342,21 @@ describe("scoped MCP server", () => {
   });
 
   it("filters assignments by name/email and paginates inside the credential scope", async () => {
+    const createdAt = new Date("2026-11-04T00:00:00.000Z");
+    findTask.mockResolvedValue({ id: "last-ticket", createdAt });
     await client.callTool({ name: "list_tickets", arguments: { person: "Daniel Alvarez", qaId: "mario", cursor: "last-ticket", limit: 10 } });
     expect(findTasks.mock.calls[0][0]).toMatchObject({
-      where: { list: { boardId: "board-allowed" }, qaId: "mario", assignee: { OR: [{ name: { contains: "Daniel Alvarez", mode: "insensitive" } }, { email: { contains: "Daniel Alvarez", mode: "insensitive" } }] } },
+      where: {
+        list: { boardId: "board-allowed" },
+        qaId: "mario",
+        assignee: { OR: [{ name: { contains: "Daniel Alvarez", mode: "insensitive" } }, { email: { contains: "Daniel Alvarez", mode: "insensitive" } }] },
+        OR: [{ createdAt: { lt: createdAt } }, { createdAt, id: { gt: "last-ticket" } }],
+      },
       orderBy: [{ createdAt: "desc" }, { id: "asc" }],
-      cursor: { id: "last-ticket" },
-      skip: 1,
       take: 10,
       select: expect.objectContaining({ createdAt: true, updatedAt: true }),
     });
+    expect(findTasks.mock.calls[0][0].cursor).toBeUndefined();
   });
 
   it("exposes SVG preferences only for information tools and preserves ticket scope", async () => {
