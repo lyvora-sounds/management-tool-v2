@@ -38,11 +38,13 @@ async function personalBoardCapabilities(
   createdById: string,
 ) {
   const role = await getBoardRole(createdById, board.id);
+  const canEdit = roleCanEditBoard(role);
   const canManage = roleCanManageBoard(role);
   return {
     role,
-    canEdit: roleCanEditBoard(role),
-    canAssign: canManage || board.memberCanAssign,
+    canEdit,
+    // Match app assignment routes: need edit rights, then admin or memberCanAssign.
+    canAssign: canEdit && (canManage || board.memberCanAssign),
     canManage,
   };
 }

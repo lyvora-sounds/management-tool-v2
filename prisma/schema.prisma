@@ -325,7 +325,7 @@ model BoardTeamAccess {
 /// MCP credential. Three shapes:
 /// - organization: organizationId set, boardId null → every board in that org
 /// - board: organizationId + boardId → that board only (must stay in the org)
-/// - fullAccess: both null → every board the creator currently admins (dynamic)
+/// - fullAccess: both null → every board the creator can currently open (rights follow app role)
 /// allEnvironments and environments are stored for old rows and are not used.
 model ExternalAccessToken {
   id              String    @id @default(cuid())
