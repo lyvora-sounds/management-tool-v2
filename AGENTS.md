@@ -28,6 +28,17 @@ Do not read every document before working. Start with the files named by the tas
 
 Treat the implementation and schema as the source of truth when documentation disagrees. Update the relevant document when a change alters a documented flow, permission, side effect, route, or known limitation.
 
+## Where code belongs (hard rule)
+
+`kiki-api` is the backend. This repo is the frontend (UI, client state, and temporary dual-run `/api` mirrors).
+
+- **New HTTP API work goes in `kiki-api` first** (`/v1/...`), as a pull request against that repository. Do not grow this app's `app/api/**` for a feature that can live on the API.
+- **This app only:** UI, `apiFetch` / `lib/apiRoutes.ts` wiring, locales, and docs. After the API ships, point the client at it; keep an old `app/api` handler only while production still needs the dual-run fallback (see `docs/architecture.md`).
+- **Shared Prisma:** schema and migrations are still duplicated today. Change them in **both** repos in the same effort, but **handlers, auth checks, and tests for the route live in `kiki-api`**. A schema-only sync in `kiki-api` without the route is incomplete.
+- **Order:** merge and deploy `kiki-api` first, then regenerate types here (`pnpm api:types`) and wire the UI.
+- **Never push commits straight to `main`.** Always use a feature branch and a pull request.
+- **Exception (temporary):** the Streamable HTTP MCP endpoint (`/api/mcp`, OAuth discovery/consent) is not migrated yet and still runs in this app. Token **mint/list/revoke** for scopes that already have API routes (board, organization, and full-access) belong in `kiki-api`, not as new Next.js API surfaces. When unsure, put the handler in `kiki-api`.
+
 ## Working rules
 
 - Preserve the existing authorization model. Board ownership is `Board.userId`; it is not a `BoardMember` row. Use the helpers in `lib/boardAccess.ts` and `lib/boardRoles.ts` instead of recreating role logic.

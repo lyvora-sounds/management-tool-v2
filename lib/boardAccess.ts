@@ -128,3 +128,20 @@ export async function isBoardAdmin(userIdOrClerkId: string, boardId: string) {
   const role = await getBoardRole(userIdOrClerkId, boardId);
   return role === "owner" || role === "admin";
 }
+
+/** Prisma filter for boards a user currently owns or admins (incl. org owner/admin). */
+export function adminBoardWhere(userId: string) {
+  return {
+    OR: [
+      { userId },
+      { members: { some: { userId, role: { in: ["owner", "admin"] } } } },
+      { organization: { members: { some: { userId, role: { in: ["owner", "admin"] } } } } },
+      {
+        AND: [
+          { organization: { members: { some: { userId } } } },
+          { teamAccess: { some: { role: { in: ["owner", "admin"] }, team: { members: { some: { userId } } } } } },
+        ],
+      },
+    ],
+  };
+}

@@ -4,18 +4,29 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { ExternalAccessContext } from "@/lib/externalAccess";
 
 const findBoard = vi.fn();
+const findBoards = vi.fn();
 const findOrganization = vi.fn();
 const findTasks = vi.fn();
 const findTask = vi.fn();
 const findFields = vi.fn();
 const findAttachment = vi.fn();
 
+const getBoardRole = vi.fn();
+vi.mock("@/lib/boardAccess", () => ({
+  canReadBoard: async () => true,
+  getBoardRole: (...args: unknown[]) => getBoardRole(...args),
+  readableBoardWhere: (userId: string) => ({ OR: [{ userId }, { members: { some: { userId } } }] }),
+  adminBoardWhere: (userId: string) => ({ OR: [{ userId }] }),
+}));
 vi.mock("@/lib/db", () => ({
   default: {
     customField: { findMany: (...args: unknown[]) => findFields(...args) },
     attachment: { findFirst: (...args: unknown[]) => findAttachment(...args) },
     user: { findMany: async () => [] },
-    board: { findUnique: (...args: unknown[]) => findBoard(...args) },
+    board: {
+      findUnique: (...args: unknown[]) => findBoard(...args),
+      findMany: (...args: unknown[]) => findBoards(...args),
+    },
     organization: { findUnique: (...args: unknown[]) => findOrganization(...args) },
     task: {
       findMany: (...args: unknown[]) => findTasks(...args),
@@ -32,6 +43,8 @@ const boardContext: ExternalAccessContext = {
   boardId: "board-allowed",
   boardTitle: "Allowed project",
   scopes: ["tickets:read"],
+  fullAccess: false,
+  createdById: "user-1",
 };
 
 const organizationContext: ExternalAccessContext = {
@@ -40,6 +53,18 @@ const organizationContext: ExternalAccessContext = {
   boardId: null,
   boardTitle: null,
   scopes: ["tickets:read"],
+  fullAccess: false,
+  createdById: "user-1",
+};
+
+const fullAccessContext: ExternalAccessContext = {
+  tokenId: "token-3",
+  organizationId: null,
+  boardId: null,
+  boardTitle: null,
+  scopes: ["tickets:read"],
+  fullAccess: true,
+  createdById: "user-1",
 };
 
 let client: Client;
@@ -56,12 +81,14 @@ async function connect(context: ExternalAccessContext) {
 
 beforeEach(async () => {
   findBoard.mockReset();
+  findBoards.mockReset().mockResolvedValue([]);
   findOrganization.mockReset();
   findTasks.mockReset();
   findTask.mockReset();
   findTasks.mockResolvedValue([]);
   findFields.mockReset().mockResolvedValue([]);
   findAttachment.mockReset().mockResolvedValue(null);
+  getBoardRole.mockReset().mockResolvedValue("member");
   ({ client, server } = await connect(boardContext));
 });
 
@@ -71,7 +98,7 @@ afterEach(async () => {
 });
 
 describe("scoped MCP server", () => {
-  it("completes the MCP handshake and never asks clients for a board id", async () => {
+  it("completes the MCP handshake and keeps board id optional on list_tickets only", async () => {
     const result = await client.listTools();
     expect(result.tools.map((tool) => tool.name)).toEqual([
       "get_project",
@@ -82,8 +109,13 @@ describe("scoped MCP server", () => {
     ]);
     for (const tool of result.tools) {
       expect(tool.annotations?.readOnlyHint).toBe(true);
-      expect(tool.inputSchema.properties).not.toHaveProperty("boardId");
       expect(JSON.stringify(tool.inputSchema)).not.toContain("environment");
+      if (tool.name === "list_tickets") {
+        expect(tool.inputSchema.properties).toHaveProperty("boardId");
+        expect(tool.inputSchema.required ?? []).not.toContain("boardId");
+      } else {
+        expect(tool.inputSchema.properties).not.toHaveProperty("boardId");
+      }
     }
   });
 
@@ -120,6 +152,78 @@ describe("scoped MCP server", () => {
       await extra.client.close();
       await extra.server.close();
     }
+  });
+
+  it("lists every readable board for a personal credential with role capabilities and accepts an optional board filter", async () => {
+    const extra = await connect(fullAccessContext);
+    try {
+      getBoardRole.mockResolvedValueOnce("member").mockResolvedValueOnce("viewer");
+      findBoards.mockResolvedValue([
+        {
+          id: "board-a",
+          title: "Alpha",
+          description: null,
+          organizationId: "org-1",
+          organization: { id: "org-1", name: "Org" },
+          accessMode: "organization",
+          defaultRole: "member",
+          memberCanAssign: false,
+          user: { id: "owner-1", name: "Owner", email: "owner@test.invalid" },
+          labels: [],
+          epics: [],
+          customFields: [],
+          list: [{ id: "list-1", title: "Todo" }],
+        },
+        {
+          id: "board-b",
+          title: "Beta",
+          description: null,
+          organizationId: "org-1",
+          organization: { id: "org-1", name: "Org" },
+          accessMode: "organization",
+          defaultRole: "viewer",
+          memberCanAssign: false,
+          user: { id: "owner-1", name: "Owner", email: "owner@test.invalid" },
+          labels: [],
+          epics: [],
+          customFields: [],
+          list: [{ id: "list-2", title: "Todo" }],
+        },
+      ]);
+      const project = await extra.client.callTool({ name: "get_project", arguments: { presentation: { format: "text" } } });
+      expect(project.isError).toBeFalsy();
+      expect(findBoards).toHaveBeenCalledWith(expect.objectContaining({
+        where: expect.objectContaining({ OR: expect.any(Array) }),
+      }));
+      const body = JSON.parse(String((project.content as { type: string; text?: string }[])[0]?.text ?? "{}"));
+      expect(body).toMatchObject({
+        scope: "personal",
+        boards: [
+          { id: "board-a", role: "member", canEdit: true, canAssign: false, canManage: false },
+          { id: "board-b", role: "viewer", canEdit: false, canAssign: false, canManage: false },
+        ],
+      });
+
+      await extra.client.callTool({ name: "list_tickets", arguments: {} });
+      expect(findTasks.mock.calls[0][0].where.list).toEqual({
+        board: expect.objectContaining({ OR: expect.any(Array) }),
+      });
+
+      await extra.client.callTool({ name: "list_tickets", arguments: { boardId: "board-a" } });
+      expect(findTasks.mock.calls[1][0].where.list).toEqual({
+        boardId: "board-a",
+        board: expect.objectContaining({ OR: expect.any(Array) }),
+      });
+    } finally {
+      await extra.client.close();
+      await extra.server.close();
+    }
+  });
+
+  it("rejects a board filter that escapes a board-scoped credential", async () => {
+    const result = await client.callTool({ name: "list_tickets", arguments: { boardId: "other-board" } });
+    expect(result.isError).toBe(true);
+    expect(findTasks).not.toHaveBeenCalled();
   });
 
   it("does not allow a ticket lookup to escape the credential scope", async () => {

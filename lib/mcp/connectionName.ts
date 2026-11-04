@@ -9,8 +9,14 @@ export function mcpConnectionName(label: string) {
   return `kikiboard-${slug || "connection"}`;
 }
 
-export function mcpScopeEndpoint(origin: string, scope: "organization" | "board", organizationId?: string, boardId?: string) {
+export function mcpScopeEndpoint(
+  origin: string,
+  scope: "organization" | "board" | "full",
+  organizationId?: string,
+  boardId?: string,
+) {
   if (!origin) return "/api/mcp";
+  if (scope === "full") return `${origin}/api/mcp`;
   if (scope === "board" && boardId) return `${origin}/api/mcp/board/${boardId}`;
   if (organizationId) return `${origin}/api/mcp/org/${organizationId}`;
   return `${origin}/api/mcp`;

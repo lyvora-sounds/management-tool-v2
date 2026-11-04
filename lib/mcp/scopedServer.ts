@@ -2,11 +2,15 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import db from "@/lib/db";
 import type { ExternalAccessContext } from "@/lib/externalAccess";
-import { createMcpTicket, createMcpEpic, updateMcpTickets, listMcpChanges, revertMcpChange, McpWriteError } from "./writes";
+import { createMcpTicket, createMcpEpic, updateMcpTickets, listMcpChanges, revertMcpChange, McpWriteError, boardScope } from "./writes";
 
 import { relationSchema } from "./ticketRelations";
 import { informationResponse, presentationSchema, SVG_CAPABILITY } from "./presentation";
-import { canReadBoard } from "@/lib/boardAccess";
+import { canReadBoard, getBoardRole } from "@/lib/boardAccess";
+import {
+  canEditBoard as roleCanEditBoard,
+  canManageBoard as roleCanManageBoard,
+} from "@/lib/boardRoles";
 
 const userSelect = { id: true, name: true, email: true } as const;
 async function boardPeople(board: { id: string }, organizationId: string) {
@@ -22,12 +26,26 @@ async function boardPeople(board: { id: string }, organizationId: string) {
   return people;
 }
 const boardMetadata = {
-  accessMode: true, defaultRole: true,
+  accessMode: true, defaultRole: true, memberCanAssign: true,
   user: { select: userSelect },
   labels: { select: { id: true, title: true, color: true } },
   epics: { select: { id: true, title: true, status: true, quarter: true } },
   customFields: { orderBy: { order: "asc" }, select: { id: true, name: true, defaultKey: true, type: true, options: true, enabled: true } },
 } as const;
+
+async function personalBoardCapabilities(
+  board: { id: string; memberCanAssign: boolean },
+  createdById: string,
+) {
+  const role = await getBoardRole(createdById, board.id);
+  const canManage = roleCanManageBoard(role);
+  return {
+    role,
+    canEdit: roleCanEditBoard(role),
+    canAssign: canManage || board.memberCanAssign,
+    canManage,
+  };
+}
 const PRIORITIES = new Set(["urgent", "high", "medium", "low"]);
 const taskChangesSchema = { type: "object", additionalProperties: false, properties: {
   title: { type: "string", maxLength: 500 }, description: { type: ["string", "null"], maxLength: 50000 },
@@ -48,10 +66,13 @@ function text(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
 }
 
-function ticketScope(context: ExternalAccessContext) {
-  return context.boardId
-    ? { list: { boardId: context.boardId } }
-    : { list: { board: { organizationId: context.organizationId } } };
+function ticketScope(context: ExternalAccessContext, boardId?: string) {
+  if (context.boardId) {
+    if (boardId && boardId !== context.boardId) return null;
+    return { list: { boardId: context.boardId } };
+  }
+  if (boardId) return { list: { boardId, board: boardScope(context) } };
+  return { list: { board: boardScope(context) } };
 }
 
 function toTicketDetail(task: {
@@ -88,7 +109,9 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
   );
   const scopeDescription = context.boardId
     ? "the single board bound to this connection"
-    : "every board in the organization bound to this connection";
+    : context.fullAccess
+      ? "every board the connection creator can currently open in Kikiboard, with the same rights as in the app"
+      : "every board in the organization bound to this connection";
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
@@ -117,6 +140,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
             cursor: { type: "string", description: "Last ticket ID from the previous page" },
             archived: { type: "boolean", default: false },
             query: { type: "string", description: "Case-insensitive title search" },
+            boardId: { type: "string", description: "Optional board filter from get_project. Recommended for personal connections." },
             limit: { type: "integer", minimum: 1, maximum: 100, default: 50 },
           },
         },
@@ -142,7 +166,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         inputSchema: { type: "object", additionalProperties: false, required: ["ticketId", "attachmentId"], properties: { ticketId: { type: "string" }, attachmentId: { type: "string" } } },
       },
       {
-        name: "get_change_history", description: "List the latest 50 MCP task operations in this connection, including change IDs and revert status.",
+        name: "get_change_history", description: "List the latest 50 MCP task operations in this connection, including change IDs and revert status. On a personal connection, only boards you own or admin are included (same as Settings history).",
         securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
         _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
         inputSchema: { type: "object", properties: {}, additionalProperties: false },
@@ -151,11 +175,11 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       ...(context.scopes.includes("tickets:write") ? [
         { name: "create_ticket", description: "Create a ticket in a list in this connection. Returns a change ID; reverting creation archives the ticket and preserves its content.", ...writeMetadata,
           inputSchema: { type: "object", additionalProperties: false, required: ["title", "listId"], properties: { ...taskChangesSchema.properties, summary: { type: "string", maxLength: 500 } } } },
-        { name: "create_epic", description: "Create an epic on a board in this connection. A board-scoped token uses that board; an organization token must pass boardId from get_project. Returns the epic so tickets can be attached with update_tickets. Epic creation is not in change history and cannot be reverted.", ...writeMetadata,
-          inputSchema: { type: "object", additionalProperties: false, required: ["title"], properties: { title: { type: "string", maxLength: 500 }, description: { type: ["string", "null"], maxLength: 50000 }, color: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" }, quarter: { type: ["string", "null"], pattern: "^\\d{4}-Q[1-4]$" }, boardId: { type: "string", description: "Required for organization connections. On a board-scoped token it must match the bound board if supplied." } } } },
+        { name: "create_epic", description: "Create an epic on a board in this connection. A board-scoped token uses that board; organization and personal tokens must pass boardId from get_project. Returns the epic so tickets can be attached with update_tickets. Epic creation is not in change history and cannot be reverted. Requires edit rights on that board (member or above).", ...writeMetadata,
+          inputSchema: { type: "object", additionalProperties: false, required: ["title"], properties: { title: { type: "string", maxLength: 500 }, description: { type: ["string", "null"], maxLength: 50000 }, color: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" }, quarter: { type: ["string", "null"], pattern: "^\\d{4}-Q[1-4]$" }, boardId: { type: "string", description: "Required for organization and personal connections. On a board-scoped token it must match the bound board if supplied." } } } },
         { name: "update_tickets", description: "Edit, move, complete or archive up to 50 tickets on one board atomically. Every batch has a change ID and before/after history. Supports people, QA, collaborators, labels, epics, custom fields, checklist, comments, attachments and public sharing. IDs and custom-field options are available from get_project. Server-generated IDs, timestamps and calendar integration IDs cannot be supplied.", ...writeMetadata, annotations: { ...writeMetadata.annotations, destructiveHint: true },
           inputSchema: { type: "object", additionalProperties: false, required: ["updates"], properties: { updates: { type: "array", minItems: 1, maxItems: 50, items: { type: "object", required: ["ticketId", "changes"], additionalProperties: false, properties: { ticketId: { type: "string" }, changes: taskChangesSchema } } }, summary: { type: "string", maxLength: 500 } } } },
-        { name: "revert_change", description: "Preview undo with confirm=false first. After user approval, set confirm=true to revert an entire MCP change. Conflicts with later task edits reject the whole revert. Creation is undone by archiving.", ...writeMetadata,
+        { name: "revert_change", description: "Preview undo with confirm=false first. After user approval, set confirm=true to revert an entire MCP change. Conflicts with later task edits reject the whole revert. Creation is undone by archiving. On a personal connection, only a board owner or admin can revert.", ...writeMetadata,
           inputSchema: { type: "object", additionalProperties: false, required: ["changeId"], properties: { changeId: { type: "string" }, confirm: { type: "boolean", default: false } } } },
       ] : []),
     ].map(tool => ["get_project", "list_tickets", "get_ticket", "get_change_history"].includes(tool.name) ? { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...tool.inputSchema.properties, presentation: presentationSchema } } } : tool),
@@ -182,7 +206,12 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
 
     if (params.name === "get_attachment") {
       if (typeof args.ticketId !== "string" || typeof args.attachmentId !== "string") return { isError: true, content: [{ type: "text", text: "ticketId and attachmentId are required" }] };
-      const attachment = await db.attachment.findFirst({ where: { id: args.attachmentId, taskId: args.ticketId, task: ticketScope(context) }, select: { filename: true, size: true, url: true } });
+      let taskFilter;
+      try { taskFilter = ticketScope(context); } catch (error) {
+        return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "Attachment not found" }] };
+      }
+      if (!taskFilter) return { isError: true, content: [{ type: "text", text: "Attachment not found or larger than 5 MiB" }] };
+      const attachment = await db.attachment.findFirst({ where: { id: args.attachmentId, taskId: args.ticketId, task: taskFilter }, select: { filename: true, size: true, url: true } });
       if (!attachment || attachment.size > 5 * 1024 * 1024) return { isError: true, content: [{ type: "text", text: "Attachment not found or larger than 5 MiB" }] };
       try {
         const response = await fetch(attachment.url, { headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }, signal: AbortSignal.timeout(15000) });
@@ -203,6 +232,9 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
 
     if (params.name === "get_project") {
       if (context.boardId) {
+        if (!context.organizationId) {
+          return { isError: true, content: [{ type: "text", text: "Board not found" }] };
+        }
         const board = await db.board.findUnique({
           where: { id: context.boardId },
           select: {
@@ -220,6 +252,39 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         return information({ scope: "board", board: { ...board, people: await boardPeople(board, context.organizationId) } });
       }
 
+      if (context.fullAccess) {
+        try {
+          if (!context.createdById) {
+            return { isError: true, content: [{ type: "text", text: "Personal connection is missing its creator" }] };
+          }
+          const createdById = context.createdById;
+          const boards = await db.board.findMany({
+            where: boardScope(context),
+            orderBy: { createdAt: "asc" },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              organizationId: true,
+              organization: { select: { id: true, name: true } },
+              ...boardMetadata,
+              list: { orderBy: { order: "asc" }, select: { id: true, title: true } },
+            },
+          });
+          const detailed = await Promise.all(boards.map(async (board) => ({
+            ...board,
+            ...(await personalBoardCapabilities(board, createdById)),
+            people: await boardPeople(board, board.organizationId),
+          })));
+          return information({ scope: "personal", boards: detailed });
+        } catch (error) {
+          return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "Project not found" }] };
+        }
+      }
+
+      if (!context.organizationId) {
+        return { isError: true, content: [{ type: "text", text: "Organization not found" }] };
+      }
       const organization = await db.organization.findUnique({
         where: { id: context.organizationId },
         select: {
@@ -241,7 +306,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       if (!organization) {
         return { isError: true, content: [{ type: "text", text: "Organization not found" }] };
       }
-      const boards = await Promise.all(organization.boards.map(async board => ({ ...board, people: await boardPeople(board, context.organizationId) })));
+      const boards = await Promise.all(organization.boards.map(async (board) => ({ ...board, people: await boardPeople(board, context.organizationId!) })));
       return information({ scope: "organization", organization: { ...organization, boards } });
     }
 
@@ -251,9 +316,17 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       const priority = typeof args.priority === "string" && PRIORITIES.has(args.priority)
         ? args.priority
         : undefined;
+      const boardId = typeof args.boardId === "string" && args.boardId.trim() ? args.boardId.trim() : undefined;
+      let scope;
+      try {
+        scope = ticketScope(context, boardId);
+      } catch (error) {
+        return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "Tickets not found" }] };
+      }
+      if (!scope) return { isError: true, content: [{ type: "text", text: "Board not found in this connection" }] };
       const tasks = await db.task.findMany({
         where: {
-          ...ticketScope(context),
+          ...scope,
           archived: args.archived === true,
           ...(typeof args.assigneeId === "string" ? { assigneeId: args.assigneeId } : {}),
           ...(typeof args.qaId === "string" ? { qaId: args.qaId } : {}),
@@ -292,10 +365,15 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       if (typeof args.ticketId !== "string" || !args.ticketId) {
         return { isError: true, content: [{ type: "text", text: "ticketId is required" }] };
       }
+      let scope;
+      try { scope = ticketScope(context); } catch (error) {
+        return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "Ticket not found" }] };
+      }
+      if (!scope) return { isError: true, content: [{ type: "text", text: "Ticket not found" }] };
       const task = await db.task.findFirst({
         where: {
           id: args.ticketId,
-          ...ticketScope(context),
+          ...scope,
         },
         select: {
           id: true,
