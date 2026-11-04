@@ -48,10 +48,11 @@ type AccessTokenSummary = {
   board: { id: string; title: string } | null;
 };
 
+// Three distinct MCP scopes, narrow → broad: one board, one organization, or every board you admin.
 const SCOPES: { id: McpScope; labelKey: "mcpScopeOrganization" | "mcpScopeBoard" | "mcpScopeFull" }[] = [
-  { id: "full", labelKey: "mcpScopeFull" },
-  { id: "organization", labelKey: "mcpScopeOrganization" },
   { id: "board", labelKey: "mcpScopeBoard" },
+  { id: "organization", labelKey: "mcpScopeOrganization" },
+  { id: "full", labelKey: "mcpScopeFull" },
 ];
 
 function canManage(role: string) {
