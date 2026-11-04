@@ -115,6 +115,13 @@ const MIGRATED: Route[] = [
   // Onboarding
   { method: "PATCH", pattern: /^\/api\/onboarding$/, to: sameUnderV1 },
 
+  // GitHub: the organization's link and the install flow. The setup page GitHub redirects the browser to is not
+  // here: it stays in this app (the Clerk cookie lives here) and relays to the API itself.
+  ...["GET", "PATCH", "DELETE"].map((method) => ({ method, pattern: /^\/api\/organizations\/[^/]+\/github$/, to: sameUnderV1 })),
+  ...["repositories", "branches"].map((part) => ({ method: "GET", pattern: new RegExp(`^/api/organizations/[^/]+/github/${part}$`), to: sameUnderV1 })),
+  ...["install", "finish", "choose"].map((part) => ({ method: "POST", pattern: new RegExp(`^/api/organizations/[^/]+/github/${part}$`), to: sameUnderV1 })),
+  { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/development$/, to: sameUnderV1 },
+
   // AI (the caller's own key) and personal settings
   ...["parse", "improve", "transcribe"].map((part) => ({ method: "POST", pattern: new RegExp(`^/api/ai/${part}$`), to: sameUnderV1 })),
   ...["GET", "PUT"].flatMap((method) => ["ai", "appearance"].map((part) => ({ method, pattern: new RegExp(`^/api/settings/${part}$`), to: sameUnderV1 }))),
