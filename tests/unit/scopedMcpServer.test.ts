@@ -170,7 +170,10 @@ describe("scoped MCP server", () => {
   it("lists every readable board for a personal credential with role capabilities and accepts an optional board filter", async () => {
     const extra = await connect(fullAccessContext);
     try {
-      getBoardRole.mockResolvedValueOnce("member").mockResolvedValueOnce("viewer");
+      getBoardRole
+        .mockResolvedValueOnce("member")
+        .mockResolvedValueOnce("viewer")
+        .mockResolvedValueOnce("member");
       findBoards.mockResolvedValue([
         {
           id: "board-a",
@@ -195,12 +198,28 @@ describe("scoped MCP server", () => {
           organization: { id: "org-1", name: "Org" },
           accessMode: "organization",
           defaultRole: "viewer",
-          memberCanAssign: false,
+          // Viewers must not report canAssign even when the board allows member assignment.
+          memberCanAssign: true,
           user: { id: "owner-1", name: "Owner", email: "owner@test.invalid" },
           labels: [],
           epics: [],
           customFields: [],
           list: [{ id: "list-2", title: "Todo" }],
+        },
+        {
+          id: "board-c",
+          title: "Gamma",
+          description: null,
+          organizationId: "org-1",
+          organization: { id: "org-1", name: "Org" },
+          accessMode: "organization",
+          defaultRole: "member",
+          memberCanAssign: true,
+          user: { id: "owner-1", name: "Owner", email: "owner@test.invalid" },
+          labels: [],
+          epics: [],
+          customFields: [],
+          list: [{ id: "list-3", title: "Todo" }],
         },
       ]);
       const project = await extra.client.callTool({ name: "get_project", arguments: { presentation: { format: "text" } } });
@@ -214,6 +233,7 @@ describe("scoped MCP server", () => {
         boards: [
           { id: "board-a", role: "member", canEdit: true, canAssign: false, canManage: false },
           { id: "board-b", role: "viewer", canEdit: false, canAssign: false, canManage: false },
+          { id: "board-c", role: "member", canEdit: true, canAssign: true, canManage: false },
         ],
       });
 

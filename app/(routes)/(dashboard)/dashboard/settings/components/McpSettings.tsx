@@ -85,14 +85,19 @@ export function McpSettings() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiFetch("/api/organizations");
-        if (!res.ok) throw new Error("load");
-        const data = (await res.json()) as OrganizationSummary[];
+        const [orgRes, boardsRes] = await Promise.all([
+          apiFetch("/api/organizations"),
+          apiFetch("/api/boards/getBoards"),
+        ]);
+        if (!orgRes.ok) throw new Error("load");
+        const data = (await orgRes.json()) as OrganizationSummary[];
+        // Same predicate as personal token mint: at least one board the user can open.
+        const readableBoards = boardsRes.ok ? ((await boardsRes.json()) as unknown) : [];
         if (cancelled) return;
         setOrganizations(data);
         setOrganizationId(data[0]?.id ?? "");
         setBoardId(data[0]?.boards[0]?.id ?? "");
-        setCanCreateFull(data.some((org) => org.boards.length > 0));
+        setCanCreateFull(Array.isArray(readableBoards) && readableBoards.length > 0);
       } catch {
         if (!cancelled) toast.error(t("mcpLoadError"));
       } finally {
