@@ -84,6 +84,16 @@ const LEGACY_RULES: LegacyRule[] = [
     names: ["actor", "ticket"],
   },
   {
+    pattern: /^(.+) asignó a (.+) como reporter de "(.+)"$/,
+    key: "activity.reporterAssigned",
+    names: ["actor", "name", "ticket"],
+  },
+  {
+    pattern: /^(.+) removió al reporter de la tarea "(.+)"$/,
+    key: "activity.reporterRemoved",
+    names: ["actor", "ticket"],
+  },
+  {
     pattern: /^(.+) asignó "(.+)" a (.+)$/,
     key: "activity.ticketAssigned",
     names: ["actor", "ticket", "assignee"],
@@ -146,6 +156,11 @@ const LEGACY_RULES: LegacyRule[] = [
   {
     pattern: /^(.+) te asignó como QA en la tarea "(.+)"$/,
     key: "notifications.assignedYouQa",
+    names: ["actor", "ticket"],
+  },
+  {
+    pattern: /^(.+) te asignó como reporter en la tarea "(.+)"$/,
+    key: "notifications.assignedYouReporter",
     names: ["actor", "ticket"],
   },
   {

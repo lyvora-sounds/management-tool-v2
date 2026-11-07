@@ -93,14 +93,14 @@ export function parseRelationPatch(input: Record<string, unknown>): RelationPatc
 }
 
 type Actor = { id: string; name: string };
-type State = Prisma.TaskGetPayload<{ select: typeof relationSelect }> & { id: string; title: string; assigneeId: string | null; qaId: string | null; shareToken: string | null };
-type Patch = RelationPatch & { assigneeId?: string | null; qaId?: string | null; epicId?: string | null };
+type State = Prisma.TaskGetPayload<{ select: typeof relationSelect }> & { id: string; title: string; assigneeId: string | null; qaId: string | null; reporterId: string | null; shareToken: string | null };
+type Patch = RelationPatch & { assigneeId?: string | null; qaId?: string | null; reporterId?: string | null; epicId?: string | null };
 export async function validateTicketRelations(tx: Prisma.TransactionClient, boardId: string, actor: Actor, patch: Patch) {
   const { collaboratorIds, labelIds, customFields, subtasks, comments, attachments, shared, ...scalar } = patch;
-  if (patch.assigneeId !== undefined || patch.qaId !== undefined || collaboratorIds !== undefined) {
+  if (patch.assigneeId !== undefined || patch.qaId !== undefined || patch.reporterId !== undefined || collaboratorIds !== undefined) {
     const board = await tx.board.findUnique({ where: { id: boardId }, select: { memberCanAssign: true } });
     if (!board || (!board.memberCanAssign && !(await isBoardAdmin(actor.id, boardId)))) throw new McpWriteError("No permission to assign people on this board");
-    for (const userId of new Set([patch.assigneeId, patch.qaId, ...(collaboratorIds ?? [])].filter((value): value is string => !!value))) {
+    for (const userId of new Set([patch.assigneeId, patch.qaId, patch.reporterId, ...(collaboratorIds ?? [])].filter((value): value is string => !!value))) {
       if (!(await canReadBoard(userId, boardId))) throw new McpWriteError("Assigned people must have access to this board");
     }
   }
@@ -114,7 +114,11 @@ async function notify(tx: Prisma.TransactionClient, boardId: string, actor: Acto
   if (userId !== actor.id) await tx.notification.create({ data: { userId, boardId, taskId: task.id, type, message: encodeLogMessage(key, { actor: actor.name, ticket: task.title }) } });
 }
 export async function applyTicketRelations(tx: Prisma.TransactionClient, boardId: string, actor: Actor, task: State, patch: Patch, capture: (id: string) => Promise<void>, uploaded: string[] = []) {
-  for (const [field, type, key] of [["assigneeId", "assigned", "notifications.assignedYou"], ["qaId", "qa_assigned", "notifications.assignedYouQa"]] as const) {
+  for (const [field, type, key] of [
+    ["assigneeId", "assigned", "notifications.assignedYou"],
+    ["qaId", "qa_assigned", "notifications.assignedYouQa"],
+    ["reporterId", "reporter_assigned", "notifications.assignedYouReporter"],
+  ] as const) {
     if (patch[field] && patch[field] !== task[field]) await notify(tx, boardId, actor, task, patch[field], type, key);
   }
   if (patch.shared !== undefined) await tx.task.update({ where: { id: task.id }, data: { shareToken: patch.shared ? task.shareToken ?? randomUUID() : null } });
@@ -191,6 +195,7 @@ export async function restoreTicketRelations(tx: Prisma.TransactionClient, board
   await validateTicketRelations(tx, boardId, actor, {
     ...(previous.assigneeId !== current.assigneeId ? { assigneeId: previous.assigneeId } : {}),
     ...(previous.qaId !== current.qaId ? { qaId: previous.qaId } : {}),
+    ...(previous.reporterId !== current.reporterId ? { reporterId: previous.reporterId } : {}),
     ...(collaboratorsChanged ? { collaboratorIds } : {}),
     epicId: previous.epicId, labelIds: previous.labels.map(row => row.labelId),
   });
@@ -217,7 +222,11 @@ export async function restoreTicketRelations(tx: Prisma.TransactionClient, board
   await tx.comment.createMany({ data: previous.comments.map(row => ({ ...row, taskId: current.id, createdAt: new Date(row.createdAt), updatedAt: new Date(row.updatedAt) })) });
   await tx.attachment.deleteMany({ where: { taskId: current.id } });
   await tx.attachment.createMany({ data: previous.attachments.map(row => ({ ...row, taskId: current.id, createdAt: new Date(row.createdAt) })) });
-  for (const [field, type, key] of [["assigneeId", "assigned", "notifications.assignedYou"], ["qaId", "qa_assigned", "notifications.assignedYouQa"]] as const) if (previous[field] && previous[field] !== current[field]) await notify(tx, boardId, actor, current, previous[field], type, key);
+  for (const [field, type, key] of [
+    ["assigneeId", "assigned", "notifications.assignedYou"],
+    ["qaId", "qa_assigned", "notifications.assignedYouQa"],
+    ["reporterId", "reporter_assigned", "notifications.assignedYouReporter"],
+  ] as const) if (previous[field] && previous[field] !== current[field]) await notify(tx, boardId, actor, current, previous[field], type, key);
 }
 
 export async function cleanupTicketUploads(urls: string[]) {

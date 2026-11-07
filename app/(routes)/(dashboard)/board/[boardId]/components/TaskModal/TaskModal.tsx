@@ -53,6 +53,7 @@ import { TaskDescriptionEditor } from "../TaskDescriptionEditor/TaskDescriptionE
 import { TaskAssignee } from "../TaskAssignee/TaskAssignee";
 import { TaskCollaborators } from "../TaskCollaborators/TaskCollaborators";
 import { TaskQa } from "../TaskQa/TaskQa";
+import { TaskReporter } from "../TaskReporter/TaskReporter";
 import { TaskSubtasks } from "../TaskSubtasks/TaskSubtasks";
 import { TaskPriority } from "../TaskPriority/TaskPriority";
 import { TaskAiImprove } from "../TaskAiImprove/TaskAiImprove";
@@ -143,6 +144,9 @@ export function TaskModal({
   const [qa, setQa] = useState<BoardUser | null | undefined>(
     currentTask.qa,
   );
+  const [reporter, setReporter] = useState<BoardUser | null | undefined>(
+    currentTask.reporter,
+  );
   const [collaborators, setCollaborators] = useState<TaskCollaborator[]>(
     currentTask.collaborators ?? [],
   );
@@ -189,6 +193,7 @@ export function TaskModal({
       setActiveLabels(currentTask.labels);
       setAssignee(currentTask.assignee);
       setQa(currentTask.qa);
+      setReporter(currentTask.reporter);
       setCollaborators(currentTask.collaborators ?? []);
       setPriority((currentTask.priority as Priority) ?? null);
       setCurrentEpicId(currentTask.epicId ?? null);
@@ -853,6 +858,7 @@ export function TaskModal({
                   memberCanAssign ||
                   Boolean(assignee) ||
                   Boolean(qa) ||
+                  Boolean(reporter) ||
                   collaborators.length > 0) && (
                   <section
                     aria-labelledby="task-meta-people"
@@ -865,6 +871,20 @@ export function TaskModal({
                       {t("fieldGroupPeople")}
                     </h3>
                     <div className="flex gap-2 flex-wrap items-center">
+                      <TaskReporter
+                        taskId={currentTask.id}
+                        boardUsers={boardUsers}
+                        reporter={reporter}
+                        canManage={canManage}
+                        memberCanAssign={memberCanAssign}
+                        onReporterChange={(nextReporter) => {
+                          setReporter(nextReporter);
+                          updateTask(currentListId, currentTask.id, {
+                            reporter: nextReporter,
+                            reporterId: nextReporter ? nextReporter.id : null,
+                          });
+                        }}
+                      />
                       <TaskAssignee
                         taskId={currentTask.id}
                         boardUsers={boardUsers}

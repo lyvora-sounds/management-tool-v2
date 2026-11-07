@@ -843,6 +843,9 @@
     "collaboratorsCount": "Mga collaborator ({count})",
     "qaLabel": "QA",
     "qaQuality": "QA / Quality (1 tao)",
+    "reporterLabel": "Reporter",
+    "reporterTitle": "Reporter (nag-report ng issue)",
+    "reporterHint": "Ang reporter ang taong nag-uulat ng issue.",
     "subtasks": "Mga subtask",
     "newSubtask": "Bagong subtask...",
     "addSubtask": "Magdagdag ng subtask",
@@ -1298,6 +1301,8 @@
     "collaboratorRemoved": "Inalis ni {actor} si {name} bilang collaborator sa \"{ticket}\"",
     "qaAssigned": "Ini-assign ni {actor} si {name} bilang QA ng \"{ticket}\"",
     "qaRemoved": "Inalis ni {actor} ang QA sa ticket na \"{ticket}\"",
+    "reporterAssigned": "Itinakda ni {actor} si {name} bilang reporter ng \"{ticket}\"",
+    "reporterRemoved": "Inalis ni {actor} ang reporter sa ticket na \"{ticket}\"",
     "brainDump": "Gumawa si {actor} ng {count, plural, one {# ticket} other {# tickets}} gamit ang AI Brain Dump",
     "brainDumpCount": "Gumawa ng {count, plural, one {# ticket} other {# tickets}} gamit ang AI Brain Dump",
     "mcpCreated": "Gumawa si {actor} ng {count} tickets sa pamamagitan ng MCP",
@@ -1314,6 +1319,7 @@
     "assignedYou": "Ini-assign sa iyo ni {actor} ang ticket na \"{ticket}\"",
     "commented": "Nag-comment si {actor} sa ticket na \"{ticket}\"",
     "assignedYouQa": "Ini-assign ka ni {actor} bilang QA sa ticket na \"{ticket}\"",
+    "assignedYouReporter": "Itinakda ka ni {actor} bilang reporter sa ticket na \"{ticket}\"",
     "addedYouCollaborator": "Idinagdag ka ni {actor} bilang collaborator sa ticket na \"{ticket}\""
   },
   "invite": {

@@ -843,6 +843,9 @@
     "collaboratorsCount": "Collaborators ({count})",
     "qaLabel": "QA",
     "qaQuality": "QA / Quality (1 person)",
+    "reporterLabel": "Reporter",
+    "reporterTitle": "Reporter (who filed the issue)",
+    "reporterHint": "The reporter is the person who reports the issue.",
     "subtasks": "Subtasks",
     "newSubtask": "New subtask...",
     "addSubtask": "Add subtask",
@@ -1298,6 +1301,8 @@
     "collaboratorRemoved": "{actor} removed {name} as a collaborator on \"{ticket}\"",
     "qaAssigned": "{actor} assigned {name} as QA of \"{ticket}\"",
     "qaRemoved": "{actor} removed QA from the ticket \"{ticket}\"",
+    "reporterAssigned": "{actor} set {name} as reporter of \"{ticket}\"",
+    "reporterRemoved": "{actor} removed the reporter from the ticket \"{ticket}\"",
     "brainDump": "{actor} created {count, plural, one {# ticket} other {# tickets}} with AI Brain Dump",
     "brainDumpCount": "Created {count, plural, one {# ticket} other {# tickets}} with AI Brain Dump",
     "mcpCreated": "{actor} created {count} tickets through MCP",
@@ -1314,6 +1319,7 @@
     "assignedYou": "{actor} assigned you the ticket \"{ticket}\"",
     "commented": "{actor} commented on the ticket \"{ticket}\"",
     "assignedYouQa": "{actor} assigned you as QA on the ticket \"{ticket}\"",
+    "assignedYouReporter": "{actor} set you as reporter on the ticket \"{ticket}\"",
     "addedYouCollaborator": "{actor} added you as a collaborator on the ticket \"{ticket}\""
   },
   "invite": {
