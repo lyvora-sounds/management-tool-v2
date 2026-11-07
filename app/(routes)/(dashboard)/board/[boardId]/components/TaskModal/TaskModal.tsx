@@ -15,6 +15,7 @@ import {
   Share2,
   Layers,
   Calendar,
+  Globe,
 } from "lucide-react";
 import {
   Dialog,
@@ -65,10 +66,12 @@ import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { TaskModalProps } from "./TaskModal.types";
 import { toast } from "sonner";
 import { TaskDevelopment } from "./TaskDevelopment";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { getStatusTheme, isDoneList, targetListForCompletion } from "@/lib/statusTheme";
 import { useBoardAccess } from "../BoardAccess";
+
+type DescriptionLanguage = "en" | "es" | "tl";
 
 export function TaskModal({
   task,
@@ -82,6 +85,7 @@ export function TaskModal({
   memberCanAssign,
 }: TaskModalProps) {
   const { canEdit } = useBoardAccess();
+  const locale = useLocale();
   const t = useTranslations("task");
   const tBoard = useTranslations("board");
   const lists = useBoardStore((s) => s.lists);
@@ -151,6 +155,10 @@ export function TaskModal({
   const [currentQuarter, setCurrentQuarter] = useState<string>(
     currentTask.quarter ?? "",
   );
+  const [descriptionLanguage, setDescriptionLanguage] =
+    useState<DescriptionLanguage>(
+      locale === "es" || locale === "tl" ? locale : "en",
+    );
   const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
@@ -626,6 +634,9 @@ export function TaskModal({
                     taskId={currentTask.id}
                     currentTitle={savedTitle}
                     currentDescription={savedDescription}
+                    descriptionLanguage={descriptionLanguage}
+                    onDescriptionLanguageChange={setDescriptionLanguage}
+                    showLanguageSelect={false}
                     onApply={handleAiApply}
                   />
                 )}
@@ -726,7 +737,32 @@ export function TaskModal({
                         className="text-sm font-sans font-bold placeholder:font-bold bg-transparent border-0 outline-none w-20"
                       />
                     </div>
+                    {!currentStartDate && !currentDueDate && (
+                      <TaskDatePicker
+                        taskId={currentTask.id}
+                        listId={currentListId}
+                        startDate={currentStartDate}
+                        dueDate={currentDueDate}
+                        onSaved={(s, d) => {
+                          setCurrentStartDate(s);
+                          setCurrentDueDate(d);
+                        }}
+                      />
+                    )}
                   </div>
+                  {(currentStartDate || currentDueDate) && (
+                    <TaskDatePicker
+                      taskId={currentTask.id}
+                      listId={currentListId}
+                      startDate={currentStartDate}
+                      dueDate={currentDueDate}
+                      hideTrigger
+                      onSaved={(s, d) => {
+                        setCurrentStartDate(s);
+                        setCurrentDueDate(d);
+                      }}
+                    />
+                  )}
                 </section>
 
                 <section
@@ -749,18 +785,6 @@ export function TaskModal({
                         updateTask(currentListId, currentTask.id, { labels });
                       }}
                     />
-                    {!currentStartDate && !currentDueDate && (
-                      <TaskDatePicker
-                        taskId={currentTask.id}
-                        listId={currentListId}
-                        startDate={currentStartDate}
-                        dueDate={currentDueDate}
-                        onSaved={(s, d) => {
-                          setCurrentStartDate(s);
-                          setCurrentDueDate(d);
-                        }}
-                      />
-                    )}
                     <TaskPriority
                       taskId={currentTask.id}
                       priority={priority}
@@ -769,6 +793,36 @@ export function TaskModal({
                         updateTask(currentListId, currentTask.id, { priority: p });
                       }}
                     />
+                    {canEdit && (
+                      <span className="relative inline-flex h-8 shrink-0 items-center rounded-md border bg-background pl-2.5 pr-2 shadow-2xs">
+                        <Globe size={13} className="shrink-0 text-muted-foreground" aria-hidden />
+                        <select
+                          aria-label={t("descriptionLanguage")}
+                          title={t("descriptionLanguage")}
+                          value={descriptionLanguage}
+                          onChange={(event) => {
+                            const language = event.target.value;
+                            if (
+                              language === "en" ||
+                              language === "es" ||
+                              language === "tl"
+                            ) {
+                              setDescriptionLanguage(language);
+                            }
+                          }}
+                          className="h-8 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-1.5 pr-5 text-sm font-sans leading-8 font-bold text-foreground focus-visible:outline-none"
+                        >
+                          <option value="en">English</option>
+                          <option value="es">Español</option>
+                          <option value="tl">Tagalog</option>
+                        </select>
+                        <ChevronDown
+                          size={14}
+                          className="pointer-events-none absolute right-2 text-muted-foreground"
+                          aria-hidden
+                        />
+                      </span>
+                    )}
                     {canEdit && (
                       <Button
                         variant="outline"
@@ -791,19 +845,6 @@ export function TaskModal({
                         </Badge>
                       ))}
                     </div>
-                  )}
-                  {(currentStartDate || currentDueDate) && (
-                    <TaskDatePicker
-                      taskId={currentTask.id}
-                      listId={currentListId}
-                      startDate={currentStartDate}
-                      dueDate={currentDueDate}
-                      hideTrigger
-                      onSaved={(s, d) => {
-                        setCurrentStartDate(s);
-                        setCurrentDueDate(d);
-                      }}
-                    />
                   )}
                   <TaskAttachments ref={attachmentsRef} taskId={currentTask.id} />
                 </section>

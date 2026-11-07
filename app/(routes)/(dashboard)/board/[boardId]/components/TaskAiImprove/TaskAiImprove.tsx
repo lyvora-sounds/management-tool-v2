@@ -11,10 +11,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { ImproveTaskResult } from "@/lib/ai/types";
 import Link from "next/link";
 
+type DescriptionLanguage = "en" | "es" | "tl";
+
 interface TaskAiImproveProps {
   taskId: string;
   currentTitle: string;
   currentDescription: string;
+  /** When provided with onDescriptionLanguageChange, language is controlled by the parent. */
+  descriptionLanguage?: DescriptionLanguage;
+  onDescriptionLanguageChange?: (language: DescriptionLanguage) => void;
+  /** Hide the inline language chip (parent renders it elsewhere, e.g. Attributes). */
+  showLanguageSelect?: boolean;
   onApply: (
     newTitle: string,
     newDescription: string,
@@ -26,12 +33,20 @@ export function TaskAiImprove({
   taskId: _taskId,
   currentTitle,
   currentDescription,
+  descriptionLanguage: descriptionLanguageProp,
+  onDescriptionLanguageChange,
+  showLanguageSelect = true,
   onApply,
 }: TaskAiImproveProps) {
   const locale = useLocale();
-  const [descriptionLanguage, setDescriptionLanguage] = useState<"en" | "es" | "tl">(
+  const [internalLanguage, setInternalLanguage] = useState<DescriptionLanguage>(
     locale === "es" || locale === "tl" ? locale : "en",
   );
+  const descriptionLanguage = descriptionLanguageProp ?? internalLanguage;
+  const setDescriptionLanguage = (language: DescriptionLanguage) => {
+    if (onDescriptionLanguageChange) onDescriptionLanguageChange(language);
+    else setInternalLanguage(language);
+  };
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
@@ -111,27 +126,29 @@ export function TaskAiImprove({
           <Sparkles size={13} />
           <span>{t("improveWithAi")}</span>
         </button>
-        <span className="relative inline-flex h-8 shrink-0 items-center rounded-full border bg-background pl-2.5 pr-2 shadow-2xs">
-          <Globe size={13} className="shrink-0 text-muted-foreground" aria-hidden />
-          <select
-            aria-label={t("descriptionLanguage")}
-            title={t("descriptionLanguage")}
-            value={descriptionLanguage}
-            onChange={(event) => {
-              const language = event.target.value;
-              if (language === "en" || language === "es" || language === "tl") {
-                setDescriptionLanguage(language);
-              }
-            }}
-            disabled={loading}
-            className="h-8 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-1.5 pr-5 text-sm font-sans leading-8 font-medium text-foreground focus-visible:outline-none"
-          >
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="tl">Tagalog</option>
-          </select>
-          <ChevronDown size={14} className="pointer-events-none absolute right-2 text-muted-foreground" aria-hidden />
-        </span>
+        {showLanguageSelect && (
+          <span className="relative inline-flex h-8 shrink-0 items-center rounded-full border bg-background pl-2.5 pr-2 shadow-2xs">
+            <Globe size={13} className="shrink-0 text-muted-foreground" aria-hidden />
+            <select
+              aria-label={t("descriptionLanguage")}
+              title={t("descriptionLanguage")}
+              value={descriptionLanguage}
+              onChange={(event) => {
+                const language = event.target.value;
+                if (language === "en" || language === "es" || language === "tl") {
+                  setDescriptionLanguage(language);
+                }
+              }}
+              disabled={loading}
+              className="h-8 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-1.5 pr-5 text-sm font-sans leading-8 font-medium text-foreground focus-visible:outline-none"
+            >
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="tl">Tagalog</option>
+            </select>
+            <ChevronDown size={14} className="pointer-events-none absolute right-2 text-muted-foreground" aria-hidden />
+          </span>
+        )}
       </>
     );
   }
