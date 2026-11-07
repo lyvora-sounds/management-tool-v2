@@ -634,10 +634,16 @@ export function TaskModal({
 
               {/* Metadata grouped by subject: Placement, Details, People */}
               <div className="flex flex-col gap-3 [&_button]:font-bold [&_button]:font-sans [&_button]:text-sm [&_input]:font-bold [&_input]:font-sans [&_input]:text-sm">
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <section
+                  aria-labelledby="task-meta-placement"
+                  className="flex flex-col gap-1.5"
+                >
+                  <h3
+                    id="task-meta-placement"
+                    className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                  >
                     {t("fieldGroupPlacement")}
-                  </span>
+                  </h3>
                   <div className="flex gap-2 flex-wrap items-center">
                     {/* Selector de Estado / Lista */}
                     <Select
@@ -709,8 +715,9 @@ export function TaskModal({
 
                     {/* Quarter Input */}
                     <div className="flex items-center gap-1 border rounded-md px-2 py-1 h-8 bg-background">
-                      <Calendar size={13} className="text-muted-foreground" />
+                      <Calendar size={13} className="text-muted-foreground" aria-hidden />
                       <input
+                        aria-label={t("quarterLabel")}
                         placeholder={t("quarterPlaceholder")}
                         value={currentQuarter}
                         readOnly={!canEdit}
@@ -720,12 +727,18 @@ export function TaskModal({
                       />
                     </div>
                   </div>
-                </div>
+                </section>
 
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <section
+                  aria-labelledby="task-meta-details"
+                  className="flex flex-col gap-1.5"
+                >
+                  <h3
+                    id="task-meta-details"
+                    className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                  >
                     {t("fieldGroupDetails")}
-                  </span>
+                  </h3>
                   <div className="flex gap-2 flex-wrap items-center">
                     <TaskLabels
                       taskId={currentTask.id}
@@ -766,86 +779,95 @@ export function TaskModal({
                       </Button>
                     )}
                   </div>
-                </div>
+                  {activeLabels.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {activeLabels.map(({ label }) => (
+                        <Badge
+                          key={label.id}
+                          className="text-white font-medium"
+                          style={{ backgroundColor: label.color }}
+                        >
+                          {label.title}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  {(currentStartDate || currentDueDate) && (
+                    <TaskDatePicker
+                      taskId={currentTask.id}
+                      listId={currentListId}
+                      startDate={currentStartDate}
+                      dueDate={currentDueDate}
+                      hideTrigger
+                      onSaved={(s, d) => {
+                        setCurrentStartDate(s);
+                        setCurrentDueDate(d);
+                      }}
+                    />
+                  )}
+                  <TaskAttachments ref={attachmentsRef} taskId={currentTask.id} />
+                </section>
 
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("fieldGroupPeople")}
-                  </span>
-                  <div className="flex gap-2 flex-wrap items-center">
-                    <TaskAssignee
-                      taskId={currentTask.id}
-                      boardUsers={boardUsers}
-                      assignee={assignee}
-                      canManage={canManage}
-                      memberCanAssign={memberCanAssign}
-                      onAssigneeChange={(nextAssignee) => {
-                        setAssignee(nextAssignee);
-                        updateTask(currentListId, currentTask.id, {
-                          assignee: nextAssignee,
-                          assigneeId: nextAssignee ? nextAssignee.id : null,
-                        });
-                      }}
-                    />
-                    <TaskCollaborators
-                      taskId={currentTask.id}
-                      boardUsers={boardUsers}
-                      collaborators={collaborators}
-                      canManage={canManage}
-                      memberCanAssign={memberCanAssign}
-                      onCollaboratorsChange={(nextCollabs) => {
-                        setCollaborators(nextCollabs);
-                        updateTask(currentListId, currentTask.id, {
-                          collaborators: nextCollabs,
-                        });
-                      }}
-                    />
-                    <TaskQa
-                      taskId={currentTask.id}
-                      boardUsers={boardUsers}
-                      qa={qa}
-                      canManage={canManage}
-                      memberCanAssign={memberCanAssign}
-                      onQaChange={(nextQa) => {
-                        setQa(nextQa);
-                        updateTask(currentListId, currentTask.id, {
-                          qa: nextQa,
-                          qaId: nextQa ? nextQa.id : null,
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {activeLabels.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {activeLabels.map(({ label }) => (
-                      <Badge
-                        key={label.id}
-                        className="text-white font-medium"
-                        style={{ backgroundColor: label.color }}
-                      >
-                        {label.title}
-                      </Badge>
-                    ))}
-                  </div>
+                {(canManage ||
+                  memberCanAssign ||
+                  Boolean(assignee) ||
+                  Boolean(qa) ||
+                  collaborators.length > 0) && (
+                  <section
+                    aria-labelledby="task-meta-people"
+                    className="flex flex-col gap-1.5"
+                  >
+                    <h3
+                      id="task-meta-people"
+                      className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                      {t("fieldGroupPeople")}
+                    </h3>
+                    <div className="flex gap-2 flex-wrap items-center">
+                      <TaskAssignee
+                        taskId={currentTask.id}
+                        boardUsers={boardUsers}
+                        assignee={assignee}
+                        canManage={canManage}
+                        memberCanAssign={memberCanAssign}
+                        onAssigneeChange={(nextAssignee) => {
+                          setAssignee(nextAssignee);
+                          updateTask(currentListId, currentTask.id, {
+                            assignee: nextAssignee,
+                            assigneeId: nextAssignee ? nextAssignee.id : null,
+                          });
+                        }}
+                      />
+                      <TaskCollaborators
+                        taskId={currentTask.id}
+                        boardUsers={boardUsers}
+                        collaborators={collaborators}
+                        canManage={canManage}
+                        memberCanAssign={memberCanAssign}
+                        onCollaboratorsChange={(nextCollabs) => {
+                          setCollaborators(nextCollabs);
+                          updateTask(currentListId, currentTask.id, {
+                            collaborators: nextCollabs,
+                          });
+                        }}
+                      />
+                      <TaskQa
+                        taskId={currentTask.id}
+                        boardUsers={boardUsers}
+                        qa={qa}
+                        canManage={canManage}
+                        memberCanAssign={memberCanAssign}
+                        onQaChange={(nextQa) => {
+                          setQa(nextQa);
+                          updateTask(currentListId, currentTask.id, {
+                            qa: nextQa,
+                            qaId: nextQa ? nextQa.id : null,
+                          });
+                        }}
+                      />
+                    </div>
+                  </section>
                 )}
-
-                {(currentStartDate || currentDueDate) && (
-                  <TaskDatePicker
-                    taskId={currentTask.id}
-                    listId={currentListId}
-                    startDate={currentStartDate}
-                    dueDate={currentDueDate}
-                    hideTrigger
-                    onSaved={(s, d) => {
-                      setCurrentStartDate(s);
-                      setCurrentDueDate(d);
-                    }}
-                  />
-                )}
-
-                <TaskAttachments ref={attachmentsRef} taskId={currentTask.id} />
               </div>
 
               <TaskHierarchy
