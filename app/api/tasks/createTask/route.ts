@@ -58,6 +58,7 @@ export async function POST(req: Request) {
         listId,
         order: lastTask ? lastTask.order + 1 : 0,
         number,
+        reporterId: user.id,
       },
     });
   });

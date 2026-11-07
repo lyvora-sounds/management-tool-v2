@@ -4,7 +4,7 @@ import { DEFAULT_FILTERS } from "@/app/(routes)/(dashboard)/board/[boardId]/comp
 import type { TaskWithLabels } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskCard/TaskCard.types";
 
 const task = (over: Partial<TaskWithLabels> = {}) =>
-  ({ id: "t", archived: false, completed: false, labels: [], dueDate: null, quarter: null, epicId: null, assigneeId: null, assignee: null, qaId: null, qa: null, collaborators: [], ...over }) as unknown as TaskWithLabels;
+  ({ id: "t", archived: false, completed: false, labels: [], dueDate: null, quarter: null, epicId: null, assigneeId: null, assignee: null, qaId: null, qa: null, reporterId: null, reporter: null, collaborators: [], ...over }) as unknown as TaskWithLabels;
 const filters = (over: Partial<typeof DEFAULT_FILTERS> = {}) => ({ ...DEFAULT_FILTERS, ...over });
 
 describe("taskMatchesFilters", () => {

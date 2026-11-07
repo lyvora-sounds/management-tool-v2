@@ -95,7 +95,7 @@ const MIGRATED: Route[] = [
   { method: "PATCH", pattern: /^\/api\/tasks\/updateOrder$/, to: () => "/v1/tasks/order" },
   { method: "DELETE", pattern: /^\/api\/tasks\/deleteTask\/[^/]+$/, to: (p) => `/v1/tasks/${id(p)}` },
   { method: "GET", pattern: /^\/api\/boards\/[^/]+\/tasks$/, to: sameUnderV1 },
-  ...["labels", "assignee", "qa", "collaborators"].map((part) => ({ method: "POST", pattern: new RegExp(`^/api/tasks/[^/]+/${part}$`), to: sameUnderV1 })),
+  ...["labels", "assignee", "qa", "reporter", "collaborators"].map((part) => ({ method: "POST", pattern: new RegExp(`^/api/tasks/[^/]+/${part}$`), to: sameUnderV1 })),
   { method: "GET", pattern: /^\/api\/tasks\/[^/]+\/subtasks$/, to: sameUnderV1 },
   { method: "POST", pattern: /^\/api\/tasks\/[^/]+\/subtasks$/, to: sameUnderV1 },
   { method: "PATCH", pattern: /^\/api\/tasks\/[^/]+\/subtasks\/[^/]+$/, to: sameUnderV1 },

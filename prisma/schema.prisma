@@ -23,6 +23,7 @@ model User {
   boardMembers         BoardMember[]
   assignedTasks        Task[]                @relation("TaskAssignee")
   qaTasks              Task[]                @relation("TaskQA")
+  reportedTasks        Task[]                @relation("TaskReporter")
   taskCollaborators    TaskCollaborator[]
   notifications        Notification[]
   activityLogs         ActivityLog[]
@@ -515,6 +516,9 @@ model Task {
   qaId String?
   qa   User?   @relation("TaskQA", fields: [qaId], references: [id], onDelete: SetNull)
 
+  reporterId String?
+  reporter   User?   @relation("TaskReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+
   labels        TaskLabel[]
   comments      Comment[]
   attachments   Attachment[]
@@ -531,6 +535,7 @@ model Task {
   @@index([archived])
   @@index([assigneeId])
   @@index([qaId])
+  @@index([reporterId])
 }
 
 model TaskCollaborator {
