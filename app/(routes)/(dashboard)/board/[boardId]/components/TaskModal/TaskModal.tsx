@@ -632,168 +632,189 @@ export function TaskModal({
                 <TaskDevelopment taskId={currentTask.id} />
               </div>
 
-              {/* Labels + Dates + Priority + Epic + Quarter + Attachments row */}
-              <div className="flex flex-col gap-2 [&_button]:font-bold [&_button]:font-sans [&_button]:text-sm [&_input]:font-bold [&_input]:font-sans [&_input]:text-sm">
-                <div className="flex gap-2 flex-wrap items-center">
-                  {/* Selector de Estado / Lista */}
-                  <Select
-                    value={currentListId}
-                    disabled={!canEdit}
-                    onValueChange={(targetListId) => {
-                      if (targetListId) handleMoveToList(targetListId);
-                    }}
-                  >
-                    <SelectTrigger className="h-8 text-sm font-sans w-auto min-w-32 gap-1.5 font-bold bg-background border shadow-2xs">
-                      <span
-                        className={cn(
-                          "w-2 h-2 rounded-full shrink-0",
-                          getStatusTheme(currentListTitle || "").dot,
-                        )}
-                      />
-                      <span className="truncate">{currentListTitle}</span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {lists.map((l) => {
-                        const theme = getStatusTheme(l.title);
-                        return (
-                          <SelectItem
-                            key={l.id}
-                            value={l.id}
-                            className="text-xs cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={cn("w-2 h-2 rounded-full", theme.dot)}
-                              />
-                              <span>{l.title}</span>
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-
-                  <TaskLabels
-                    taskId={currentTask.id}
-                    boardId={boardId}
-                    activeLabels={activeLabels}
-                    onLabelsChange={(labels) => {
-                      setActiveLabels(labels);
-                      updateTask(currentListId, currentTask.id, { labels });
-                    }}
-                  />
-                  {!currentStartDate && !currentDueDate && (
-                    <TaskDatePicker
-                      taskId={currentTask.id}
-                      listId={currentListId}
-                      startDate={currentStartDate}
-                      dueDate={currentDueDate}
-                      onSaved={(s, d) => {
-                        setCurrentStartDate(s);
-                        setCurrentDueDate(d);
-                      }}
-                    />
-                  )}
-                  <TaskPriority
-                    taskId={currentTask.id}
-                    priority={priority}
-                    onSaved={(p) => {
-                      setPriority(p);
-                      updateTask(currentListId, currentTask.id, { priority: p });
-                    }}
-                  />
-
-                  {/* Epic Selector */}
-                  {epics.length > 0 && (
+              {/* Metadata grouped by subject: Placement, Details, People */}
+              <div className="flex flex-col gap-3 [&_button]:font-bold [&_button]:font-sans [&_button]:text-sm [&_input]:font-bold [&_input]:font-sans [&_input]:text-sm">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("fieldGroupPlacement")}
+                  </span>
+                  <div className="flex gap-2 flex-wrap items-center">
+                    {/* Selector de Estado / Lista */}
                     <Select
-                      // sin `items`, base-ui muestra el id de la épica en el botón en lugar de su nombre
-                      items={epicItems}
+                      value={currentListId}
                       disabled={!canEdit}
-                      value={currentEpicId || "none"}
-                      onValueChange={(v) => saveEpic(v === "none" ? null : v)}
+                      onValueChange={(targetListId) => {
+                        if (targetListId) handleMoveToList(targetListId);
+                      }}
                     >
-                      <SelectTrigger className="h-8 text-sm font-sans font-bold w-auto min-w-28 gap-1">
-                        <Layers size={13} className="text-muted-foreground" />
-                        <SelectValue placeholder={tBoard("epicFilter")} />
+                      <SelectTrigger className="h-8 text-sm font-sans w-auto min-w-32 gap-1.5 font-bold bg-background border shadow-2xs">
+                        <span
+                          className={cn(
+                            "w-2 h-2 rounded-full shrink-0",
+                            getStatusTheme(currentListTitle || "").dot,
+                          )}
+                        />
+                        <span className="truncate">{currentListTitle}</span>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">{t("noEpic")}</SelectItem>
-                        {epics.map((ep) => (
-                          <SelectItem key={ep.id} value={ep.id}>
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className="w-2 h-2 rounded-full"
-                                style={{ backgroundColor: ep.color }}
-                              />
-                              <span>{ep.title}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
+                        {lists.map((l) => {
+                          const theme = getStatusTheme(l.title);
+                          return (
+                            <SelectItem
+                              key={l.id}
+                              value={l.id}
+                              className="text-xs cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={cn("w-2 h-2 rounded-full", theme.dot)}
+                                />
+                                <span>{l.title}</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
-                  )}
 
-                  {/* Quarter Input */}
-                  <div className="flex items-center gap-1 border rounded-md px-2 py-1 h-8 bg-background">
-                    <Calendar size={13} className="text-muted-foreground" />
-                    <input
-                      placeholder={t("quarterPlaceholder")}
-                      value={currentQuarter}
-                      readOnly={!canEdit}
-                      onChange={(e) => setCurrentQuarter(e.target.value)}
-                      onBlur={() => saveQuarter(currentQuarter)}
-                      className="text-sm font-sans font-bold placeholder:font-bold bg-transparent border-0 outline-none w-20"
+                    {/* Epic Selector */}
+                    {epics.length > 0 && (
+                      <Select
+                        // sin `items`, base-ui muestra el id de la épica en el botón en lugar de su nombre
+                        items={epicItems}
+                        disabled={!canEdit}
+                        value={currentEpicId || "none"}
+                        onValueChange={(v) => saveEpic(v === "none" ? null : v)}
+                      >
+                        <SelectTrigger className="h-8 text-sm font-sans font-bold w-auto min-w-28 gap-1">
+                          <Layers size={13} className="text-muted-foreground" />
+                          <SelectValue placeholder={tBoard("epicFilter")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">{t("noEpic")}</SelectItem>
+                          {epics.map((ep) => (
+                            <SelectItem key={ep.id} value={ep.id}>
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ backgroundColor: ep.color }}
+                                />
+                                <span>{ep.title}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+
+                    {/* Quarter Input */}
+                    <div className="flex items-center gap-1 border rounded-md px-2 py-1 h-8 bg-background">
+                      <Calendar size={13} className="text-muted-foreground" />
+                      <input
+                        placeholder={t("quarterPlaceholder")}
+                        value={currentQuarter}
+                        readOnly={!canEdit}
+                        onChange={(e) => setCurrentQuarter(e.target.value)}
+                        onBlur={() => saveQuarter(currentQuarter)}
+                        className="text-sm font-sans font-bold placeholder:font-bold bg-transparent border-0 outline-none w-20"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("fieldGroupDetails")}
+                  </span>
+                  <div className="flex gap-2 flex-wrap items-center">
+                    <TaskLabels
+                      taskId={currentTask.id}
+                      boardId={boardId}
+                      activeLabels={activeLabels}
+                      onLabelsChange={(labels) => {
+                        setActiveLabels(labels);
+                        updateTask(currentListId, currentTask.id, { labels });
+                      }}
+                    />
+                    {!currentStartDate && !currentDueDate && (
+                      <TaskDatePicker
+                        taskId={currentTask.id}
+                        listId={currentListId}
+                        startDate={currentStartDate}
+                        dueDate={currentDueDate}
+                        onSaved={(s, d) => {
+                          setCurrentStartDate(s);
+                          setCurrentDueDate(d);
+                        }}
+                      />
+                    )}
+                    <TaskPriority
+                      taskId={currentTask.id}
+                      priority={priority}
+                      onSaved={(p) => {
+                        setPriority(p);
+                        updateTask(currentListId, currentTask.id, { priority: p });
+                      }}
+                    />
+                    {canEdit && (
+                      <Button
+                        variant="outline"
+                        onClick={() => attachmentsRef.current?.openFilePicker()}
+                      >
+                        <Paperclip size={15} />
+                        <span>{t("attach")}</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("fieldGroupPeople")}
+                  </span>
+                  <div className="flex gap-2 flex-wrap items-center">
+                    <TaskAssignee
+                      taskId={currentTask.id}
+                      boardUsers={boardUsers}
+                      assignee={assignee}
+                      canManage={canManage}
+                      memberCanAssign={memberCanAssign}
+                      onAssigneeChange={(nextAssignee) => {
+                        setAssignee(nextAssignee);
+                        updateTask(currentListId, currentTask.id, {
+                          assignee: nextAssignee,
+                          assigneeId: nextAssignee ? nextAssignee.id : null,
+                        });
+                      }}
+                    />
+                    <TaskCollaborators
+                      taskId={currentTask.id}
+                      boardUsers={boardUsers}
+                      collaborators={collaborators}
+                      canManage={canManage}
+                      memberCanAssign={memberCanAssign}
+                      onCollaboratorsChange={(nextCollabs) => {
+                        setCollaborators(nextCollabs);
+                        updateTask(currentListId, currentTask.id, {
+                          collaborators: nextCollabs,
+                        });
+                      }}
+                    />
+                    <TaskQa
+                      taskId={currentTask.id}
+                      boardUsers={boardUsers}
+                      qa={qa}
+                      canManage={canManage}
+                      memberCanAssign={memberCanAssign}
+                      onQaChange={(nextQa) => {
+                        setQa(nextQa);
+                        updateTask(currentListId, currentTask.id, {
+                          qa: nextQa,
+                          qaId: nextQa ? nextQa.id : null,
+                        });
+                      }}
                     />
                   </div>
-
-                  {canEdit && <Button
-                    variant="outline"
-                    onClick={() => attachmentsRef.current?.openFilePicker()}
-                  >
-                    <Paperclip size={15} />
-                    <span>{t("attach")}</span>
-                  </Button>}
-                  <TaskAssignee
-                    taskId={currentTask.id}
-                    boardUsers={boardUsers}
-                    assignee={assignee}
-                    canManage={canManage}
-                    memberCanAssign={memberCanAssign}
-                    onAssigneeChange={(nextAssignee) => {
-                      setAssignee(nextAssignee);
-                      updateTask(currentListId, currentTask.id, {
-                        assignee: nextAssignee,
-                        assigneeId: nextAssignee ? nextAssignee.id : null,
-                      });
-                    }}
-                  />
-                  <TaskCollaborators
-                    taskId={currentTask.id}
-                    boardUsers={boardUsers}
-                    collaborators={collaborators}
-                    canManage={canManage}
-                    memberCanAssign={memberCanAssign}
-                    onCollaboratorsChange={(nextCollabs) => {
-                      setCollaborators(nextCollabs);
-                      updateTask(currentListId, currentTask.id, {
-                        collaborators: nextCollabs,
-                      });
-                    }}
-                  />
-                  <TaskQa
-                    taskId={currentTask.id}
-                    boardUsers={boardUsers}
-                    qa={qa}
-                    canManage={canManage}
-                    memberCanAssign={memberCanAssign}
-                    onQaChange={(nextQa) => {
-                      setQa(nextQa);
-                      updateTask(currentListId, currentTask.id, {
-                        qa: nextQa,
-                        qaId: nextQa ? nextQa.id : null,
-                      });
-                    }}
-                  />
                 </div>
 
                 {activeLabels.length > 0 && (
