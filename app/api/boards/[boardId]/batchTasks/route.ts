@@ -82,6 +82,7 @@ export async function POST(
           epicId: item.epicId || null,
           order: currentOrder,
           number,
+          reporterId: user.id,
           subtasks: {
             create: (item.subtasks || []).map((s, idx) => ({
               title: s.title,
@@ -94,6 +95,7 @@ export async function POST(
           subtasks: true,
           assignee: { select: { id: true, name: true, email: true } },
           qa: { select: { id: true, name: true, email: true } },
+          reporter: { select: { id: true, name: true, email: true } },
           collaborators: {
             include: {
               user: { select: { id: true, name: true, email: true } },

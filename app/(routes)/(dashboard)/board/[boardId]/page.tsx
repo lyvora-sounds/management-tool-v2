@@ -39,6 +39,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
               labels: { include: { label: true } },
               assignee: { select: { id: true, name: true, email: true } },
               qa: { select: { id: true, name: true, email: true } },
+              reporter: { select: { id: true, name: true, email: true } },
               collaborators: {
                 include: {
                   user: { select: { id: true, name: true, email: true } },

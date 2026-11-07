@@ -41,7 +41,7 @@ vi.mock("@/lib/db", () => ({ default: {
 } }));
 const { createMcpTicket, createMcpEpic, updateMcpTickets, revertMcpChange, listMcpChanges, taskSnapshot, snapshotsMatch, parseTaskPatch } = await import("@/lib/mcp/writes");
 const context: ExternalAccessContext = { tokenId: "token-1", organizationId: "org-1", boardId: "board-1", boardTitle: "Board", scopes: ["tickets:read", "tickets:write"], fullAccess: false, createdById: "user-1" };
-const task = { id: "task-1", title: "Original", description: null, listId: "list-1", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, assigneeId: null, qaId: null, epicId: null, quarter: null, shareToken: null, collaborators: [], labels: [], customValues: [], subtasks: [], comments: [], attachments: [], startDate: null, dueDate: null, updatedAt: new Date("2026-10-09T10:00:00.000Z") };
+const task = { id: "task-1", title: "Original", description: null, listId: "list-1", order: 0, completed: false, completedAt: null, completedById: null, archived: false, archivedAt: null, priority: null, assigneeId: null, qaId: null, reporterId: null, epicId: null, quarter: null, shareToken: null, collaborators: [], labels: [], customValues: [], subtasks: [], comments: [], attachments: [], startDate: null, dueDate: null, updatedAt: new Date("2026-10-09T10:00:00.000Z") };
 beforeEach(() => {
   vi.clearAllMocks(); editable.mockResolvedValue(true); admin.mockResolvedValue(true);
   credential.mockResolvedValue({ scopes: context.scopes, organizationId: context.organizationId, boardId: context.boardId, fullAccess: false, createdById: "user-1" });

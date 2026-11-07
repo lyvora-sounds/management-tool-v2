@@ -44,7 +44,7 @@ export function CreateTaskForm({ listId }: CreateTaskFormProps) {
 
       if (res.ok) {
         const task = taskFromApi((await res.json()) as ApiCreatedTask);
-        addTask(listId, { ...task, labels: [], collaborators: [], assignee: null, qa: null });
+        addTask(listId, { ...task, labels: [], collaborators: [], assignee: null, qa: null, reporter: null });
         handleClose();
       } else {
         toast.error(t("createError"));

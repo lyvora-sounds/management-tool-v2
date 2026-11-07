@@ -16,7 +16,7 @@ const select = {
   completed: true, completedAt: true, completedById: true,
   archived: true, archivedAt: true, priority: true,
   startDate: true, dueDate: true, updatedAt: true,
-  assigneeId: true, qaId: true, epicId: true, quarter: true, shareToken: true,
+  assigneeId: true, qaId: true, reporterId: true, epicId: true, quarter: true, shareToken: true,
   ...relationSelect,
 } as const;
 type TaskState = Prisma.TaskGetPayload<{ select: typeof select }>;
@@ -27,7 +27,7 @@ export type Snapshot = Omit<TaskState, "completedAt" | "archivedAt" | "startDate
   completedAt: string | null; archivedAt: string | null;
   startDate: string | null; dueDate: string | null; updatedAt: string;
 };
-type Patch = Partial<Pick<TaskState, "title" | "description" | "listId" | "completed" | "archived" | "priority" | "startDate" | "dueDate" | "assigneeId" | "qaId" | "epicId" | "quarter" | "order">> & ReturnType<typeof parseRelationPatch>;
+type Patch = Partial<Pick<TaskState, "title" | "description" | "listId" | "completed" | "archived" | "priority" | "startDate" | "dueDate" | "assigneeId" | "qaId" | "reporterId" | "epicId" | "quarter" | "order">> & ReturnType<typeof parseRelationPatch>;
 
 export function taskSnapshot(task: TaskState): Snapshot {
   return { ...task, subtasks: (task.subtasks ?? []).map(row => ({ ...row, createdAt: row.createdAt.toISOString() })), comments: (task.comments ?? []).map(row => ({ ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() })), attachments: (task.attachments ?? []).map(row => ({ ...row, createdAt: row.createdAt.toISOString() })), completedAt: task.completedAt?.toISOString() ?? null, archivedAt: task.archivedAt?.toISOString() ?? null,
@@ -42,12 +42,12 @@ export function snapshotsMatch(current: Snapshot, expected: Snapshot) {
 
 export function parseTaskPatch(value: unknown): Patch {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new McpWriteError("Changes must be an object");
-  const fields = new Set(["title", "description", "listId", "completed", "archived", "priority", "startDate", "dueDate", "assigneeId", "qaId", "epicId", "quarter", "order", "collaboratorIds", "labelIds", "customFields", "subtasks", "comments", "attachments", "shared"]);
+  const fields = new Set(["title", "description", "listId", "completed", "archived", "priority", "startDate", "dueDate", "assigneeId", "qaId", "reporterId", "epicId", "quarter", "order", "collaboratorIds", "labelIds", "customFields", "subtasks", "comments", "attachments", "shared"]);
   const entries = Object.entries(value);
   if (!entries.length || entries.some(([key]) => !fields.has(key))) throw new McpWriteError("Unsupported or empty task changes");
   const patch: Patch = parseRelationPatch(value as Record<string, unknown>);
   for (const [key, raw] of entries) {
-    if (["assigneeId", "qaId", "epicId", "quarter"].includes(key)) {
+    if (["assigneeId", "qaId", "reporterId", "epicId", "quarter"].includes(key)) {
       if (raw !== null && (typeof raw !== "string" || !raw.trim() || raw.length > 200)) throw new McpWriteError(`Invalid ${key}`);
       if (key === "quarter" && raw !== null && !/^\d{4}-Q[1-4]$/.test(raw as string)) throw new McpWriteError("Invalid quarter");
       Object.assign(patch, { [key]: raw });
@@ -368,6 +368,7 @@ export async function revertMcpChange(context: ExternalAccessContext, changeId: 
           ...(previous.assigneeId !== undefined ? {
             ...(previous.assigneeId !== current.assigneeId ? { assigneeId: previous.assigneeId } : {}),
             ...(previous.qaId !== current.qaId ? { qaId: previous.qaId } : {}),
+            ...(previous.reporterId !== current.reporterId ? { reporterId: previous.reporterId } : {}),
             epicId: previous.epicId, quarter: previous.quarter, shareToken: previous.shareToken,
           } : {}),
         };

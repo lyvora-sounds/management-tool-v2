@@ -7,7 +7,7 @@ vi.mock("@/lib/notifications/webhooks", () => ({ sendBoardWebhookNotification: v
 const { parseRelationPatch, validateTicketRelations, applyTicketRelations, restoreTicketRelations, cleanupTicketUploads } = await import("@/lib/mcp/ticketRelations");
 const { parseTaskPatch, snapshotsMatch, taskSnapshot } = await import("@/lib/mcp/writes");
 const actor = { id: "actor", name: "Daniel" };
-const task = { id: "ticket", title: "Ticket to test", assigneeId: null, qaId: null, shareToken: null, collaborators: [], labels: [], customValues: [], subtasks: [], comments: [], attachments: [] };
+const task = { id: "ticket", title: "Ticket to test", assigneeId: null, qaId: null, reporterId: null, shareToken: null, collaborators: [], labels: [], customValues: [], subtasks: [], comments: [], attachments: [] };
 function transaction() {
   const model = () => ({ create: vi.fn(), createMany: vi.fn(), deleteMany: vi.fn(), update: vi.fn(), delete: vi.fn() });
   return {
