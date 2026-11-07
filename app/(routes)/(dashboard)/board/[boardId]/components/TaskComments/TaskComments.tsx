@@ -11,6 +11,7 @@ import { mentionHandle } from "@/lib/mentions";
 import { CommentItem, TaskCommentsProps } from "./TaskComments.types";
 import { CommentsSkeleton } from "@/components/skeletons";
 import { useBoardAccess } from "../BoardAccess";
+import { FieldGroupInfoHint } from "../FieldGroupInfoHint/FieldGroupInfoHint";
 import { apiFetch } from "@/lib/apiClient";
 
 type Candidate = { key: string; handle: string; agent?: boolean };
@@ -460,7 +461,13 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
               >
                 <Sparkles size={15} />
               </button>
-              <span className="ml-auto hidden pr-1 text-[11px] text-muted-foreground lg:inline">{t("commentHint")}</span>
+              <span className="ml-auto inline-flex items-center pr-1">
+                <FieldGroupInfoHint
+                  text={t("commentHint")}
+                  side="top"
+                  align="end"
+                />
+              </span>
               <button
                 type="button"
                 onClick={submit}

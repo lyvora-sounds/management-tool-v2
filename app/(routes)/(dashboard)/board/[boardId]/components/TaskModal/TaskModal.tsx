@@ -60,6 +60,7 @@ import { TaskAiImprove } from "../TaskAiImprove/TaskAiImprove";
 import { TaskShareModal } from "../TaskShareModal/TaskShareModal";
 import { TaskCustomFields } from "../TaskCustomFields/TaskCustomFields";
 import { TaskHierarchy } from "../TaskHierarchy/TaskHierarchy";
+import { FieldGroupInfoHint } from "../FieldGroupInfoHint/FieldGroupInfoHint";
 import { hierarchyNodesFromLists } from "../TaskHierarchy/hierarchyNodes";
 import type { Priority } from "../TaskPriority/TaskPriority.constants";
 import type { LabelModel } from "@/lib/generated/prisma/models/Label";
@@ -654,12 +655,15 @@ export function TaskModal({
                   aria-labelledby="task-meta-placement"
                   className="flex flex-col gap-1.5"
                 >
-                  <h3
-                    id="task-meta-placement"
-                    className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
-                  >
-                    {t("fieldGroupPlacement")}
-                  </h3>
+                  <div className="flex items-center gap-1.5">
+                    <h3
+                      id="task-meta-placement"
+                      className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                      {t("fieldGroupPlacement")}
+                    </h3>
+                    <FieldGroupInfoHint text={t("fieldGroupPlacementHint")} />
+                  </div>
                   <div className="flex gap-2 flex-wrap items-center">
                     {/* Selector de Estado / Lista */}
                     <Select
@@ -774,12 +778,15 @@ export function TaskModal({
                   aria-labelledby="task-meta-details"
                   className="flex flex-col gap-1.5"
                 >
-                  <h3
-                    id="task-meta-details"
-                    className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
-                  >
-                    {t("fieldGroupDetails")}
-                  </h3>
+                  <div className="flex items-center gap-1.5">
+                    <h3
+                      id="task-meta-details"
+                      className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                      {t("fieldGroupDetails")}
+                    </h3>
+                    <FieldGroupInfoHint text={t("fieldGroupDetailsHint")} />
+                  </div>
                   <div className="flex gap-2 flex-wrap items-center">
                     <TaskLabels
                       taskId={currentTask.id}
@@ -864,12 +871,15 @@ export function TaskModal({
                     aria-labelledby="task-meta-people"
                     className="flex flex-col gap-1.5"
                   >
-                    <h3
-                      id="task-meta-people"
-                      className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
-                    >
-                      {t("fieldGroupPeople")}
-                    </h3>
+                    <div className="flex items-center gap-1.5">
+                      <h3
+                        id="task-meta-people"
+                        className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                      >
+                        {t("fieldGroupPeople")}
+                      </h3>
+                      <FieldGroupInfoHint text={t("fieldGroupPeopleHint")} />
+                    </div>
                     <div className="flex gap-2 flex-wrap items-center">
                       <TaskReporter
                         taskId={currentTask.id}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Flag, Info, X } from "lucide-react";
+import { Check, Flag, X } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -23,34 +23,6 @@ function getInitials(name: string | null, email: string) {
       .slice(0, 2)
       .toUpperCase();
   return email[0].toUpperCase();
-}
-
-function InfoHint({ text }: { text: string }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <span className="relative inline-flex">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-label={text}
-        onClick={(event) => {
-          event.stopPropagation();
-          setOpen((current) => !current);
-        }}
-        className="inline-flex size-5 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-      >
-        <Info size={13} aria-hidden />
-      </button>
-      <span
-        role="tooltip"
-        hidden={!open}
-        className="absolute top-full left-0 z-30 mt-1 w-60 rounded-md bg-foreground px-2.5 py-1.5 text-left text-xs leading-relaxed font-normal text-background shadow-md"
-      >
-        {text}
-      </span>
-    </span>
-  );
 }
 
 export function TaskReporter({
@@ -84,7 +56,6 @@ export function TaskReporter({
         <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400">
           {t("reporterLabel")}:
         </span>
-        <InfoHint text={t("reporterHint")} />
         <div
           title={reporter.name ?? reporter.email}
           className="w-5 h-5 rounded-full bg-sky-600 text-white text-[10px] font-semibold flex items-center justify-center"
@@ -136,12 +107,9 @@ export function TaskReporter({
         />
         <PopoverContent className="w-60 flex flex-col gap-1 p-2" align="start">
           <div className="flex items-center justify-between gap-2 px-1 pb-1.5 border-b mb-1">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <p className="text-xs font-semibold text-muted-foreground">
-                {t("reporterTitle")}
-              </p>
-              <InfoHint text={t("reporterHint")} />
-            </div>
+            <p className="text-xs font-semibold text-muted-foreground">
+              {t("reporterTitle")}
+            </p>
             {reporter && (
               <button
                 onClick={() => selectUser(null)}
@@ -197,7 +165,6 @@ export function TaskReporter({
           </div>
         </PopoverContent>
       </Popover>
-      <InfoHint text={t("reporterHint")} />
     </div>
   );
 }
