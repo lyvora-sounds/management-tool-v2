@@ -21,6 +21,7 @@ export type TaskWithLabels = TaskModel & {
   labels: { label: LabelModel }[];
   assignee?: BoardUser | null;
   qa?: BoardUser | null;
+  reporter?: BoardUser | null;
   collaborators: TaskCollaborator[];
   assignees?: TaskAssignee[];
   priority?: string | null;

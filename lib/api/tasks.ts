@@ -27,6 +27,11 @@ export function taskFromApi(task: ApiCreatedTask): TaskModel {
     listId: task.listId,
     assigneeId: task.assigneeId,
     qaId: task.qaId,
+    // OpenAPI CreatedTask gains reporterId when the API schema ships; until then new tickets still need the Prisma field.
+    reporterId:
+      "reporterId" in task
+        ? ((task as ApiCreatedTask & { reporterId: string | null }).reporterId ?? null)
+        : null,
     shareToken: null,
     googleEventId: null,
     createdAt: new Date(task.createdAt),
