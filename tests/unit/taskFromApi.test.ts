@@ -5,7 +5,7 @@ import type { ApiCreatedTask } from "@/lib/api/types";
 const created: ApiCreatedTask = {
   id: "t1", title: "Ship it", description: null, completed: false, completedAt: null, completedById: null, priority: null,
   startDate: null, dueDate: "2026-12-01T00:00:00.000Z", archived: false, archivedAt: null, quarter: null, epicId: null,
-  order: 3, listId: "l1", assigneeId: null, qaId: null, number: 12, createdAt: "2026-11-02T10:00:00.000Z", updatedAt: "2026-11-02T10:00:01.000Z",
+  order: 3, listId: "l1", assigneeId: null, qaId: null, reporterId: null, number: 12, createdAt: "2026-11-02T10:00:00.000Z", updatedAt: "2026-11-02T10:00:01.000Z",
 };
 
 describe("a ticket the API created, as the board screens hold it", () => {

@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { dateLocale } from "@/i18n/routing";
+import { apiFetch } from "@/lib/apiClient";
 import { CalendarTask } from "./calendar.types";
 
 const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
@@ -64,7 +65,7 @@ export default function CalendarPage() {
 
   const fetchTasks = useCallback((y: number, m: number) => {
     setLoading(true);
-    fetch(`/api/calendar?year=${y}&month=${m + 1}`)
+    apiFetch(`/api/calendar?year=${y}&month=${m + 1}`)
       .then((r) => r.json())
       .then((data) => setTasks(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false));
