@@ -29,7 +29,7 @@ Per-user `UserCalendarSync` (encrypted access + refresh tokens).
 1. `GET /api/integrations/google-calendar/auth` (signed in) redirects to Google OAuth (`calendar.events`, `access_type=offline`, `prompt=consent`). `state` is the Kikiboard user id.
 2. Callback `/api/integrations/google-calendar/callback` is **public** in the Clerk matcher (Google redirects here). It exchanges the code and upserts tokens.
 3. `syncTaskToGoogleCalendar` can create an all-day `[Kikiboard] {title}` event on the primary calendar and store `Task.googleEventId`. Expired access tokens are refreshed first.
-4. **Dormant:** nothing in task create/update calls the sync helper, and Settings has no calendar tab that starts the OAuth flow. The in-app `/dashboard/calendar` is Neon due dates (`GET /api/calendar`), not Google.
+4. **Dormant:** nothing in task create/update calls the sync helper, and Settings has no calendar tab that starts the OAuth flow. The in-app `/dashboard/calendar` is Neon due dates, not Google: it reads `GET /v1/calendar` from kiki-api through `apiFetch` (the old `GET /api/calendar` handler stays as the fallback until the release). The Google OAuth routes above are not served by the API; they go with the other old handlers, and a real sync would need a signed `state`, a Settings entry and a call to the sync helper.
 
 ## GitHub
 

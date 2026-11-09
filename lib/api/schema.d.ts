@@ -722,6 +722,63 @@ export interface paths {
         };
         trace?: never;
     };
+    "/v1/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tickets due in a month, on the boards the caller can read */
+        get: {
+            parameters: {
+                query?: {
+                    year?: number;
+                    month?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CalendarTask"][];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/search": {
         parameters: {
             query?: never;
@@ -3258,6 +3315,7 @@ export interface paths {
                         archived?: boolean;
                         assigneeId?: string | null;
                         qaId?: string | null;
+                        reporterId?: string | null;
                         listId?: string;
                     };
                 };
@@ -3665,6 +3723,95 @@ export interface paths {
                             success: true;
                             qaId: string | null;
                             qa: {
+                                id: string;
+                                name: string | null;
+                                email: string;
+                            } | null;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tasks/{taskId}/reporter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set the ticket's reporter, or clear it if they already are (editors; members only if the board allows) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        reporterId?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            reporterId: string | null;
+                            reporter: {
                                 id: string;
                                 name: string | null;
                                 email: string;
@@ -7324,6 +7471,164 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/settings/mcp/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active external-access tokens created by the caller */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PersonalExternalAccessToken"][];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a personal MCP token for every board the caller can open; rights follow app role; shown once */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        /** @enum {string} */
+                        access?: "read" | "write";
+                        /** @description A future date, or empty for a token that does not expire */
+                        expiresAt?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreatedPersonalExternalAccessToken"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Revoke an external-access token the caller created */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7525,6 +7830,7 @@ export interface components {
             listId: string;
             assigneeId: string | null;
             qaId: string | null;
+            reporterId: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -7550,6 +7856,7 @@ export interface components {
             listId: string;
             assigneeId: string | null;
             qaId: string | null;
+            reporterId: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -7577,6 +7884,7 @@ export interface components {
             listId: string;
             assigneeId: string | null;
             qaId: string | null;
+            reporterId: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -7608,6 +7916,11 @@ export interface components {
                 email: string;
             } | null;
             qa: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            reporter: {
                 id: string;
                 name: string | null;
                 email: string;
@@ -7743,6 +8056,46 @@ export interface components {
             /** @description The plaintext token. It is shown this once and cannot be read again. */
             token: string;
         };
+        PersonalExternalAccessTokenInput: {
+            id: string;
+            name: string;
+            tokenPrefix: string;
+            scopes: string[];
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            fullAccess: boolean;
+            organization: {
+                id: string;
+                name: string;
+            } | null;
+            board: {
+                id: string;
+                title: string;
+            } | null;
+        };
+        CreatedPersonalExternalAccessTokenInput: {
+            id: string;
+            name: string;
+            tokenPrefix: string;
+            scopes: string[];
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            fullAccess: boolean;
+            organization: {
+                id: string;
+                name: string;
+            } | null;
+            board: {
+                id: string;
+                title: string;
+            } | null;
+            /** @description The plaintext token. It is shown this once and cannot be read again. */
+            token: string;
+        };
         InvitationPreviewInput: {
             /** @description The address the invitation was sent to */
             email: string;
@@ -7872,6 +8225,21 @@ export interface components {
             role: string;
             /** Format: date-time */
             createdAt: string;
+        };
+        CalendarTaskInput: {
+            id: string;
+            title: string;
+            completed: boolean;
+            dueDate: string | null;
+            list: {
+                title: string;
+                boardId: string;
+                board: {
+                    id: string;
+                    title: string;
+                    color: string | null;
+                };
+            };
         };
         SearchResultInput: {
             boards: {
@@ -8116,6 +8484,7 @@ export interface components {
             listId: string;
             assigneeId: string | null;
             qaId: string | null;
+            reporterId: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -8141,6 +8510,7 @@ export interface components {
             listId: string;
             assigneeId: string | null;
             qaId: string | null;
+            reporterId: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -8168,6 +8538,7 @@ export interface components {
             listId: string;
             assigneeId: string | null;
             qaId: string | null;
+            reporterId: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -8199,6 +8570,11 @@ export interface components {
                 email: string;
             } | null;
             qa: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            reporter: {
                 id: string;
                 name: string | null;
                 email: string;
@@ -8334,6 +8710,46 @@ export interface components {
             /** @description The plaintext token. It is shown this once and cannot be read again. */
             token: string;
         };
+        PersonalExternalAccessToken: {
+            id: string;
+            name: string;
+            tokenPrefix: string;
+            scopes: string[];
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            fullAccess: boolean;
+            organization: {
+                id: string;
+                name: string;
+            } | null;
+            board: {
+                id: string;
+                title: string;
+            } | null;
+        };
+        CreatedPersonalExternalAccessToken: {
+            id: string;
+            name: string;
+            tokenPrefix: string;
+            scopes: string[];
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            fullAccess: boolean;
+            organization: {
+                id: string;
+                name: string;
+            } | null;
+            board: {
+                id: string;
+                title: string;
+            } | null;
+            /** @description The plaintext token. It is shown this once and cannot be read again. */
+            token: string;
+        };
         InvitationPreview: {
             /** @description The address the invitation was sent to */
             email: string;
@@ -8463,6 +8879,21 @@ export interface components {
             role: string;
             /** Format: date-time */
             createdAt: string;
+        };
+        CalendarTask: {
+            id: string;
+            title: string;
+            completed: boolean;
+            dueDate: string | null;
+            list: {
+                title: string;
+                boardId: string;
+                board: {
+                    id: string;
+                    title: string;
+                    color: string | null;
+                };
+            };
         };
         SearchResult: {
             boards: {

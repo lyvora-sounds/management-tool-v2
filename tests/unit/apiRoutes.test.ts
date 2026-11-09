@@ -16,6 +16,8 @@ describe("apiPathFor: routes already served by kiki-api", () => {
     ["PATCH", "/api/notifications", "/v1/notifications"],
     ["PATCH", "/api/notifications/n1", "/v1/notifications/n1"],
     ["GET", "/api/search", "/v1/search"],
+    ["GET", "/api/calendar", "/v1/calendar"],
+    ["GET", "/api/settings/mcp/tokens", "/v1/settings/mcp/tokens"],
     ["GET", "/api/boards/getBoards", "/v1/boards"],
     ["POST", "/api/boards/createBoard", "/v1/boards"],
     ["PATCH", "/api/boards/updateBoard/b1", "/v1/boards/b1"],
@@ -143,6 +145,10 @@ describe("apiPathFor: routes already served by kiki-api", () => {
       ["PUT", "/api/lists/updateOrder"],
       ["DELETE", "/api/notifications/n1"],
       ["DELETE", "/api/search"],
+      ["POST", "/api/calendar"], // the page only reads
+      // Google Calendar OAuth is dormant and is not served by the API.
+      ["GET", "/api/integrations/google-calendar/auth"],
+      ["GET", "/api/integrations/google-calendar/callback"],
       // The rest of the board routes belong to later sub-batches.
       ["POST", "/api/boards/b1/tasks"],
       ["PUT", "/api/boards/b1/members/m1"],
@@ -150,8 +156,7 @@ describe("apiPathFor: routes already served by kiki-api", () => {
       ["PUT", "/api/organizations/o1/members"],
       ["PATCH", "/api/organizations"],
       ["GET", "/api/organizations/o1/teams/t1/members"],
-      // The MCP settings and the calendar belong to later batches.
-      ["GET", "/api/settings/mcp/tokens"],
+      // The rest of the MCP settings belong to the MCP batch.
       ["GET", "/api/settings/mcp/history"],
       ["POST", "/api/settings/mcp/oauth-clients"],
       ["GET", "/api/settings/ai/extra"],
@@ -174,6 +179,7 @@ describe("apiPathFor: routes already served by kiki-api", () => {
   it("does not take a longer path for a shorter one", () => {
     expect(apiPathFor("GET", "/api/labels/label/l1")).toBeNull();
     expect(apiPathFor("GET", "/api/search/extra")).toBeNull();
+    expect(apiPathFor("GET", "/api/calendar/extra")).toBeNull();
   });
 });
 
