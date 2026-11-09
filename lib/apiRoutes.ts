@@ -32,6 +32,7 @@ const MIGRATED: Route[] = [
 
   // Search
   { method: "GET", pattern: /^\/api\/search$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/calendar$/, to: sameUnderV1 },
 
   // Boards
   { method: "GET", pattern: /^\/api\/boards\/getBoards$/, to: () => "/v1/boards" },

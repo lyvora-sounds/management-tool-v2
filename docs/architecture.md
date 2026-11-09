@@ -73,7 +73,7 @@ Deletes cascade. Six links use `SetNull`: `Organization.createdById`, `ExternalA
 
 - **Dashboard** — greeting, weekly activity, assigned work, upcoming due dates, recent boards.
 - **Board** — Kanban or list, live-ish polling (`use-board-polling`), activity drawer.
-- **Calendar** — `/api/calendar` tasks with due dates.
+- **Calendar** — tasks with due dates, read from `GET /v1/calendar` (kiki-api) through `apiFetch`; `/api/calendar` remains as the fallback.
 - **My tasks** — `/dashboard/tasks`.
 - **Settings** — per-user AI credentials, custom fields, Google Calendar OAuth.
 - **Cmd+K search** — `/api/search` over boards and tasks the user can see.
