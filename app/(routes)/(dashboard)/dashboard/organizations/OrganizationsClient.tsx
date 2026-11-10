@@ -32,6 +32,10 @@ type Team = { id: string; name: string; members: { user: Member["user"] }[]; boa
 
 const looksLikeEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
+/** Split a free-text field into unique emails (comma, semicolon, or whitespace). */
+const parseEmails = (value: string) =>
+  [...new Set(value.split(/[,;\s]+/).map((part) => part.trim().toLowerCase()).filter(Boolean))];
+
 /** Keep the viewport where the user left it after React reflows (focus/open/expand must not yank scroll). */
 async function withPreservedScroll<T>(work: () => Promise<T> | T): Promise<T> {
   const y = typeof window === "undefined" ? 0 : window.scrollY;
@@ -70,13 +74,12 @@ export function OrganizationsClient({
   const [availablePeople, setAvailablePeople] = useState<Record<string, AvailablePerson[]>>({});
   const [pendingInvitations, setPendingInvitations] = useState<Record<string, PendingInvitation[]>>({});
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  const [inviteEmails, setInviteEmails] = useState<string[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberPickerOpen, setMemberPickerOpen] = useState(false);
   const [searchingPeople, setSearchingPeople] = useState(false);
   const [memberRole, setMemberRole] = useState("member");
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("member");
-  const [inviting, setInviting] = useState(false);
+  const [submittingPeople, setSubmittingPeople] = useState(false);
   const [updatingMember, setUpdatingMember] = useState<string | null>(null);
   const [teamName, setTeamName] = useState("");
   const [teamMemberSelection, setTeamMemberSelection] = useState<Record<string, string>>({});
@@ -180,12 +183,21 @@ export function OrganizationsClient({
     window.scrollTo({ top: y, left: 0, behavior: "instant" });
   }, [memberPickerOpen]);
 
+  const resetMemberForm = () => {
+    setSelectedEmails([]);
+    setInviteEmails([]);
+    setMemberSearch("");
+    setMemberPickerOpen(false);
+    setMemberRole("member");
+  };
+
   const toggle = async (organizationId: string) => {
     await withPreservedScroll(async () => {
       // Expanding content under a focused header makes the browser scroll that header into view.
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
       const next = expanded === organizationId ? null : organizationId;
       setExpanded(next);
+      resetMemberForm();
       if (next) await loadDetails(next);
     });
   };
@@ -216,58 +228,107 @@ export function OrganizationsClient({
   };
 
   const toggleSelectedEmail = (email: string) => {
+    const normalized = email.toLowerCase();
+    setInviteEmails((current) => current.filter((item) => item !== normalized));
     setSelectedEmails((current) =>
-      current.includes(email) ? current.filter((item) => item !== email) : [...current, email],
+      current.includes(normalized) ? current.filter((item) => item !== normalized) : [...current, normalized],
     );
   };
 
-  const addMembers = async (organizationId: string) => {
-    if (selectedEmails.length === 0) return;
-    const response = await apiFetch(`/api/organizations/${organizationId}/members/batch`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ emails: selectedEmails, role: memberRole }),
-    });
-    const data = await response.json().catch(() => null);
-    if (!response.ok) {
-      toast.error(data?.message ?? data?.error ?? t("memberError"));
-      return;
-    }
-    const added = data?.added?.length ?? 0;
-    const failed = data?.failed ?? [];
-    setSelectedEmails([]);
-    setMemberSearch("");
-    setMemberPickerOpen(false);
-    await Promise.all([loadDetails(organizationId), loadOrganizations()]);
-    if (added > 0) toast.success(t("membersAdded", { count: added }));
-    if (failed.length > 0) {
-      toast.error(failed[0]?.message ?? t("memberError"));
-    }
+  const removeQueuedEmail = (email: string) => {
+    const normalized = email.toLowerCase();
+    setSelectedEmails((current) => current.filter((item) => item !== normalized));
+    setInviteEmails((current) => current.filter((item) => item !== normalized));
   };
 
-  const inviteByEmail = async (organizationId: string, email = inviteEmail, role = inviteRole) => {
-    const trimmed = email.trim().toLowerCase();
-    if (!looksLikeEmail(trimmed)) {
-      toast.error(t("invalidInviteEmail"));
+  const submitPeople = async (organizationId: string) => {
+    const available = availablePeople[organizationId] ?? [];
+    const availableEmails = new Set(available.map((person) => person.email.toLowerCase()));
+    const typed = parseEmails(memberSearch);
+    const toAdd = new Set(selectedEmails.map((email) => email.toLowerCase()));
+    const toInvite = new Set(inviteEmails.map((email) => email.toLowerCase()));
+    const invalid: string[] = [];
+
+    for (const email of typed) {
+      if (availableEmails.has(email)) {
+        toAdd.add(email);
+        toInvite.delete(email);
+      } else if (looksLikeEmail(email)) toInvite.add(email);
+      else invalid.push(email);
+    }
+
+    if (toAdd.size === 0 && toInvite.size === 0) {
+      if (invalid.length > 0) toast.error(t("invalidInviteEmail"));
       return;
     }
-    setInviting(true);
-    const response = await apiFetch(`/api/organizations/${organizationId}/invitations`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: trimmed, role }),
-    });
-    const data = await response.json().catch(() => null);
-    if (response.ok) {
-      setInviteEmail("");
-      setMemberSearch("");
-      setMemberPickerOpen(false);
-      await loadDetails(organizationId, memberSearch);
-      toast.success(t("inviteSent"));
-    } else {
-      toast.error(data?.message ?? data?.error ?? t("inviteError"));
+
+    setSubmittingPeople(true);
+    let added = 0;
+    let invited = 0;
+    let firstFailure: string | null = invalid.length > 0 ? t("invalidInviteEmail") : null;
+
+    if (toAdd.size > 0) {
+      const response = await apiFetch(`/api/organizations/${organizationId}/members/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails: [...toAdd], role: memberRole }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        firstFailure ??= data?.message ?? data?.error ?? t("memberError");
+      } else {
+        added = data?.added?.length ?? 0;
+        const failed = data?.failed ?? [];
+        if (failed.length > 0) firstFailure ??= failed[0]?.message ?? t("memberError");
+      }
     }
-    setInviting(false);
+
+    if (toInvite.size > 0) {
+      const response = await apiFetch(`/api/organizations/${organizationId}/invitations/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails: [...toInvite], role: memberRole }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        firstFailure ??= data?.message ?? data?.error ?? t("inviteError");
+      } else {
+        invited = data?.invited?.length ?? 0;
+        const failed = data?.failed ?? [];
+        if (failed.length > 0) firstFailure ??= failed[0]?.message ?? t("inviteError");
+      }
+    }
+
+    resetMemberForm();
+    await Promise.all([loadDetails(organizationId), loadOrganizations()]);
+    if (added > 0) toast.success(t("membersAdded", { count: added }));
+    if (invited > 0) toast.success(t("invitesSent", { count: invited }));
+    if (firstFailure) toast.error(firstFailure);
+    setSubmittingPeople(false);
+  };
+
+  /** Queue typed emails as invite chips (or select matching collaborators). */
+  const queueEmailFromSearch = (organizationId: string) => {
+    const typed = parseEmails(memberSearch);
+    if (typed.length === 0) return;
+    const available = availablePeople[organizationId] ?? [];
+    const availableEmails = new Set(available.map((person) => person.email.toLowerCase()));
+    const nextSelected = new Set(selectedEmails);
+    const nextInvites = new Set(inviteEmails);
+    let sawInvalid = false;
+    for (const email of typed) {
+      if (availableEmails.has(email)) {
+        nextSelected.add(email);
+        nextInvites.delete(email);
+      } else if (looksLikeEmail(email)) {
+        nextInvites.add(email);
+        nextSelected.delete(email);
+      } else sawInvalid = true;
+    }
+    setSelectedEmails([...nextSelected]);
+    setInviteEmails([...nextInvites]);
+    setMemberSearch("");
+    if (sawInvalid) toast.error(t("invalidInviteEmail"));
   };
 
   const cancelInvitation = async (organizationId: string, invitationId: string) => {
@@ -500,7 +561,7 @@ export function OrganizationsClient({
                       {canManage && (
                         <div className="space-y-3 rounded-xl border bg-muted/20 p-3">
                           <div className="space-y-2">
-                            <div className="text-xs font-medium">{t("addExistingMember")}</div>
+                            <div className="text-xs font-medium">{t("addOrInvitePeople")}</div>
                             <div className="flex flex-col gap-2 sm:flex-row">
                               <Popover open={memberPickerOpen} onOpenChange={openMemberPicker}>
                                 <PopoverTrigger
@@ -509,8 +570,8 @@ export function OrganizationsClient({
                                   }
                                 >
                                   <span className="truncate">
-                                    {selectedEmails.length > 0
-                                      ? t("selectedPeople", { count: selectedEmails.length })
+                                    {selectedEmails.length + inviteEmails.length > 0
+                                      ? t("selectedPeople", { count: selectedEmails.length + inviteEmails.length })
                                       : t("selectPerson")}
                                   </span>
                                   <ChevronsUpDown className="ml-2 shrink-0 text-muted-foreground" size={15} />
@@ -522,14 +583,20 @@ export function OrganizationsClient({
                                       ref={memberSearchRef}
                                       value={memberSearch}
                                       onChange={(event) => setMemberSearch(event.target.value)}
-                                      placeholder={t("searchPeople")}
+                                      onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                          event.preventDefault();
+                                          queueEmailFromSearch(organization.id);
+                                        }
+                                      }}
+                                      placeholder={t("searchOrInvitePeople")}
                                       className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                                     />
                                     {searchingPeople && <Loader2 size={14} className="animate-spin text-muted-foreground" />}
                                   </div>
                                   <div className="max-h-72 overflow-y-auto rounded-lg">
                                     {(availablePeople[organization.id] ?? []).map((person) => {
-                                      const selected = selectedEmails.includes(person.email);
+                                      const selected = selectedEmails.includes(person.email.toLowerCase());
                                       return (
                                         <button
                                           key={person.id}
@@ -556,64 +623,58 @@ export function OrganizationsClient({
                                         <p className="text-xs text-muted-foreground">
                                           {memberSearch ? t("noSearchResults") : t("noAvailablePeople")}
                                         </p>
-                                        {looksLikeEmail(memberSearch) && (
+                                        {parseEmails(memberSearch).some(looksLikeEmail) && (
                                           <Button
                                             type="button"
                                             size="sm"
                                             variant="secondary"
-                                            disabled={inviting}
-                                            onClick={() => void inviteByEmail(organization.id, memberSearch, memberRole)}
+                                            disabled={submittingPeople}
+                                            onClick={() => queueEmailFromSearch(organization.id)}
                                           >
                                             <Mail size={14} className="mr-1.5" />
-                                            {t("inviteThisEmail", { email: memberSearch.trim() })}
+                                            {t("inviteThisEmail", { email: parseEmails(memberSearch).filter(looksLikeEmail).join(", ") })}
                                           </Button>
                                         )}
                                       </div>
                                     )}
                                   </div>
-                                  <p className="px-2 text-[10px] text-muted-foreground">{t("searchLimit")}</p>
+                                  <p className="px-2 text-[10px] text-muted-foreground">{t("searchOrInviteHint")}</p>
                                 </PopoverContent>
                               </Popover>
                               <select className="h-9 rounded-md border bg-background px-2 text-sm" value={memberRole} onChange={(event) => setMemberRole(event.target.value)}><option value="member">{tCommon("member")}</option><option value="admin">{tCommon("admin")}</option></select>
-                              <Button type="button" size="sm" onClick={() => void addMembers(organization.id)} disabled={selectedEmails.length === 0}>{tCommon("add")}</Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => void submitPeople(organization.id)}
+                                disabled={submittingPeople || (selectedEmails.length === 0 && inviteEmails.length === 0 && parseEmails(memberSearch).length === 0)}
+                              >
+                                {submittingPeople ? <Loader2 size={14} className="animate-spin" /> : t("addOrInvite")}
+                              </Button>
                             </div>
-                            {selectedEmails.length > 0 && (
+                            {(selectedEmails.length > 0 || inviteEmails.length > 0) && (
                               <div className="flex flex-wrap gap-1.5">
                                 {selectedEmails.map((email) => {
-                                  const person = (availablePeople[organization.id] ?? []).find((item) => item.email === email);
+                                  const person = (availablePeople[organization.id] ?? []).find((item) => item.email.toLowerCase() === email);
                                   return (
-                                    <Badge key={email} variant="secondary" className="gap-1 pr-1">
+                                    <Badge key={`add-${email}`} variant="secondary" className="gap-1 pr-1">
                                       <span className="max-w-[12rem] truncate">{person?.name || email}</span>
-                                      <button type="button" className="rounded-sm p-0.5 hover:bg-background/80" onClick={() => toggleSelectedEmail(email)} aria-label={t("removeSelection", { email })}>
+                                      <button type="button" className="rounded-sm p-0.5 hover:bg-background/80" onClick={() => removeQueuedEmail(email)} aria-label={t("removeSelection", { email })}>
                                         <X size={12} />
                                       </button>
                                     </Badge>
                                   );
                                 })}
+                                {inviteEmails.map((email) => (
+                                  <Badge key={`invite-${email}`} variant="outline" className="gap-1 pr-1">
+                                    <Mail size={12} className="shrink-0 text-muted-foreground" />
+                                    <span className="max-w-[12rem] truncate">{email}</span>
+                                    <button type="button" className="rounded-sm p-0.5 hover:bg-background/80" onClick={() => removeQueuedEmail(email)} aria-label={t("removeSelection", { email })}>
+                                      <X size={12} />
+                                    </button>
+                                  </Badge>
+                                ))}
                               </div>
                             )}
-                          </div>
-                          <div className="space-y-2 border-t pt-3">
-                            <div className="text-xs font-medium">{t("inviteByEmail")}</div>
-                            <div className="flex flex-col gap-2 sm:flex-row">
-                              <Input
-                                type="email"
-                                value={inviteEmail}
-                                onChange={(event) => setInviteEmail(event.target.value)}
-                                onKeyDown={(event) => {
-                                  if (event.key === "Enter") {
-                                    event.preventDefault();
-                                    void inviteByEmail(organization.id);
-                                  }
-                                }}
-                                placeholder={t("inviteEmailPlaceholder")}
-                                className="bg-background"
-                              />
-                              <select className="h-9 rounded-md border bg-background px-2 text-sm" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}><option value="member">{tCommon("member")}</option><option value="admin">{tCommon("admin")}</option></select>
-                              <Button type="button" size="sm" onClick={() => void inviteByEmail(organization.id)} disabled={inviting || !inviteEmail.trim()}>
-                                {inviting ? <Loader2 size={14} className="animate-spin" /> : t("invite")}
-                              </Button>
-                            </div>
                           </div>
                           {(pendingInvitations[organization.id] ?? []).length > 0 && (
                             <div className="space-y-2 border-t pt-3">

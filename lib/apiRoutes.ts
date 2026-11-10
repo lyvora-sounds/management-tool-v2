@@ -81,6 +81,7 @@ const MIGRATED: Route[] = [
   { method: "GET", pattern: /^\/api\/organizations\/[^/]+\/available-members$/, to: sameUnderV1 },
   { method: "GET", pattern: /^\/api\/organizations\/[^/]+\/invitations$/, to: sameUnderV1 },
   { method: "POST", pattern: /^\/api\/organizations\/[^/]+\/invitations$/, to: sameUnderV1 },
+  { method: "POST", pattern: /^\/api\/organizations\/[^/]+\/invitations\/batch$/, to: sameUnderV1 },
   { method: "DELETE", pattern: /^\/api\/organizations\/[^/]+\/invitations\/[^/]+$/, to: sameUnderV1 },
   { method: "GET", pattern: /^\/api\/organizations\/[^/]+\/teams$/, to: sameUnderV1 },
   { method: "POST", pattern: /^\/api\/organizations\/[^/]+\/teams$/, to: sameUnderV1 },
