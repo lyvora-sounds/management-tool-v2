@@ -9,7 +9,10 @@ import { apiFetch } from "@/lib/apiClient";
 
 type InviteInfo = {
   email: string;
-  boardTitle: string;
+  kind: "board" | "organization";
+  boardTitle: string | null;
+  organizationName: string | null;
+  role: string | null;
   status: string;
   expired: boolean;
 };
@@ -48,6 +51,8 @@ export default function InvitePage() {
     if (!res.ok) {
       setError(data.message ?? data.error);
       setAccepting(false);
+    } else if (data.organizationId) {
+      router.push("/dashboard/organizations");
     } else {
       router.push(`/board/${data.boardId}`);
     }
@@ -60,6 +65,11 @@ export default function InvitePage() {
       </div>
     );
   }
+
+  const targetTitle =
+    info?.kind === "organization"
+      ? (info.organizationName ?? "")
+      : (info?.boardTitle ?? "");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -91,9 +101,13 @@ export default function InvitePage() {
           </>
         ) : (
           <>
-            <h1 className="text-xl font-bold">{t("title")}</h1>
+            <h1 className="text-xl font-bold">
+              {info.kind === "organization" ? t("organizationTitle") : t("title")}
+            </h1>
             <p className="text-sm text-muted-foreground">
-              {t("invitedTo", { title: info?.boardTitle ?? "" })}
+              {info.kind === "organization"
+                ? t("invitedToOrganization", { title: targetTitle })
+                : t("invitedTo", { title: targetTitle })}
             </p>
             {!isSignedIn && (
               <p className="text-xs text-muted-foreground">

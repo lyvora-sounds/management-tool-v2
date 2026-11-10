@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CSSProperties, FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowRightLeft, Building2, Check, ChevronDown, ChevronRight, ChevronsUpDown, FolderKanban, Loader2, Plus, Search, Trash2, Users } from "lucide-react";
+import { AlertTriangle, ArrowRightLeft, Building2, Check, ChevronDown, ChevronRight, ChevronsUpDown, Clock, FolderKanban, Loader2, Mail, Plus, Search, Trash2, Users, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -27,7 +27,29 @@ type Organization = {
 };
 type Member = { role: string; user: { id: string; name: string | null; email: string } };
 type AvailablePerson = Member["user"] & { organizations: { id: string; name: string }[] };
+type PendingInvitation = { id: string; email: string; status: string; role: string; expiresAt: string; organizationId: string; createdAt: string };
 type Team = { id: string; name: string; members: { user: Member["user"] }[]; boardAccess: { role: string; board: { id: string; title: string } }[] };
+
+const looksLikeEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
+/** Split a free-text field into unique emails (comma, semicolon, or whitespace). */
+const parseEmails = (value: string) =>
+  [...new Set(value.split(/[,;\s]+/).map((part) => part.trim().toLowerCase()).filter(Boolean))];
+
+/** Keep the viewport where the user left it after React reflows (focus/open/expand must not yank scroll). */
+async function withPreservedScroll<T>(work: () => Promise<T> | T): Promise<T> {
+  const y = typeof window === "undefined" ? 0 : window.scrollY;
+  const result = await work();
+  if (typeof window !== "undefined") {
+    const restore = () => window.scrollTo({ top: y, left: 0, behavior: "instant" });
+    restore();
+    requestAnimationFrame(() => {
+      restore();
+      requestAnimationFrame(restore);
+    });
+  }
+  return result;
+}
 
 export function OrganizationsClient({
   githubNotice = null,
@@ -50,11 +72,14 @@ export function OrganizationsClient({
   const [members, setMembers] = useState<Record<string, Member[]>>({});
   const [teams, setTeams] = useState<Record<string, Team[]>>({});
   const [availablePeople, setAvailablePeople] = useState<Record<string, AvailablePerson[]>>({});
-  const [memberEmail, setMemberEmail] = useState("");
+  const [pendingInvitations, setPendingInvitations] = useState<Record<string, PendingInvitation[]>>({});
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  const [inviteEmails, setInviteEmails] = useState<string[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberPickerOpen, setMemberPickerOpen] = useState(false);
   const [searchingPeople, setSearchingPeople] = useState(false);
   const [memberRole, setMemberRole] = useState("member");
+  const [submittingPeople, setSubmittingPeople] = useState(false);
   const [updatingMember, setUpdatingMember] = useState<string | null>(null);
   const [teamName, setTeamName] = useState("");
   const [teamMemberSelection, setTeamMemberSelection] = useState<Record<string, string>>({});
@@ -67,11 +92,15 @@ export function OrganizationsClient({
   const [moveConfirmation, setMoveConfirmation] = useState("");
   const [moving, setMoving] = useState(false);
   const noticedGithub = useRef(false);
+  const memberSearchRef = useRef<HTMLInputElement>(null);
 
   const loadOrganizations = useCallback(async () => {
     const response = await apiFetch("/api/organizations", { cache: "no-store" });
     if (!response.ok) throw new Error();
-    setOrganizations(await response.json());
+    const data = await response.json();
+    await withPreservedScroll(() => {
+      setOrganizations(data);
+    });
   }, []);
 
   useEffect(() => {
@@ -90,27 +119,36 @@ export function OrganizationsClient({
       setSearchingPeople(true);
       apiFetch(`/api/organizations/${expanded}/available-members?q=${encodeURIComponent(memberSearch)}`)
         .then(async (response) => response.ok ? response.json() : [])
-        .then((people) => setAvailablePeople((value) => ({ ...value, [expanded]: people })))
+        .then((people) =>
+          withPreservedScroll(() => {
+            setAvailablePeople((value) => ({ ...value, [expanded]: people }));
+          }),
+        )
         .finally(() => setSearchingPeople(false));
     }, 250);
     return () => window.clearTimeout(timer);
   }, [expanded, memberSearch]);
 
   const loadDetails = useCallback(async (organizationId: string, search = "") => {
-    const [membersResponse, teamsResponse, peopleResponse] = await Promise.all([
+    const [membersResponse, teamsResponse, peopleResponse, invitationsResponse] = await Promise.all([
       apiFetch(`/api/organizations/${organizationId}/members`, { cache: "no-store" }),
       apiFetch(`/api/organizations/${organizationId}/teams`, { cache: "no-store" }),
       apiFetch(`/api/organizations/${organizationId}/available-members?q=${encodeURIComponent(search)}`, { cache: "no-store" }),
+      apiFetch(`/api/organizations/${organizationId}/invitations`, { cache: "no-store" }),
     ]);
-    if ([membersResponse, teamsResponse, peopleResponse].some((response) => response.status >= 500)) {
+    if ([membersResponse, teamsResponse, peopleResponse, invitationsResponse].some((response) => response.status >= 500)) {
       throw new Error("Unable to load organization details");
     }
     const memberData = membersResponse.ok ? await membersResponse.json() : [];
     const teamData = teamsResponse.ok ? await teamsResponse.json() : [];
     const peopleData = peopleResponse.ok ? await peopleResponse.json() : [];
-    setMembers((value) => ({ ...value, [organizationId]: memberData }));
-    setTeams((value) => ({ ...value, [organizationId]: teamData }));
-    setAvailablePeople((value) => ({ ...value, [organizationId]: peopleData }));
+    const invitationData = invitationsResponse.ok ? await invitationsResponse.json() : [];
+    await withPreservedScroll(() => {
+      setMembers((value) => ({ ...value, [organizationId]: memberData }));
+      setTeams((value) => ({ ...value, [organizationId]: teamData }));
+      setAvailablePeople((value) => ({ ...value, [organizationId]: peopleData }));
+      setPendingInvitations((value) => ({ ...value, [organizationId]: invitationData }));
+    });
   }, []);
 
   useEffect(() => {
@@ -138,10 +176,36 @@ export function OrganizationsClient({
 
   useBoardPolling(refreshOrganizations);
 
+  useEffect(() => {
+    if (!memberPickerOpen) return;
+    const y = window.scrollY;
+    memberSearchRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: y, left: 0, behavior: "instant" });
+  }, [memberPickerOpen]);
+
+  const resetMemberForm = () => {
+    setSelectedEmails([]);
+    setInviteEmails([]);
+    setMemberSearch("");
+    setMemberPickerOpen(false);
+    setMemberRole("member");
+  };
+
   const toggle = async (organizationId: string) => {
-    const next = expanded === organizationId ? null : organizationId;
-    setExpanded(next);
-    if (next) await loadDetails(next);
+    await withPreservedScroll(async () => {
+      // Expanding content under a focused header makes the browser scroll that header into view.
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      const next = expanded === organizationId ? null : organizationId;
+      setExpanded(next);
+      resetMemberForm();
+      if (next) await loadDetails(next);
+    });
+  };
+
+  const openMemberPicker = (open: boolean) => {
+    const y = window.scrollY;
+    setMemberPickerOpen(open);
+    requestAnimationFrame(() => window.scrollTo({ top: y, left: 0, behavior: "instant" }));
   };
 
   const createOrganization = async (event: FormEvent) => {
@@ -163,21 +227,124 @@ export function OrganizationsClient({
     setCreating(false);
   };
 
-  const addMember = async (organizationId: string) => {
-    const response = await apiFetch(`/api/organizations/${organizationId}/members`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: memberEmail, role: memberRole }),
-    });
-    if (response.ok) {
-      setMemberEmail("");
-      setMemberSearch("");
-      setMemberPickerOpen(false);
-      await Promise.all([loadDetails(organizationId), loadOrganizations()]);
-      toast.success(t("memberAdded"));
-    } else {
+  const toggleSelectedEmail = (email: string) => {
+    const normalized = email.toLowerCase();
+    setInviteEmails((current) => current.filter((item) => item !== normalized));
+    setSelectedEmails((current) =>
+      current.includes(normalized) ? current.filter((item) => item !== normalized) : [...current, normalized],
+    );
+  };
+
+  const removeQueuedEmail = (email: string) => {
+    const normalized = email.toLowerCase();
+    setSelectedEmails((current) => current.filter((item) => item !== normalized));
+    setInviteEmails((current) => current.filter((item) => item !== normalized));
+  };
+
+  const submitPeople = async (organizationId: string) => {
+    const available = availablePeople[organizationId] ?? [];
+    const availableEmails = new Set(available.map((person) => person.email.toLowerCase()));
+    const typed = parseEmails(memberSearch);
+    const toAdd = new Set(selectedEmails.map((email) => email.toLowerCase()));
+    const toInvite = new Set(inviteEmails.map((email) => email.toLowerCase()));
+    const invalid: string[] = [];
+
+    for (const email of typed) {
+      if (availableEmails.has(email)) {
+        toAdd.add(email);
+        toInvite.delete(email);
+      } else if (looksLikeEmail(email)) toInvite.add(email);
+      else invalid.push(email);
+    }
+
+    if (toAdd.size === 0 && toInvite.size === 0) {
+      if (invalid.length > 0) toast.error(t("invalidInviteEmail"));
+      return;
+    }
+
+    setSubmittingPeople(true);
+    let added = 0;
+    let invited = 0;
+    let firstFailure: string | null = invalid.length > 0 ? t("invalidInviteEmail") : null;
+
+    if (toAdd.size > 0) {
+      const response = await apiFetch(`/api/organizations/${organizationId}/members/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails: [...toAdd], role: memberRole }),
+      });
       const data = await response.json().catch(() => null);
-      toast.error(data?.message ?? data?.error ?? t("memberError"));
+      if (!response.ok) {
+        firstFailure ??= data?.message ?? data?.error ?? t("memberError");
+      } else {
+        added = data?.added?.length ?? 0;
+        const failed = data?.failed ?? [];
+        if (failed.length > 0) firstFailure ??= failed[0]?.message ?? t("memberError");
+      }
+    }
+
+    if (toInvite.size > 0) {
+      const response = await apiFetch(`/api/organizations/${organizationId}/invitations/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails: [...toInvite], role: memberRole }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        firstFailure ??= data?.message ?? data?.error ?? t("inviteError");
+      } else {
+        invited = data?.invited?.length ?? 0;
+        const failed = data?.failed ?? [];
+        if (failed.length > 0) firstFailure ??= failed[0]?.message ?? t("inviteError");
+      }
+    }
+
+    resetMemberForm();
+    await Promise.all([loadDetails(organizationId), loadOrganizations()]);
+    if (added > 0) toast.success(t("membersAdded", { count: added }));
+    if (invited > 0) toast.success(t("invitesSent", { count: invited }));
+    if (firstFailure) toast.error(firstFailure);
+    setSubmittingPeople(false);
+  };
+
+  /** Queue typed emails as invite chips (or select matching collaborators). */
+  const queueEmailFromSearch = (organizationId: string) => {
+    const typed = parseEmails(memberSearch);
+    if (typed.length === 0) return;
+    const available = availablePeople[organizationId] ?? [];
+    const availableEmails = new Set(available.map((person) => person.email.toLowerCase()));
+    const nextSelected = new Set(selectedEmails);
+    const nextInvites = new Set(inviteEmails);
+    let sawInvalid = false;
+    for (const email of typed) {
+      if (availableEmails.has(email)) {
+        nextSelected.add(email);
+        nextInvites.delete(email);
+      } else if (looksLikeEmail(email)) {
+        nextInvites.add(email);
+        nextSelected.delete(email);
+      } else sawInvalid = true;
+    }
+    setSelectedEmails([...nextSelected]);
+    setInviteEmails([...nextInvites]);
+    setMemberSearch("");
+    if (sawInvalid) toast.error(t("invalidInviteEmail"));
+  };
+
+  const cancelInvitation = async (organizationId: string, invitationId: string) => {
+    const previous = pendingInvitations[organizationId] ?? [];
+    setPendingInvitations((value) => ({
+      ...value,
+      [organizationId]: previous.filter((item) => item.id !== invitationId),
+    }));
+    const response = await apiFetch(`/api/organizations/${organizationId}/invitations/${invitationId}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      setPendingInvitations((value) => ({ ...value, [organizationId]: previous }));
+      toast.error(t("inviteCancelError"));
+    } else {
+      toast.success(t("inviteCancelled"));
     }
   };
 
@@ -392,66 +559,149 @@ export function OrganizationsClient({
                         );
                       })}
                       {canManage && (
-                        <div className="space-y-2 rounded-xl border bg-muted/20 p-3">
-                          <div className="text-xs font-medium">{t("addExistingMember")}</div>
-                          <div className="flex flex-col gap-2 sm:flex-row">
-                            <Popover open={memberPickerOpen} onOpenChange={setMemberPickerOpen}>
-                              <PopoverTrigger
-                                render={
-                                  <Button type="button" variant="outline" className="min-w-0 flex-1 justify-between bg-background font-normal" />
-                                }
-                              >
-                                <span className="truncate">
-                                  {memberEmail
-                                    ? (() => {
-                                        const person = (availablePeople[organization.id] ?? []).find((item) => item.email === memberEmail);
-                                        return person ? `${person.name || t("unnamedMember")} · ${person.email}` : memberEmail;
-                                      })()
-                                    : t("selectPerson")}
-                                </span>
-                                <ChevronsUpDown className="ml-2 shrink-0 text-muted-foreground" size={15} />
-                              </PopoverTrigger>
-                              <PopoverContent align="start" className="w-[min(34rem,calc(100vw-2rem))] gap-2 rounded-xl p-2">
-                                <div className="flex items-center gap-2 rounded-lg border bg-background px-3 focus-within:ring-2 focus-within:ring-ring/40">
-                                  <Search size={15} className="shrink-0 text-muted-foreground" />
-                                  <input
-                                    value={memberSearch}
-                                    onChange={(event) => setMemberSearch(event.target.value)}
-                                    placeholder={t("searchPeople")}
-                                    className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                                    autoFocus
-                                  />
-                                  {searchingPeople && <Loader2 size={14} className="animate-spin text-muted-foreground" />}
-                                </div>
-                                <div className="max-h-72 overflow-y-auto rounded-lg">
-                                  {(availablePeople[organization.id] ?? []).map((person) => (
-                                    <button
-                                      key={person.id}
-                                      type="button"
-                                      onClick={() => {
-                                        setMemberEmail(person.email);
-                                        setMemberPickerOpen(false);
+                        <div className="space-y-3 rounded-xl border bg-muted/20 p-3">
+                          <div className="space-y-2">
+                            <div className="text-xs font-medium">{t("addOrInvitePeople")}</div>
+                            <div className="flex flex-col gap-2 sm:flex-row">
+                              <Popover open={memberPickerOpen} onOpenChange={openMemberPicker}>
+                                <PopoverTrigger
+                                  render={
+                                    <Button type="button" variant="outline" className="min-w-0 flex-1 justify-between bg-background font-normal" />
+                                  }
+                                >
+                                  <span className="truncate">
+                                    {selectedEmails.length + inviteEmails.length > 0
+                                      ? t("selectedPeople", { count: selectedEmails.length + inviteEmails.length })
+                                      : t("selectPerson")}
+                                  </span>
+                                  <ChevronsUpDown className="ml-2 shrink-0 text-muted-foreground" size={15} />
+                                </PopoverTrigger>
+                                <PopoverContent align="start" className="w-[min(34rem,calc(100vw-2rem))] gap-2 rounded-xl p-2">
+                                  <div className="flex items-center gap-2 rounded-lg border bg-background px-3 focus-within:ring-2 focus-within:ring-ring/40">
+                                    <Search size={15} className="shrink-0 text-muted-foreground" />
+                                    <input
+                                      ref={memberSearchRef}
+                                      value={memberSearch}
+                                      onChange={(event) => setMemberSearch(event.target.value)}
+                                      onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                          event.preventDefault();
+                                          queueEmailFromSearch(organization.id);
+                                        }
                                       }}
-                                      className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none"
-                                    >
-                                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                        {(person.name || person.email).slice(0, 2).toUpperCase()}
-                                      </span>
-                                      <span className="min-w-0 flex-1">
-                                        <span className="flex items-center gap-2 font-medium"><span className="truncate">{person.name || t("unnamedMember")}</span>{memberEmail === person.email && <Check size={14} className="text-primary" />}</span>
-                                        <span className="block truncate text-xs text-muted-foreground">{person.email}</span>
-                                        <span className="mt-1 flex flex-wrap gap-1">{person.organizations.map((item) => <Badge key={item.id} variant="secondary" className="text-[10px]">{item.name}</Badge>)}</span>
-                                      </span>
+                                      placeholder={t("searchOrInvitePeople")}
+                                      className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                    />
+                                    {searchingPeople && <Loader2 size={14} className="animate-spin text-muted-foreground" />}
+                                  </div>
+                                  <div className="max-h-72 overflow-y-auto rounded-lg">
+                                    {(availablePeople[organization.id] ?? []).map((person) => {
+                                      const selected = selectedEmails.includes(person.email.toLowerCase());
+                                      return (
+                                        <button
+                                          key={person.id}
+                                          type="button"
+                                          onClick={() => toggleSelectedEmail(person.email)}
+                                          className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none"
+                                        >
+                                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                                            {(person.name || person.email).slice(0, 2).toUpperCase()}
+                                          </span>
+                                          <span className="min-w-0 flex-1">
+                                            <span className="flex items-center gap-2 font-medium">
+                                              <span className="truncate">{person.name || t("unnamedMember")}</span>
+                                              {selected && <Check size={14} className="text-primary" />}
+                                            </span>
+                                            <span className="block truncate text-xs text-muted-foreground">{person.email}</span>
+                                            <span className="mt-1 flex flex-wrap gap-1">{person.organizations.map((item) => <Badge key={item.id} variant="secondary" className="text-[10px]">{item.name}</Badge>)}</span>
+                                          </span>
+                                        </button>
+                                      );
+                                    })}
+                                    {!searchingPeople && (availablePeople[organization.id] ?? []).length === 0 && (
+                                      <div className="space-y-3 px-3 py-6 text-center">
+                                        <p className="text-xs text-muted-foreground">
+                                          {memberSearch ? t("noSearchResults") : t("noAvailablePeople")}
+                                        </p>
+                                        {parseEmails(memberSearch).some(looksLikeEmail) && (
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="secondary"
+                                            disabled={submittingPeople}
+                                            onClick={() => queueEmailFromSearch(organization.id)}
+                                          >
+                                            <Mail size={14} className="mr-1.5" />
+                                            {t("inviteThisEmail", { email: parseEmails(memberSearch).filter(looksLikeEmail).join(", ") })}
+                                          </Button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <p className="px-2 text-[10px] text-muted-foreground">{t("searchOrInviteHint")}</p>
+                                </PopoverContent>
+                              </Popover>
+                              <select className="h-9 rounded-md border bg-background px-2 text-sm" value={memberRole} onChange={(event) => setMemberRole(event.target.value)}><option value="member">{tCommon("member")}</option><option value="admin">{tCommon("admin")}</option></select>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => void submitPeople(organization.id)}
+                                disabled={submittingPeople || (selectedEmails.length === 0 && inviteEmails.length === 0 && parseEmails(memberSearch).length === 0)}
+                              >
+                                {submittingPeople ? <Loader2 size={14} className="animate-spin" /> : t("addOrInvite")}
+                              </Button>
+                            </div>
+                            {(selectedEmails.length > 0 || inviteEmails.length > 0) && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {selectedEmails.map((email) => {
+                                  const person = (availablePeople[organization.id] ?? []).find((item) => item.email.toLowerCase() === email);
+                                  return (
+                                    <Badge key={`add-${email}`} variant="secondary" className="gap-1 pr-1">
+                                      <span className="max-w-[12rem] truncate">{person?.name || email}</span>
+                                      <button type="button" className="rounded-sm p-0.5 hover:bg-background/80" onClick={() => removeQueuedEmail(email)} aria-label={t("removeSelection", { email })}>
+                                        <X size={12} />
+                                      </button>
+                                    </Badge>
+                                  );
+                                })}
+                                {inviteEmails.map((email) => (
+                                  <Badge key={`invite-${email}`} variant="outline" className="gap-1 pr-1">
+                                    <Mail size={12} className="shrink-0 text-muted-foreground" />
+                                    <span className="max-w-[12rem] truncate">{email}</span>
+                                    <button type="button" className="rounded-sm p-0.5 hover:bg-background/80" onClick={() => removeQueuedEmail(email)} aria-label={t("removeSelection", { email })}>
+                                      <X size={12} />
                                     </button>
-                                  ))}
-                                  {!searchingPeople && (availablePeople[organization.id] ?? []).length === 0 && <p className="px-3 py-8 text-center text-xs text-muted-foreground">{memberSearch ? t("noSearchResults") : t("noAvailablePeople")}</p>}
-                                </div>
-                                <p className="px-2 text-[10px] text-muted-foreground">{t("searchLimit")}</p>
-                              </PopoverContent>
-                            </Popover>
-                            <select className="h-9 rounded-md border bg-background px-2 text-sm" value={memberRole} onChange={(event) => setMemberRole(event.target.value)}><option value="member">{tCommon("member")}</option><option value="admin">{tCommon("admin")}</option></select>
-                            <Button type="button" size="sm" onClick={() => void addMember(organization.id)} disabled={!memberEmail}>{tCommon("add")}</Button>
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
                           </div>
+                          {(pendingInvitations[organization.id] ?? []).length > 0 && (
+                            <div className="space-y-2 border-t pt-3">
+                              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("pendingInvitations")}</div>
+                              {(pendingInvitations[organization.id] ?? []).map((invitation) => (
+                                <div key={invitation.id} className="flex items-center justify-between gap-3 text-sm">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate font-medium flex items-center gap-1.5">
+                                      <Clock size={13} className="shrink-0 text-muted-foreground" />
+                                      {invitation.email}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">{invitation.role}</p>
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    size="icon-sm"
+                                    variant="ghost"
+                                    onClick={() => void cancelInvitation(organization.id, invitation.id)}
+                                    aria-label={t("cancelInvite", { email: invitation.email })}
+                                    title={t("cancelInvite", { email: invitation.email })}
+                                  >
+                                    <Trash2 size={14} />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

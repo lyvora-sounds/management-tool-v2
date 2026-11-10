@@ -1,10 +1,24 @@
 # Invitations
 
-Owners and admins add people by email. The guest gets a 7-day token link, must sign in as **that same email**, then becomes a `BoardMember`.
+Owners and admins add people by email. The guest gets a 7-day token link, must sign in as **that same email**, then becomes a `BoardMember` (board invites) or an `OrganizationMember` (organization invites).
 
 ![Invite a collaborator](./diagrams/invitation.svg)
 
-## Send
+## Organization invites
+
+Organization owners and admins can invite by email from the Organizations → Members UI when the person is not already in “people you work with”.
+
+| Method | Path | Notes |
+|--------|------|-------|
+| `POST` | `/api/organizations/[organizationId]/invitations` | Body `{ email, role?: "admin"\|"member" }` (default `member`). 7-day pending; emails `/invite/{token}`. |
+| `GET` | `/api/organizations/[organizationId]/invitations` | Pending invites for managers. |
+| `DELETE` | `/api/organizations/[organizationId]/invitations]/[invitationId]` | Owner or admin. |
+
+Accept uses the same `/invite/[token]` page. Preview includes `kind: "organization"` and `organizationName`. Accept upserts `OrganizationMember` with the invited role and redirects to `/dashboard/organizations`.
+
+Batch-add of people who already have accounts: `POST /api/organizations/[organizationId]/members/batch` with `{ emails, role }`.
+
+## Board send
 
 `POST /api/boards/[boardId]/invitations` — `canManageBoard` (owner or admin).
 
