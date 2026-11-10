@@ -68,12 +68,17 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
     setLoading(false);
   };
 
-  const cancelInvitation = async (invitationId: string) => {
+  const cancelInvitation = async (invitation: Invitation) => {
     const prev = invitations;
-    setInvitations(prev.filter((i) => i.id !== invitationId));
-    const res = await apiFetch(`/api/boards/${boardId}/invitations/${invitationId}`, {
-      method: "DELETE",
-    });
+    setInvitations(prev.filter((i) => i.id !== invitation.id));
+    const res =
+      invitation.source === "organization" && invitation.organizationId
+        ? await apiFetch(`/api/organizations/${invitation.organizationId}/invitations/${invitation.id}`, {
+            method: "DELETE",
+          })
+        : await apiFetch(`/api/boards/${boardId}/invitations/${invitation.id}`, {
+            method: "DELETE",
+          });
     if (!res.ok) setInvitations(prev);
   };
 
@@ -223,27 +228,30 @@ export function BoardMembers({ boardId, open, onClose }: Props) {
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 {t("pendingInvitations")}
               </p>
-              {invitations.map((inv) => (
-                <div key={inv.id} className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition-colors">
+              {invitations.map((inv) => {
+                // Board invites: owner only (board DELETE is owner-scoped). Org invites: any manager.
+                const canCancel = inv.source === "organization" ? canManage : isOwner;
+                return (
+                <div key={`${inv.source ?? "board"}-${inv.id}`} className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted transition-colors">
                   <Clock size={15} className="text-muted-foreground shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{inv.email}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Mail size={10} /> {t("pending")}
+                      {inv.source === "organization" ? ` · ${t("organizationInvite")}` : null}
                     </p>
                   </div>
-                  {/* Revocar invitaciones es solo del propietario: al admin le
-                      devolvía 404 y la fila reaparecía sin explicación. */}
-                  {isOwner && (
+                  {canCancel && (
                     <button
-                      onClick={() => cancelInvitation(inv.id)}
+                      onClick={() => cancelInvitation(inv)}
                       className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
                     >
                       <Trash2 size={13} />
                     </button>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

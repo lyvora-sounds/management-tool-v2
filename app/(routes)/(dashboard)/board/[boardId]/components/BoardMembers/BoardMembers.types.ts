@@ -14,6 +14,8 @@ export type Invitation = {
   id: string;
   email: string;
   createdAt: string;
+  source?: "board" | "organization";
+  organizationId?: string | null;
 };
 
 export type Props = {
