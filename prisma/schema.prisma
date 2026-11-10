@@ -182,6 +182,7 @@ model Organization {
   createdBy   User?   @relation("OrganizationCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   members              OrganizationMember[]
+  invitations          OrganizationInvitation[]
   teams                Team[]
   boards               Board[]
   externalAccessTokens ExternalAccessToken[]
@@ -277,6 +278,24 @@ model OrganizationMember {
 
   @@id([organizationId, userId])
   @@index([userId])
+}
+
+/// Invite someone to an organization by email before they have an account (or before they share another org).
+model OrganizationInvitation {
+  id     String @id @default(cuid())
+  email  String
+  token  String @unique @default(cuid())
+  status String @default("pending") // "pending" | "accepted" | "revoked"
+  role   String @default("member") // "admin" | "member"
+  expiresAt DateTime
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([token])
 }
 
 model Team {
