@@ -241,12 +241,15 @@ export function OrganizationsClient({
     setInviteEmails((current) => current.filter((item) => item !== normalized));
   };
 
-  const submitPeople = async (organizationId: string) => {
+  const submitPeople = async (
+    organizationId: string,
+    overrides?: { selectedEmails?: string[]; inviteEmails?: string[]; memberSearch?: string },
+  ) => {
     const available = availablePeople[organizationId] ?? [];
     const availableEmails = new Set(available.map((person) => person.email.toLowerCase()));
-    const typed = parseEmails(memberSearch);
-    const toAdd = new Set(selectedEmails.map((email) => email.toLowerCase()));
-    const toInvite = new Set(inviteEmails.map((email) => email.toLowerCase()));
+    const typed = parseEmails(overrides?.memberSearch ?? memberSearch);
+    const toAdd = new Set((overrides?.selectedEmails ?? selectedEmails).map((email) => email.toLowerCase()));
+    const toInvite = new Set((overrides?.inviteEmails ?? inviteEmails).map((email) => email.toLowerCase()));
     const invalid: string[] = [];
 
     for (const email of typed) {
@@ -329,6 +332,22 @@ export function OrganizationsClient({
     setInviteEmails([...nextInvites]);
     setMemberSearch("");
     if (sawInvalid) toast.error(t("invalidInviteEmail"));
+  };
+
+  /** Send invitation emails for the current search immediately (Invite {email} CTA). */
+  const inviteEmailsFromSearchNow = (organizationId: string) => {
+    const emails = parseEmails(memberSearch).filter(looksLikeEmail);
+    if (emails.length === 0 && inviteEmails.length === 0) {
+      toast.error(t("invalidInviteEmail"));
+      return;
+    }
+    // Include any chips already queued via Enter so Invite does not drop them.
+    const mergedInvites = [...new Set([...inviteEmails, ...emails].map((email) => email.toLowerCase()))];
+    void submitPeople(organizationId, {
+      selectedEmails: [],
+      inviteEmails: mergedInvites,
+      memberSearch: "",
+    });
   };
 
   const cancelInvitation = async (organizationId: string, invitationId: string) => {
@@ -629,7 +648,7 @@ export function OrganizationsClient({
                                             size="sm"
                                             variant="secondary"
                                             disabled={submittingPeople}
-                                            onClick={() => queueEmailFromSearch(organization.id)}
+                                            onClick={() => inviteEmailsFromSearchNow(organization.id)}
                                           >
                                             <Mail size={14} className="mr-1.5" />
                                             {t("inviteThisEmail", { email: parseEmails(memberSearch).filter(looksLikeEmail).join(", ") })}
@@ -676,10 +695,12 @@ export function OrganizationsClient({
                               </div>
                             )}
                           </div>
-                          {(pendingInvitations[organization.id] ?? []).length > 0 && (
-                            <div className="space-y-2 border-t pt-3">
-                              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("pendingInvitations")}</div>
-                              {(pendingInvitations[organization.id] ?? []).map((invitation) => (
+                          <div className="space-y-2 border-t pt-3">
+                            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("pendingInvitations")}</div>
+                            {(pendingInvitations[organization.id] ?? []).length === 0 ? (
+                              <p className="text-xs text-muted-foreground">{t("noPendingInvitations")}</p>
+                            ) : (
+                              (pendingInvitations[organization.id] ?? []).map((invitation) => (
                                 <div key={invitation.id} className="flex items-center justify-between gap-3 text-sm">
                                   <div className="min-w-0 flex-1">
                                     <p className="truncate font-medium flex items-center gap-1.5">
@@ -690,18 +711,19 @@ export function OrganizationsClient({
                                   </div>
                                   <Button
                                     type="button"
-                                    size="icon-sm"
-                                    variant="ghost"
+                                    size="sm"
+                                    variant="outline"
                                     onClick={() => void cancelInvitation(organization.id, invitation.id)}
                                     aria-label={t("cancelInvite", { email: invitation.email })}
                                     title={t("cancelInvite", { email: invitation.email })}
                                   >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={14} className="mr-1.5" />
+                                    {t("cancelInviteAction")}
                                   </Button>
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                              ))
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
