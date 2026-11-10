@@ -32,6 +32,21 @@ type Team = { id: string; name: string; members: { user: Member["user"] }[]; boa
 
 const looksLikeEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
+/** Keep the viewport where the user left it after React reflows (focus/open/expand must not yank scroll). */
+async function withPreservedScroll<T>(work: () => Promise<T> | T): Promise<T> {
+  const y = typeof window === "undefined" ? 0 : window.scrollY;
+  const result = await work();
+  if (typeof window !== "undefined") {
+    const restore = () => window.scrollTo({ top: y, left: 0, behavior: "instant" });
+    restore();
+    requestAnimationFrame(() => {
+      restore();
+      requestAnimationFrame(restore);
+    });
+  }
+  return result;
+}
+
 export function OrganizationsClient({
   githubNotice = null,
   githubOrganizationId = null,
@@ -74,11 +89,15 @@ export function OrganizationsClient({
   const [moveConfirmation, setMoveConfirmation] = useState("");
   const [moving, setMoving] = useState(false);
   const noticedGithub = useRef(false);
+  const memberSearchRef = useRef<HTMLInputElement>(null);
 
   const loadOrganizations = useCallback(async () => {
     const response = await apiFetch("/api/organizations", { cache: "no-store" });
     if (!response.ok) throw new Error();
-    setOrganizations(await response.json());
+    const data = await response.json();
+    await withPreservedScroll(() => {
+      setOrganizations(data);
+    });
   }, []);
 
   useEffect(() => {
@@ -97,7 +116,11 @@ export function OrganizationsClient({
       setSearchingPeople(true);
       apiFetch(`/api/organizations/${expanded}/available-members?q=${encodeURIComponent(memberSearch)}`)
         .then(async (response) => response.ok ? response.json() : [])
-        .then((people) => setAvailablePeople((value) => ({ ...value, [expanded]: people })))
+        .then((people) =>
+          withPreservedScroll(() => {
+            setAvailablePeople((value) => ({ ...value, [expanded]: people }));
+          }),
+        )
         .finally(() => setSearchingPeople(false));
     }, 250);
     return () => window.clearTimeout(timer);
@@ -117,10 +140,12 @@ export function OrganizationsClient({
     const teamData = teamsResponse.ok ? await teamsResponse.json() : [];
     const peopleData = peopleResponse.ok ? await peopleResponse.json() : [];
     const invitationData = invitationsResponse.ok ? await invitationsResponse.json() : [];
-    setMembers((value) => ({ ...value, [organizationId]: memberData }));
-    setTeams((value) => ({ ...value, [organizationId]: teamData }));
-    setAvailablePeople((value) => ({ ...value, [organizationId]: peopleData }));
-    setPendingInvitations((value) => ({ ...value, [organizationId]: invitationData }));
+    await withPreservedScroll(() => {
+      setMembers((value) => ({ ...value, [organizationId]: memberData }));
+      setTeams((value) => ({ ...value, [organizationId]: teamData }));
+      setAvailablePeople((value) => ({ ...value, [organizationId]: peopleData }));
+      setPendingInvitations((value) => ({ ...value, [organizationId]: invitationData }));
+    });
   }, []);
 
   useEffect(() => {
@@ -148,10 +173,27 @@ export function OrganizationsClient({
 
   useBoardPolling(refreshOrganizations);
 
+  useEffect(() => {
+    if (!memberPickerOpen) return;
+    const y = window.scrollY;
+    memberSearchRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: y, left: 0, behavior: "instant" });
+  }, [memberPickerOpen]);
+
   const toggle = async (organizationId: string) => {
-    const next = expanded === organizationId ? null : organizationId;
-    setExpanded(next);
-    if (next) await loadDetails(next);
+    await withPreservedScroll(async () => {
+      // Expanding content under a focused header makes the browser scroll that header into view.
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      const next = expanded === organizationId ? null : organizationId;
+      setExpanded(next);
+      if (next) await loadDetails(next);
+    });
+  };
+
+  const openMemberPicker = (open: boolean) => {
+    const y = window.scrollY;
+    setMemberPickerOpen(open);
+    requestAnimationFrame(() => window.scrollTo({ top: y, left: 0, behavior: "instant" }));
   };
 
   const createOrganization = async (event: FormEvent) => {
@@ -460,7 +502,7 @@ export function OrganizationsClient({
                           <div className="space-y-2">
                             <div className="text-xs font-medium">{t("addExistingMember")}</div>
                             <div className="flex flex-col gap-2 sm:flex-row">
-                              <Popover open={memberPickerOpen} onOpenChange={setMemberPickerOpen}>
+                              <Popover open={memberPickerOpen} onOpenChange={openMemberPicker}>
                                 <PopoverTrigger
                                   render={
                                     <Button type="button" variant="outline" className="min-w-0 flex-1 justify-between bg-background font-normal" />
@@ -477,11 +519,11 @@ export function OrganizationsClient({
                                   <div className="flex items-center gap-2 rounded-lg border bg-background px-3 focus-within:ring-2 focus-within:ring-ring/40">
                                     <Search size={15} className="shrink-0 text-muted-foreground" />
                                     <input
+                                      ref={memberSearchRef}
                                       value={memberSearch}
                                       onChange={(event) => setMemberSearch(event.target.value)}
                                       placeholder={t("searchPeople")}
                                       className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                                      autoFocus
                                     />
                                     {searchingPeople && <Loader2 size={14} className="animate-spin text-muted-foreground" />}
                                   </div>
