@@ -495,6 +495,7 @@
     "invalidInviteEmail": "Introduce un email válido",
     "pendingInvitations": "Invitaciones pendientes",
     "noPendingInvitations": "No hay invitaciones pendientes.",
+    "pendingFromBoard": "Tablero · {board}",
     "cancelInvite": "Cancelar invitación de {email}",
     "cancelInviteAction": "Cancelar",
     "inviteCancelled": "Invitación cancelada",
@@ -911,6 +912,7 @@
     "admin": "Admin",
     "pendingInvitations": "Invitaciones pendientes",
     "pending": "Pendiente",
+    "organizationInvite": "Organización",
     "empty": "No hay miembros ni invitaciones aún."
   },
   "permissions": {
