@@ -27,7 +27,18 @@ type Organization = {
 };
 type Member = { role: string; user: { id: string; name: string | null; email: string } };
 type AvailablePerson = Member["user"] & { organizations: { id: string; name: string }[] };
-type PendingInvitation = { id: string; email: string; status: string; role: string; expiresAt: string; organizationId: string; createdAt: string };
+type PendingInvitation = {
+  id: string;
+  email: string;
+  status: string;
+  role: string;
+  expiresAt: string;
+  organizationId: string;
+  createdAt: string;
+  source?: "organization" | "board";
+  boardId?: string | null;
+  boardTitle?: string | null;
+};
 type Team = { id: string; name: string; members: { user: Member["user"] }[]; boardAccess: { role: string; board: { id: string; title: string } }[] };
 
 const looksLikeEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -701,13 +712,17 @@ export function OrganizationsClient({
                               <p className="text-xs text-muted-foreground">{t("noPendingInvitations")}</p>
                             ) : (
                               (pendingInvitations[organization.id] ?? []).map((invitation) => (
-                                <div key={invitation.id} className="flex items-center justify-between gap-3 text-sm">
+                                <div key={`${invitation.source ?? "organization"}-${invitation.id}`} className="flex items-center justify-between gap-3 text-sm">
                                   <div className="min-w-0 flex-1">
                                     <p className="truncate font-medium flex items-center gap-1.5">
                                       <Clock size={13} className="shrink-0 text-muted-foreground" />
                                       {invitation.email}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">{invitation.role}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {invitation.source === "board" && invitation.boardTitle
+                                        ? t("pendingFromBoard", { board: invitation.boardTitle })
+                                        : invitation.role}
+                                    </p>
                                   </div>
                                   <Button
                                     type="button"
