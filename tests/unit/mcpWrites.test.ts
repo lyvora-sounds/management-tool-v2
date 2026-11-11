@@ -17,7 +17,9 @@ const create = vi.fn();
 const epicCreate = vi.fn();
 const boardLookup = vi.fn();
 const boardUpdate = vi.fn(async (..._args: unknown[]) => ({ key: "LY", nextTicketNumber: 2 }));
-const tx = { board: { findUnique: async () => ({ memberCanAssign: true }), findFirst: (...args: unknown[]) => boardLookup(...args), update: (...args: unknown[]) => boardUpdate(...args) }, epic: { create: epicCreate }, notification: { create: notification }, customField: { findFirst: async () => ({ id: "env", type: "SELECT", defaultKey: "environment", options: ["production"] }) }, customFieldValue: { findUnique: async () => null, upsert: customWrite }, task: { create, findFirst: lookup, updateMany: update, findUniqueOrThrow: lookup }, list: { findFirst: list }, externalAccessToken: { findUnique: credential }, mcpChange: { create: journal, updateMany: marked }, activityLog: { create: logs } };
+const transitionCreate = vi.fn();
+const transitionFindFirst = vi.fn(async (..._args: unknown[]) => null);
+const tx = { board: { findUnique: async () => ({ memberCanAssign: true }), findFirst: (...args: unknown[]) => boardLookup(...args), update: (...args: unknown[]) => boardUpdate(...args) }, epic: { create: epicCreate }, notification: { create: notification }, customField: { findFirst: async () => ({ id: "env", type: "SELECT", defaultKey: "environment", options: ["production"] }) }, customFieldValue: { findUnique: async () => null, findMany: async () => [{ value: "5" }], upsert: customWrite }, task: { create, findFirst: lookup, findUnique: async () => ({ createdAt: new Date("2026-10-09T09:00:00.000Z"), assigneeId: null, list: { title: "Todo" } }), updateMany: update, findUniqueOrThrow: lookup }, list: { findFirst: list }, externalAccessToken: { findUnique: credential }, mcpChange: { create: journal, updateMany: marked }, activityLog: { create: logs }, taskStateTransition: { create: transitionCreate, findFirst: transitionFindFirst } };
 const historyList = vi.fn();
 vi.mock("@/lib/boardAccess", () => ({
   canEditBoard: (...args: unknown[]) => editable(...args),
@@ -30,7 +32,7 @@ vi.mock("@/lib/notifications/webhooks", () => ({ sendBoardWebhookNotification: v
 vi.mock("@/lib/db", () => ({ default: {
   list: { findFirst: (...args: unknown[]) => list(...args) },
   board: { findFirst: (...args: unknown[]) => boardLookup(...args) },
-  task: { findFirst: async () => ({ list: { boardId: "board-1", board: { organizationId: "org-1" } } }) },
+  task: { findFirst: async () => ({ list: { boardId: "board-1", board: { organizationId: "org-1" } } }), findUnique: async () => null },
   user: { findUnique: async () => ({ id: "user-1", name: "Owner", email: "owner@test.invalid" }) },
   externalAccessToken: { findUnique: async () => ({ createdById: "user-1" }) },
   mcpChange: {
@@ -225,5 +227,22 @@ describe("personal MCP membership rights", () => {
     expect(marked).not.toHaveBeenCalled();
     admin.mockResolvedValue(true);
     expect(await revertMcpChange(personalContext, "change-0", false)).toMatchObject({ preview: true });
+  });
+
+  it("records a TaskStateTransition with dwell time and story points when moving a ticket between lists", async () => {
+    list.mockResolvedValue({ id: "list-2", boardId: "board-1", title: "Done", board: { organizationId: "org-1" } });
+    await updateMcpTickets(personalContext, { updates: [{ ticketId: task.id, changes: { listId: "list-2" } }] });
+    expect(transitionCreate).toHaveBeenCalledTimes(1);
+    expect(transitionCreate.mock.calls[0][0].data).toMatchObject({
+      taskId: task.id,
+      boardId: "board-1",
+      fromListId: "list-1",
+      fromListTitle: "Todo",
+      toListId: "list-2",
+      toListTitle: "Done",
+      movedById: "user-1",
+      storyPointsAtMove: 5,
+      completedAfterMove: true,
+    });
   });
 });

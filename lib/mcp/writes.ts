@@ -6,6 +6,7 @@ import { encodeLogMessage } from "@/lib/activityMessages";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
 import { cleanupTicketUploads, applyTicketRelations, parseRelationPatch, relationSelect, restoreTicketRelations, validateTicketRelations } from "./ticketRelations";
 import { isDoneList } from "@/lib/statusTheme";
+import { recordTaskStateTransition } from "@/lib/transitions";
 import { takeTicketNumber } from "@/lib/integrations/ticketBranch";
 import { ticketDevelopment } from "./ticketDevelopment";
 
@@ -291,9 +292,11 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
         const task = await tx.task.findFirst({ where: { id: update.id, list: { boardId, board: boardScope(context) } }, select });
         if (!task) throw new McpWriteError("All updates must belong to one board in this connection");
         const patch = { ...update.patch };
+        let targetList: { id: string; title: string } | null = null;
         if (patch.listId && patch.listId !== task.listId) {
           const target = await tx.list.findFirst({ where: { id: patch.listId, boardId } });
           if (!target) throw new McpWriteError("Target list must belong to the same board");
+          targetList = target;
           if (patch.completed === undefined) patch.completed = isDoneList(target.title) ? true : task.completed ? false : undefined;
         }
         const now = new Date();
@@ -306,6 +309,19 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
         const changed = await tx.task.updateMany({ where: { id: task.id, updatedAt: task.updatedAt }, data });
         if (changed.count !== 1) throw new McpWriteError("A ticket changed concurrently. Retry with fresh ticket data.");
         await applyTicketRelations(tx, boardId, actor, task, patch, capture, uploaded);
+        if (targetList && patch.listId && patch.listId !== task.listId) {
+          await recordTaskStateTransition(tx, {
+            taskId: task.id,
+            boardId,
+            fromListId: task.listId,
+            toListId: patch.listId,
+            toListTitle: targetList.title,
+            movedById: actor.id,
+            assigneeIdAtMove: patch.assigneeId !== undefined ? patch.assigneeId : task.assigneeId,
+            completedAfterMove: patch.completed !== undefined ? patch.completed : task.completed,
+            transitionedAt: now,
+          });
+        }
       }
       const before = [...captured.values()];
       const after = await Promise.all(before.map(row => tx.task.findUniqueOrThrow({ where: { id: row.id }, select })));
@@ -357,10 +373,12 @@ export async function revertMcpChange(context: ExternalAccessContext, changeId: 
       if (!current || !snapshotsMatch(taskSnapshot(current), expected)) throw new McpWriteError("Revert conflict: a ticket has changed since this operation. Nothing was reverted.");
       const previous = before.find((task) => task.id === expected.id);
       let data: Prisma.TaskUpdateManyMutationInput;
+      let revertTargetList: { id: string; title: string } | null = null;
       if (!previous) data = { archived: true, archivedAt: new Date() };
       else {
         const target = await tx.list.findFirst({ where: { id: previous.listId, boardId: change.boardId } });
         if (!target) throw new McpWriteError("The original list no longer exists. Nothing was reverted.");
+        revertTargetList = target;
         const fields = {
           title: previous.title, description: previous.description, listId: previous.listId,
           order: previous.order, completed: previous.completed, completedById: previous.completedById,
@@ -377,7 +395,21 @@ export async function revertMcpChange(context: ExternalAccessContext, changeId: 
       }
       const updated = await tx.task.updateMany({ where: { id: expected.id, updatedAt: current.updatedAt }, data });
       if (updated.count !== 1) throw new McpWriteError("Revert conflict: a ticket changed concurrently. Nothing was reverted.");
-      if (previous) await restoreTicketRelations(tx, change.boardId, actor, current, previous);
+      if (previous) {
+        await restoreTicketRelations(tx, change.boardId, actor, current, previous);
+        if (revertTargetList && previous.listId !== current.listId) {
+          await recordTaskStateTransition(tx, {
+            taskId: expected.id,
+            boardId: change.boardId,
+            fromListId: current.listId,
+            toListId: previous.listId,
+            toListTitle: revertTargetList.title,
+            movedById: actor.id,
+            assigneeIdAtMove: previous.assigneeId !== undefined ? previous.assigneeId : current.assigneeId,
+            completedAfterMove: previous.completed,
+          });
+        }
+      }
       restored.push(await tx.task.findUniqueOrThrow({ where: { id: expected.id }, select }));
     }
     const undo = await tx.mcpChange.create({ data: { ...changeScope(context, change.organizationId), boardId: change.boardId, tokenId: context.tokenId || null, actorId: actor.id, kind: "revert", summary: `Revert ${change.id}`, before: after, after: restored.map(taskSnapshot), revertsChangeId: change.id } });
