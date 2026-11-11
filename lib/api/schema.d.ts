@@ -2758,6 +2758,322 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/organizations/{organizationId}/members/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add several people who already have accounts (organization owner or admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        emails: string[];
+                        /** @enum {string} */
+                        role: "admin" | "member";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BatchAddMembersResult"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/organizations/{organizationId}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pending invitations for this organization (owner or admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PendingOrganizationInvitation"][];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Invite someone to the organization by email (owner or admin); the invitation lasts 7 days */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        email: string;
+                        /**
+                         * @default member
+                         * @enum {string}
+                         */
+                        role?: "admin" | "member";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PendingOrganizationInvitation"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/organizations/{organizationId}/invitations/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Invite several people by email (owner or admin); each invitation lasts 7 days */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        emails: string[];
+                        /**
+                         * @default member
+                         * @enum {string}
+                         */
+                        role?: "admin" | "member";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BatchInviteResult"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/organizations/{organizationId}/invitations/{invitationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a pending organization invitation (owner or admin) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    organizationId: string;
+                    invitationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/organizations/{organizationId}/teams": {
         parameters: {
             query?: never;
@@ -6988,7 +7304,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** What an invitation link is for: the address, the board and whether it can still be used */
+        /** What an invitation link is for: the address, the board or organization, and whether it can still be used */
         get: {
             parameters: {
                 query?: never;
@@ -7037,7 +7353,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Accept an invitation: joins the board and its organization */
+        /** Accept an invitation: joins the board (and its organization) or the organization alone */
         post: {
             parameters: {
                 query?: never;
@@ -7055,9 +7371,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            boardId: string;
-                        };
+                        "application/json": components["schemas"]["InvitationAccept"];
                     };
                 };
                 /** @description Default Response */
@@ -8099,10 +8413,22 @@ export interface components {
         InvitationPreviewInput: {
             /** @description The address the invitation was sent to */
             email: string;
-            boardTitle: string;
+            /**
+             * @description Whether this invite is for a board or an organization
+             * @enum {string}
+             */
+            kind: "board" | "organization";
+            boardTitle: string | null;
+            organizationName: string | null;
+            /** @description For organization invites: admin or member */
+            role: string | null;
             /** @description pending, accepted or revoked */
             status: string;
             expired: boolean;
+        };
+        InvitationAcceptInput: {
+            boardId?: string;
+            organizationId?: string;
         };
         BoardIntegrationsInput: {
             slackWebhookUrl: string | null;
@@ -8179,6 +8505,34 @@ export interface components {
             organizations: {
                 id: string;
                 name: string;
+            }[];
+        };
+        PendingOrganizationInvitationInput: {
+            id: string;
+            email: string;
+            status: string;
+            /** @description admin or member */
+            role: string;
+            /** Format: date-time */
+            expiresAt: string;
+            organizationId: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        BatchAddMembersResultInput: {
+            added: components["schemas"]["MembershipInput"][];
+            failed: {
+                email: string;
+                error: string;
+                message: string;
+            }[];
+        };
+        BatchInviteResultInput: {
+            invited: components["schemas"]["PendingOrganizationInvitationInput"][];
+            failed: {
+                email: string;
+                error: string;
+                message: string;
             }[];
         };
         TeamInput: {
@@ -8753,10 +9107,22 @@ export interface components {
         InvitationPreview: {
             /** @description The address the invitation was sent to */
             email: string;
-            boardTitle: string;
+            /**
+             * @description Whether this invite is for a board or an organization
+             * @enum {string}
+             */
+            kind: "board" | "organization";
+            boardTitle: string | null;
+            organizationName: string | null;
+            /** @description For organization invites: admin or member */
+            role: string | null;
             /** @description pending, accepted or revoked */
             status: string;
             expired: boolean;
+        };
+        InvitationAccept: {
+            boardId?: string;
+            organizationId?: string;
         };
         BoardIntegrations: {
             slackWebhookUrl: string | null;
@@ -8833,6 +9199,34 @@ export interface components {
             organizations: {
                 id: string;
                 name: string;
+            }[];
+        };
+        PendingOrganizationInvitation: {
+            id: string;
+            email: string;
+            status: string;
+            /** @description admin or member */
+            role: string;
+            /** Format: date-time */
+            expiresAt: string;
+            organizationId: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        BatchAddMembersResult: {
+            added: components["schemas"]["Membership"][];
+            failed: {
+                email: string;
+                error: string;
+                message: string;
+            }[];
+        };
+        BatchInviteResult: {
+            invited: components["schemas"]["PendingOrganizationInvitation"][];
+            failed: {
+                email: string;
+                error: string;
+                message: string;
             }[];
         };
         Team: {
