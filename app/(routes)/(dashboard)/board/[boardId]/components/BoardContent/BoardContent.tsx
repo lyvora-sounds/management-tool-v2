@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useBoardPolling } from "@/hooks/use-board-polling";
 import { Progress } from "@/components/ui/progress";
@@ -14,6 +14,7 @@ import {
   useSensor,
   useSensors,
   closestCorners,
+  type CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -138,6 +139,22 @@ export function BoardContent({
 
   const listIds = useMemo(() => lists.map((l) => l.id), [lists]);
 
+  // Moving a card to another list changes the height of both lists, so the nearest drop target can flip back and
+  // forth while the pointer rests near the edge between them. Each flip moved the card again, which re-measured it,
+  // which flipped the target again: React gave up with "Maximum update depth exceeded" (#185). For the frame after
+  // a card changes list, the card itself is the target, so nothing moves twice (dnd-kit's own multi-list example).
+  const movedToNewList = useRef(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      movedToNewList.current = false;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [lists]);
+  const collisionDetection = useCallback<CollisionDetection>((args) => {
+    if (movedToNewList.current && args.active.data.current?.type === "task") return [{ id: args.active.id }];
+    return closestCorners(args);
+  }, []);
+
   const handleDragStart = (event: DragStartEvent) => {
     if (!canEdit) return;
     const { active } = event;
@@ -177,9 +194,10 @@ export function BoardContent({
 
     if (activeId === overId) return;
 
-    // Dentro de la misma lista solo hay destino si se está sobre otra tarea;
-    // sobre el contenedor de la propia lista no hay nada que reordenar.
-    if (sourceListId === targetListId && overType !== "task") return;
+    // Solo un cambio de lista mueve la tarjeta mientras se arrastra. El orden dentro de una lista se aplica al
+    // soltar (handleDragEnd): dnd-kit ya desplaza las tarjetas al arrastrar, y reordenar el estado en cada
+    // movimiento hacía que el destino más cercano saltara de una tarjeta a otra sin fin.
+    if (sourceListId === targetListId) return;
 
     const sourceList = lists.find((l) => l.id === sourceListId);
     const targetList = lists.find((l) => l.id === targetListId);
@@ -198,6 +216,7 @@ export function BoardContent({
     // El orden de los argumentos importa: (tarea, lista origen, lista destino, índice).
     moveTask(activeId, sourceListId, targetListId, newIndex);
     active.data.current = { ...active.data.current, listId: targetListId };
+    movedToNewList.current = true;
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -232,10 +251,20 @@ export function BoardContent({
     if (activeType === "task") {
       const activeId = active.id as string;
       const currentListId = active.data.current?.listId as string;
-      const targetList = lists.find((l) => l.id === currentListId);
+
+      // Dropped on another card of its own list: put it in that card's place.
+      if (over.data.current?.type === "task" && over.id !== activeId && over.data.current?.listId === currentListId) {
+        const list = useBoardStore.getState().lists.find((l) => l.id === currentListId);
+        const from = list?.tasks.findIndex((t) => t.id === activeId) ?? -1;
+        const to = list?.tasks.findIndex((t) => t.id === over.id) ?? -1;
+        if (from !== -1 && to !== -1 && from !== to) moveTask(activeId, currentListId, currentListId, to);
+      }
+
+      const latestLists = useBoardStore.getState().lists;
+      const targetList = latestLists.find((l) => l.id === currentListId);
       if (!targetList) return;
 
-      const taskUpdates = lists.flatMap((list) =>
+      const taskUpdates = latestLists.flatMap((list) =>
         list.tasks.map((task, i) => ({
           id: task.id,
           order: i,
@@ -327,7 +356,7 @@ export function BoardContent({
       {view === "kanban" && (
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={collisionDetection}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}

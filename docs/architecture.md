@@ -129,6 +129,7 @@ Migrated so far (the old handler is still in `app/api` until the comparison on s
 | | `GET /api/invite/[token]` (public), `POST /api/invite/[token]` | `GET /v1/invitations/:token`, `POST /v1/invitations/:token/accept` |
 | | `GET`, `POST`, `DELETE` `.../external-access` of a board and of an organization | same under `/v1` |
 | | `GET`, `POST`, `DELETE /api/settings/mcp/tokens` (list/create full-access / revoke own) | same under `/v1` |
+| | `GET`, `POST /api/settings/mcp/history` (changes of an organization or board, one change, undo), `GET`, `POST`, `DELETE /api/settings/mcp/oauth-clients` (Claude and ChatGPT clients) | same under `/v1` |
 | Organizations | `GET`, `POST /api/organizations`, `GET`, `POST`, `PATCH`, `DELETE /api/organizations/[organizationId]/members`, `GET .../available-members` | same under `/v1` |
 | | `GET`, `POST .../teams`, `POST`, `DELETE .../teams/[teamId]/members` and `.../teams/[teamId]/boards` | same under `/v1` |
 | Tickets | `PATCH /api/tasks/updateTask/[taskId]`, `DELETE /api/tasks/deleteTask/[taskId]` | `PATCH`, `DELETE /v1/tasks/:taskId` |

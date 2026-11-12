@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { copyToClipboard } from "@/lib/copyText";
 import { mcpConnectionSnippet } from "@/lib/mcp/connectionName";
+import { apiFetch } from "@/lib/apiClient";
 
 type Provider = "chatgpt" | "claude" | "grok" | "gemini";
 type OAuthClient = { id: string; redirectUris: string[]; allowWrite: boolean };
@@ -37,7 +38,7 @@ export function McpConnectionGuide({ endpoint, connectionName }: { endpoint: str
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/settings/mcp/oauth-clients").then(async (response) => {
+    apiFetch("/api/settings/mcp/oauth-clients").then(async (response) => {
       if (!response.ok) throw new Error("load");
       const data = await response.json();
       if (!cancelled) setClients(data);
@@ -55,7 +56,7 @@ export function McpConnectionGuide({ endpoint, connectionName }: { endpoint: str
     event.preventDefault();
     setBusy(true);
     try {
-      const response = await fetch("/api/settings/mcp/oauth-clients", {
+      const response = await apiFetch("/api/settings/mcp/oauth-clients", {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(provider === "claude" ? { provider: "claude", allowWrite } : { redirectUri: callback.trim(), allowWrite }),
       });
       if (!response.ok) throw new Error("create");
@@ -68,7 +69,7 @@ export function McpConnectionGuide({ endpoint, connectionName }: { endpoint: str
   async function revoke(id: string) {
     setBusy(true);
     try {
-      const response = await fetch("/api/settings/mcp/oauth-clients", {
+      const response = await apiFetch("/api/settings/mcp/oauth-clients", {
         method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ id }),
       });
       if (!response.ok) throw new Error("revoke");
