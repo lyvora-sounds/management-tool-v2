@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { changedHistoryFields, formatHistoryValue, historyRelationImpact, type HistoryNames, type HistorySnapshot } from "@/lib/mcp/historyPreview";
 import { Button } from "@/components/ui/button";
+import { apiFetch } from "@/lib/apiClient";
 
 type Change = { id: string; kind: string; summary: string; createdAt: string; revertedAt: string | null };
 type Detail = HistoryNames & { id: string; kind: string; summary: string; before: HistorySnapshot[]; after: HistorySnapshot[] };
@@ -23,7 +24,7 @@ export function McpChangeHistory({ organizationId, boardId }: { organizationId: 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true); setError(false);
     try {
-      const response = await fetch(url, { signal });
+      const response = await apiFetch(url, { signal });
       if (!response.ok) throw new Error("load");
       const data = await response.json();
       if (!signal?.aborted) setChanges(data);
@@ -40,7 +41,7 @@ export function McpChangeHistory({ organizationId, boardId }: { organizationId: 
   async function preview(id: string) {
     setBusy(true);
     try {
-      const response = await fetch(`${url}&changeId=${encodeURIComponent(id)}`);
+      const response = await apiFetch(`${url}&changeId=${encodeURIComponent(id)}`);
       if (!response.ok) throw new Error("preview");
       setDetail(await response.json());
     } catch { toast.error(t("loadError")); }
@@ -51,7 +52,7 @@ export function McpChangeHistory({ organizationId, boardId }: { organizationId: 
     if (!detail) return;
     setBusy(true);
     try {
-      const response = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ changeId: detail.id, confirm: true }) });
+      const response = await apiFetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ changeId: detail.id, confirm: true }) });
       if (!response.ok) throw new Error("revert");
       setDetail(null); toast.success(t("reverted")); await load();
     } catch { toast.error(t("conflict")); }
