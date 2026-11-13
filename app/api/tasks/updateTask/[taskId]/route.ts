@@ -5,6 +5,7 @@ import { canEditBoard, canReadBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
 import { isDoneList } from "@/lib/statusTheme";
+import { recordTaskStateTransition } from "@/lib/transitions";
 
 export async function PATCH(
   req: Request,
@@ -84,51 +85,72 @@ export async function PATCH(
     }
   }
 
-  const updated = await db.task.update({
-    where: { id: taskId },
-    data: {
-      ...(title !== undefined && { title: title.trim() }),
-      ...(description !== undefined && {
-        description: description.trim() || null,
-      }),
-      ...(targetList && { listId: targetList.id }),
-      ...(nextCompleted !== undefined && {
-        completed: nextCompleted,
-        completedAt: nextCompletedAt,
-        completedById: nextCompletedById,
-      }),
-      ...(startDate !== undefined && {
-        startDate: startDate ? new Date(startDate) : null,
-      }),
-      ...(dueDate !== undefined && {
-        dueDate: dueDate ? new Date(dueDate) : null,
-      }),
-      ...(priority !== undefined && { priority: priority ?? null }),
-      ...(epicId !== undefined && { epicId: epicId || null }),
-      ...(quarter !== undefined && { quarter: quarter?.trim() || null }),
-      ...(archived !== undefined && {
-        archived,
-        archivedAt: archived ? new Date() : null,
-      }),
-      ...(assigneeId !== undefined && { assigneeId: assigneeId || null }),
-      ...(qaId !== undefined && { qaId: qaId || null }),
-    },
-    include: {
-      list: {
-        include: {
-          board: { select: { id: true, title: true, color: true } },
+  const updated = await db.$transaction(async (tx) => {
+    const result = await tx.task.update({
+      where: { id: taskId },
+      data: {
+        ...(title !== undefined && { title: title.trim() }),
+        ...(description !== undefined && {
+          description: description.trim() || null,
+        }),
+        ...(targetList && { listId: targetList.id }),
+        ...(nextCompleted !== undefined && {
+          completed: nextCompleted,
+          completedAt: nextCompletedAt,
+          completedById: nextCompletedById,
+        }),
+        ...(startDate !== undefined && {
+          startDate: startDate ? new Date(startDate) : null,
+        }),
+        ...(dueDate !== undefined && {
+          dueDate: dueDate ? new Date(dueDate) : null,
+        }),
+        ...(priority !== undefined && { priority: priority ?? null }),
+        ...(epicId !== undefined && { epicId: epicId || null }),
+        ...(quarter !== undefined && { quarter: quarter?.trim() || null }),
+        ...(archived !== undefined && {
+          archived,
+          archivedAt: archived ? new Date() : null,
+        }),
+        ...(assigneeId !== undefined && { assigneeId: assigneeId || null }),
+        ...(qaId !== undefined && { qaId: qaId || null }),
+      },
+      include: {
+        list: {
+          include: {
+            board: { select: { id: true, title: true, color: true } },
+          },
+        },
+        epic: true,
+        labels: { include: { label: true } },
+        assignee: { select: { id: true, name: true, email: true } },
+        qa: { select: { id: true, name: true, email: true } },
+        collaborators: {
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+          },
         },
       },
-      epic: true,
-      labels: { include: { label: true } },
-      assignee: { select: { id: true, name: true, email: true } },
-      qa: { select: { id: true, name: true, email: true } },
-      collaborators: {
-        include: {
-          user: { select: { id: true, name: true, email: true } },
-        },
-      },
-    },
+    });
+
+    if (targetList && targetList.id !== task.listId) {
+      await recordTaskStateTransition(tx, {
+        taskId: task.id,
+        boardId: task.list.board.id,
+        fromListId: task.listId,
+        fromListTitle: task.list.title,
+        toListId: targetList.id,
+        toListTitle: targetList.title,
+        movedById: user.id,
+        assigneeIdAtMove:
+          assigneeId !== undefined ? assigneeId || null : task.assigneeId,
+        completedAfterMove:
+          nextCompleted !== undefined ? nextCompleted : task.completed,
+        taskCreatedAt: task.createdAt,
+      });
+    }
+
+    return result;
   });
 
   const actor = user.name ?? user.email;

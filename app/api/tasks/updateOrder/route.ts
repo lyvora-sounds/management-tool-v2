@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { canEditBoard } from "@/lib/boardAccess";
 import { createActivity } from "@/lib/createActivity";
+import { isDoneList } from "@/lib/statusTheme";
+import { recordTaskStateTransitions, type TaskStateMoveInput } from "@/lib/transitions";
 
 type OrderItem = { id: string; order: number; listId: string };
 
@@ -25,11 +27,18 @@ export async function PATCH(req: Request) {
   const [tasks, lists] = await Promise.all([
     db.task.findMany({
       where: { id: { in: taskIds } },
-      select: { id: true, list: { select: { boardId: true } } },
+      select: {
+        id: true,
+        listId: true,
+        assigneeId: true,
+        completed: true,
+        createdAt: true,
+        list: { select: { boardId: true, title: true } },
+      },
     }),
     db.list.findMany({
       where: { id: { in: listIds } },
-      select: { id: true, boardId: true },
+      select: { id: true, boardId: true, title: true },
     }),
   ]);
 
@@ -49,11 +58,34 @@ export async function PATCH(req: Request) {
   const allowed = await canEditBoard(user.id, boardId);
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  await Promise.all(
-    (items as OrderItem[]).map(({ id, order, listId }) =>
-      db.task.update({ where: { id }, data: { order, listId } }),
-    ),
-  );
+  const previousById = new Map(tasks.map((t) => [t.id, t]));
+  const listTitleById = new Map(lists.map((l) => [l.id, l.title]));
+
+  await db.$transaction(async (tx) => {
+    const moves: TaskStateMoveInput[] = [];
+    for (const { id, order, listId } of items as OrderItem[]) {
+      const prev = previousById.get(id);
+      await tx.task.update({ where: { id }, data: { order, listId } });
+      if (prev && prev.listId !== listId) {
+        const toTitle = listTitleById.get(listId) ?? "";
+        moves.push({
+          taskId: id,
+          boardId,
+          fromListId: prev.listId,
+          fromListTitle: prev.list.title,
+          toListId: listId,
+          toListTitle: toTitle,
+          movedById: user.id,
+          assigneeIdAtMove: prev.assigneeId ?? null,
+          completedAfterMove: isDoneList(toTitle) ? true : Boolean(prev.completed),
+          taskCreatedAt: prev.createdAt ?? null,
+        });
+      }
+    }
+    if (moves.length > 0) {
+      await recordTaskStateTransitions(tx, moves);
+    }
+  });
 
   if (movedTaskId && fromListId && toListId && fromListId !== toListId) {
     const [task, fromList, toList] = await Promise.all([
