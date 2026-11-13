@@ -701,6 +701,30 @@ model TaskStateTransition {
   @@index([boardId, transitionedAt])
 }
 
+/// Append-only security & administrative audit log (ISO 27001 A.8.15 / A.8.16). No foreign keys on purpose:
+/// audit records must survive the deletion of users, tickets, boards, or organizations. UPDATE and DELETE are
+/// rejected by a database trigger (see the security_audit_logs migration).
+model SecurityAuditLog {
+  id             String   @id @default(cuid())
+  boardId        String?
+  organizationId String?
+  actorId        String?
+  actorEmail     String?
+  ipAddress      String?
+  userAgent      String?
+  action         String // e.g. MEMBER_INVITED, ROLE_CHANGED, TICKET_DELETED, BOARD_ACCESS_UPDATED, INTEGRATION_TOKEN_ROTATED
+  entityType     String // e.g. BOARD_MEMBER, INVITATION, TASK, BOARD, MCP_TOKEN
+  entityId       String?
+  beforeState    Json?
+  afterState     Json?
+  createdAt      DateTime @default(now())
+
+  @@index([boardId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}
+
 model CustomFieldValue {
   id            String      @id @default(cuid())
   taskId        String
