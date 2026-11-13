@@ -40,6 +40,7 @@ import { taskMatchesFilters } from "./taskMatchesFilters";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/apiClient";
+import { boardTaskHref } from "@/lib/boardTaskUrl";
 
 export function BoardContent({
   lists: initialLists,
@@ -84,10 +85,7 @@ export function BoardContent({
   }, [effectiveLists, taskIdParam]);
 
   const handleCloseUrlModal = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("taskId");
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    router.replace(boardTaskHref(pathname, searchParams, null), { scroll: false });
   };
 
   useEffect(() => {
@@ -421,6 +419,7 @@ export function BoardContent({
 
       {urlTaskEntry && (
         <TaskModal
+          key={urlTaskEntry.task.id}
           task={urlTaskEntry.task}
           listId={urlTaskEntry.listId}
           listTitle={urlTaskEntry.listTitle}
