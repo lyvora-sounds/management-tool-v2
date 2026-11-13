@@ -33,7 +33,8 @@ import { HierarchyStepsProvider } from "../TaskHierarchy/HierarchySteps";
 import { BoardFilters } from "../BoardFilters/BoardFilters";
 import { BoardFiltersState } from "../BoardFilters/BoardFilters.types";
 import { BoardListView } from "../BoardListView/BoardListView";
-import { LayoutList, Columns3 } from "lucide-react";
+import { BoardObservability } from "../BoardObservability/BoardObservability";
+import { LayoutList, Columns3, BarChart3 } from "lucide-react";
 import { DEFAULT_FILTERS } from "./BoardContent.constants";
 import { taskMatchesFilters } from "./taskMatchesFilters";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ export function BoardContent({
   const [activeList, setActiveList] = useState<ListWithTasks | null>(null);
   const [dragOriginListId, setDragOriginListId] = useState<string | null>(null);
   const [filters, setFilters] = useState<BoardFiltersState>(DEFAULT_FILTERS);
-  const [view, setView] = useState<"kanban" | "list">("kanban");
+  const [view, setView] = useState<"kanban" | "list" | "observability">("kanban");
   const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
 
   const effectiveLists = lists && lists.length > 0 ? lists : initialLists;
@@ -328,6 +329,15 @@ export function BoardContent({
           >
             <LayoutList size={16} />
           </Button>
+          <Button
+            variant={view === "observability" ? "secondary" : "ghost"}
+            size="icon"
+            onClick={() => setView("observability")}
+            title={t("observabilityView")}
+            data-testid="observability-view-button"
+          >
+            <BarChart3 size={16} />
+          </Button>
         </div>
       </div>
 
@@ -339,6 +349,10 @@ export function BoardContent({
             {t("completedProgress", { done: doneTasks, total: totalTasks })}
           </span>
         </div>
+      )}
+
+      {view === "observability" && (
+        <BoardObservability boardId={boardId} boardUsers={boardUsers} />
       )}
 
       {view === "list" && (
