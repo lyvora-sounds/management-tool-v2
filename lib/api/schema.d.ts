@@ -779,6 +779,283 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/settings/mcp/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The changes made through MCP connections in an organization or board (admins only); with `changeId`, one change and the names it mentions */
+        get: {
+            parameters: {
+                query: {
+                    organizationId: string;
+                    boardId?: string;
+                    changeId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["McpChange"][] | components["schemas"]["McpChangeDetail"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Undo one MCP change; it needs `confirm: true` and fails if a ticket changed since */
+        post: {
+            parameters: {
+                query: {
+                    organizationId: string;
+                    boardId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        changeId: string;
+                        /** @enum {boolean} */
+                        confirm: true;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            changeId: string;
+                            revertedChangeId: string;
+                            tickets: unknown[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/settings/mcp/oauth-clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The active OAuth clients the caller registered */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["McpOAuthClient"][];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Register an OAuth client for Claude (fixed callbacks) or ChatGPT (its own callback); the secret is shown once */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        provider?: "chatgpt" | "claude";
+                        redirectUri?: string;
+                        allowWrite?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreatedMcpOAuthClient"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Revoke an OAuth client the caller registered, and every token it granted */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/search": {
         parameters: {
             query?: never;
@@ -2829,7 +3106,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Pending invitations for this organization (owner or admin) */
+        /** Pending invitations for this organization and for its boards (owner or admin). Keeps Members and Board members in sync. */
         get: {
             parameters: {
                 query?: never;
@@ -3024,7 +3301,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Revoke a pending organization invitation (owner or admin) */
+        /** Revoke a pending organization invitation or a pending board invitation for a board in this organization (owner or admin) */
         delete: {
             parameters: {
                 query?: never;
@@ -8333,6 +8610,13 @@ export interface components {
             boardId: string;
             /** Format: date-time */
             createdAt: string;
+            /**
+             * @description Where the invite was created
+             * @enum {string}
+             */
+            source: "board" | "organization";
+            /** @description Set when source is organization */
+            organizationId: string | null;
         };
         BoardPeopleInput: {
             owner: {
@@ -8511,13 +8795,22 @@ export interface components {
             id: string;
             email: string;
             status: string;
-            /** @description admin or member */
+            /** @description admin or member (board-sourced rows use member) */
             role: string;
             /** Format: date-time */
             expiresAt: string;
             organizationId: string;
             /** Format: date-time */
             createdAt: string;
+            /**
+             * @description Where the invite was created
+             * @enum {string}
+             */
+            source: "organization" | "board";
+            /** @description Set when source is board */
+            boardId: string | null;
+            /** @description Set when source is board */
+            boardTitle: string | null;
         };
         BatchAddMembersResultInput: {
             added: components["schemas"]["MembershipInput"][];
@@ -8593,6 +8886,56 @@ export interface components {
                     title: string;
                     color: string | null;
                 };
+            };
+        };
+        McpOAuthClientInput: {
+            id: string;
+            redirectUris: string[];
+            allowWrite: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CreatedMcpOAuthClientInput: {
+            id: string;
+            redirectUris: string[];
+            allowWrite: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** @description Shown once */
+            secret: string;
+        };
+        McpChangeInput: {
+            id: string;
+            boardId: string;
+            kind: string;
+            summary: string;
+            /** Format: date-time */
+            createdAt: string;
+            revertedAt: string | null;
+            revertsChangeId: string | null;
+        };
+        McpChangeDetailInput: {
+            id: string;
+            kind: string;
+            summary: string;
+            boardId: string;
+            revertedAt: string | null;
+            before: unknown[];
+            after: unknown[];
+            listNames: {
+                [key: string]: string;
+            };
+            userNames: {
+                [key: string]: string;
+            };
+            labelNames: {
+                [key: string]: string;
+            };
+            epicNames: {
+                [key: string]: string;
+            };
+            customFieldNames: {
+                [key: string]: string;
             };
         };
         SearchResultInput: {
@@ -9027,6 +9370,13 @@ export interface components {
             boardId: string;
             /** Format: date-time */
             createdAt: string;
+            /**
+             * @description Where the invite was created
+             * @enum {string}
+             */
+            source: "board" | "organization";
+            /** @description Set when source is organization */
+            organizationId: string | null;
         };
         BoardPeople: {
             owner: {
@@ -9205,13 +9555,22 @@ export interface components {
             id: string;
             email: string;
             status: string;
-            /** @description admin or member */
+            /** @description admin or member (board-sourced rows use member) */
             role: string;
             /** Format: date-time */
             expiresAt: string;
             organizationId: string;
             /** Format: date-time */
             createdAt: string;
+            /**
+             * @description Where the invite was created
+             * @enum {string}
+             */
+            source: "organization" | "board";
+            /** @description Set when source is board */
+            boardId: string | null;
+            /** @description Set when source is board */
+            boardTitle: string | null;
         };
         BatchAddMembersResult: {
             added: components["schemas"]["Membership"][];
@@ -9287,6 +9646,56 @@ export interface components {
                     title: string;
                     color: string | null;
                 };
+            };
+        };
+        McpOAuthClient: {
+            id: string;
+            redirectUris: string[];
+            allowWrite: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CreatedMcpOAuthClient: {
+            id: string;
+            redirectUris: string[];
+            allowWrite: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** @description Shown once */
+            secret: string;
+        };
+        McpChange: {
+            id: string;
+            boardId: string;
+            kind: string;
+            summary: string;
+            /** Format: date-time */
+            createdAt: string;
+            revertedAt: string | null;
+            revertsChangeId: string | null;
+        };
+        McpChangeDetail: {
+            id: string;
+            kind: string;
+            summary: string;
+            boardId: string;
+            revertedAt: string | null;
+            before: unknown[];
+            after: unknown[];
+            listNames: {
+                [key: string]: string;
+            };
+            userNames: {
+                [key: string]: string;
+            };
+            labelNames: {
+                [key: string]: string;
+            };
+            epicNames: {
+                [key: string]: string;
+            };
+            customFieldNames: {
+                [key: string]: string;
             };
         };
         SearchResult: {
