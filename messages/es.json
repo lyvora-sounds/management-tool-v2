@@ -687,7 +687,8 @@
     "archiveList": "Lista: {title}",
     "archiveListFallback": "General",
     "archiveArchivedOn": "Archivado: {date}",
-    "archiveRestore": "Restaurar"
+    "archiveRestore": "Restaurar",
+    "observabilityView": "Observabilidad y Auditoría ISO 27001"
   },
   "filters": {
     "all": "Todas",
@@ -814,7 +815,7 @@
     "completedAndMoved": "Completado y movido a \"{title}\"",
     "reopenedAndMoved": "Reactivado y movido a \"{title}\"",
     "share": "Compartir",
-    "shareTitle": "Compartir enlace público de solo lectura",
+    "shareTitle": "Compartir ticket",
     "details": "Detalles",
     "fieldGroupPlacement": "Ubicación",
     "fieldGroupPlacementHint": "Dónde está el ticket en el tablero: lista/estado, fechas y jerarquía de padre o épica.",
@@ -841,7 +842,6 @@
     "shareGenerated": "Enlace público generado",
     "shareRevoked": "Enlace revocado",
     "shareCopied": "Enlace copiado al portapapeles",
-    "shareTitle": "Compartir ticket",
     "sharePublicTitle": "Compartir ticket públicamente",
     "privateLink": "Enlace privado",
     "privateLinkHint": "Solo las personas que pueden abrir este tablero ven el ticket. Este enlace siempre está disponible.",
@@ -1588,30 +1588,30 @@
   "mcpGuide": {
     "accessTitle": "Acceso y permisos",
     "stepTitles": {
-        "chatgpt": {
-            "1": "Abre la configuración",
-            "2": "Crea credenciales OAuth",
-            "3": "Instala el conector",
-            "4": "Autoriza el acceso"
-        },
-        "claude": {
-            "1": "Genera las credenciales",
-            "2": "Añade el conector",
-            "3": "Pega el ID y el secreto",
-            "4": "Conecta y aprueba"
-        },
-        "grok": {
-            "1": "Crea un token con alcance",
-            "2": "Configura tu token",
-            "3": "Añade el servidor MCP",
-            "4": "Empieza a usar Kikiboard"
-        },
-        "gemini": {
-            "1": "Crea un token con alcance",
-            "2": "Añade la configuración",
-            "3": "Configura tu token",
-            "4": "Comprueba la conexión"
-        }
+      "chatgpt": {
+        "1": "Abre la configuración",
+        "2": "Crea credenciales OAuth",
+        "3": "Instala el conector",
+        "4": "Autoriza el acceso"
+      },
+      "claude": {
+        "1": "Genera las credenciales",
+        "2": "Añade el conector",
+        "3": "Pega el ID y el secreto",
+        "4": "Conecta y aprueba"
+      },
+      "grok": {
+        "1": "Crea un token con alcance",
+        "2": "Configura tu token",
+        "3": "Añade el servidor MCP",
+        "4": "Empieza a usar Kikiboard"
+      },
+      "gemini": {
+        "1": "Crea un token con alcance",
+        "2": "Añade la configuración",
+        "3": "Configura tu token",
+        "4": "Comprueba la conexión"
+      }
     },
     "title": "Conecta tu asistente de IA",
     "intro": "Elige tu asistente para ver las instrucciones. Las conexiones se limitan a una organización o un tablero. Solo lectura por defecto; los cambios requieren permiso explícito.",
@@ -1726,5 +1726,56 @@
     "sharingLinkChanged": "Al revertir, se restaura el enlace público anterior y se reemplaza el actual.",
     "bytes": "bytes",
     "relationImpact": "Al revertir, se eliminan {removed}, se restauran {restored} y se modifican {changed} elementos."
+  },
+  "observability": {
+    "title": "Observabilidad, Velocidad y Auditoría ISO 27001",
+    "subtitle": "Transiciones de estado inmutables, story points por usuario, tiempos de ciclo y registro de seguridad.",
+    "preset_7d": "7d",
+    "preset_30d": "30d",
+    "preset_quarter": "90d",
+    "preset_all": "Todo",
+    "groupByLabel": "Intervalo de agrupación",
+    "interval_day": "Diario",
+    "interval_week": "Semanal",
+    "interval_month": "Mensual",
+    "userFilterLabel": "Filtrar por usuario",
+    "allUsers": "Todos los miembros",
+    "exportCsv": "Exportar CSV",
+    "exportJson": "Exportar JSON ISO",
+    "kpiAchievedPoints": "Story points logrados",
+    "ptsUnit": "pts",
+    "tasksUnit": "tickets",
+    "kpiCompletionRate": "{rate}% completado",
+    "kpiLeadTime": "Lead Time Promedio",
+    "kpiCycleTime": "Cycle Time Promedio",
+    "kpiMedian": "Mediana: {value}",
+    "kpiBottleneck": "Columna Cuello de Botella",
+    "noBottleneck": "Ninguno detectado",
+    "kpiCompletedTasks": "{done} de {total} tickets completados",
+    "achievedByUserTitle": "Story points logrados por usuario",
+    "snapshotAttributionNote": "Instantánea inmutable al completar",
+    "loading": "Cargando métricas de observabilidad...",
+    "emptyVelocity": "Sin story points completados en este periodo.",
+    "unassignedUser": "Sin asignar",
+    "velocityTrendTitle": "Tendencia de Velocidad y Burndown",
+    "remainingShort": "rest",
+    "dwellTimeTitle": "Tiempo de Permanencia por Columna",
+    "emptyDwell": "Sin transiciones de estado registradas en este periodo.",
+    "isoAuditTitle": "Registros de Auditoría Inmutables ISO/IEC 27001 A.8.15 y A.8.32",
+    "tabStateTransitions": "Transiciones de Estado ({count})",
+    "tabSecurityAudit": "Auditoría de Seguridad ({count})",
+    "emptyTransitions": "Aún no hay transiciones de estado registradas.",
+    "emptyAuditLogs": "Aún no hay eventos de auditoría de seguridad registrados.",
+    "colTimestamp": "Fecha y Hora (UTC)",
+    "colTicket": "Ticket",
+    "colTransition": "Transición de Estado",
+    "colAssigneeSnapshot": "Asignado al Mover",
+    "colPointsSnapshot": "Story points",
+    "colDwell": "Tiempo en Lista",
+    "createdInitial": "Creado",
+    "colAction": "Acción",
+    "colActor": "Actor",
+    "colEntity": "Entidad",
+    "colIpAddress": "Dirección IP"
   }
 }

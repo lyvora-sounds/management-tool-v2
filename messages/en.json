@@ -687,7 +687,8 @@
     "archiveList": "List: {title}",
     "archiveListFallback": "General",
     "archiveArchivedOn": "Archived: {date}",
-    "archiveRestore": "Restore"
+    "archiveRestore": "Restore",
+    "observabilityView": "Observability & ISO 27001 Audit"
   },
   "filters": {
     "all": "All",
@@ -814,7 +815,7 @@
     "completedAndMoved": "Completed and moved to \"{title}\"",
     "reopenedAndMoved": "Reopened and moved to \"{title}\"",
     "share": "Share",
-    "shareTitle": "Share public read-only link",
+    "shareTitle": "Share ticket",
     "details": "Details",
     "fieldGroupPlacement": "Placement",
     "fieldGroupPlacementHint": "Where the ticket sits on the board: list/status, dates, and parent or epic hierarchy.",
@@ -841,7 +842,6 @@
     "shareGenerated": "Public link generated",
     "shareRevoked": "Link revoked",
     "shareCopied": "Link copied to clipboard",
-    "shareTitle": "Share ticket",
     "sharePublicTitle": "Share ticket publicly",
     "privateLink": "Private link",
     "privateLinkHint": "Only people who can open this board can view the ticket. This link is always available.",
@@ -1588,30 +1588,30 @@
   "mcpGuide": {
     "accessTitle": "Access & permissions",
     "stepTitles": {
-        "chatgpt": {
-            "1": "Open connector settings",
-            "2": "Create OAuth credentials",
-            "3": "Install your connector",
-            "4": "Approve access"
-        },
-        "claude": {
-            "1": "Generate credentials",
-            "2": "Add your connector",
-            "3": "Paste the ID and secret",
-            "4": "Connect and approve"
-        },
-        "grok": {
-            "1": "Create a scoped token",
-            "2": "Set your token",
-            "3": "Add the MCP server",
-            "4": "Start using Kikiboard"
-        },
-        "gemini": {
-            "1": "Create a scoped token",
-            "2": "Add the configuration",
-            "3": "Set your token",
-            "4": "Check the connection"
-        }
+      "chatgpt": {
+        "1": "Open connector settings",
+        "2": "Create OAuth credentials",
+        "3": "Install your connector",
+        "4": "Approve access"
+      },
+      "claude": {
+        "1": "Generate credentials",
+        "2": "Add your connector",
+        "3": "Paste the ID and secret",
+        "4": "Connect and approve"
+      },
+      "grok": {
+        "1": "Create a scoped token",
+        "2": "Set your token",
+        "3": "Add the MCP server",
+        "4": "Start using Kikiboard"
+      },
+      "gemini": {
+        "1": "Create a scoped token",
+        "2": "Add the configuration",
+        "3": "Set your token",
+        "4": "Check the connection"
+      }
     },
     "title": "Connect your AI assistant",
     "intro": "Choose your assistant for setup instructions. Connections stay within one organization or board. Read-only is the default; task writes require explicit permission.",
@@ -1726,5 +1726,56 @@
     "sharingLinkChanged": "Reverting restores the previous public link and replaces the current one.",
     "bytes": "bytes",
     "relationImpact": "Revert removes {removed}, restores {restored}, and changes {changed} entries."
+  },
+  "observability": {
+    "title": "Observability, Velocity & ISO 27001 Audit",
+    "subtitle": "Immutable state transitions, story points velocity per user, cycle times, and security audit trail.",
+    "preset_7d": "7d",
+    "preset_30d": "30d",
+    "preset_quarter": "90d",
+    "preset_all": "All time",
+    "groupByLabel": "Group interval",
+    "interval_day": "Daily",
+    "interval_week": "Weekly",
+    "interval_month": "Monthly",
+    "userFilterLabel": "Filter by user",
+    "allUsers": "All members",
+    "exportCsv": "Export CSV",
+    "exportJson": "Export ISO JSON",
+    "kpiAchievedPoints": "Achieved Story Points",
+    "ptsUnit": "pts",
+    "tasksUnit": "tickets",
+    "kpiCompletionRate": "{rate}% completion rate",
+    "kpiLeadTime": "Average Lead Time",
+    "kpiCycleTime": "Average Cycle Time",
+    "kpiMedian": "Median: {value}",
+    "kpiBottleneck": "Bottleneck Column",
+    "noBottleneck": "None detected",
+    "kpiCompletedTasks": "{done} of {total} tickets completed",
+    "achievedByUserTitle": "Story Points Achieved per User",
+    "snapshotAttributionNote": "Immutable snapshot at completion",
+    "loading": "Loading observability metrics...",
+    "emptyVelocity": "No completed story points in this window.",
+    "unassignedUser": "Unassigned",
+    "velocityTrendTitle": "Velocity & Burndown Trend",
+    "remainingShort": "rem",
+    "dwellTimeTitle": "Column State Dwell Time",
+    "emptyDwell": "No state transitions recorded in this window.",
+    "isoAuditTitle": "ISO/IEC 27001 A.8.15 & A.8.32 Immutable Audit Logs",
+    "tabStateTransitions": "State Transitions ({count})",
+    "tabSecurityAudit": "Security Audit ({count})",
+    "emptyTransitions": "No state transitions recorded yet.",
+    "emptyAuditLogs": "No security audit events recorded yet.",
+    "colTimestamp": "Timestamp (UTC)",
+    "colTicket": "Ticket",
+    "colTransition": "State Transition",
+    "colAssigneeSnapshot": "Assignee at Move",
+    "colPointsSnapshot": "Story Points",
+    "colDwell": "Dwell Time",
+    "createdInitial": "Created",
+    "colAction": "Action",
+    "colActor": "Actor",
+    "colEntity": "Entity",
+    "colIpAddress": "IP Address"
   }
 }

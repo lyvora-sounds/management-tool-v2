@@ -140,7 +140,9 @@ Every connection exposes these read-only tools:
   match by meaning from `get_project` and ask the user if no list matches.
   After the pull request is created, the next chat message must include its URL;
 - `get_attachment` — a scoped attachment's file contents as base64, up to 5 MiB;
-- `get_change_history` — the latest 50 MCP operations and their revert status.
+- `get_change_history` — the latest 50 MCP operations and their revert status;
+- `get_board_metrics` — story points planned vs. achieved per user and date bucket, velocity & burndown trends, lead/cycle time stats, and column dwell-time bottlenecks;
+- `get_state_history` — append-only ISO 27001 state transition timeline (timestamps, dwell durations, and assignee/story-points snapshots at move) for a board or single ticket.
 
 Do not place tokens in source control, chat prompts, logs, or client-visible
 configuration files. Use the secret/environment facility provided by the MCP

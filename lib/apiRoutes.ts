@@ -58,6 +58,11 @@ const MIGRATED: Route[] = [
   { method: "GET", pattern: /^\/api\/boards\/[^/]+\/integrations$/, to: sameUnderV1 },
   { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/integrations$/, to: sameUnderV1 },
 
+  // Observability / ISO audit (Step 2–4)
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/metrics$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/state-history$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/audit-logs$/, to: sameUnderV1 },
+
   // Board members, invitations and external access
   { method: "GET", pattern: /^\/api\/boards\/[^/]+\/invitations$/, to: (p) => p.replace(/^\/api\/boards\/([^/]+)\/invitations$/, "/v1/boards/$1/members") },
   { method: "POST", pattern: /^\/api\/boards\/[^/]+\/invitations$/, to: sameUnderV1 },

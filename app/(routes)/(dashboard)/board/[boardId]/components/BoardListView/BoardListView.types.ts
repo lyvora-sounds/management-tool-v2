@@ -15,9 +15,4 @@ export interface BoardListViewProps {
 export interface TaskRowProps {
   task: TaskWithLabels;
   listId: string;
-  listTitle: string;
-  boardId: string;
-  canManage: boolean;
-  boardUsers: BoardUser[];
-  memberCanAssign: boolean;
 }

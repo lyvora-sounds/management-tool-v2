@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { Prisma } from "@/lib/generated/prisma/client";
 import db from "@/lib/db";
 import { nextListAfterMerge } from "@/lib/statusTheme";
+import { recordTaskStateTransition } from "@/lib/transitions";
 import { ticketIdentityFromBranch } from "@/lib/integrations/ticketBranch";
 import { requireOrganizationManager, requireOrganizationMember } from "@/lib/organizations";
 import {
@@ -229,7 +230,14 @@ async function advanceTicketAfterMerge(effect: Extract<GithubWebhookEffect, { ac
   if (!board) return;
   const task = await db.task.findFirst({
     where: { number: identity.number, archived: false, list: { boardId: board.id } },
-    select: { id: true, listId: true, completed: true },
+    select: {
+      id: true,
+      listId: true,
+      completed: true,
+      createdAt: true,
+      assigneeId: true,
+      list: { select: { title: true } },
+    },
   });
   if (!task) return;
   const marker = `github-pr-merged:${effect.repositoryId}:${effect.pullRequestId}`;
@@ -237,6 +245,7 @@ async function advanceTicketAfterMerge(effect: Extract<GithubWebhookEffect, { ac
   if (already) return;
   const move = nextListAfterMerge(board.list, task.listId);
   const actorId = connection.connectedById ?? board.userId;
+  const toList = move.listId ? board.list.find((list) => list.id === move.listId) : null;
   await db.$transaction(async (tx) => {
     const raced = await tx.activityLog.findFirst({ where: { boardId: board.id, type: "github_pr_merged", message: marker }, select: { id: true } });
     if (raced) return;
@@ -248,6 +257,20 @@ async function advanceTicketAfterMerge(effect: Extract<GithubWebhookEffect, { ac
           ...(move.complete && !task.completed ? { completed: true, completedAt: new Date(), completedById: actorId } : {}),
         },
       });
+      if (move.listId && move.listId !== task.listId && toList) {
+        await recordTaskStateTransition(tx, {
+          taskId: task.id,
+          boardId: board.id,
+          fromListId: task.listId,
+          fromListTitle: task.list.title,
+          toListId: move.listId,
+          toListTitle: toList.title,
+          movedById: actorId,
+          assigneeIdAtMove: task.assigneeId,
+          completedAfterMove: move.complete,
+          taskCreatedAt: task.createdAt,
+        });
+      }
     }
     await tx.activityLog.create({
       data: { boardId: board.id, userId: actorId, type: "github_pr_merged", message: marker },

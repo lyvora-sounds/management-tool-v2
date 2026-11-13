@@ -2,6 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   CheckCircle2,
@@ -14,7 +15,6 @@ import {
 import { cn } from "@/lib/utils";
 import { TaskCardProps } from "./TaskCard.types";
 import { TaskActions } from "../TaskActions/TaskActions";
-import { TaskModal } from "../TaskModal/TaskModal";
 import { useBoardStore } from "../../store/useBoardStore";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
 import { targetListForCompletion } from "@/lib/statusTheme";
@@ -25,6 +25,7 @@ import { useHierarchyStep } from "../TaskHierarchy/HierarchySteps";
 import { dateLocale } from "@/i18n/routing";
 import { useAppearance } from "@/components/Appearance/AppearanceProvider";
 import { apiFetch } from "@/lib/apiClient";
+import { boardTaskHref } from "@/lib/boardTaskUrl";
 
 function getInitials(name: string | null | undefined, email: string | undefined) {
   if (name)
@@ -41,11 +42,6 @@ function getInitials(name: string | null | undefined, email: string | undefined)
 export function TaskCard({
   task,
   listId,
-  listTitle,
-  boardId,
-  canManage,
-  boardUsers,
-  memberCanAssign,
 }: TaskCardProps) {
   const t = useTranslations("task");
   const tPriority = useTranslations("priority");
@@ -53,9 +49,16 @@ export function TaskCard({
   const { card: show } = useAppearance().appearance;
   const updateTask = useBoardStore((s) => s.updateTask);
   const lists = useBoardStore((s) => s.lists);
-  const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const ticketOpen = searchParams.get("taskId") === task.id;
   const [completed, setCompleted] = useState(task.completed);
   const { canEdit } = useBoardAccess();
+
+  const openTicket = () => {
+    router.replace(boardTaskHref(pathname, searchParams, task.id), { scroll: false });
+  };
 
   const {
     attributes,
@@ -67,7 +70,7 @@ export function TaskCard({
   } = useSortable({
     id: task.id,
     data: { type: "task", task, listId },
-    disabled: modalOpen || !canEdit,
+    disabled: ticketOpen || !canEdit,
   });
 
   const style = {
@@ -188,7 +191,7 @@ export function TaskCard({
             "flex-1 cursor-pointer leading-snug",
             completed && "line-through text-muted-foreground",
           )}
-          onClick={() => setModalOpen(true)}
+          onClick={openTicket}
         >
           {task.title}
         </span>
@@ -319,19 +322,6 @@ export function TaskCard({
         </div>
       )}
 
-      {modalOpen && (
-        <TaskModal
-          task={task}
-          listId={listId}
-          listTitle={listTitle}
-          boardId={boardId}
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          canManage={canManage}
-          boardUsers={boardUsers}
-          memberCanAssign={memberCanAssign}
-        />
-      )}
     </div>
   );
 }
