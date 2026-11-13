@@ -9,6 +9,13 @@ import { informationResponse, presentationSchema, SVG_CAPABILITY } from "./prese
 import { MCP_SERVER_INSTRUCTIONS, ticketDevelopment } from "./ticketDevelopment";
 import { canReadBoard, getBoardRole } from "@/lib/boardAccess";
 import {
+  getBoardMetricsSummary,
+  getStateTransitionHistory,
+  type AllocationPolicy,
+  type GroupByInterval,
+  type MetricsDbClient,
+} from "@/lib/metrics/storyPoints";
+import {
   canEditBoard as roleCanEditBoard,
   canManageBoard as roleCanManageBoard,
 } from "@/lib/boardRoles";
@@ -184,6 +191,43 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
         inputSchema: { type: "object", properties: {}, additionalProperties: false },
         annotations: { readOnlyHint: true },
+      },
+      {
+        name: "get_board_metrics",
+        description: `Calculate delivery velocity, achieved story points per user, burndown, lead/cycle times, and column bottleneck metrics for a board in ${scopeDescription}. Uses immutable TaskStateTransition snapshots (ISO 27001 A.8.15/A.8.32).`,
+        securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
+        _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        inputSchema: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            boardId: { type: "string", description: "Board ID from get_project (optional on board-scoped connections)." },
+            startDate: { type: "string", description: "Optional ISO-8601 start date filter." },
+            endDate: { type: "string", description: "Optional ISO-8601 end date filter." },
+            groupBy: { type: "string", enum: ["day", "week", "month"], default: "week" },
+            userId: { type: "string", description: "Optional user ID to filter achieved story points." },
+            allocationPolicy: { type: "string", enum: ["primary", "split"], default: "primary" },
+          },
+        },
+      },
+      {
+        name: "get_state_history",
+        description: `Retrieve the chronological, append-only state transition timeline (timestamps, dwell duration per column, assignee and story points snapshots at move) for a ticket or board in ${scopeDescription}.`,
+        securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }],
+        _meta: { securitySchemes: [{ type: "oauth2", scopes: ["tickets:read"] }] },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        inputSchema: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            boardId: { type: "string", description: "Board ID from get_project (optional on board-scoped connections or when ticketId is provided)." },
+            ticketId: { type: "string", description: "Optional ticket ID to inspect transitions for a single ticket." },
+            startDate: { type: "string", description: "Optional ISO-8601 start date filter." },
+            endDate: { type: "string", description: "Optional ISO-8601 end date filter." },
+            limit: { type: "integer", minimum: 1, maximum: 500, default: 100 },
+          },
+        },
       },
       ...(context.scopes.includes("tickets:write") ? [
         { name: "create_ticket", description: "Create a ticket in a list in this connection. Returns a change ID; reverting creation archives the ticket and preserves its content.", ...writeMetadata,
@@ -449,6 +493,119 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
         board: { id: list.board.id, title: list.board.title },
         list: { id: list.id, title: list.title },
       });
+    }
+
+    if (params.name === "get_board_metrics") {
+      const requestedBoardId =
+        typeof args.boardId === "string" && args.boardId.trim()
+          ? args.boardId.trim()
+          : context.boardId ?? undefined;
+      if (!requestedBoardId) {
+        return { isError: true, content: [{ type: "text", text: "boardId is required for organization and personal connections" }] };
+      }
+      if (context.boardId && requestedBoardId !== context.boardId) {
+        return { isError: true, content: [{ type: "text", text: "Board not found in this connection" }] };
+      }
+      let boardFilter;
+      try {
+        boardFilter = context.boardId
+          ? { id: context.boardId, ...(context.organizationId ? { organizationId: context.organizationId } : {}) }
+          : { id: requestedBoardId, ...boardScope(context) };
+      } catch (error) {
+        return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "Board not found" }] };
+      }
+      const board = await db.board.findFirst({
+        where: boardFilter,
+        select: { id: true },
+      });
+      if (!board) {
+        return { isError: true, content: [{ type: "text", text: "Board not found in this connection" }] };
+      }
+
+      const groupBy: GroupByInterval =
+        args.groupBy === "day" || args.groupBy === "month" ? args.groupBy : "week";
+      const allocationPolicy: AllocationPolicy =
+        args.allocationPolicy === "split" ? "split" : "primary";
+      const startDate = typeof args.startDate === "string" ? args.startDate : null;
+      const endDate = typeof args.endDate === "string" ? args.endDate : null;
+      const userId = typeof args.userId === "string" ? args.userId : undefined;
+
+      const summary = await getBoardMetricsSummary(
+        db as unknown as MetricsDbClient,
+        board.id,
+        { startDate, endDate, groupBy, userId, allocationPolicy },
+      );
+      return text(summary);
+    }
+
+    if (params.name === "get_state_history") {
+      const ticketId =
+        typeof args.ticketId === "string" && args.ticketId.trim() ? args.ticketId.trim() : null;
+      let resolvedBoardId =
+        typeof args.boardId === "string" && args.boardId.trim()
+          ? args.boardId.trim()
+          : context.boardId ?? null;
+
+      if (ticketId) {
+        let scope;
+        try {
+          scope = ticketScope(context, resolvedBoardId ?? undefined);
+        } catch (error) {
+          return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "Ticket not found" }] };
+        }
+        if (!scope) {
+          return { isError: true, content: [{ type: "text", text: "Ticket not found in this connection" }] };
+        }
+        const task = await db.task.findFirst({
+          where: { id: ticketId, ...scope },
+          select: { id: true, list: { select: { boardId: true } } },
+        });
+        if (!task) {
+          return { isError: true, content: [{ type: "text", text: "Ticket not found in this connection" }] };
+        }
+        resolvedBoardId = task.list.boardId;
+      } else {
+        if (!resolvedBoardId) {
+          return { isError: true, content: [{ type: "text", text: "boardId or ticketId is required" }] };
+        }
+        if (context.boardId && resolvedBoardId !== context.boardId) {
+          return { isError: true, content: [{ type: "text", text: "Board not found in this connection" }] };
+        }
+        let boardFilter;
+        try {
+          boardFilter = context.boardId
+            ? { id: context.boardId, ...(context.organizationId ? { organizationId: context.organizationId } : {}) }
+            : { id: resolvedBoardId, ...boardScope(context) };
+        } catch (error) {
+          return { isError: true, content: [{ type: "text", text: error instanceof McpWriteError ? error.message : "Board not found" }] };
+        }
+        const board = await db.board.findFirst({
+          where: boardFilter,
+          select: { id: true },
+        });
+        if (!board) {
+          return { isError: true, content: [{ type: "text", text: "Board not found in this connection" }] };
+        }
+      }
+
+      const limit =
+        typeof args.limit === "number" && Number.isFinite(args.limit)
+          ? Math.max(1, Math.min(500, Math.trunc(args.limit)))
+          : 100;
+      const startDate = typeof args.startDate === "string" ? args.startDate : null;
+      const endDate = typeof args.endDate === "string" ? args.endDate : null;
+
+      const transitions = await getStateTransitionHistory(
+        db as unknown as MetricsDbClient,
+        {
+          boardId: resolvedBoardId,
+          taskId: ticketId,
+          startDate,
+          endDate,
+          limit,
+        },
+      );
+      return text({ boardId: resolvedBoardId, ticketId, transitions });
     }
 
     return { isError: true, content: [{ type: "text", text: "Unknown tool" }] };
