@@ -679,6 +679,28 @@ model CustomField {
   @@index([boardId])
 }
 
+/// Append-only status log (ISO 27001 A.8.15 / A.8.32). No foreign keys on purpose: the history survives the
+/// deletion of a ticket, list or board. UPDATE and DELETE are rejected by a database trigger
+/// (see the task_state_transitions migration).
+model TaskStateTransition {
+  id                 String   @id @default(cuid())
+  taskId             String
+  boardId            String
+  fromListId         String? // null = the ticket was created
+  fromListTitle      String?
+  toListId           String
+  toListTitle        String
+  movedById          String?
+  assigneeIdAtMove   String? // who gets the credit when the move lands in Done
+  storyPointsAtMove  Int?
+  completedAfterMove Boolean // the target status is Done at move time (list titles can be renamed later)
+  durationMs         BigInt? // time spent in fromList
+  transitionedAt     DateTime @default(now())
+
+  @@index([taskId, transitionedAt])
+  @@index([boardId, transitionedAt])
+}
+
 model CustomFieldValue {
   id            String      @id @default(cuid())
   taskId        String
