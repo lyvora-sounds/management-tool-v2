@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
   CheckCircle2,
@@ -10,15 +11,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBoardStore } from "../../store/useBoardStore";
-import { TaskModal } from "../TaskModal/TaskModal";
 import { TaskActions } from "../TaskActions/TaskActions";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
 import { BoardListViewProps, TaskRowProps } from "./BoardListView.types";
-import type { ListWithTasks, BoardUser } from "../TaskCard/TaskCard.types";
+import type { ListWithTasks } from "../TaskCard/TaskCard.types";
 import { useLocale, useTranslations } from "next-intl";
 import { dateLocale } from "@/i18n/routing";
 import { useBoardAccess } from "../BoardAccess";
 import { apiFetch } from "@/lib/apiClient";
+import { boardTaskHref } from "@/lib/boardTaskUrl";
 
 function getInitials(name: string | null, email: string) {
   if (name)
@@ -54,20 +55,21 @@ function isOverdue(date: Date | string | null | undefined) {
 function TaskRow({
   task,
   listId,
-  listTitle,
-  boardId,
-  canManage,
-  boardUsers,
-  memberCanAssign,
 }: TaskRowProps) {
   const t = useTranslations("task");
   const tPriority = useTranslations("priority");
   const locale = useLocale();
   const updateTask = useBoardStore((s) => s.updateTask);
   const [completed, setCompleted] = useState(task.completed);
-  const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const priority = getPriority(task.priority);
   const { canEdit } = useBoardAccess();
+
+  const openTicket = () => {
+    router.replace(boardTaskHref(pathname, searchParams, task.id), { scroll: false });
+  };
 
   const toggleCompleted = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -87,9 +89,8 @@ function TaskRow({
   const overdue = isOverdue(due) && !completed;
 
   return (
-    <>
       <div
-        onClick={() => setModalOpen(true)}
+        onClick={openTicket}
         className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer border border-transparent hover:border-border"
       >
         {canEdit && <div
@@ -208,35 +209,10 @@ function TaskRow({
           <TaskActions taskId={task.id} listId={listId} />
         </div>
       </div>
-
-      <TaskModal
-        task={task}
-        listId={listId}
-        listTitle={listTitle}
-        boardId={boardId}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        canManage={canManage}
-        boardUsers={boardUsers}
-        memberCanAssign={memberCanAssign}
-      />
-    </>
   );
 }
 
-function ListGroup({
-  list,
-  boardId,
-  canManage,
-  boardUsers,
-  memberCanAssign,
-}: {
-  list: ListWithTasks;
-  boardId: string;
-  canManage: boolean;
-  boardUsers: BoardUser[];
-  memberCanAssign: boolean;
-}) {
+function ListGroup({ list }: { list: ListWithTasks }) {
   const tBoard = useTranslations("board");
   const [collapsed, setCollapsed] = useState(false);
 
@@ -266,16 +242,7 @@ function ListGroup({
             </p>
           ) : (
             list.tasks.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                listId={list.id}
-                listTitle={list.title}
-                boardId={boardId}
-                canManage={canManage}
-                boardUsers={boardUsers}
-                memberCanAssign={memberCanAssign}
-              />
+              <TaskRow key={task.id} task={task} listId={list.id} />
             ))
           )}
         </div>
@@ -284,24 +251,11 @@ function ListGroup({
   );
 }
 
-export function BoardListView({
-  lists,
-  boardId,
-  canManage,
-  boardUsers,
-  memberCanAssign,
-}: BoardListViewProps) {
+export function BoardListView({ lists }: BoardListViewProps) {
   return (
     <div className="flex flex-col gap-3 overflow-y-auto">
       {lists.map((list) => (
-        <ListGroup
-          key={list.id}
-          list={list}
-          boardId={boardId}
-          canManage={canManage}
-          boardUsers={boardUsers}
-          memberCanAssign={memberCanAssign}
-        />
+        <ListGroup key={list.id} list={list} />
       ))}
     </div>
   );

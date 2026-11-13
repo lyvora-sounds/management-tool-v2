@@ -5,6 +5,7 @@ import {
   getBoardVelocityTrends,
   getCycleAndLeadTime,
   getStateTransitionHistory,
+  parseMetricsDate,
   type MetricsDbClient,
 } from "@/lib/metrics/storyPoints";
 
@@ -386,5 +387,92 @@ describe("Story Points Velocity & Burndown Engine (KI-00062)", () => {
       totalTasks: 2,
       completedTasks: 1,
     });
+  });
+
+  it("includes completions later on a bare YYYY-MM-DD endDate (inclusive UTC day)", async () => {
+    const db = createMockDb({
+      transitions: [
+        {
+          id: "tr-late",
+          taskId: "t-1",
+          boardId: "b-1",
+          fromListId: "l-ip",
+          fromListTitle: "In progress",
+          toListId: "l-done",
+          toListTitle: "Done",
+          movedById: "u-daniel",
+          assigneeIdAtMove: "u-daniel",
+          storyPointsAtMove: 5,
+          completedAfterMove: true,
+          durationMs: BigInt(1_000),
+          transitionedAt: new Date("2026-10-31T18:30:00.000Z"),
+        },
+      ],
+      tasks: [
+        {
+          id: "t-1",
+          title: "Late finish",
+          createdAt: new Date("2026-10-01T10:00:00.000Z"),
+          completed: true,
+          completedAt: new Date("2026-10-31T18:30:00.000Z"),
+          archived: false,
+          assigneeId: "u-daniel",
+          customValues: [{ value: "5" }],
+        },
+      ],
+    });
+
+    const end = parseMetricsDate("2026-10-31", "end");
+    expect(end).toEqual(new Date("2026-10-31T23:59:59.999Z"));
+
+    const midnightOnly = await getAchievedStoryPointsPerUser(db, "b-1", {
+      endDate: new Date("2026-10-31T00:00:00.000Z"),
+    });
+    expect(midnightOnly).toHaveLength(0);
+
+    const inclusive = await getAchievedStoryPointsPerUser(db, "b-1", {
+      endDate: "2026-10-31",
+    });
+    expect(inclusive).toHaveLength(1);
+    expect(inclusive[0]).toMatchObject({ userId: "u-daniel", achievedPoints: 5 });
+  });
+
+  it("loads board history once when building the metrics summary", async () => {
+    let transitionLoads = 0;
+    let taskLoads = 0;
+    const base = createMockDb({
+      transitions: [],
+      tasks: [
+        {
+          id: "t-1",
+          title: "Open",
+          createdAt: new Date("2026-10-01T10:00:00.000Z"),
+          completed: false,
+          completedAt: null,
+          archived: false,
+          assigneeId: "u-daniel",
+          customValues: [{ value: "3" }],
+        },
+      ],
+    });
+    const db: MetricsDbClient = {
+      taskStateTransition: {
+        findMany: async (args) => {
+          transitionLoads += 1;
+          return base.taskStateTransition.findMany(args);
+        },
+      },
+      task: {
+        findMany: async (args) => {
+          taskLoads += 1;
+          return base.task.findMany(args);
+        },
+      },
+      user: base.user,
+    };
+
+    await getBoardMetricsSummary(db, "b-1", { endDate: "2026-10-31" });
+    expect(transitionLoads).toBe(1);
+    expect(taskLoads).toBe(1);
   });
 });
