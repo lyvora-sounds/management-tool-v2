@@ -293,10 +293,15 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
         if (!task) throw new McpWriteError("All updates must belong to one board in this connection");
         const patch = { ...update.patch };
         let targetList: { id: string; title: string } | null = null;
+        let fromListTitle: string | null = null;
         if (patch.listId && patch.listId !== task.listId) {
-          const target = await tx.list.findFirst({ where: { id: patch.listId, boardId } });
+          const [target, fromList] = await Promise.all([
+            tx.list.findFirst({ where: { id: patch.listId, boardId } }),
+            tx.list.findFirst({ where: { id: task.listId, boardId }, select: { title: true } }),
+          ]);
           if (!target) throw new McpWriteError("Target list must belong to the same board");
           targetList = target;
+          fromListTitle = fromList?.title ?? null;
           if (patch.completed === undefined) patch.completed = isDoneList(target.title) ? true : task.completed ? false : undefined;
         }
         const now = new Date();
@@ -314,11 +319,12 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
             taskId: task.id,
             boardId,
             fromListId: task.listId,
+            fromListTitle,
             toListId: patch.listId,
             toListTitle: targetList.title,
             movedById: actor.id,
             assigneeIdAtMove: patch.assigneeId !== undefined ? patch.assigneeId : task.assigneeId,
-            completedAfterMove: patch.completed !== undefined ? patch.completed : task.completed,
+            completedAfterMove: patch.completed !== undefined ? patch.completed : isDoneList(targetList.title),
             transitionedAt: now,
           });
         }

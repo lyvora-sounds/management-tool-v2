@@ -11,41 +11,42 @@ export async function DELETE(
 ) {
   const { taskId } = await params;
   const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: "unauthorized", message: "Unauthorized" }, { status: 401 });
 
   const user = await db.user.findUnique({ where: { clerkId: userId } });
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized", message: "Unauthorized" }, { status: 401 });
 
   const task = await db.task.findUnique({
     where: { id: taskId },
     include: { list: { include: { board: true } } },
   });
-  if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!task) return NextResponse.json({ error: "not_found", message: "Not found" }, { status: 404 });
 
   const allowed = await canEditBoard(user.id, task.list.board.id);
-  if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  await db.task.delete({ where: { id: taskId } });
+  if (!allowed) return NextResponse.json({ error: "not_found", message: "Not found" }, { status: 404 });
 
   const auditMeta = extractRequestAuditMeta(req.headers);
-  await recordSecurityAuditLog(db, {
-    boardId: task.list.board.id,
-    organizationId: task.list.board.organizationId,
-    actorId: user.id,
-    actorEmail: user.email,
-    ipAddress: auditMeta.ipAddress,
-    userAgent: auditMeta.userAgent,
-    action: "TICKET_DELETED",
-    entityType: "TASK",
-    entityId: task.id,
-    beforeState: {
-      id: task.id,
-      title: task.title,
-      listId: task.listId,
-      assigneeId: task.assigneeId,
-      completed: task.completed,
-    },
-    afterState: null,
+  await db.$transaction(async (tx) => {
+    await recordSecurityAuditLog(tx, {
+      boardId: task.list.board.id,
+      organizationId: task.list.board.organizationId,
+      actorId: user.id,
+      actorEmail: user.email,
+      ipAddress: auditMeta.ipAddress,
+      userAgent: auditMeta.userAgent,
+      action: "TICKET_DELETED",
+      entityType: "TASK",
+      entityId: task.id,
+      beforeState: {
+        id: task.id,
+        title: task.title,
+        listId: task.listId,
+        assigneeId: task.assigneeId,
+        completed: task.completed,
+      },
+      afterState: null,
+    });
+    await tx.task.delete({ where: { id: taskId } });
   });
 
   await createActivity({

@@ -77,7 +77,7 @@ export async function PATCH(req: Request) {
           toListTitle: toTitle,
           movedById: user.id,
           assigneeIdAtMove: prev.assigneeId ?? null,
-          completedAfterMove: isDoneList(toTitle) ? true : Boolean(prev.completed),
+          completedAfterMove: isDoneList(toTitle),
           taskCreatedAt: prev.createdAt ?? null,
         });
       }

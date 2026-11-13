@@ -84,6 +84,8 @@ describe("securityAudit engine (ISO 27001 A.8.15 & A.8.16)", () => {
       afterState: { role: "ADMIN" },
     });
 
+    await expect(getSecurityAuditLogs(mockDb, {})).rejects.toThrow(/boardId or organizationId/);
+
     const logs = await getSecurityAuditLogs(mockDb, { boardId: "board_1" });
     expect(logs).toHaveLength(1);
     expect(logs[0]?.action).toBe("ROLE_CHANGED");

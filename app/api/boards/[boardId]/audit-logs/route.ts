@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import db from "@/lib/db";
-import { canReadBoard } from "@/lib/boardAccess";
-import { getSecurityAuditLogs } from "@/lib/securityAudit";
+import { isBoardAdmin } from "@/lib/boardAccess";
+import { getSecurityAuditLogs, parseOptionalAuditDate } from "@/lib/securityAudit";
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +11,7 @@ export async function GET(
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "unauthorized", message: "Unauthorized" }, { status: 401 });
     }
 
     const user = await db.user.findUnique({
@@ -19,13 +19,14 @@ export async function GET(
       select: { id: true },
     });
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "unauthorized", message: "Unauthorized" }, { status: 401 });
     }
 
     const { boardId } = await params;
-    const allowed = await canReadBoard(user.id, boardId);
+    // Security audit payloads include IPs and emails; only owners/admins may read them.
+    const allowed = await isBoardAdmin(user.id, boardId);
     if (!allowed) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ error: "not_found", message: "Not found" }, { status: 404 });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -36,10 +37,13 @@ export async function GET(
     const endDateRaw = searchParams.get("endDate");
     const limitRaw = searchParams.get("limit");
 
-    const startDate = startDateRaw ? new Date(startDateRaw) : undefined;
-    const endDate = endDateRaw ? new Date(endDateRaw) : undefined;
-    if ((startDate && Number.isNaN(startDate.getTime())) || (endDate && Number.isNaN(endDate.getTime()))) {
-      return NextResponse.json({ error: "Invalid startDate or endDate" }, { status: 400 });
+    const startDate = parseOptionalAuditDate(startDateRaw);
+    const endDate = parseOptionalAuditDate(endDateRaw);
+    if (startDate === "invalid" || endDate === "invalid") {
+      return NextResponse.json(
+        { error: "invalid_request", message: "Invalid startDate or endDate" },
+        { status: 400 },
+      );
     }
 
     const limit = limitRaw ? Number.parseInt(limitRaw, 10) : 100;
@@ -56,6 +60,9 @@ export async function GET(
     return NextResponse.json({ boardId, auditLogs });
   } catch (error) {
     console.error("Failed to fetch security audit logs:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "internal_error", message: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

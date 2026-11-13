@@ -118,6 +118,28 @@ export function extractRequestAuditMeta(headers?: Headers | Record<string, strin
 }
 
 /**
+ * Prefer a resolved client IP (when the edge sets request.ip) over raw forwarded headers.
+ */
+export function auditRequestMeta(request: {
+  ip?: string;
+  headers: Headers | Record<string, string | string[] | undefined>;
+}): { ipAddress: string | null; userAgent: string | null } {
+  const fromHeaders = extractRequestAuditMeta(request.headers);
+  const resolvedIp = typeof request.ip === "string" ? request.ip.trim() : "";
+  return {
+    ipAddress: resolvedIp || fromHeaders.ipAddress,
+    userAgent: fromHeaders.userAgent,
+  };
+}
+
+/** Parse an optional ISO/date query value; returns `"invalid"` when present but not a real date. */
+export function parseOptionalAuditDate(value: string | undefined | null): Date | undefined | "invalid" {
+  if (!value) return undefined;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "invalid" : d;
+}
+
+/**
  * Writes an immutable SecurityAuditLog entry with automatic secret scrubbing.
  */
 export async function recordSecurityAuditLog(db: DbClient, input: SecurityAuditInput) {
@@ -172,6 +194,10 @@ export async function getSecurityAuditLogs(
   db: DbClient,
   options: SecurityAuditQueryOptions,
 ): Promise<SecurityAuditLogRecord[]> {
+  if (!options.boardId && !options.organizationId) {
+    throw new Error("getSecurityAuditLogs requires boardId or organizationId");
+  }
+
   const limit = Math.min(Math.max(options.limit ?? 100, 1), 500);
   const rows = await db.securityAuditLog.findMany({
     where: {

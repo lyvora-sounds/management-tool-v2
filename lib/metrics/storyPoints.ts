@@ -186,10 +186,39 @@ export type MetricsDbClient = {
   };
 };
 
-function toValidDate(value: Date | string | null | undefined): Date | null {
-  if (!value) return null;
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * Parses a date bound. Bare `YYYY-MM-DD` is UTC start-of-day for `start` and
+ * end-of-day (23:59:59.999Z) for `end` so day-long ranges stay inclusive.
+ * Returns `"invalid"` when the value is present but not a real date.
+ */
+export function parseMetricsDate(
+  value: Date | string | null | undefined,
+  bound: "start" | "end" = "start",
+): Date | null | "invalid" {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "string") {
+    const bare = value.trim();
+    const m = DATE_ONLY.exec(bare);
+    if (m) {
+      const y = Number(m[1]);
+      const mo = Number(m[2]);
+      const d = Number(m[3]);
+      if (bound === "end") return new Date(Date.UTC(y, mo - 1, d, 23, 59, 59, 999));
+      return new Date(Date.UTC(y, mo - 1, d, 0, 0, 0, 0));
+    }
+  }
   const d = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
+  return Number.isNaN(d.getTime()) ? "invalid" : d;
+}
+
+function toValidDate(
+  value: Date | string | null | undefined,
+  bound: "start" | "end" = "start",
+): Date | null {
+  const parsed = parseMetricsDate(value, bound);
+  return parsed === "invalid" ? null : parsed;
 }
 
 function normalizeInterval(interval?: VelocityInterval): GroupByInterval {
@@ -354,8 +383,8 @@ export async function getAchievedStoryPointsPerUser(
   boardId: string,
   options: StoryPointsQueryOptions = {},
 ): Promise<UserAchievedPointsEntry[]> {
-  const startDate = toValidDate(options.startDate);
-  const endDate = toValidDate(options.endDate);
+  const startDate = toValidDate(options.startDate, "start");
+  const endDate = toValidDate(options.endDate, "end");
   const groupBy: GroupByInterval = options.groupBy ?? "week";
   const allocationPolicy: AllocationPolicy = options.allocationPolicy ?? "primary";
   const filterUserId = options.userId !== undefined ? options.userId : undefined;
@@ -486,8 +515,8 @@ export async function getBoardVelocityTrends(
   boardId: string,
   options: VelocityQueryOptions = {},
 ): Promise<VelocityTrendsResult> {
-  const startDate = toValidDate(options.startDate);
-  const endDate = toValidDate(options.endDate);
+  const startDate = toValidDate(options.startDate, "start");
+  const endDate = toValidDate(options.endDate, "end");
   const interval = normalizeInterval(options.intervals);
   const allocationPolicy: AllocationPolicy = options.allocationPolicy ?? "primary";
   const filterUserId = options.userId !== undefined ? options.userId : undefined;
@@ -670,8 +699,8 @@ export async function getCycleAndLeadTime(
   boardId: string,
   options: CycleLeadQueryOptions = {},
 ): Promise<CycleAndLeadTimeResult> {
-  const startDate = toValidDate(options.startDate);
-  const endDate = toValidDate(options.endDate);
+  const startDate = toValidDate(options.startDate, "start");
+  const endDate = toValidDate(options.endDate, "end");
 
   const [transitions, tasks] = await Promise.all([
     prisma.taskStateTransition.findMany({
@@ -821,8 +850,8 @@ export async function getStateTransitionHistory(
     limit?: number;
   },
 ): Promise<StateTransitionHistoryEntry[]> {
-  const startDate = toValidDate(params.startDate);
-  const endDate = toValidDate(params.endDate);
+  const startDate = toValidDate(params.startDate, "start");
+  const endDate = toValidDate(params.endDate, "end");
   const limit = Math.min(Math.max(params.limit ?? 100, 1), 500);
 
   const timeFilter: Record<string, Date> = {};
@@ -898,32 +927,21 @@ export async function getBoardMetricsSummary(
     allocationPolicy?: AllocationPolicy;
   } = {},
 ): Promise<BoardMetricsSummary> {
-  const startDate = toValidDate(options.startDate);
-  const endDate = toValidDate(options.endDate);
+  const startDate = toValidDate(options.startDate, "start");
+  const endDate = toValidDate(options.endDate, "end");
   const groupBy = options.groupBy ?? "week";
 
-  const [achievedByUser, velocity, cycleAndLeadTime, tasks] = await Promise.all([
-    getAchievedStoryPointsPerUser(prisma, boardId, {
-      startDate,
-      endDate,
-      groupBy,
-      userId: options.userId,
-      allocationPolicy: options.allocationPolicy,
-    }),
-    getBoardVelocityTrends(prisma, boardId, {
-      startDate,
-      endDate,
-      intervals: groupBy,
-      userId: options.userId,
-      allocationPolicy: options.allocationPolicy,
-    }),
-    getCycleAndLeadTime(prisma, boardId, { startDate, endDate }),
-    prisma.task.findMany({
+  // One shared history/task load for the three aggregators (avoids 3× full-board scans).
+  const [sharedTransitions, sharedTasks] = await Promise.all([
+    prisma.taskStateTransition.findMany({
       where: {
-        list: { boardId },
-        archived: false,
-        ...(options.userId !== undefined ? { assigneeId: options.userId } : {}),
+        boardId,
+        ...(endDate ? { transitionedAt: { lte: endDate } } : {}),
       },
+      orderBy: { transitionedAt: "asc" },
+    }),
+    prisma.task.findMany({
+      where: { list: { boardId } },
       select: {
         id: true,
         title: true,
@@ -932,9 +950,57 @@ export async function getBoardMetricsSummary(
         completedAt: true,
         archived: true,
         assigneeId: true,
+        collaborators: { select: { userId: true } },
+        customValues: {
+          where: { customField: { defaultKey: "story_points" } },
+          select: { value: true },
+        },
       },
     }),
   ]);
+
+  const cachedPrisma = {
+    taskStateTransition: {
+      findMany: async () => sharedTransitions,
+    },
+    task: {
+      findMany: async (args?: { where?: { archived?: boolean; list?: unknown; assigneeId?: string | null } }) => {
+        let rows = sharedTasks;
+        if (args?.where?.archived === false) {
+          rows = rows.filter((t) => !t.archived);
+        }
+        if (args?.where && "assigneeId" in args.where) {
+          rows = rows.filter((t) => t.assigneeId === args.where!.assigneeId);
+        }
+        return rows;
+      },
+    },
+    user: prisma.user,
+  } as unknown as MetricsDbClient;
+
+  const [achievedByUser, velocity, cycleAndLeadTime] = await Promise.all([
+    getAchievedStoryPointsPerUser(cachedPrisma, boardId, {
+      startDate,
+      endDate,
+      groupBy,
+      userId: options.userId,
+      allocationPolicy: options.allocationPolicy,
+    }),
+    getBoardVelocityTrends(cachedPrisma, boardId, {
+      startDate,
+      endDate,
+      intervals: groupBy,
+      userId: options.userId,
+      allocationPolicy: options.allocationPolicy,
+    }),
+    getCycleAndLeadTime(cachedPrisma, boardId, { startDate, endDate }),
+  ]);
+
+  const tasks = sharedTasks.filter((t) => {
+    if (t.archived) return false;
+    if (options.userId !== undefined) return t.assigneeId === options.userId;
+    return true;
+  });
 
   const plannedPoints = velocity.totalPlannedPoints;
   const achievedPoints = velocity.totalAchievedPoints;
