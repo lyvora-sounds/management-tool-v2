@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  auditRequestMeta,
   extractRequestAuditMeta,
   getSecurityAuditLogs,
+  parseOptionalAuditDate,
   recordSecurityAuditLog,
   sanitizeAuditState,
 } from "@/lib/securityAudit";
+import { parseMetricsDate } from "@/lib/metrics/storyPoints";
 
 describe("securityAudit engine (ISO 27001 A.8.15 & A.8.16)", () => {
   it("scrubs sensitive keys and bearer/token strings recursively from audit states", () => {
@@ -97,5 +100,16 @@ describe("securityAudit engine (ISO 27001 A.8.15 & A.8.16)", () => {
     expect(logs[0]?.afterState).toEqual({
       role: "ADMIN",
     });
+  });
+
+  it("prefers request.ip and validates optional audit dates", () => {
+    expect(
+      auditRequestMeta({
+        ip: "198.51.100.10",
+        headers: { "x-forwarded-for": "203.0.113.1", "user-agent": "KikiTest/2" },
+      }),
+    ).toEqual({ ipAddress: "198.51.100.10", userAgent: "KikiTest/2" });
+    expect(parseOptionalAuditDate("not-a-date")).toBe("invalid");
+    expect(parseMetricsDate("2026-10-31", "end")).toEqual(new Date("2026-10-31T23:59:59.999Z"));
   });
 });
