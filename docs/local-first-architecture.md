@@ -272,13 +272,13 @@ Open question for the team: is **true offline write** a near-term product requir
 
 | Piece | Where |
 |---|---|
-| Board SSE | `kiki-api` `GET /v1/boards/:boardId/events` (Bearer + `canReadBoard`) |
+| Board SSE | `kiki-api` `GET /v1/boards/:boardId/events` (Bearer + `canReadBoard`, heartbeat ACL re-check, CORS after hijack) |
 | IndexedDB | Dexie `boardCache` + `outbox` (`lib/local-first/db.ts`) |
-| Hydrate / persist | `useBoardLocalFirst` on `BoardContent` |
-| Invalidation | SSE `domain` → debounced `router.refresh()` |
-| Outbox | DnD + menu move `updateOrder` (lists + tasks) via `enqueueAndSend` (kept only on network failure) |
-| Sign-out wipe | `clearLocalFirstDb` in `SidebarUserFooter` |
-| Kill switch | `NEXT_PUBLIC_LOCAL_FIRST=0` |
+| Hydrate / persist | `useBoardLocalFirst` on `BoardContent` (empty `[]` is a real snapshot) |
+| Invalidation | SSE `ready` + `domain` → debounced `router.refresh()`; poll stays 25s |
+| Outbox | DnD + menu move `updateOrder` via `enqueueAndSend` (IDB failure falls back to direct `apiFetch`) |
+| Sign-out wipe | `await clearLocalFirstDb()` before Clerk `signOut` |
+| Kill switch | **Opt-in:** `NEXT_PUBLIC_LOCAL_FIRST=1` |
 | SSE prerequisite | `NEXT_PUBLIC_API_URL` pointing at kiki-api |
 
-**Still follow-ups:** shared EventBus across Cloud Run instances; outbox for more mutations; optional `updatedSince` delta GET; field-scoped CRDT for rich text.
+**Still open (not claimed done):** shared EventBus across Cloud Run instances; per-user IndexedDB partition; conflict rebase / `updatedAt` UI when flush races a remote edit; outbox for more mutations; optional `updatedSince` delta GET; field-scoped CRDT for rich text.

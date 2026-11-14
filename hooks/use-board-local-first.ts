@@ -16,7 +16,8 @@ type Options = {
 
 /**
  * Strategy A client: hydrate Zustand from IndexedDB, persist snapshots, SSE invalidate via
- * router.refresh(), flush outbox on reconnect. Safe no-op when local-first is disabled.
+ * router.refresh(), flush outbox on reconnect. Safe no-op when local-first is disabled —
+ * RSC snapshots still always win into the store.
  */
 export function useBoardLocalFirst({ boardId, initialLists }: Options) {
   const router = useRouter();
@@ -34,7 +35,8 @@ export function useBoardLocalFirst({ boardId, initialLists }: Options) {
     void (async () => {
       try {
         const cached = await readBoardCache(boardId);
-        if (cancelled || serverSynced.current || !cached?.length) return;
+        // null = miss; [] is a real empty snapshot and must be allowed to apply before RSC.
+        if (cancelled || serverSynced.current || cached === null) return;
         skipPersist.current = true;
         setLists(cached);
       } catch {
@@ -46,9 +48,8 @@ export function useBoardLocalFirst({ boardId, initialLists }: Options) {
     };
   }, [boardId, setLists]);
 
-  // Authoritative RSC snapshot wins when it arrives / refreshes.
+  // Authoritative RSC snapshot wins when it arrives / refreshes — including [].
   useEffect(() => {
-    if (!initialLists?.length) return;
     serverSynced.current = true;
     skipPersist.current = true;
     setLists(initialLists);
@@ -57,14 +58,13 @@ export function useBoardLocalFirst({ boardId, initialLists }: Options) {
     }
   }, [boardId, initialLists, setLists]);
 
-  // Persist client mutations (DnD, etc.) for the next visit.
+  // Persist client mutations (DnD, etc.) for the next visit, including empty boards.
   useEffect(() => {
     if (!isLocalFirstEnabled()) return;
     if (skipPersist.current) {
       skipPersist.current = false;
       return;
     }
-    if (!lists.length) return;
     const handle = window.setTimeout(() => {
       void writeBoardCache(boardId, lists).catch(() => {});
     }, 250);
@@ -82,38 +82,43 @@ export function useBoardLocalFirst({ boardId, initialLists }: Options) {
     return () => window.removeEventListener("online", flush);
   }, [boardId]);
 
-  // SSE → soft refresh. Debounce so a burst of events does not stampede RSC.
+  // SSE → soft refresh. Refetch on every ready (reconnect gap) and on domain frames.
   useEffect(() => {
     if (!isLocalFirstEnabled() || !isBoardEventStreamConfigured()) return;
 
     const ac = new AbortController();
     let stopped = false;
     let delayMs = 1_000;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const refresh = () => {
+      const now = Date.now();
+      if (now - lastRemoteEvent.current < 400) return;
+      lastRemoteEvent.current = now;
+      router.refresh();
+    };
 
     const connect = async () => {
       while (!stopped && !ac.signal.aborted) {
         const result = await openBoardEventStream(
           boardId,
           {
-            onDomain: () => {
-              const now = Date.now();
-              if (now - lastRemoteEvent.current < 400) return;
-              lastRemoteEvent.current = now;
-              router.refresh();
-            },
+            onReady: () => refresh(),
+            onDomain: () => refresh(),
           },
           ac.signal,
         );
         if (stopped || ac.signal.aborted) return;
         if (result === "skipped") return;
         if (result === "forbidden") {
-          // Membership revoked or session gone: drop the durable replica.
           void deleteBoardCache(boardId).catch(() => {});
           return;
         }
         if (result === "connected") delayMs = 1_000;
         else delayMs = Math.min(delayMs * 2, 30_000);
-        await new Promise((r) => setTimeout(r, delayMs));
+        await new Promise<void>((resolve) => {
+          reconnectTimer = setTimeout(resolve, delayMs);
+        });
       }
     };
 
@@ -121,6 +126,7 @@ export function useBoardLocalFirst({ boardId, initialLists }: Options) {
     return () => {
       stopped = true;
       ac.abort();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
     };
   }, [boardId, router]);
 }

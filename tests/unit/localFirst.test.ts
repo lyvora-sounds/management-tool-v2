@@ -87,4 +87,29 @@ describe("board cache + outbox", () => {
     expect(await db.outbox.count()).toBe(0);
     await db.delete();
   });
+
+  it("falls back to a direct fetch when enqueue fails (IndexedDB unavailable)", async () => {
+    const broken = {
+      outbox: {
+        put: vi.fn(async () => {
+          throw new Error("quota");
+        }),
+      },
+    } as never;
+    const ok = vi.fn(async () => new Response(null, { status: 200 }));
+    const res = await enqueueAndSend(
+      { method: "PATCH", path: "/api/tasks/updateOrder", body: { items: [] } },
+      ok as never,
+      broken,
+    );
+    expect(res?.status).toBe(200);
+    expect(ok).toHaveBeenCalledOnce();
+    await db.delete();
+  });
+
+  it("persists an empty board snapshot so deleted lists do not resurrect", async () => {
+    await writeBoardCache("b1", [], db);
+    expect(await readBoardCache("b1", db)).toEqual([]);
+    await db.delete();
+  });
 });

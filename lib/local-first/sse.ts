@@ -41,8 +41,8 @@ export function consumeSseBuffer(
 }
 
 /**
- * Authenticated SSE to kiki-api. Returns null when NEXT_PUBLIC_API_URL is unset (local dual-run
- * without the API) — callers keep polling. Abort via signal.
+ * Authenticated SSE to kiki-api. Returns `"skipped"` when NEXT_PUBLIC_API_URL is unset (local
+ * dual-run without the API) — callers keep polling. Abort via signal.
  */
 export async function openBoardEventStream(
   boardId: string,

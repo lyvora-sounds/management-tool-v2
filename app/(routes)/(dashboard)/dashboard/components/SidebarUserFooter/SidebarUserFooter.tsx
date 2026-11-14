@@ -18,8 +18,8 @@ export function SidebarUserFooter({ name, email, imageUrl }: SidebarUserFooterPr
   const t = useTranslations("sidebar");
   const tCommon = useTranslations("common");
 
-  const handleSignOut = () => {
-    void clearLocalFirstDb().catch(() => {});
+  const handleSignOut = async () => {
+    await clearLocalFirstDb().catch(() => {});
     signOut(() => router.push("/"));
   };
 

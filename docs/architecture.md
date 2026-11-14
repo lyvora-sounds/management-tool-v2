@@ -72,7 +72,7 @@ Deletes cascade. Six links use `SetNull`: `Organization.createdById`, `ExternalA
 ## App surfaces after sign-in
 
 - **Dashboard** — greeting, weekly activity, assigned work, upcoming due dates, recent boards.
-- **Board** — Kanban or list; IndexedDB cache + mutation outbox (`use-board-local-first`); SSE from kiki-api when `NEXT_PUBLIC_API_URL` is set, with slower polling as fallback (`use-board-polling`); activity drawer. See [Local-First architecture](./local-first-architecture.md).
+- **Board** — Kanban or list; opt-in IndexedDB cache + mutation outbox (`NEXT_PUBLIC_LOCAL_FIRST=1`, `use-board-local-first`); SSE from kiki-api when `NEXT_PUBLIC_API_URL` is set; 25s polling safety net (`use-board-polling`); activity drawer. See [Local-First architecture](./local-first-architecture.md).
 - **Calendar** — tasks with due dates, read from `GET /v1/calendar` (kiki-api) through `apiFetch`; `/api/calendar` remains as the fallback.
 - **My tasks** — `/dashboard/tasks`.
 - **Settings** — per-user AI credentials, custom fields, Google Calendar OAuth.

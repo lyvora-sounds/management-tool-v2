@@ -7,6 +7,17 @@ export type OutboxMutation = {
   body: unknown;
 };
 
+function sendMutation(
+  mutation: OutboxMutation,
+  fetchImpl: typeof apiFetch,
+): Promise<Response> {
+  return fetchImpl(mutation.path, {
+    method: mutation.method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(mutation.body),
+  });
+}
+
 export async function enqueueOutbox(
   mutation: OutboxMutation,
   db: LocalFirstDb = getLocalFirstDb(),
@@ -24,21 +35,25 @@ export async function enqueueOutbox(
 }
 
 /**
- * Persist then send. On network failure the row stays for a later flush.
- * Any HTTP response (including 4xx/5xx) drops the row so UI rollback cannot double-apply later.
+ * Persist then send when IndexedDB works. If the DB cannot open or enqueue fails, fall back to a
+ * direct fetch so a drag is never dropped solely because storage is unavailable.
+ * On network failure (after a successful enqueue) the row stays for a later flush.
+ * Any HTTP response drops the row so UI rollback cannot double-apply later.
  */
 export async function enqueueAndSend(
   mutation: OutboxMutation,
   fetchImpl: typeof apiFetch = apiFetch,
   db: LocalFirstDb = getLocalFirstDb(),
 ): Promise<Response | null> {
-  const row = await enqueueOutbox(mutation, db);
+  let row: OutboxRow;
   try {
-    const response = await fetchImpl(mutation.path, {
-      method: mutation.method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(mutation.body),
-    });
+    row = await enqueueOutbox(mutation, db);
+  } catch {
+    return sendMutation(mutation, fetchImpl);
+  }
+
+  try {
+    const response = await sendMutation(mutation, fetchImpl);
     await db.outbox.delete(row.id);
     return response;
   } catch {
@@ -63,10 +78,7 @@ export async function flushOutbox(
       });
       await db.outbox.delete(row.id);
       if (response.ok) sent += 1;
-      else {
-        // Dropped a permanently rejected write; continue so later rows can flush.
-        failed += 1;
-      }
+      else failed += 1;
     } catch {
       await db.outbox.update(row.id, { attempts: row.attempts + 1 });
       failed += 1;
