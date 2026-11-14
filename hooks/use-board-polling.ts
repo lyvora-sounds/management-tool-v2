@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 
 const POLL_INTERVAL = 25_000; // 25 segundos
 
+/**
+ * Safety-net refresh. Stays at 25s even when SSE is configured: same-list / list-column
+ * reorders and multi-instance EventBus gaps still need a reliable poll until those paths
+ * are fully covered by domain events on every replica.
+ */
 export function useBoardPolling(onRefresh?: () => Promise<void>) {
   const router = useRouter();
 

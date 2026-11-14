@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useBoardPolling } from "@/hooks/use-board-polling";
+import { useBoardLocalFirst } from "@/hooks/use-board-local-first";
 import { Progress } from "@/components/ui/progress";
+import { enqueueAndSend } from "@/lib/local-first/outbox";
+import { isLocalFirstEnabled } from "@/lib/local-first/flags";
 import {
   DndContext,
   DragEndEvent,
@@ -52,6 +55,7 @@ export function BoardContent({
 }: BoardContentProps) {
   const t = useTranslations("board");
   useBoardPolling();
+  useBoardLocalFirst({ boardId, initialLists });
 
   const router = useRouter();
   const pathname = usePathname();
@@ -87,10 +91,6 @@ export function BoardContent({
   const handleCloseUrlModal = () => {
     router.replace(boardTaskHref(pathname, searchParams, null), { scroll: false });
   };
-
-  useEffect(() => {
-    setLists(initialLists);
-  }, [initialLists, setLists]);
 
   useEffect(() => {
     let cancelled = false;
@@ -237,14 +237,19 @@ export function BoardContent({
       const newLists = arrayMove(lists, oldIndex, newIndex);
       reorderLists(oldIndex, newIndex);
 
-      await apiFetch("/api/lists/updateOrder", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          boardId,
-          lists: newLists.map((l, index) => ({ id: l.id, order: index })),
-        }),
-      });
+      const listPayload = {
+        boardId,
+        lists: newLists.map((l, index) => ({ id: l.id, order: index })),
+      };
+      if (isLocalFirstEnabled()) {
+        await enqueueAndSend({ method: "PATCH", path: "/api/lists/updateOrder", body: listPayload });
+      } else {
+        await apiFetch("/api/lists/updateOrder", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(listPayload),
+        });
+      }
     }
 
     if (activeType === "task") {
@@ -271,16 +276,21 @@ export function BoardContent({
         })),
       );
 
-      await apiFetch("/api/tasks/updateOrder", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: taskUpdates,
-          movedTaskId: activeId,
-          fromListId,
-          toListId: currentListId,
-        }),
-      });
+      const orderPayload = {
+        items: taskUpdates,
+        movedTaskId: activeId,
+        fromListId,
+        toListId: currentListId,
+      };
+      if (isLocalFirstEnabled()) {
+        await enqueueAndSend({ method: "PATCH", path: "/api/tasks/updateOrder", body: orderPayload });
+      } else {
+        await apiFetch("/api/tasks/updateOrder", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+      }
     }
   };
 
