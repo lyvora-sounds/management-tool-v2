@@ -276,7 +276,7 @@ Open question for the team: is **true offline write** a near-term product requir
 | IndexedDB | Dexie `boardCache` + `outbox` (`lib/local-first/db.ts`) |
 | Hydrate / persist | `useBoardLocalFirst` on `BoardContent` |
 | Invalidation | SSE `domain` → debounced `router.refresh()` |
-| Outbox | DnD `updateOrder` (lists + tasks) via `enqueueAndSend` |
+| Outbox | DnD + menu move `updateOrder` (lists + tasks) via `enqueueAndSend` (kept only on network failure) |
 | Sign-out wipe | `clearLocalFirstDb` in `SidebarUserFooter` |
 | Kill switch | `NEXT_PUBLIC_LOCAL_FIRST=0` |
 | SSE prerequisite | `NEXT_PUBLIC_API_URL` pointing at kiki-api |

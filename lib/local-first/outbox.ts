@@ -25,7 +25,7 @@ export async function enqueueOutbox(
 
 /**
  * Persist then send. On network failure the row stays for a later flush.
- * A non-network HTTP error drops the row (server rejected; retrying would loop).
+ * Any HTTP response (including 4xx/5xx) drops the row so UI rollback cannot double-apply later.
  */
 export async function enqueueAndSend(
   mutation: OutboxMutation,
@@ -39,11 +39,7 @@ export async function enqueueAndSend(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(mutation.body),
     });
-    if (response.ok || (response.status >= 400 && response.status < 500)) {
-      await db.outbox.delete(row.id);
-    } else {
-      await db.outbox.update(row.id, { attempts: row.attempts + 1 });
-    }
+    await db.outbox.delete(row.id);
     return response;
   } catch {
     await db.outbox.update(row.id, { attempts: row.attempts + 1 });
@@ -65,13 +61,11 @@ export async function flushOutbox(
         headers: { "Content-Type": "application/json" },
         body: row.body,
       });
-      if (response.ok || (response.status >= 400 && response.status < 500)) {
-        await db.outbox.delete(row.id);
-        sent += 1;
-      } else {
-        await db.outbox.update(row.id, { attempts: row.attempts + 1 });
+      await db.outbox.delete(row.id);
+      if (response.ok) sent += 1;
+      else {
+        // Dropped a permanently rejected write; continue so later rows can flush.
         failed += 1;
-        break;
       }
     } catch {
       await db.outbox.update(row.id, { attempts: row.attempts + 1 });

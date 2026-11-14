@@ -19,6 +19,8 @@ import { TaskActionsProps } from "./TaskActions.types";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 import { useBoardAccess } from "../BoardAccess";
 import { apiFetch } from "@/lib/apiClient";
+import { enqueueAndSend } from "@/lib/local-first/outbox";
+import { isLocalFirstEnabled } from "@/lib/local-first/flags";
 
 export function TaskActions({ taskId, listId }: TaskActionsProps) {
   const { canEdit } = useBoardAccess();
@@ -53,18 +55,23 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
         l.tasks.map((t, i) => ({ id: t.id, order: i, listId: l.id })),
       );
 
+    const orderPayload = {
+      items,
+      movedTaskId: taskId,
+      fromListId: listId,
+      toListId,
+    };
+
     try {
-      const res = await apiFetch("/api/tasks/updateOrder", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items,
-          movedTaskId: taskId,
-          fromListId: listId,
-          toListId,
-        }),
-      });
-      if (!res.ok) throw new Error("move failed");
+      const res = isLocalFirstEnabled()
+        ? await enqueueAndSend({ method: "PATCH", path: "/api/tasks/updateOrder", body: orderPayload })
+        : await apiFetch("/api/tasks/updateOrder", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderPayload),
+          });
+      // null = queued offline; optimistic UI already applied and will flush on reconnect.
+      if (res && !res.ok) throw new Error("move failed");
       toast.success(t("movedTo", { title: targetList?.title ?? "" }));
     } catch {
       moveTask(taskId, toListId, listId, originalIndex);

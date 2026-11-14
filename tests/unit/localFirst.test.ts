@@ -75,4 +75,16 @@ describe("board cache + outbox", () => {
     expect(await db.outbox.count()).toBe(0);
     await db.delete();
   });
+
+  it("drops the outbox row on a 5xx so a rolled-back UI cannot double-apply", async () => {
+    const boom = vi.fn(async () => new Response("nope", { status: 503 }));
+    const res = await enqueueAndSend(
+      { method: "PATCH", path: "/api/tasks/updateOrder", body: { items: [] } },
+      boom as never,
+      db,
+    );
+    expect(res?.status).toBe(503);
+    expect(await db.outbox.count()).toBe(0);
+    await db.delete();
+  });
 });

@@ -49,7 +49,7 @@ export async function openBoardEventStream(
   handlers: BoardEventHandlers,
   signal: AbortSignal,
   options: { baseUrl?: string; getToken?: () => Promise<string | null>; fetchImpl?: typeof fetch } = {},
-): Promise<"connected" | "skipped" | "failed"> {
+): Promise<"connected" | "skipped" | "forbidden" | "failed"> {
   const base = (options.baseUrl ?? process.env.NEXT_PUBLIC_API_URL)?.replace(/\/+$/, "");
   if (!base) return "skipped";
 
@@ -61,6 +61,10 @@ export async function openBoardEventStream(
       headers: { Authorization: `Bearer ${token}`, Accept: "text/event-stream" },
       signal,
     });
+    if (response.status === 401 || response.status === 403) {
+      handlers.onError?.(new Error(`sse ${response.status}`));
+      return "forbidden";
+    }
     if (!response.ok || !response.body) {
       handlers.onError?.(new Error(`sse ${response.status}`));
       return "failed";
