@@ -20,6 +20,7 @@ Use this page as a router. Read only the documents relevant to the change instea
 | Slack, Discord, Google Calendar, GitHub, sharing, email, MCP | [Integrations](./integrations.md) | integration routes and `lib/integrations` |
 | Security controls or certification planning | [ISO 27001 Compliance](./iso-27001-compliance-plan.md) | Cross-cutting; verify claims against current code and CI |
 | Spend, location, live traffic, then production security | [Production security checklist](./production-security-checklist.md) | Cross-cutting; section 1 is the service map plus the real-time view, and every row stays unreviewed until it has evidence |
+| Client DB, offline/local-first sync, EventBus push vs poll | [Local-First architecture](./local-first-architecture.md) | Board Zustand store, `use-board-polling`, `kiki-api` events |
 
 The code and Prisma schema are authoritative. When behavior changes, update the matching flow document in the same change.
 
