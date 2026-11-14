@@ -2,11 +2,16 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { isBoardEventStreamConfigured, isLocalFirstEnabled } from "@/lib/local-first/flags";
 
 const POLL_INTERVAL = 25_000; // 25 segundos
+/** When SSE is configured, poll less often as a safety net for multi-instance EventBus gaps. */
+const POLL_INTERVAL_WITH_SSE = 60_000;
 
 export function useBoardPolling(onRefresh?: () => Promise<void>) {
   const router = useRouter();
+  const intervalMs =
+    isLocalFirstEnabled() && isBoardEventStreamConfigured() ? POLL_INTERVAL_WITH_SSE : POLL_INTERVAL;
 
   useEffect(() => {
     let refreshing = false;
@@ -18,7 +23,7 @@ export function useBoardPolling(onRefresh?: () => Promise<void>) {
       void onRefresh().catch(() => {}).finally(() => { refreshing = false; });
     };
 
-    const interval = setInterval(refresh, POLL_INTERVAL);
+    const interval = setInterval(refresh, intervalMs);
 
     // También refresca cuando el usuario vuelve a la pestaña
     document.addEventListener("visibilitychange", refresh);
@@ -29,5 +34,5 @@ export function useBoardPolling(onRefresh?: () => Promise<void>) {
       document.removeEventListener("visibilitychange", refresh);
       window.removeEventListener("focus", refresh);
     };
-  }, [router, onRefresh]);
+  }, [router, onRefresh, intervalMs]);
 }

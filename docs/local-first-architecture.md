@@ -3,7 +3,7 @@
 Investigation of whether Kikiboard should adopt a Local-First (offline-capable, client-DB + bidirectional sync) model so navigation and mutations feel near-instant while a background engine reconciles with the server.
 
 **Ticket:** [KI-00076](https://kikiboard.xyz/board/cmtb8wt1r000804l7lldm4hf5?taskId=cmwffh35k000008jm9x7cdra7)  
-**Status of this doc:** engineering recommendation + POC plan (not an implementation).  
+**Status of this doc:** Strategy A is implemented as a first slice (see §11).  
 **Audience:** engineering team presentation / decision record.
 
 ---
@@ -262,6 +262,23 @@ Open question for the team: is **true offline write** a near-term product requir
 ## 10. References (internal)
 
 - `docs/architecture.md` — request path, `apiFetch`, board surfaces.
-- `hooks/use-board-polling.ts` — current freshness mechanism.
+- `hooks/use-board-polling.ts` — polling safety net (60s when SSE is configured).
+- `hooks/use-board-local-first.ts` — IndexedDB hydrate/persist, SSE refresh, outbox flush.
+- `lib/local-first/*` — Dexie schema, cache, outbox, SSE client.
 - `app/(routes)/(dashboard)/board/[boardId]/store/useBoardStore.ts` — in-memory client model.
-- `kiki-api` `docs/events.md` — publish path ready for realtime listeners.
+- `kiki-api` `docs/events.md` — `GET /v1/boards/:boardId/events` SSE listener.
+
+## 11. Implemented slice (Strategy A)
+
+| Piece | Where |
+|---|---|
+| Board SSE | `kiki-api` `GET /v1/boards/:boardId/events` (Bearer + `canReadBoard`) |
+| IndexedDB | Dexie `boardCache` + `outbox` (`lib/local-first/db.ts`) |
+| Hydrate / persist | `useBoardLocalFirst` on `BoardContent` |
+| Invalidation | SSE `domain` → debounced `router.refresh()` |
+| Outbox | DnD `updateOrder` (lists + tasks) via `enqueueAndSend` |
+| Sign-out wipe | `clearLocalFirstDb` in `SidebarUserFooter` |
+| Kill switch | `NEXT_PUBLIC_LOCAL_FIRST=0` |
+| SSE prerequisite | `NEXT_PUBLIC_API_URL` pointing at kiki-api |
+
+**Still follow-ups:** shared EventBus across Cloud Run instances; outbox for more mutations; optional `updatedSince` delta GET; field-scoped CRDT for rich text.

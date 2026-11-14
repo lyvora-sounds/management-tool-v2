@@ -8,6 +8,7 @@ import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
+import { clearLocalFirstDb } from "@/lib/local-first/db";
 import { SidebarUserFooterProps } from "./SidebarUserFooter.types";
 
 export function SidebarUserFooter({ name, email, imageUrl }: SidebarUserFooterProps) {
@@ -18,6 +19,7 @@ export function SidebarUserFooter({ name, email, imageUrl }: SidebarUserFooterPr
   const tCommon = useTranslations("common");
 
   const handleSignOut = () => {
+    void clearLocalFirstDb().catch(() => {});
     signOut(() => router.push("/"));
   };
 
