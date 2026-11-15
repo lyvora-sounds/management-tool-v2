@@ -1583,7 +1583,9 @@
     "allow": "Allow access",
     "deny": "Cancel",
     "invalidRequest": "This connection request is invalid or OAuth has not been configured for this client.",
-    "writeAccess": "Allow task creation, editing and archiving with reversible change history"
+    "writeAccess": "Allow task creation, editing and archiving with reversible change history",
+    "loading": "Loading the connection request…",
+    "failed": "The connection could not be completed. Try again."
   },
   "mcpGuide": {
     "accessTitle": "Access & permissions",

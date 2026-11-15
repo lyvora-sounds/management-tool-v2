@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import db from "@/lib/db";
 import { isBoardAdmin, readableBoardWhere } from "@/lib/boardAccess";
 import { issueAuthorizationCode } from "@/lib/mcp/oauth";
+import { McpAuthorizeForm } from "./McpAuthorizeForm";
 import { authorizationCallback, filterConsentScopes, oauthClientName, parseMcpResource } from "@/lib/mcp/oauthConfig";
 
 export const dynamic = "force-dynamic";
@@ -19,10 +20,17 @@ export default async function McpAuthorizePage({ searchParams }: {
     if (Array.isArray(value)) return <p className="p-6">{t("invalidRequest")}</p>;
     if (value !== undefined) query.set(key, value);
   }
+  const serialized = query.toString();
+  // With the API configured, kiki-api decides what the person may connect and issues the code; this page only
+  // asks it. Without it (local development) the page still does it itself, below, until the old routes go.
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    const { userId } = await auth();
+    if (!userId) redirect("/sign-in");
+    return <McpAuthorizeForm params={serialized} />;
+  }
   let authorization;
   try { authorization = await validateAuthorizationRequest(query); }
   catch { return <p className="p-6">{t("invalidRequest")}</p>; }
-  const serialized = query.toString();
   const client = oauthClientName(authorization.redirectUri);
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");

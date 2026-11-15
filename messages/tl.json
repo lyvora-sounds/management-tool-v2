@@ -1583,7 +1583,9 @@
     "allow": "Payagan ang access",
     "deny": "Kanselahin",
     "invalidRequest": "Hindi wasto ang kahilingan o hindi pa naka-configure ang OAuth para sa client na ito.",
-    "writeAccess": "Payagan ang paggawa, pag-edit at pag-archive ng tasks na may nababaligtad na history"
+    "writeAccess": "Payagan ang paggawa, pag-edit at pag-archive ng tasks na may nababaligtad na history",
+    "loading": "Nilo-load ang kahilingan sa koneksyon…",
+    "failed": "Hindi makumpleto ang koneksyon. Subukang muli."
   },
   "mcpGuide": {
     "accessTitle": "Access at mga pahintulot",
