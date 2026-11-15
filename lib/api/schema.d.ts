@@ -1056,6 +1056,122 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/mcp/oauth/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What a person can connect to an OAuth client that asks for access: the organizations and boards they administer
+         * @description Send the query string of the authorization request exactly as the client built it (`client_id`, `redirect_uri`, `response_type`, `code_challenge`, `code_challenge_method`, `resource`, `state`, optional `scope`). It is read from the URL because a client may add parameters.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["McpConsentOptions"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Answer an OAuth client's request for access; the answer is the address to send the person back to */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        params: string;
+                        /** @enum {string} */
+                        decision: "allow" | "deny";
+                        selection?: string;
+                        writeAccess?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            redirectTo: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/search": {
         parameters: {
             query?: never;
@@ -1629,6 +1745,56 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/boards/{boardId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SSE stream of domain events for a board
+         * @description Authenticated long-lived stream. Use fetch + ReadableStream (EventSource cannot send Authorization). Heartbeat comments keep proxies alive; ACL is re-checked on each heartbeat.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/onboarding": {
@@ -2448,6 +2614,15 @@ export interface paths {
                 };
                 /** @description Default Response */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -8220,6 +8395,330 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/boards/{boardId}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Delivery velocity, achieved story points per user, burndown, and cycle/lead time metrics */
+        get: {
+            parameters: {
+                query?: {
+                    startDate?: string;
+                    endDate?: string;
+                    groupBy?: "day" | "week" | "month";
+                    userId?: string;
+                    allocationPolicy?: "primary" | "split";
+                };
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            boardId: string;
+                            dateRange: {
+                                startDate: string | null;
+                                endDate: string | null;
+                            };
+                            totals: {
+                                plannedPoints: number;
+                                achievedPoints: number;
+                                remainingPoints: number;
+                                completionRate: number;
+                                totalTasks: number;
+                                completedTasks: number;
+                            };
+                            achievedByUser: {
+                                userId: string | null;
+                                userName: string | null;
+                                userEmail: string | null;
+                                achievedPoints: number;
+                                completedTasks: number;
+                                buckets: {
+                                    periodKey: string;
+                                    periodStart: string;
+                                    periodEnd: string;
+                                    points: number;
+                                    tasks: number;
+                                }[];
+                            }[];
+                            velocity: {
+                                /** @enum {string} */
+                                interval: "day" | "week" | "month";
+                                totalPlannedPoints: number;
+                                totalAchievedPoints: number;
+                                totalCompletedTasks: number;
+                                buckets: {
+                                    periodKey: string;
+                                    periodStart: string;
+                                    periodEnd: string;
+                                    achievedPoints: number;
+                                    completedTasks: number;
+                                    cumulativePoints: number;
+                                    remainingPoints: number;
+                                    byUser: {
+                                        userId: string | null;
+                                        userName: string | null;
+                                        points: number;
+                                        tasks: number;
+                                    }[];
+                                }[];
+                            };
+                            cycleAndLeadTime: {
+                                leadTime: {
+                                    averageMs: number | null;
+                                    medianMs: number | null;
+                                    p85Ms: number | null;
+                                    sampleSize: number;
+                                };
+                                cycleTime: {
+                                    averageMs: number | null;
+                                    medianMs: number | null;
+                                    p85Ms: number | null;
+                                    sampleSize: number;
+                                };
+                                dwellByList: {
+                                    listId: string;
+                                    listTitle: string;
+                                    transitionCount: number;
+                                    averageDwellMs: number;
+                                    medianDwellMs: number;
+                                    totalDwellMs: number;
+                                    isBottleneck: boolean;
+                                }[];
+                                bottleneckListId: string | null;
+                                bottleneckListTitle: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/boards/{boardId}/state-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Immutable workflow state transition history for a board or specific ticket */
+        get: {
+            parameters: {
+                query?: {
+                    taskId?: string;
+                    startDate?: string;
+                    endDate?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            transitions: {
+                                id: string;
+                                taskId: string;
+                                taskTitle: string | null;
+                                boardId: string;
+                                fromListId: string | null;
+                                fromListTitle: string | null;
+                                toListId: string;
+                                toListTitle: string;
+                                movedById: string | null;
+                                movedByName: string | null;
+                                assigneeIdAtMove: string | null;
+                                assigneeNameAtMove: string | null;
+                                storyPointsAtMove: number | null;
+                                completedAfterMove: boolean;
+                                durationMs: number | null;
+                                transitionedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/boards/{boardId}/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Immutable ISO 27001 A.8.15/A.8.16 security & administrative audit log entries for a board */
+        get: {
+            parameters: {
+                query?: {
+                    action?: string;
+                    actorId?: string;
+                    entityType?: string;
+                    startDate?: string;
+                    endDate?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            boardId: string;
+                            auditLogs: {
+                                id: string;
+                                boardId: string | null;
+                                organizationId: string | null;
+                                actorId: string | null;
+                                actorEmail: string | null;
+                                ipAddress: string | null;
+                                userAgent: string | null;
+                                action: string;
+                                entityType: string;
+                                entityId: string | null;
+                                beforeState: unknown;
+                                afterState: unknown;
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8887,6 +9386,20 @@ export interface components {
                     color: string | null;
                 };
             };
+        };
+        McpConsentOptionsInput: {
+            client: string;
+            writeRequested: boolean;
+            lockedSelection: string | null;
+            organizations: {
+                id: string;
+                name: string;
+            }[];
+            boards: {
+                id: string;
+                title: string;
+                organizationName: string;
+            }[];
         };
         McpOAuthClientInput: {
             id: string;
@@ -9647,6 +10160,20 @@ export interface components {
                     color: string | null;
                 };
             };
+        };
+        McpConsentOptions: {
+            client: string;
+            writeRequested: boolean;
+            lockedSelection: string | null;
+            organizations: {
+                id: string;
+                name: string;
+            }[];
+            boards: {
+                id: string;
+                title: string;
+                organizationName: string;
+            }[];
         };
         McpOAuthClient: {
             id: string;

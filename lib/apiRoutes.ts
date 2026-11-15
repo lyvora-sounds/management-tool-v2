@@ -143,6 +143,8 @@ const MIGRATED: Route[] = [
   ...["GET", "POST", "DELETE"].map((method) => ({ method, pattern: /^\/api\/settings\/mcp\/tokens$/, to: sameUnderV1 })),
   ...["GET", "POST"].map((method) => ({ method, pattern: /^\/api\/settings\/mcp\/history$/, to: sameUnderV1 })),
   ...["GET", "POST", "DELETE"].map((method) => ({ method, pattern: /^\/api\/settings\/mcp\/oauth-clients$/, to: sameUnderV1 })),
+  // The consent screen of the MCP OAuth flow; the app has no route of its own for it.
+  ...["GET", "POST"].map((method) => ({ method, pattern: /^\/api\/mcp\/oauth\/consent$/, to: sameUnderV1 })),
 ];
 
 /** The kiki-api path for a request, or null when this app still serves it. */
