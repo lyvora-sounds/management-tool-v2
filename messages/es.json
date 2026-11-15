@@ -1583,7 +1583,9 @@
     "allow": "Permitir acceso",
     "deny": "Cancelar",
     "invalidRequest": "La solicitud no es válida o no se ha configurado OAuth para este cliente.",
-    "writeAccess": "Permitir crear, editar y archivar tareas con historial reversible"
+    "writeAccess": "Permitir crear, editar y archivar tareas con historial reversible",
+    "loading": "Cargando la solicitud de conexión…",
+    "failed": "No se pudo completar la conexión. Inténtalo de nuevo."
   },
   "mcpGuide": {
     "accessTitle": "Acceso y permisos",

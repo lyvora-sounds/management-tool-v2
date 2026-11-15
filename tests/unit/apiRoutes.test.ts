@@ -23,6 +23,8 @@ describe("apiPathFor: routes already served by kiki-api", () => {
     ["GET", "/api/settings/mcp/oauth-clients", "/v1/settings/mcp/oauth-clients"],
     ["POST", "/api/settings/mcp/oauth-clients", "/v1/settings/mcp/oauth-clients"],
     ["DELETE", "/api/settings/mcp/oauth-clients", "/v1/settings/mcp/oauth-clients"],
+    ["GET", "/api/mcp/oauth/consent", "/v1/mcp/oauth/consent"],
+    ["POST", "/api/mcp/oauth/consent", "/v1/mcp/oauth/consent"],
     ["GET", "/api/boards/getBoards", "/v1/boards"],
     ["POST", "/api/boards/createBoard", "/v1/boards"],
     ["PATCH", "/api/boards/updateBoard/b1", "/v1/boards/b1"],
@@ -161,7 +163,10 @@ describe("apiPathFor: routes already served by kiki-api", () => {
       ["PUT", "/api/organizations/o1/members"],
       ["PATCH", "/api/organizations"],
       ["GET", "/api/organizations/o1/teams/t1/members"],
-      // The MCP endpoint itself belongs to the MCP batch.
+      // The MCP endpoint and its OAuth authorize/token routes are not called by the app's own pages.
+      ["POST", "/api/mcp"],
+      ["POST", "/api/mcp/oauth/token"],
+      ["PUT", "/api/mcp/oauth/consent"],
       ["PUT", "/api/settings/mcp/history"],
       ["PATCH", "/api/settings/mcp/oauth-clients"],
       ["GET", "/api/settings/ai/extra"],
