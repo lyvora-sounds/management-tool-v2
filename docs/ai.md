@@ -83,6 +83,15 @@ not write.
 
 See `mcp/README.md` for provisioning and connection examples.
 
+**Where the endpoint runs.** kiki-api serves the MCP endpoint and the OAuth server (`/v1/mcp…`,
+`/.well-known/oauth-…`; see its `docs/mcp.md`). The public address stays this app's, so connectors
+already authorised keep working. With `MCP_API_REWRITES=1` and `NEXT_PUBLIC_API_URL` set **at build
+time**, `next.config.ts` forwards `/api/mcp`, `/api/mcp/org/:id`, `/api/mcp/board/:id`,
+`/api/mcp/oauth/authorize`, `/api/mcp/oauth/token` and the `/.well-known/oauth-*` documents to the API
+(`lib/mcpApiRewrites.ts`, `beforeFiles`). The consent routes are not forwarded. Switching it on or off
+needs a new deployment; with it off the handlers in `app/api/mcp` answer, which is the way back until
+they are deleted in the final release. A response carrying `x-request-id` came from the API.
+
 ChatGPT uses OAuth rather than pasted bearer-header JSON. Public discovery at
 `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server`
 advertises a user-created or legacy predefined confidential client, PKCE S256, and read/optional write scopes.
