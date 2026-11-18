@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { put, del } from "@vercel/blob";
+import { putBlob, delBlob } from "@/lib/blobStore";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { canReadBoard, isBoardAdmin } from "@/lib/boardAccess";
 import { encodeLogMessage } from "@/lib/activityMessages";
@@ -180,7 +180,7 @@ export async function applyTicketRelations(tx: Prisma.TransactionClient, boardId
       else await tx.attachment.update({ where: { id: row.id }, data: { filename: row.filename! } });
     } else {
       const bytes = Buffer.from(row.contentBase64!, "base64");
-      const blob = await put(`attachments/${task.id}/${row.filename}`, bytes, { access: "private", addRandomSuffix: true });
+      const blob = await putBlob(`attachments/${task.id}/${row.filename}`, bytes);
       uploaded.push(blob.url);
       await tx.attachment.create({ data: { taskId: task.id, filename: row.filename!, url: blob.url, size: bytes.length } });
     }
@@ -230,5 +230,5 @@ export async function restoreTicketRelations(tx: Prisma.TransactionClient, board
 }
 
 export async function cleanupTicketUploads(urls: string[]) {
-  await Promise.allSettled(urls.map(url => del(url)));
+  await Promise.allSettled(urls.map(url => delBlob(url)));
 }

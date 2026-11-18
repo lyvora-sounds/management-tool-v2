@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { put } from "@vercel/blob";
 import db from "@/lib/db";
+import { BlobUnavailableError, putBlob } from "@/lib/blobStore";
 import { canEditBoard, canReadBoard } from "@/lib/boardAccess";
 
 export async function GET(
@@ -58,12 +58,15 @@ export async function POST(
 
   let blob;
   try {
-    blob = await put(`attachments/${taskId}/${file.name}`, file, {
-      access: "private",
-      addRandomSuffix: true,
+    const bytes = Buffer.from(await file.arrayBuffer());
+    blob = await putBlob(`attachments/${taskId}/${file.name}`, bytes, {
+      contentType: file.type || "application/octet-stream",
     });
   } catch (err) {
-    console.error("[BLOB PUT ERROR]", err);
+    if (err instanceof BlobUnavailableError) {
+      return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+    }
+    console.error("[R2 PUT ERROR]", err);
     return NextResponse.json({ error: "No se pudo subir el archivo" }, { status: 502 });
   }
 

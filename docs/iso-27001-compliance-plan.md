@@ -147,16 +147,16 @@ flowchart TD
 
 ---
 
-### 3.4 File Attachments (Vercel Blob Storage)
+### 3.4 File Attachments (Cloudflare R2 Storage)
 
-* **Architecture**: Attachments are uploaded to Vercel Blob with `access: "private"` and downloaded via `/api/tasks/[taskId]/attachments/[attachmentId]/download`.
+* **Architecture**: Attachments are uploaded to a private Cloudflare R2 bucket via `lib/blobStore.ts` and downloaded via `/api/tasks/[taskId]/attachments/[attachmentId]/download` (or `kiki-api`).
 * **ISO Control Ref**: A.8.7 (*Protection Against Malware*), A.8.23 (*Information Access Restriction*), ISO 27701.
 
 | Aspect | Current Status | Audit Finding & Gap | Required Remediation |
 |---|---|---|---|
 | **Download Authorization** | Protected route | Properly checks `hasBoardAccess(user.id, board.id)`. | Maintain this check. |
 | **Malware & MIME Control** | Direct upload acceptance | Accepts arbitrary file types without extension allowlisting, MIME verification, or virus scanning. | Restrict uploaded file types (reject executables `.exe`, `.bat`, `.sh`, `.cmd`); enforce file size limits (max 15MB). |
-| **Data Lifecycle / Cleanup** | Cascade deletes in Prisma | Deleting a task or board deletes database rows, but **leaves orphaned files stored in Vercel Blob**. | Trigger `@vercel/blob` `del()` when tasks or attachments are deleted. |
+| **Data Lifecycle / Cleanup** | Cascade deletes in Prisma | Deleting a task or board deletes database rows, but **leaves orphaned files stored in Cloudflare R2**. | Trigger `delBlob()` when tasks or attachments are deleted. |
 
 ---
 
@@ -260,7 +260,7 @@ gantt
      * Store: timestamp (UTC), actorId, action, targetResource, IP, user-agent.
   2. **File & Attachment Lifecycle**:
      * Add file type extension/MIME allowlist and 15MB file size limit to attachment upload route.
-     * Call `@vercel/blob` `del()` when tasks or attachments are deleted.
+     * Call `delBlob()` when tasks or attachments are deleted.
   3. **Privacy & Public Share Controls**:
      * Add `expiresAt DateTime?` and optional password/PIN protection to `Task.shareToken`.
      * Add AI Data Processing Consent disclosure on `/dashboard/settings`.

@@ -11,7 +11,7 @@ Kikiboard is a Next.js 16 App Router app. The browser talks to Route Handlers un
 | UI | Next.js 16 App Router, Tailwind v4, shadcn/ui, Zustand, dnd-kit, Tiptap |
 | Auth | Clerk (`clerkMiddleware` + `auth.protect`) |
 | Data | Prisma 7 → PostgreSQL on Neon |
-| Files | Vercel Blob (`access: "private"`) |
+| Files | Cloudflare R2 (private bucket via `lib/blobStore.ts`) |
 | Email | Resend |
 | Deploy | Vercel |
 | Runtime | Node.js 24.22.1 (see below) |

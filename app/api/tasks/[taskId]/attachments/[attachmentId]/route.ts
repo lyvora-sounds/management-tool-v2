@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { del } from "@vercel/blob";
 import db from "@/lib/db";
+import { delBlob } from "@/lib/blobStore";
 import { canEditBoard } from "@/lib/boardAccess";
 
 export async function DELETE(
@@ -28,9 +28,9 @@ export async function DELETE(
   if (!allowed) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   try {
-    await del(attachment.url);
+    await delBlob(attachment.url);
   } catch (err) {
-    console.error("[BLOB DEL ERROR]", err);
+    console.error("[R2 DEL ERROR]", err);
   }
   await db.attachment.delete({ where: { id: attachmentId } });
 
