@@ -44,7 +44,9 @@ See `mcp/README.md` for configuration and token lifetimes.
 
 ![Clerk to Neon identity sync](./diagrams/clerk-webhook.svg)
 
-`POST /api/webhooks/clerk` is public but **Svix-signed**. Missing headers or a bad signature → 400.
+`POST /v1/webhooks/clerk` on kiki-api is public but **Svix-signed** (see its `docs/clerk-webhook.md`). Clerk's endpoint URL, one per Clerk instance, is `https://api-staging.kikiboard.xyz/v1/webhooks/clerk` for development and `https://api.kikiboard.xyz/v1/webhooks/clerk` for production; it is changed by hand in the Clerk dashboard, and changing only the URL keeps the signing secret. Missing headers or a bad signature → 400.
+
+`POST /api/webhooks/clerk` in this app does the same and stays as the way back until the final release (KI-00059), together with `CLERK_WEBHOOK_SECRET` in Vercel. Nothing calls it while the endpoint points at the API.
 
 | Event | Effect |
 |---|---|
@@ -57,7 +59,7 @@ This is how a Clerk account deletion wipes the corresponding Kikiboard user.
 
 - `middleware.ts` — route matcher
 - `lib/getOrCreateUser.ts` — first-touch sync + email linking
-- `app/api/webhooks/clerk/route.ts` — Svix verify + update/delete
+- `app/api/webhooks/clerk/route.ts` — Svix verify + update/delete (old handler, replaced by kiki-api's `POST /v1/webhooks/clerk`)
 
 Users generate account-owned ChatGPT client credentials in Settings → MCP.
 The callback is allowlisted exactly, the secret is shown once and stored only
