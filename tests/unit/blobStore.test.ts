@@ -33,6 +33,18 @@ describe("Cloudflare R2 blob store", () => {
       R2_SECRET_ACCESS_KEY: "sk",
       R2_BUCKET_NAME: "BadBucket",
     })).toBeNull();
+    expect(readR2Config({
+      R2_ACCOUNT_ID: "acct123",
+      R2_ACCESS_KEY_ID: "ak bad",
+      R2_SECRET_ACCESS_KEY: "sk",
+      R2_BUCKET_NAME: "kiki-attachments",
+    })).toBeNull();
+    expect(readR2Config({
+      R2_ACCOUNT_ID: "acct123",
+      R2_ACCESS_KEY_ID: "ak",
+      R2_SECRET_ACCESS_KEY: "sk\nbad",
+      R2_BUCKET_NAME: "kiki-attachments",
+    })).toBeNull();
   });
 
   it("only trusts R2 object addresses", () => {

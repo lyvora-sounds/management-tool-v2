@@ -43,7 +43,7 @@ export function readR2Config(
   const secretAccessKey = env.R2_SECRET_ACCESS_KEY?.trim() ?? "";
   const bucket = env.R2_BUCKET_NAME?.trim() ?? "";
   if (!ACCOUNT_ID_PATTERN.test(accountId)) return null;
-  if (!accessKeyId || !secretAccessKey) return null;
+  if (!accessKeyId || !secretAccessKey || /\s/.test(accessKeyId) || /\s/.test(secretAccessKey)) return null;
   if (!BUCKET_NAME_PATTERN.test(bucket)) return null;
   return { accountId, accessKeyId, secretAccessKey, bucket };
 }
