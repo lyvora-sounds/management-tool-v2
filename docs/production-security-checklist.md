@@ -44,7 +44,7 @@ One row per thing that can run, hold data, or send a bill. Add a row when a cons
 |---|---|---|---|---|---|---|---|---|
 | Vercel | App hosting, serverless functions, CDN, deployment previews | `docs/architecture.md` | | | | | Not reviewed | |
 | Neon | PostgreSQL. Dev branch id is `EXPECTED_NEON_BRANCH_ID` | `.env.example`, `prisma/schema.prisma` | | | | | Not reviewed | |
-| Vercel Blob | Private task attachments | `BLOB_READ_WRITE_TOKEN`, `app/api/tasks/[taskId]/attachments/route.ts` | | | | | Not reviewed | |
+| Cloudflare R2 | Private task attachments | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `lib/blobStore.ts`, `app/api/tasks/[taskId]/attachments/route.ts` | | | | | Not reviewed | |
 | Clerk | Sign-in, sessions, user webhooks | `.env.example`, `docs/auth.md` | | | | | Not reviewed | |
 | Resend | Invitation email | `docs/integrations.md`, `docs/invitations.md` | | | | | Not reviewed | |
 | GitHub | Source and Actions CI | `.github/workflows/ci.yml` | | | | | Not reviewed | |
@@ -68,13 +68,13 @@ One row per thing that can run, hold data, or send a bill. Add a row when a cons
 
 ### Real-time
 
-This is the view of production while it is happening. Kikiboard does not push updates over a socket. An open board refreshes every 25 seconds (`hooks/use-board-polling.ts`). The notification bell polls `/api/notifications` every 30 seconds and ignores a failed response (`NotificationBell.tsx`). Both paths discard the error, so a client-only failure never becomes a log line. Server failures that do get logged are `console.error` calls on AI, Blob, Resend, and the Google callback. Nothing in the repo ships those lines to a tracker, and there is no `instrumentation.ts`.
+This is the view of production while it is happening. Kikiboard does not push updates over a socket. An open board refreshes every 25 seconds (`hooks/use-board-polling.ts`). The notification bell polls `/api/notifications` every 30 seconds and ignores a failed response (`NotificationBell.tsx`). Both paths discard the error, so a client-only failure never becomes a log line. Server failures that do get logged are `console.error` calls on AI, R2, Resend, and the Google callback. Nothing in the repo ships those lines to a tracker, and there is no `instrumentation.ts`.
 
 | ID | Measure | Done when | Where to start | Status | Notes |
 |---|---|---|---|---|---|
 | OBS-08 | Requests visible as they arrive | Route, status, and duration for production traffic, including board refresh and `/api/notifications`, show up within about a minute. | Vercel runtime logs. No telemetry SDK in `package.json` | Not reviewed | |
-| OBS-09 | Errors visible while they continue | A new failure groups, counts, and stays on screen as it repeats. Client polling failures are included, not only the `console.error` paths. | `hooks/use-board-polling.ts`, `NotificationBell.tsx`, `app/api/ai`, Blob and Resend routes | Not reviewed | |
-| OBS-10 | Dependencies visible now | Neon compute, connections, and slow queries; function concurrency; Blob, Resend, and Clerk errors. The numbers are current to the minute. | Neon monitoring, Vercel, Resend, Clerk | Not reviewed | |
+| OBS-09 | Errors visible while they continue | A new failure groups, counts, and stays on screen as it repeats. Client polling failures are included, not only the `console.error` paths. | `hooks/use-board-polling.ts`, `NotificationBell.tsx`, `app/api/ai`, R2 and Resend routes | Not reviewed | |
+| OBS-10 | Dependencies visible now | Neon compute, connections, and slow queries; function concurrency; R2, Resend, and Clerk errors. The numbers are current to the minute. | Neon monitoring, Vercel, Cloudflare R2, Resend, Clerk | Not reviewed | |
 | OBS-11 | Today's spend, not last month's invoice | Function time, bandwidth, database compute, blob storage, and email volume can be read for today. A runaway loop is obvious the same hour. | Each vendor's usage page, filtered to today. Distinct from OBS-03 and from the alert in OBS-06 | Not reviewed | |
 | OBS-12 | One slow request can be followed now | A board load, an AI call, or an MCP write can be traced from the route to Neon and to the outbound provider during the incident. | Confirm whether the host adds tracing. The repo does not | Not reviewed | |
 | OBS-13 | Those live signals page a person | Error rate, latency, downtime, and same-day spend each notify someone. A real failure pages. A quiet hour does not. | Vendor alert settings, checked against a recent real event | Not reviewed | |
@@ -112,7 +112,7 @@ AI model spend on a user’s own key is their bill (`docs/ai.md`). OBS-03 still 
 | SEC-15 | Validation on the server, not only in the form | Every mutating route checks types, bounds, and permissions again after the client. | `app/api/**/route.ts` | Not reviewed | |
 | SEC-16 | Input sanitization on every field a user can type | Stored text cannot change into HTML, Markdown, or a query that the app will execute. | Task titles, descriptions, comments, custom fields | Not reviewed | |
 | SEC-17 | Protection against SQL injection, XSS, CSRF, and the rest of OWASP | Queries are parameterized, rendered text is encoded, state-changing browser requests require a session the attacker cannot forge, and file/redirect/SSRF cases are covered. | Prisma query usage, React rendering, `middleware.ts` | Not reviewed | |
-| SEC-18 | File uploads are scanned, size-limited, and stored where they cannot execute | Limits are enforced on the server. Objects are private. Content is not served from a path the app executes. Malware scanning is a separate decision, recorded either way. | `app/api/tasks/[taskId]/attachments/route.ts`, `lib/mcp/ticketRelations.ts` (`@vercel/blob`, `access: "private"`) | Not reviewed | |
+| SEC-18 | File uploads are scanned, size-limited, and stored where they cannot execute | Limits are enforced on the server. Objects are private. Content is not served from a path the app executes. Malware scanning is a separate decision, recorded either way. | `app/api/tasks/[taskId]/attachments/route.ts`, `lib/mcp/ticketRelations.ts`, `lib/blobStore.ts` (private R2 bucket) | Not reviewed | |
 | SEC-19 | CORS is not “allow everything” | Browser origins that may call credentialed APIs are an explicit list. | `middleware.ts`, `next.config.ts`, route handlers | Not reviewed | |
 | SEC-20 | Security headers on every response | Responses send a Content-Security-Policy, HSTS, `X-Frame-Options` or frame-ancestors, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy`. | `next.config.ts`, `middleware.ts` | Not reviewed | |
 | SEC-21 | Webhooks verify signatures | Inbound webhooks reject missing or invalid signatures before any write. | `app/api/webhooks/clerk/route.ts`; outbound board webhooks in `docs/integrations.md` | Not reviewed | |
@@ -125,7 +125,7 @@ AI model spend on a user’s own key is their bill (`docs/ai.md`). OBS-03 still 
 | ID | Measure | Done when | Where to start | Status | Notes |
 |---|---|---|---|---|---|
 | SEC-25 | Secrets stay out of the code, the repo, and AI chat history | No production key is committed, logged, or pasted into a prompt that leaves the network. `.env.example` has names only. | `.env.example`, `lib/crypto.ts`, `docs/ai.md` | Not reviewed | |
-| SEC-26 | Keys that were ever pasted into config or chat are rotated | There is a rotation procedure, and any known pasted key has been rotated. | Deployment env vars, `ENCRYPTION_SECRET`, Clerk, blob, and AI provider keys | Not reviewed | |
+| SEC-26 | Keys that were ever pasted into config or chat are rotated | There is a rotation procedure, and any known pasted key has been rotated. | Deployment env vars, `ENCRYPTION_SECRET`, Clerk, R2, and AI provider keys | Not reviewed | |
 | SEC-27 | Encryption at rest and in transit | TLS terminates every public route. Sensitive columns (AI keys, OAuth tokens) use application encryption with a secret that fails startup when missing. Database disks are encrypted by the host. | `lib/crypto.ts`, Neon and Vercel project settings | Not reviewed | |
 | SEC-28 | Logs say who did what, and never record passwords, tokens, or card numbers | Activity logs are useful for investigation and are scrubbed of secrets. | `lib/createActivity.ts`, `docs/collaboration.md`, MCP `McpChange` history | Not reviewed | |
 | SEC-29 | Email authentication so password resets and invites are not spoofed | SPF, DKIM, and DMARC pass for the sending domain, and bounces/complaints are handled. | Transactional email provider, `docs/invitations.md` | Not reviewed | |

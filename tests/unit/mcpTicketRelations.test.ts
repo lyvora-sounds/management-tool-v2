@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const readable = vi.fn(); const admin = vi.fn(); const put = vi.fn(); const del = vi.fn();
+const readable = vi.fn(); const admin = vi.fn(); const putBlob = vi.fn(); const delBlob = vi.fn();
 vi.mock("@/lib/boardAccess", () => ({ canReadBoard: (...args: unknown[]) => readable(...args), isBoardAdmin: (...args: unknown[]) => admin(...args), canEditBoard: vi.fn() }));
 vi.mock("@/lib/db", () => ({ default: {} }));
-vi.mock("@vercel/blob", () => ({ put: (...args: unknown[]) => put(...args), del: (...args: unknown[]) => del(...args) }));
+vi.mock("@/lib/blobStore", () => ({ putBlob: (...args: unknown[]) => putBlob(...args), delBlob: (...args: unknown[]) => delBlob(...args) }));
 vi.mock("@/lib/notifications/webhooks", () => ({ sendBoardWebhookNotification: vi.fn() }));
 const { parseRelationPatch, validateTicketRelations, applyTicketRelations, restoreTicketRelations, cleanupTicketUploads } = await import("@/lib/mcp/ticketRelations");
 const { parseTaskPatch, snapshotsMatch, taskSnapshot } = await import("@/lib/mcp/writes");
@@ -20,7 +20,7 @@ function transaction() {
   };
 }
 type Tx = Parameters<typeof validateTicketRelations>[0];
-beforeEach(() => { vi.clearAllMocks(); readable.mockResolvedValue(true); admin.mockResolvedValue(false); put.mockResolvedValue({ url: "https://store.private.blob.vercel-storage.com/file" }); });
+beforeEach(() => { vi.clearAllMocks(); readable.mockResolvedValue(true); admin.mockResolvedValue(false); putBlob.mockResolvedValue({ url: "https://acct123.r2.cloudflarestorage.com/kiki-attachments/file" }); });
 describe("expanded MCP ticket fields", () => {
   it("accepts QA, assignee, epic, quarter, order and validated relation patches", () => {
     expect(parseTaskPatch({ qaId: "mario", assigneeId: null, epicId: "epic", quarter: "2026-Q4", order: 2, customFields: [{ customFieldId: "env", value: "production" }] })).toMatchObject({ qaId: "mario", quarter: "2026-Q4", order: 2 });
@@ -83,9 +83,9 @@ describe("expanded MCP ticket fields", () => {
     const tx = transaction(); const uploaded: string[] = [];
     const patch = parseRelationPatch({ attachments: [{ filename: "test.txt", contentBase64: "aGVsbG8=" }] });
     await applyTicketRelations(tx as unknown as Tx, "board", actor, task, patch, vi.fn(), uploaded);
-    expect(put).toHaveBeenCalledWith("attachments/ticket/test.txt", Buffer.from("hello"), { access: "private", addRandomSuffix: true });
+    expect(putBlob).toHaveBeenCalledWith("attachments/ticket/test.txt", Buffer.from("hello"));
     expect(tx.attachment.create).toHaveBeenCalledWith({ data: { taskId: "ticket", filename: "test.txt", size: 5, url: uploaded[0] } });
-    await cleanupTicketUploads(uploaded); expect(del).toHaveBeenCalledWith(uploaded[0]);
+    await cleanupTicketUploads(uploaded); expect(delBlob).toHaveBeenCalledWith(uploaded[0]);
     for (const row of [{ filename: "../test", contentBase64: "" }, { filename: "test", contentBase64: "invalid?" }, { id: "existing", filename: "test", contentBase64: "" }]) expect(() => parseRelationPatch({ attachments: [row] })).toThrow();
   });
   it("allows scalar reverts without assignment permission when assignments are unchanged", async () => {

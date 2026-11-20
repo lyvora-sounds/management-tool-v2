@@ -1,6 +1,7 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import db from "@/lib/db";
+import { readBlob } from "@/lib/blobStore";
 import type { ExternalAccessContext } from "@/lib/externalAccess";
 import { createMcpTicket, createMcpEpic, updateMcpTickets, listMcpChanges, revertMcpChange, McpWriteError, boardScope } from "./writes";
 
@@ -271,9 +272,9 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
       const attachment = await db.attachment.findFirst({ where: { id: args.attachmentId, taskId: args.ticketId, task: taskFilter }, select: { filename: true, size: true, url: true } });
       if (!attachment || attachment.size > 5 * 1024 * 1024) return { isError: true, content: [{ type: "text", text: "Attachment not found or larger than 5 MiB" }] };
       try {
-        const response = await fetch(attachment.url, { headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }, signal: AbortSignal.timeout(15000) });
-        if (!response.ok || !response.body) throw new Error("Unavailable");
-        const reader = response.body.getReader();
+        const file = await readBlob(attachment.url, { signal: AbortSignal.timeout(15000) });
+        if (!file?.body) throw new Error("Unavailable");
+        const reader = file.body.getReader();
         const chunks: Uint8Array[] = []; let size = 0;
         try {
           while (true) {
@@ -283,7 +284,7 @@ export function createScopedMcpServer(context: ExternalAccessContext) {
             chunks.push(chunk.value);
           }
         } finally { await reader.cancel(); }
-        return text({ filename: attachment.filename, size, contentType: response.headers.get("content-type"), contentBase64: Buffer.concat(chunks).toString("base64") });
+        return text({ filename: attachment.filename, size, contentType: file.contentType, contentBase64: Buffer.concat(chunks).toString("base64") });
       } catch { return { isError: true, content: [{ type: "text", text: "Attachment could not be read" }] }; }
     }
 
