@@ -2,7 +2,7 @@ import db from "@/lib/db";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { adminBoardWhere, canEditBoard, isBoardAdmin, readableBoardWhere } from "@/lib/boardAccess";
 import { type ExternalAccessContext, TICKETS_WRITE_SCOPE } from "@/lib/externalAccess";
-import { encodeLogMessage } from "@/lib/activityMessages";
+import { encodeLogMessage, type ActivityTicketRef, type LogParams } from "@/lib/activityMessages";
 import { sendBoardWebhookNotification } from "@/lib/notifications/webhooks";
 import { cleanupTicketUploads, applyTicketRelations, parseRelationPatch, relationSelect, restoreTicketRelations, validateTicketRelations } from "./ticketRelations";
 import { isDoneList } from "@/lib/statusTheme";
@@ -152,8 +152,15 @@ function summary(value: unknown, fallback: string) {
   return value.trim();
 }
 
-async function activity(tx: Prisma.TransactionClient, boardId: string, actor: { id: string; name: string }, key: string, count: number) {
-  await tx.activityLog.create({ data: { boardId, userId: actor.id, type: "mcp_change", message: encodeLogMessage(key, { actor: actor.name, count }) } });
+async function activity(
+  tx: Prisma.TransactionClient,
+  boardId: string,
+  actor: { id: string; name: string },
+  key: string,
+  params: LogParams,
+  refs?: ActivityTicketRef[],
+) {
+  await tx.activityLog.create({ data: { boardId, userId: actor.id, type: "mcp_change", message: encodeLogMessage(key, params, refs) } });
 }
 
 async function completionNotification(boardId: string, actorName: string, before: Snapshot[], after: TaskState[]) {
@@ -182,7 +189,7 @@ export async function createMcpTicket(context: ExternalAccessContext, args: Reco
       const last = await tx.task.findFirst({ where: { listId: scopedList.id }, orderBy: { order: "desc" }, select: { order: true } });
       if (patch.completed === undefined && isDoneList(scopedList.title)) patch.completed = true;
       const scalar = await validateTicketRelations(tx, list.boardId, actor, patch);
-      const { number } = await takeTicketNumber(tx, list.boardId);
+      const { number, ticketKey } = await takeTicketNumber(tx, list.boardId);
       const task = await tx.task.create({ data: { ...scalar, number, title: patch.title!, listId: scopedList.id, order: patch.order ?? (last?.order ?? -1) + 1, completedAt: patch.completed ? new Date() : null, completedById: patch.completed ? actor.id : null, archivedAt: patch.archived ? new Date() : null }, select });
       const relatedBefore = new Map<string, Snapshot>();
       const capture = async (id: string) => {
@@ -195,7 +202,14 @@ export async function createMcpTicket(context: ExternalAccessContext, args: Reco
       const created = await tx.task.findUniqueOrThrow({ where: { id: task.id }, select });
       const relatedAfter = await Promise.all([...relatedBefore.keys()].map(id => tx.task.findUniqueOrThrow({ where: { id }, select })));
       const change = await tx.mcpChange.create({ data: { ...changeScope(context, list.board.organizationId), boardId: list.boardId, tokenId: context.tokenId, actorId: actor.id, kind: "create", summary: summary(args.summary, `Create: ${task.title}`), before: [...relatedBefore.values()], after: [taskSnapshot(created), ...relatedAfter.map(taskSnapshot)] } });
-      await activity(tx, list.boardId, actor, "activity.mcpCreated", 1);
+      await activity(
+        tx,
+        list.boardId,
+        actor,
+        "activity.mcpTicketCreated",
+        { actor: actor.name, ticket: created.title },
+        [{ taskId: created.id, ticketKey, title: created.title }],
+      );
       return { changeId: change.id, ticket: taskSnapshot(created) };
     }, { isolationLevel: "Serializable", timeout: 60000 });
   } catch (error) { await cleanupTicketUploads(uploaded); throw error; }
@@ -252,7 +266,7 @@ export async function createMcpEpic(context: ExternalAccessContext, args: Record
       data: { boardId: board.id, title, description, color, quarter },
       select: { id: true, title: true, description: true, color: true, quarter: true, status: true, boardId: true },
     });
-    await activity(tx, board.id, actor, "activity.mcpEpicCreated", 1);
+    await activity(tx, board.id, actor, "activity.mcpEpicCreatedNamed", { actor: actor.name, epic: epic.title });
     return { epic };
   }, { isolationLevel: "Serializable" });
 }
@@ -332,7 +346,26 @@ export async function updateMcpTickets(context: ExternalAccessContext, args: Rec
       const before = [...captured.values()];
       const after = await Promise.all(before.map(row => tx.task.findUniqueOrThrow({ where: { id: row.id }, select })));
       const change = await tx.mcpChange.create({ data: { ...changeScope(context, organizationId), boardId, tokenId: context.tokenId || null, actorId: actor.id, kind: "update", summary: summary(args.summary, `Update ${updates.length} tickets`), before, after: after.map(taskSnapshot) } });
-      await activity(tx, boardId, actor, "activity.mcpUpdated", updates.length);
+      const mcpRefs = after.map((t) => ({ taskId: t.id, title: t.title }));
+      if (after.length === 1) {
+        await activity(
+          tx,
+          boardId,
+          actor,
+          "activity.mcpTicketUpdated",
+          { actor: actor.name, ticket: after[0].title },
+          mcpRefs,
+        );
+      } else {
+        await activity(
+          tx,
+          boardId,
+          actor,
+          "activity.mcpUpdated",
+          { actor: actor.name, count: after.length },
+          mcpRefs,
+        );
+      }
       return { changeId: change.id, before, after };
     }, { isolationLevel: "Serializable", timeout: 60000 });
   } catch (error) { await cleanupTicketUploads(uploaded); throw error; }
@@ -419,7 +452,26 @@ export async function revertMcpChange(context: ExternalAccessContext, changeId: 
       restored.push(await tx.task.findUniqueOrThrow({ where: { id: expected.id }, select }));
     }
     const undo = await tx.mcpChange.create({ data: { ...changeScope(context, change.organizationId), boardId: change.boardId, tokenId: context.tokenId || null, actorId: actor.id, kind: "revert", summary: `Revert ${change.id}`, before: after, after: restored.map(taskSnapshot), revertsChangeId: change.id } });
-    await activity(tx, change.boardId, actor, "activity.mcpReverted", after.length);
+    const revertRefs = restored.map((t) => ({ taskId: t.id, title: t.title }));
+    if (restored.length === 1) {
+      await activity(
+        tx,
+        change.boardId,
+        actor,
+        "activity.mcpTicketReverted",
+        { actor: actor.name, ticket: restored[0].title },
+        revertRefs,
+      );
+    } else {
+      await activity(
+        tx,
+        change.boardId,
+        actor,
+        "activity.mcpReverted",
+        { actor: actor.name, count: restored.length },
+        revertRefs,
+      );
+    }
     return { changeId: undo.id, restored };
   }, { isolationLevel: "Serializable" });
   await completionNotification(change.boardId, actor.name, after, result.restored);

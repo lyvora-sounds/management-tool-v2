@@ -6,6 +6,7 @@ export type ApiLabel = ApiSchemas["Label"];
 export type ApiError = ApiSchemas["Error"];
 export type ApiBoard = ApiSchemas["Board"];
 export type ApiBoardLink = ApiSchemas["BoardLink"];
+export type ApiActivityReference = ApiSchemas["ActivityReference"];
 export type ApiActivityLog = ApiSchemas["ActivityLog"];
 export type ApiAttachment = ApiSchemas["Attachment"];
 export type ApiCreatedTask = ApiSchemas["CreatedTask"];

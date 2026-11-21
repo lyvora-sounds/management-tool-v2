@@ -1330,10 +1330,16 @@
     "reporterRemoved": "{actor} removió al reporter del ticket \"{ticket}\"",
     "brainDump": "{actor} creó {count, plural, one {# ticket} other {# tickets}} con AI Brain Dump",
     "brainDumpCount": "Se crearon {count, plural, one {# ticket} other {# tickets}} con AI Brain Dump",
-    "mcpCreated": "{actor} creó {count} tickets mediante MCP",
+    "mcpCreated": "{actor} creó {count, plural, one {# ticket} other {# tickets}} mediante MCP",
+    "mcpTicketCreated": "{actor} creó el ticket \"{ticket}\" mediante MCP",
     "mcpEpicCreated": "{actor} creó una épica mediante MCP",
-    "mcpUpdated": "{actor} actualizó {count} tickets mediante MCP",
-    "mcpReverted": "{actor} revirtió cambios en {count} tickets mediante MCP"
+    "mcpEpicCreatedNamed": "{actor} creó la épica \"{epic}\" mediante MCP",
+    "mcpUpdated": "{actor} actualizó {count, plural, one {# ticket} other {# tickets}} mediante MCP",
+    "mcpTicketUpdated": "{actor} actualizó el ticket \"{ticket}\" mediante MCP",
+    "mcpReverted": "{actor} revirtió cambios en {count, plural, one {# ticket} other {# tickets}} mediante MCP",
+    "mcpTicketReverted": "{actor} revirtió cambios en el ticket \"{ticket}\" mediante MCP",
+    "showMoreTickets": "Mostrar {count} {count, plural, one {ticket} other {tickets}} más",
+    "showFewerTickets": "Mostrar menos tickets"
   },
   "notifications": {
     "mentioned": "{actor} te mencionó en el ticket \"{ticket}\"",

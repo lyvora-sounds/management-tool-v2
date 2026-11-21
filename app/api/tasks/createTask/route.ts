@@ -67,6 +67,7 @@ export async function POST(req: Request) {
     type: "task_created",
     key: "activity.ticketCreated",
     params: { actor: user.name ?? user.email, ticket: task.title, list: list.title },
+    refs: [{ taskId: task.id, title: task.title }],
     boardId: list.boardId,
     userId: user.id,
   });

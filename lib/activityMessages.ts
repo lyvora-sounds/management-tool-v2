@@ -2,12 +2,44 @@ import type { AppTranslator } from "@/lib/i18nFormat";
 
 export type LogParams = Record<string, string | number>;
 
+export type ActivityTicketRef = {
+  taskId: string;
+  ticketKey?: string;
+  title?: string;
+};
+
 export type DecodedLog = {
   key: string;
   params: LogParams;
+  refs: ActivityTicketRef[];
 };
 
-export function encodeLogMessage(key: string, params: LogParams = {}): string {
+function parseRefs(raw: unknown): ActivityTicketRef[] {
+  if (!Array.isArray(raw)) return [];
+  const refs: ActivityTicketRef[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const row = item as Record<string, unknown>;
+    if (typeof row.taskId !== "string" || !row.taskId.trim()) continue;
+    refs.push({
+      taskId: row.taskId.trim(),
+      ...(typeof row.ticketKey === "string" && row.ticketKey.trim()
+        ? { ticketKey: row.ticketKey.trim() }
+        : {}),
+      ...(typeof row.title === "string" && row.title.trim() ? { title: row.title.trim() } : {}),
+    });
+  }
+  return refs;
+}
+
+export function encodeLogMessage(
+  key: string,
+  params: LogParams = {},
+  refs?: ActivityTicketRef[],
+): string {
+  if (refs && refs.length > 0) {
+    return JSON.stringify({ k: key, p: params, r: refs });
+  }
   return JSON.stringify({ k: key, p: params });
 }
 
@@ -15,13 +47,14 @@ export function decodeLogMessage(raw: string): DecodedLog | null {
   const trimmed = raw.trim();
   if (trimmed.startsWith("{")) {
     try {
-      const parsed = JSON.parse(trimmed) as { k?: unknown; p?: unknown };
+      const parsed = JSON.parse(trimmed) as { k?: unknown; p?: unknown; r?: unknown };
       if (typeof parsed.k === "string") {
         return {
           key: parsed.k,
           params: parsed.p && typeof parsed.p === "object" && !Array.isArray(parsed.p)
             ? (parsed.p as LogParams)
             : {},
+          refs: parseRefs(parsed.r),
         };
       }
     } catch {
@@ -179,7 +212,7 @@ function parseLegacyLog(raw: string): DecodedLog | null {
       const value = match[index + 1];
       params[name] = name === "count" ? Number(value) : value;
     });
-    return { key: rule.key, params };
+    return { key: rule.key, params, refs: [] };
   }
   return null;
 }

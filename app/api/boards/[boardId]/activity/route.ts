@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { canReadBoard } from "@/lib/boardAccess";
+import { resolveBoardActivityReferences } from "@/lib/activityReferences";
 
 export async function GET(
   _req: Request,
@@ -23,5 +24,15 @@ export async function GET(
     take: 100,
   });
 
-  return NextResponse.json(logs);
+  const refsByLogId = await resolveBoardActivityReferences(
+    logs,
+    process.env.NEXT_PUBLIC_APP_URL ?? "",
+  );
+
+  return NextResponse.json(
+    logs.map((log) => ({
+      ...log,
+      references: refsByLogId.get(log.id) ?? [],
+    })),
+  );
 }

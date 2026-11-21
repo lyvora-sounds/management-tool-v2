@@ -1,3 +1,5 @@
+import type { ActivityReference } from "@/lib/activityReferences";
+
 interface ActivityEntry {
   id: string;
   type: string;
@@ -5,6 +7,7 @@ interface ActivityEntry {
   createdAt: Date;
   board: { id: string; title: string };
   user: { name: string | null };
+  references?: ActivityReference[];
 }
 
 export interface RecentActivityProps {

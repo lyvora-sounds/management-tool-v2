@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useLocale, useTranslations } from "next-intl";
 import { dateLocale } from "@/i18n/routing";
 import { FormattedLogMessage } from "@/components/Shared/FormattedLogMessage";
+import { ActivityReferences } from "@/components/Shared/ActivityReferences";
 import type { ActivityLog, BoardActivityProps } from "./BoardActivity.types";
 import { TYPE_ICON } from "./BoardActivity.constants";
 import { ActivitySkeleton } from "@/components/skeletons";
@@ -51,34 +52,46 @@ export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="overflow-y-auto max-h-[60vh] flex flex-col divide-y px-1">
+        <div className="overflow-y-auto max-h-[60vh] px-1">
           {loading && <ActivitySkeleton count={5} />}
           {!loading && logs.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
               {t("activityEmpty")}
             </p>
           )}
-          {!loading &&
-            logs.map((log) => (
-              <div key={log.id} className="flex items-start gap-3 px-3 py-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium mt-0.5">
-                  {TYPE_ICON[log.type] ?? "•"}
-                </span>
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-sm leading-snug">
-                    <FormattedLogMessage message={log.message} />
+          {!loading && logs.length > 0 && (
+            <ul role="list" className="flex flex-col divide-y">
+              {logs.map((log) => (
+                <li key={log.id} className="flex items-start gap-3 px-3 py-3">
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium mt-0.5"
+                  >
+                    {TYPE_ICON[log.type] ?? "•"}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(log.createdAt).toLocaleString(dateLocale(locale), {
-                      day: "2-digit",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-              </div>
-            ))}
+                  <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                    <span className="text-sm leading-snug">
+                      <FormattedLogMessage message={log.message} />
+                    </span>
+                    <ActivityReferences
+                      boardId={boardId}
+                      message={log.message}
+                      references={log.references}
+                      onNavigate={onClose}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(log.createdAt).toLocaleString(dateLocale(locale), {
+                        day: "2-digit",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="border-t px-4 py-3 flex justify-end">
