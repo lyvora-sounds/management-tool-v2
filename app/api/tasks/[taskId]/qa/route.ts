@@ -75,6 +75,7 @@ export async function POST(
       type: "task_qa_assigned",
       key: "activity.qaAssigned",
       params: { actor: actorName, name: qaName, ticket: task.title },
+      refs: [{ taskId: task.id, title: task.title }],
       boardId: task.list.board.id,
       userId: user.id,
     });
@@ -83,6 +84,7 @@ export async function POST(
       type: "task_qa_unassigned",
       key: "activity.qaRemoved",
       params: { actor: actorName, ticket: task.title },
+      refs: [{ taskId: task.id, title: task.title }],
       boardId: task.list.board.id,
       userId: user.id,
     });

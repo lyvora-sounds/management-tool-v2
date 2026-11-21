@@ -165,6 +165,7 @@ export async function PATCH(
         from: task.list.title,
         to: targetList.title,
       },
+      refs: [{ taskId: task.id, title: updated.title }],
       boardId: task.list.board.id,
       userId: user.id,
     });
@@ -175,6 +176,7 @@ export async function PATCH(
       type: nextCompleted ? "task_completed" : "task_reopened",
       key: nextCompleted ? "activity.ticketCompleted" : "activity.ticketReopened",
       params: { actor, ticket: task.title },
+      refs: [{ taskId: task.id, title: updated.title }],
       boardId: task.list.board.id,
       userId: user.id,
     });
@@ -195,6 +197,7 @@ export async function PATCH(
       type: "task_renamed",
       key: "activity.ticketRenamed",
       params: { actor, ticket: task.title, newTitle: title.trim() },
+      refs: [{ taskId: task.id, title: title.trim() }],
       boardId: task.list.board.id,
       userId: user.id,
     });

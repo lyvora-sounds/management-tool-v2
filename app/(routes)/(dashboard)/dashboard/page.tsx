@@ -19,6 +19,7 @@ import { getOnboardingState } from "@/lib/onboardingState";
 import { readableBoardWhere } from "@/lib/boardAccess";
 import { AccessDeniedNotice } from "./components/AccessDeniedNotice/AccessDeniedNotice";
 import { isAccessDeniedAccess } from "@/lib/ticketShare";
+import { resolveBoardActivityReferences } from "@/lib/activityReferences";
 
 export default async function DashboardPage({
   searchParams,
@@ -152,6 +153,8 @@ export default async function DashboardPage({
       take: 8,
       select: {
         id: true,
+        boardId: true,
+        userId: true,
         type: true,
         message: true,
         createdAt: true,
@@ -219,6 +222,15 @@ export default async function DashboardPage({
     }),
   ]);
 
+  const recentActivityRefMap = await resolveBoardActivityReferences(
+    recentActivity,
+    process.env.NEXT_PUBLIC_APP_URL ?? "",
+  );
+  const recentActivityWithRefs = recentActivity.map((log) => ({
+    ...log,
+    references: recentActivityRefMap.get(log.id) ?? [],
+  }));
+
   const priorityCounts = allPendingTasks.reduce(
     (acc, t) => {
       if (t.priority === "urgent") acc.urgent++;
@@ -280,7 +292,7 @@ export default async function DashboardPage({
 
       <UpcomingTasks tasks={upcomingTasks} />
 
-      <RecentActivity logs={recentActivity} />
+      <RecentActivity logs={recentActivityWithRefs} />
 
       <AssignedToMe tasks={assignedTasks} userId={user.id} />
 

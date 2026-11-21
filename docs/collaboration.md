@@ -67,7 +67,9 @@ Rows store `boardId` and `taskId` so the UI can deep-link.
 
 ## Activity log
 
-`createActivity` writes `ActivityLog { type, message, boardId, userId }`. The board activity panel loads `/api/boards/[boardId]/activity` (capped at 100). Types include created, moved, completed, reopened, renamed, assigned, deleted, list changes, brain dump.
+`createActivity` writes `ActivityLog { type, message, boardId, userId }`, encoding `{ k, p, r? }` where `r` holds lightweight referenced ticket stubs (`taskId`, optional `ticketKey` and `title`). Single-ticket mutations, AI Brain Dump batches, and MCP ticket operations attach `r`; deleted tickets omit references so dead links are not emitted.
+
+Both `GET /v1/boards/[boardId]/activity` (`kiki-api`, and the fallback `/api/boards/[boardId]/activity`) and Dashboard `RecentActivity` resolve `references: [{ taskId, ticketKey, title, url }]` against live board/task rows — including backwards-compatible resolution for historical entries (unique title match on `p.ticket` / `p.newTitle`, or matching legacy `mcp_change` logs to `McpChange.after` by actor and timestamp). Activity DTOs should always include `references` as an array (`[]` when none); the UI treats omit as a transitional fallback to embedded `r`, and `[]` as “no links”. Client-safe helpers live in `lib/activityReferencesClient.ts`; server resolution (`resolveBoardActivityReferences`) stays in `lib/activityReferences.ts` and must not be imported from `"use client"` modules. Ship/deploy `kiki-api` activity `references` before regenerating OpenAPI types here. `ActivityReferences` renders those resolved items as clickable, human-readable `/board/[boardId]?taskId=[taskId]` links in `BoardActivity` and `RecentActivity` (capped at 5 rows per entry with a toggle). The board activity panel loads capped at 100 entries. Types include created, moved, completed, reopened, renamed, assigned, deleted, list changes, brain dump, and MCP changes.
 
 Activity is a board timeline. Notifications are personal.
 

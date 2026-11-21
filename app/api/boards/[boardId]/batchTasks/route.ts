@@ -115,6 +115,7 @@ export async function POST(
     type: "task_created",
     key: "activity.brainDump",
     params: { actor: user.name ?? user.email, count: createdTasks.length },
+    refs: createdTasks.map((t) => ({ taskId: t.id, title: t.title })),
   });
 
   // Triage opt-in por tablero: una sola llamada de IA para todo el lote.

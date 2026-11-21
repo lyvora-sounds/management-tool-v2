@@ -6,9 +6,43 @@ export type ApiLabel = ApiSchemas["Label"];
 export type ApiError = ApiSchemas["Error"];
 export type ApiBoard = ApiSchemas["Board"];
 export type ApiBoardLink = ApiSchemas["BoardLink"];
-export type ApiActivityLog = ApiSchemas["ActivityLog"];
+/**
+ * Ticket link on an activity row. Defined locally until staging OpenAPI
+ * publishes `ActivityReference` (after kiki-api activity refs deploy); then
+ * switch back to `ApiSchemas["ActivityReference"]` via `pnpm api:types`.
+ */
+export type ApiActivityReference = {
+  taskId: string;
+  ticketKey: string | null;
+  title: string;
+  url: string;
+};
+/** Activity log DTO; `references` is additive until OpenAPI lists it on ActivityLog. */
+export type ApiActivityLog = ApiSchemas["ActivityLog"] & {
+  references?: ApiActivityReference[];
+};
 export type ApiAttachment = ApiSchemas["Attachment"];
 export type ApiCreatedTask = ApiSchemas["CreatedTask"];
+
+/** Narrow unknown JSON `references` into typed activity links (omit when absent). */
+export function readActivityReferences(value: unknown): ApiActivityReference[] | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value)) return undefined;
+  const refs: ApiActivityReference[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const row = item as Record<string, unknown>;
+    if (typeof row.taskId !== "string" || !row.taskId.trim()) continue;
+    if (typeof row.title !== "string" || typeof row.url !== "string") continue;
+    refs.push({
+      taskId: row.taskId.trim(),
+      ticketKey: typeof row.ticketKey === "string" ? row.ticketKey : null,
+      title: row.title,
+      url: row.url,
+    });
+  }
+  return refs;
+}
 
 type JsonBody<T> = T extends { content: { "application/json": infer Body } } ? Body : never;
 
