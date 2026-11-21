@@ -1,4 +1,4 @@
-import type { ActivityReference } from "@/lib/activityReferences";
+import type { ActivityReference } from "@/lib/activityReferencesClient";
 
 interface ActivityEntry {
   id: string;

@@ -1,13 +1,13 @@
 import db from "@/lib/db";
 import { decodeLogMessage, type ActivityTicketRef, type DecodedLog } from "@/lib/activityMessages";
 import { formatTicketKey } from "@/lib/integrations/ticketBranch";
+import {
+  buildTicketUrl,
+  type ActivityReference,
+} from "@/lib/activityReferencesClient";
 
-export type ActivityReference = {
-  taskId: string;
-  ticketKey: string | null;
-  title: string;
-  url: string;
-};
+export type { ActivityReference } from "@/lib/activityReferencesClient";
+export { buildTicketUrl, fallbackActivityReferences } from "@/lib/activityReferencesClient";
 
 export type ActivityLogInput = {
   id: string;
@@ -33,6 +33,28 @@ type McpChangeSummary = {
   after: unknown;
 };
 
+type TaskFindWhere =
+  | {
+      id: { in: string[] };
+      list: { boardId: { in: string[] } };
+    }
+  | {
+      title: { in: string[] };
+      list: { boardId: { in: string[] } };
+    }
+  | {
+      OR: Array<
+        | {
+            id: { in: string[] };
+            list: { boardId: { in: string[] } };
+          }
+        | {
+            title: { in: string[] };
+            list: { boardId: { in: string[] } };
+          }
+      >;
+    };
+
 type ActivityReferenceStore = {
   board: {
     findMany: (args: {
@@ -42,7 +64,7 @@ type ActivityReferenceStore = {
   };
   task: {
     findMany: (args: {
-      where: { list: { boardId: { in: string[] } } };
+      where: TaskFindWhere;
       select: { id: true; title: true; number: true; list: { select: { boardId: true } } };
     }) => Promise<Array<{ id: string; title: string; number: number; list: { boardId: string } }>>;
   };
@@ -57,19 +79,6 @@ type ActivityReferenceStore = {
 };
 
 const MCP_MATCH_WINDOW_MS = 5000;
-
-export function buildTicketUrl(appUrl: string, boardId: string, taskId: string): string {
-  const path = `/board/${encodeURIComponent(boardId)}?taskId=${encodeURIComponent(taskId)}`;
-  try {
-    const parsed = new URL(appUrl.trim());
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-      return `${parsed.origin}${path}`;
-    }
-  } catch {
-    // Fall back to a relative board deep-link when appUrl is empty or invalid.
-  }
-  return path;
-}
 
 function isEpicOnlyMcpLog(decoded: DecodedLog | null): boolean {
   return decoded?.key === "activity.mcpEpicCreated" || decoded?.key === "activity.mcpEpicCreatedNamed";
@@ -125,32 +134,28 @@ function findClosestUnusedMcpChange(
   return best;
 }
 
-/**
- * Fallback client resolver used only when the API/server did not return resolved `references`
- * (e.g., while `kiki-api` rollout is still pending). Relies solely on embedded `r` refs.
- */
-export function fallbackActivityReferences(
-  boardId: string,
-  message: string,
-  appUrl = "",
-): ActivityReference[] {
-  const decoded = decodeLogMessage(message);
-  if (!decoded || decoded.refs.length === 0) return [];
-  const seen = new Set<string>();
-  const refs: ActivityReference[] = [];
-  for (const ref of decoded.refs) {
-    if (seen.has(ref.taskId)) continue;
-    seen.add(ref.taskId);
-    refs.push({
-      taskId: ref.taskId,
-      ticketKey: ref.ticketKey ?? null,
-      title: ref.title ?? ref.ticketKey ?? ref.taskId,
-      url: buildTicketUrl(appUrl, boardId, ref.taskId),
-    });
-  }
-  return refs;
+function buildTaskWhere(
+  boardIds: string[],
+  taskIds: string[],
+  legacyTitles: string[],
+): TaskFindWhere | null {
+  const idClause =
+    taskIds.length > 0
+      ? { id: { in: taskIds }, list: { boardId: { in: boardIds } } }
+      : null;
+  const titleClause =
+    legacyTitles.length > 0
+      ? { title: { in: legacyTitles }, list: { boardId: { in: boardIds } } }
+      : null;
+
+  if (idClause && titleClause) return { OR: [idClause, titleClause] };
+  return idClause ?? titleClause;
 }
 
+/**
+ * Server-only resolver. Loads only the task rows needed for the given logs
+ * (explicit `r` ids, legacy titles, and MCP snapshot ids after match).
+ */
 export async function resolveBoardActivityReferences(
   logs: ActivityLogInput[],
   appUrl = "",
@@ -162,28 +167,35 @@ export async function resolveBoardActivityReferences(
   const parsed = logs.map((log) => ({ log, decoded: decodeLogMessage(log.message) }));
 
   const neededBoardIds = new Set<string>();
+  const explicitTaskIds = new Set<string>();
+  const legacyTitles = new Set<string>();
   const mcpBoardIds = new Set<string>();
+  const mcpLogs: Array<{ log: ActivityLogInput; decoded: DecodedLog | null }> = [];
 
   for (const { log, decoded } of parsed) {
     if (decoded && decoded.refs.length > 0) {
       neededBoardIds.add(log.boardId);
-    } else if (legacyTitleForLog(log.type, decoded)) {
-      neededBoardIds.add(log.boardId);
-    } else if (log.type === "mcp_change" && !isEpicOnlyMcpLog(decoded)) {
-      neededBoardIds.add(log.boardId);
-      mcpBoardIds.add(log.boardId);
+      for (const ref of decoded.refs) {
+        explicitTaskIds.add(ref.taskId);
+      }
+    } else {
+      const title = legacyTitleForLog(log.type, decoded);
+      if (title) {
+        neededBoardIds.add(log.boardId);
+        legacyTitles.add(title);
+      } else if (log.type === "mcp_change" && !isEpicOnlyMcpLog(decoded)) {
+        neededBoardIds.add(log.boardId);
+        mcpBoardIds.add(log.boardId);
+        mcpLogs.push({ log, decoded });
+      }
     }
   }
 
   if (neededBoardIds.size === 0) return result;
 
   const boardIds = [...neededBoardIds];
-  const [boards, rawTasks, mcpChanges] = await Promise.all([
+  const [boards, mcpChanges] = await Promise.all([
     store.board.findMany({ where: { id: { in: boardIds } }, select: { id: true, key: true } }),
-    store.task.findMany({
-      where: { list: { boardId: { in: boardIds } } },
-      select: { id: true, title: true, number: true, list: { select: { boardId: true } } },
-    }),
     mcpBoardIds.size > 0
       ? store.mcpChange.findMany({
           where: { boardId: { in: [...mcpBoardIds] } },
@@ -193,6 +205,25 @@ export async function resolveBoardActivityReferences(
         })
       : Promise.resolve([] as McpChangeSummary[]),
   ]);
+
+  const usedMcpChangeIds = new Set<string>();
+  const mcpMatchedTaskIdsByLog = new Map<string, string[]>();
+
+  for (const { log } of mcpLogs) {
+    const matched = findClosestUnusedMcpChange(log, mcpChanges, usedMcpChangeIds);
+    if (!matched) continue;
+    const ids = extractTaskIdsFromSnapshot(matched.after);
+    mcpMatchedTaskIdsByLog.set(log.id, ids);
+    for (const id of ids) explicitTaskIds.add(id);
+  }
+
+  const taskWhere = buildTaskWhere(boardIds, [...explicitTaskIds], [...legacyTitles]);
+  const rawTasks = taskWhere
+    ? await store.task.findMany({
+        where: taskWhere,
+        select: { id: true, title: true, number: true, list: { select: { boardId: true } } },
+      })
+    : [];
 
   const boardKeyById = new Map(boards.map((b) => [b.id, b.key]));
   const tasksByBoardAndId = new Map<string, TaskSummary>();
@@ -211,8 +242,6 @@ export async function resolveBoardActivityReferences(
     if (bucket) bucket.push(task);
     else tasksByBoardAndTitle.set(titleKey, [task]);
   }
-
-  const usedMcpChangeIds = new Set<string>();
 
   const toReference = (task: TaskSummary, fallbackRef?: ActivityTicketRef): ActivityReference => {
     const boardKey = boardKeyById.get(task.boardId) ?? null;
@@ -245,11 +274,8 @@ export async function resolveBoardActivityReferences(
           addTask(matches[0]);
         }
       } else if (log.type === "mcp_change" && !isEpicOnlyMcpLog(decoded)) {
-        const matched = findClosestUnusedMcpChange(log, mcpChanges, usedMcpChangeIds);
-        if (matched) {
-          for (const taskId of extractTaskIdsFromSnapshot(matched.after)) {
-            addTask(tasksByBoardAndId.get(`${log.boardId}:${taskId}`));
-          }
+        for (const taskId of mcpMatchedTaskIdsByLog.get(log.id) ?? []) {
+          addTask(tasksByBoardAndId.get(`${log.boardId}:${taskId}`));
         }
       }
     }

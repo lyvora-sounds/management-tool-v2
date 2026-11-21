@@ -4,7 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Link2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { fallbackActivityReferences, type ActivityReference } from "@/lib/activityReferences";
+import {
+  fallbackActivityReferences,
+  type ActivityReference,
+} from "@/lib/activityReferencesClient";
 
 const INITIAL_VISIBLE = 5;
 
@@ -16,12 +19,17 @@ export function ActivityReferences({
 }: {
   boardId: string;
   message: string;
+  /**
+   * Server-resolved links. Prefer always-present arrays (`[]` when empty).
+   * `undefined` is transitional (older API omit) and triggers embedded-`r` fallback.
+   */
   references?: ActivityReference[];
   onNavigate?: () => void;
 }) {
   const t = useTranslations("activity");
   const [expanded, setExpanded] = useState(false);
 
+  // Empty array = resolved with no links. Omit = fall back to embedded `r`.
   const items =
     references !== undefined
       ? references

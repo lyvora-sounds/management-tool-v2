@@ -3,8 +3,8 @@ import { decodeLogMessage, encodeLogMessage } from "@/lib/activityMessages";
 import {
   buildTicketUrl,
   fallbackActivityReferences,
-  resolveBoardActivityReferences,
-} from "@/lib/activityReferences";
+} from "@/lib/activityReferencesClient";
+import { resolveBoardActivityReferences } from "@/lib/activityReferences";
 
 const T0 = new Date("2026-11-21T10:00:00.000Z");
 
@@ -95,6 +95,14 @@ describe("resolveBoardActivityReferences", () => {
       ],
       "https://kikiboard.xyz",
       store,
+    );
+    expect(store.task.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: { in: expect.arrayContaining(["t1", "t-gone"]) },
+          list: { boardId: { in: ["b1"] } },
+        },
+      }),
     );
     expect(refs.get("a1")).toEqual([
       {
