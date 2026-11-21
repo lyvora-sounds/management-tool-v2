@@ -60,6 +60,7 @@ export async function POST(
       type: "task_collaborator_removed",
       key: "activity.collaboratorRemoved",
       params: { actor: actorName, name: collabName, ticket: task.title },
+      refs: [{ taskId: task.id, title: task.title }],
       boardId: task.list.board.id,
       userId: user.id,
     });
@@ -96,6 +97,7 @@ export async function POST(
       type: "task_collaborator_added",
       key: "activity.collaboratorAdded",
       params: { actor: actorName, name: collabName, ticket: task.title },
+      refs: [{ taskId: task.id, title: task.title }],
       boardId: task.list.board.id,
       userId: user.id,
     });

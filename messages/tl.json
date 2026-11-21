@@ -1330,10 +1330,16 @@
     "reporterRemoved": "Inalis ni {actor} ang reporter sa ticket na \"{ticket}\"",
     "brainDump": "Gumawa si {actor} ng {count, plural, one {# ticket} other {# tickets}} gamit ang AI Brain Dump",
     "brainDumpCount": "Gumawa ng {count, plural, one {# ticket} other {# tickets}} gamit ang AI Brain Dump",
-    "mcpCreated": "Gumawa si {actor} ng {count} tickets sa pamamagitan ng MCP",
+    "mcpCreated": "Gumawa si {actor} ng {count, plural, one {# ticket} other {# tickets}} sa pamamagitan ng MCP",
+    "mcpTicketCreated": "Gumawa si {actor} ng ticket na \"{ticket}\" sa pamamagitan ng MCP",
     "mcpEpicCreated": "Gumawa si {actor} ng isang epic sa pamamagitan ng MCP",
-    "mcpUpdated": "Nag-update si {actor} ng {count} tickets sa pamamagitan ng MCP",
-    "mcpReverted": "Ibinalik ni {actor} ang changes sa {count} tickets sa pamamagitan ng MCP"
+    "mcpEpicCreatedNamed": "Gumawa si {actor} ng epic na \"{epic}\" sa pamamagitan ng MCP",
+    "mcpUpdated": "Nag-update si {actor} ng {count, plural, one {# ticket} other {# tickets}} sa pamamagitan ng MCP",
+    "mcpTicketUpdated": "Nag-update si {actor} ng ticket na \"{ticket}\" sa pamamagitan ng MCP",
+    "mcpReverted": "Ibinalik ni {actor} ang changes sa {count, plural, one {# ticket} other {# tickets}} sa pamamagitan ng MCP",
+    "mcpTicketReverted": "Ibinalik ni {actor} ang changes sa ticket na \"{ticket}\" sa pamamagitan ng MCP",
+    "showMoreTickets": "Ipakita ang {count} pang {count, plural, one {ticket} other {tickets}}",
+    "showFewerTickets": "Ipakita ang mas kaunting tickets"
   },
   "notifications": {
     "mentioned": "Binanggit ka ni {actor} sa ticket na \"{ticket}\"",

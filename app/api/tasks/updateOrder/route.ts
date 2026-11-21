@@ -103,6 +103,7 @@ export async function PATCH(req: Request) {
           from: fromList.title,
           to: toList.title,
         },
+        refs: [{ taskId: movedTaskId, title: task.title }],
         boardId: task.list.boardId,
         userId: user.id,
       });

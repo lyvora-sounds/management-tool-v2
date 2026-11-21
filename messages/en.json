@@ -1330,10 +1330,16 @@
     "reporterRemoved": "{actor} removed the reporter from the ticket \"{ticket}\"",
     "brainDump": "{actor} created {count, plural, one {# ticket} other {# tickets}} with AI Brain Dump",
     "brainDumpCount": "Created {count, plural, one {# ticket} other {# tickets}} with AI Brain Dump",
-    "mcpCreated": "{actor} created {count} tickets through MCP",
+    "mcpCreated": "{actor} created {count, plural, one {# ticket} other {# tickets}} through MCP",
+    "mcpTicketCreated": "{actor} created the ticket \"{ticket}\" through MCP",
     "mcpEpicCreated": "{actor} created an epic through MCP",
-    "mcpUpdated": "{actor} updated {count} tickets through MCP",
-    "mcpReverted": "{actor} reverted changes to {count} tickets through MCP"
+    "mcpEpicCreatedNamed": "{actor} created the epic \"{epic}\" through MCP",
+    "mcpUpdated": "{actor} updated {count, plural, one {# ticket} other {# tickets}} through MCP",
+    "mcpTicketUpdated": "{actor} updated the ticket \"{ticket}\" through MCP",
+    "mcpReverted": "{actor} reverted changes to {count, plural, one {# ticket} other {# tickets}} through MCP",
+    "mcpTicketReverted": "{actor} reverted changes to the ticket \"{ticket}\" through MCP",
+    "showMoreTickets": "Show {count} more referenced {count, plural, one {ticket} other {tickets}}",
+    "showFewerTickets": "Show fewer tickets"
   },
   "notifications": {
     "mentioned": "{actor} mentioned you on the ticket \"{ticket}\"",

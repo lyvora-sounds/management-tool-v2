@@ -1172,6 +1172,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/webhooks/clerk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clerk's webhook: an updated account refreshes the user's name and email, a deleted one removes the user */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            received: true;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/search": {
         parameters: {
             query?: never;
@@ -8860,15 +8917,22 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        ActivityReferenceInput: {
+            taskId: string;
+            ticketKey: string | null;
+            title: string;
+            url: string;
+        };
         ActivityLogInput: {
             id: string;
             type: string;
-            /** @description JSON {"k": translation key, "p": params}; the frontend translates it */
+            /** @description JSON {"k": translation key, "p": params, optional "r": ticket ref stubs}; the frontend translates it */
             message: string;
             boardId: string;
             userId: string;
             /** Format: date-time */
             createdAt: string;
+            references: components["schemas"]["ActivityReferenceInput"][];
         };
         EpicProgressInput: {
             id: string;
@@ -9634,15 +9698,22 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        ActivityReference: {
+            taskId: string;
+            ticketKey: string | null;
+            title: string;
+            url: string;
+        };
         ActivityLog: {
             id: string;
             type: string;
-            /** @description JSON {"k": translation key, "p": params}; the frontend translates it */
+            /** @description JSON {"k": translation key, "p": params, optional "r": ticket ref stubs}; the frontend translates it */
             message: string;
             boardId: string;
             userId: string;
             /** Format: date-time */
             createdAt: string;
+            references: components["schemas"]["ActivityReference"][];
         };
         EpicProgress: {
             id: string;
