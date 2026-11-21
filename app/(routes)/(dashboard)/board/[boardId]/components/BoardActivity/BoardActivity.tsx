@@ -17,6 +17,32 @@ import type { ActivityLog, BoardActivityProps } from "./BoardActivity.types";
 import { TYPE_ICON } from "./BoardActivity.constants";
 import { ActivitySkeleton } from "@/components/skeletons";
 import { apiFetch } from "@/lib/apiClient";
+import { readActivityReferences } from "@/lib/api/types";
+
+function mapActivityLogs(data: unknown): ActivityLog[] {
+  if (!Array.isArray(data)) return [];
+  const logs: ActivityLog[] = [];
+  for (const row of data) {
+    if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+    const item = row as Record<string, unknown>;
+    if (
+      typeof item.id !== "string" ||
+      typeof item.type !== "string" ||
+      typeof item.message !== "string" ||
+      typeof item.createdAt !== "string"
+    ) {
+      continue;
+    }
+    logs.push({
+      id: item.id,
+      type: item.type,
+      message: item.message,
+      createdAt: item.createdAt,
+      references: readActivityReferences(item.references),
+    });
+  }
+  return logs;
+}
 
 export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
   const t = useTranslations("board");
@@ -31,8 +57,8 @@ export function BoardActivity({ boardId, open, onClose }: BoardActivityProps) {
     const controller = new AbortController();
     apiFetch(`/api/boards/${boardId}/activity`, { signal: controller.signal })
       .then((r) => r.json())
-      .then((data) => {
-        setLogs(Array.isArray(data) ? data : []);
+      .then((data: unknown) => {
+        setLogs(mapActivityLogs(data));
         setLoading(false);
       })
       .catch(() => setLoading(false));
