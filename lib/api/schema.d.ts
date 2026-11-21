@@ -8917,12 +8917,6 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        ActivityReferenceInput: {
-            taskId: string;
-            ticketKey: string | null;
-            title: string;
-            url: string;
-        };
         ActivityLogInput: {
             id: string;
             type: string;
@@ -8932,7 +8926,6 @@ export interface components {
             userId: string;
             /** Format: date-time */
             createdAt: string;
-            references?: components["schemas"]["ActivityReferenceInput"][];
         };
         EpicProgressInput: {
             id: string;
@@ -9698,12 +9691,6 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        ActivityReference: {
-            taskId: string;
-            ticketKey: string | null;
-            title: string;
-            url: string;
-        };
         ActivityLog: {
             id: string;
             type: string;
@@ -9713,7 +9700,6 @@ export interface components {
             userId: string;
             /** Format: date-time */
             createdAt: string;
-            references?: components["schemas"]["ActivityReference"][];
         };
         EpicProgress: {
             id: string;
