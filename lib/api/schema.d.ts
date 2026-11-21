@@ -8917,15 +8917,22 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        ActivityReferenceInput: {
+            taskId: string;
+            ticketKey: string | null;
+            title: string;
+            url: string;
+        };
         ActivityLogInput: {
             id: string;
             type: string;
-            /** @description JSON {"k": translation key, "p": params}; the frontend translates it */
+            /** @description JSON {"k": translation key, "p": params, optional "r": ticket ref stubs}; the frontend translates it */
             message: string;
             boardId: string;
             userId: string;
             /** Format: date-time */
             createdAt: string;
+            references: components["schemas"]["ActivityReferenceInput"][];
         };
         EpicProgressInput: {
             id: string;
@@ -9691,15 +9698,22 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        ActivityReference: {
+            taskId: string;
+            ticketKey: string | null;
+            title: string;
+            url: string;
+        };
         ActivityLog: {
             id: string;
             type: string;
-            /** @description JSON {"k": translation key, "p": params}; the frontend translates it */
+            /** @description JSON {"k": translation key, "p": params, optional "r": ticket ref stubs}; the frontend translates it */
             message: string;
             boardId: string;
             userId: string;
             /** Format: date-time */
             createdAt: string;
+            references: components["schemas"]["ActivityReference"][];
         };
         EpicProgress: {
             id: string;
