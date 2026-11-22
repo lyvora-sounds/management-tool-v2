@@ -9712,6 +9712,23 @@ export interface components {
         };
         DashboardInput: {
             userId: string;
+            userName: string | null;
+            onboarding: {
+                done: {
+                    createBoard: boolean;
+                    addList: boolean;
+                    createTicket: boolean;
+                    inviteTeammate: boolean;
+                    connectAi: boolean;
+                };
+                completedCount: number;
+                total: number;
+                /** @description Every step is done: the card says goodbye by itself */
+                isComplete: boolean;
+                /** @description The person closed the card by hand */
+                dismissed: boolean;
+                tourSeen: boolean;
+            };
             boards: components["schemas"]["BoardCardInput"][];
             totalTasks: number;
             totalPending: number;
@@ -10907,6 +10924,23 @@ export interface components {
         };
         Dashboard: {
             userId: string;
+            userName: string | null;
+            onboarding: {
+                done: {
+                    createBoard: boolean;
+                    addList: boolean;
+                    createTicket: boolean;
+                    inviteTeammate: boolean;
+                    connectAi: boolean;
+                };
+                completedCount: number;
+                total: number;
+                /** @description Every step is done: the card says goodbye by itself */
+                isComplete: boolean;
+                /** @description The person closed the card by hand */
+                dismissed: boolean;
+                tourSeen: boolean;
+            };
             boards: components["schemas"]["BoardCard"][];
             totalTasks: number;
             totalPending: number;

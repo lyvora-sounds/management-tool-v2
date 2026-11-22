@@ -1,10 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import db from "@/lib/db";
-import { getOrCreateUser } from "@/lib/getOrCreateUser";
+import { apiServerGet } from "@/lib/apiServer";
+import type { ApiDashboard } from "@/lib/api/types";
 import { CreateBoardModal } from "./components/boards/CreateBoardModal/CreateBoardModal";
-import { BoardList } from "./components/boards/BoardList/BoardList";
 import { DashboardStats } from "./components/DashboardStats/DashboardStats";
 import { UpcomingTasks } from "./components/UpcomingTasks/UpcomingTasks";
 import { RecentActivity } from "./components/RecentActivity/RecentActivity";
@@ -15,11 +14,8 @@ import { WeeklyActivity } from "./components/WeeklyActivity/WeeklyActivity";
 import { PriorityBreakdownChart } from "./components/PriorityBreakdownChart/PriorityBreakdownChart";
 import { Greeting } from "./components/Greeting/Greeting";
 import { OnboardingChecklist } from "./components/OnboardingChecklist/OnboardingChecklist";
-import { getOnboardingState } from "@/lib/onboardingState";
-import { readableBoardWhere } from "@/lib/boardAccess";
 import { AccessDeniedNotice } from "./components/AccessDeniedNotice/AccessDeniedNotice";
 import { isAccessDeniedAccess } from "@/lib/ticketShare";
-import { resolveBoardActivityReferences } from "@/lib/activityReferences";
 
 export default async function DashboardPage({
   searchParams,
@@ -30,8 +26,8 @@ export default async function DashboardPage({
   if (!userId) redirect("/sign-in");
   const { access } = await searchParams;
 
-  const user = await getOrCreateUser(userId);
-  if (!user) {
+  const read = await apiServerGet<ApiDashboard>("/v1/me/dashboard");
+  if (!read.ok) {
     const tDash = await getTranslations("dashboard");
     const tCommon = await getTranslations("common");
     return (
@@ -45,51 +41,8 @@ export default async function DashboardPage({
     );
   }
 
-  const rawBoards = await db.board.findMany({
-    where: readableBoardWhere(user.id),
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      color: true,
-      updatedAt: true,
-      userId: true,
-      list: {
-        select: {
-          _count: { select: { tasks: true } },
-          tasks: { select: { completed: true } },
-        },
-      },
-    },
-  });
-
-  const boards = rawBoards.map((b) => ({
-    id: b.id,
-    title: b.title,
-    color: b.color,
-    updatedAt: b.updatedAt,
-    isOwner: b.userId === user.id,
-    totalTasks: b.list.reduce((acc, l) => acc + l._count.tasks, 0),
-    completedTasks: b.list.reduce((acc, l) => acc + l.tasks.filter((t) => t.completed).length, 0),
-    totalLists: b.list.length,
-  }));
-
-  const boardIds = boards.map((b) => b.id);
-
-  const now = new Date();
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
-  startOfWeek.setHours(0, 0, 0, 0);
-
-  const in7Days = new Date(now);
-  in7Days.setDate(now.getDate() + 7);
-  in7Days.setHours(23, 59, 59, 999);
-
-  const last7Days = new Date(now);
-  last7Days.setDate(now.getDate() - 6);
-  last7Days.setHours(0, 0, 0, 0);
-
-  const [
+  const {
+    boards,
     totalTasks,
     totalPending,
     overdue,
@@ -97,151 +50,16 @@ export default async function DashboardPage({
     upcomingTasks,
     recentActivity,
     assignedTasks,
-    completedLast7,
-    allPendingTasks,
-  ] = await Promise.all([
-    db.task.count({
-      where: { list: { boardId: { in: boardIds } }, archived: false },
-    }),
-    db.task.count({
-      where: {
-        completed: false,
-        archived: false,
-        list: { boardId: { in: boardIds } },
-      },
-    }),
-    db.task.count({
-      where: {
-        completed: false,
-        archived: false,
-        dueDate: { lt: now },
-        list: { boardId: { in: boardIds } },
-      },
-    }),
-    db.task.count({
-      where: {
-        completed: true,
-        updatedAt: { gte: startOfWeek },
-        list: { boardId: { in: boardIds } },
-      },
-    }),
-    db.task.findMany({
-      where: {
-        completed: false,
-        archived: false,
-        dueDate: { gte: now, lte: in7Days },
-        list: { boardId: { in: boardIds } },
-      },
-      orderBy: { dueDate: "asc" },
-      select: {
-        id: true,
-        title: true,
-        completed: true,
-        dueDate: true,
-        priority: true,
-        list: {
-          select: {
-            title: true,
-            board: { select: { id: true, title: true } },
-          },
-        },
-      },
-    }),
-    db.activityLog.findMany({
-      where: { boardId: { in: boardIds } },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-      select: {
-        id: true,
-        boardId: true,
-        userId: true,
-        type: true,
-        message: true,
-        createdAt: true,
-        board: { select: { id: true, title: true } },
-        user: { select: { name: true } },
-      },
-    }),
-    db.task.findMany({
-      where: {
-        OR: [
-          { assigneeId: user.id },
-          { collaborators: { some: { userId: user.id } } },
-          { qaId: user.id },
-        ],
-        archived: false,
-        list: { boardId: { in: boardIds } },
-      },
-      orderBy: [{ completed: "asc" }, { dueDate: "asc" }],
-      select: {
-        id: true,
-        title: true,
-        completed: true,
-        priority: true,
-        dueDate: true,
-        quarter: true,
-        assigneeId: true,
-        qaId: true,
-        collaborators: { select: { userId: true } },
-        epic: { select: { id: true, title: true, color: true } },
-        _count: { select: { comments: true, attachments: true } },
-        subtasks: { select: { id: true, completed: true } },
-        list: {
-          select: {
-            id: true,
-            title: true,
-            board: {
-              select: {
-                id: true,
-                title: true,
-                list: {
-                  select: { id: true, title: true, order: true },
-                  orderBy: { order: "asc" },
-                },
-              },
-            },
-          },
-        },
-      },
-    }),
-    db.task.findMany({
-      where: {
-        completed: true,
-        completedAt: { gte: last7Days },
-        completedById: user.id,
-      },
-      select: { completedAt: true },
-    }),
-    db.task.findMany({
-      where: {
-        completed: false,
-        archived: false,
-        list: { boardId: { in: boardIds } },
-      },
-      select: { priority: true },
-    }),
-  ]);
+    priorityCounts,
+    onboarding,
+  } = read.data;
+  const user = { id: read.data.userId, name: read.data.userName };
+  const completedLast7 = read.data.completedLast7.map((at) => new Date(at));
 
-  const recentActivityRefMap = await resolveBoardActivityReferences(
-    recentActivity,
-    process.env.NEXT_PUBLIC_APP_URL ?? "",
-  );
-  const recentActivityWithRefs = recentActivity.map((log) => ({
-    ...log,
-    references: recentActivityRefMap.get(log.id) ?? [],
-  }));
-
-  const priorityCounts = allPendingTasks.reduce(
-    (acc, t) => {
-      if (t.priority === "urgent") acc.urgent++;
-      else if (t.priority === "high") acc.high++;
-      else if (t.priority === "medium") acc.medium++;
-      else if (t.priority === "low") acc.low++;
-      else acc.none++;
-      return acc;
-    },
-    { urgent: 0, high: 0, medium: 0, low: 0, none: 0 },
-  );
+  const now = new Date();
+  const last7Days = new Date(now);
+  last7Days.setDate(now.getDate() - 6);
+  last7Days.setHours(0, 0, 0, 0);
 
   // Formatear fecha en zona local (YYYY-MM-DD) sin conversión UTC
   const toLocalKey = (d: Date) =>
@@ -252,13 +70,12 @@ export default async function DashboardPage({
     const d = new Date(last7Days);
     d.setDate(last7Days.getDate() + i);
     const key = toLocalKey(d);
-    const count = completedLast7.filter((t) => t.completedAt && toLocalKey(t.completedAt) === key).length;
+    const count = completedLast7.filter((completedAt) => toLocalKey(completedAt) === key).length;
     return { date: key, count };
   });
 
   const tBoards = await getTranslations("boards");
 
-  const onboarding = await getOnboardingState(user.id);
   // Se deja de mostrar cuando el usuario la cierra y cuando ya no queda nada
   // por hacer: enseñar cinco checks verdes para siempre no ayuda a nadie.
   const showOnboarding = !onboarding.dismissed && !onboarding.isComplete;
@@ -292,7 +109,7 @@ export default async function DashboardPage({
 
       <UpcomingTasks tasks={upcomingTasks} />
 
-      <RecentActivity logs={recentActivityWithRefs} />
+      <RecentActivity logs={recentActivity} />
 
       <AssignedToMe tasks={assignedTasks} userId={user.id} />
 
