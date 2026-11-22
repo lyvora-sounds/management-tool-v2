@@ -111,7 +111,8 @@ The pages that render on the server no longer query the database. They call kiki
 
 - A 4xx is an answer the page decides on (`redirect` to sign-in, or to the access-denied screen). The API failing or being unreachable throws, so the page's error boundary shows it instead of an empty screen.
 - Unlike `apiFetch`, there is **no same-origin fallback**: a server page has no route of its own to fall back to. `NEXT_PUBLIC_API_URL` must be set wherever these pages run (production, staging, and any preview or local run that opens them).
-- Migrated: boards list, my tickets, board observability. Still reading the database directly: dashboard layout, dashboard home, board, public ticket link, MCP authorization.
+- Migrated: dashboard layout, boards list, my tickets, board, board observability. Still reading the database directly: dashboard home, public ticket link, MCP authorization.
+- A page that hands the data to components typed on the Prisma models asks with `{ dates: "keep" }` and maps it with the `…FromApi` helpers in `lib/api` (`boardFromApi`, `boardTaskFromApi`, `listsFromApi`), which also null the secrets the API never sends. Pages that only read values take the default, where the `…At` / `…Date` strings arrive as `Date`.
 
 Migrated so far (the old handler is still in `app/api` until the comparison on staging is done, then it is deleted):
 

@@ -25,6 +25,10 @@ export type Revived<T> = T extends readonly (infer U)[]
     : T;
 
 export type ApiRead<T> = { ok: true; data: Revived<T> } | { ok: false; status: number };
+/** The answer as the API sent it, dates still ISO strings: for the code that maps it with the `…FromApi` helpers. */
+export type ApiPlainRead<T> = { ok: true; data: T } | { ok: false; status: number };
+
+type GetOptions = { auth?: boolean };
 
 /**
  * GET from kiki-api on behalf of the signed-in person, from a server-rendered page. The page used to query the
@@ -34,7 +38,9 @@ export type ApiRead<T> = { ok: true; data: Revived<T> } | { ok: false; status: n
 export function createApiServerGet({ baseUrl, getToken, fetchImpl, timeoutMs = 15000 }: Options) {
   const base = baseUrl?.replace(/\/+$/, "");
 
-  return async function apiServerGet<T>(path: string, { auth: needsSession = true }: { auth?: boolean } = {}): Promise<ApiRead<T>> {
+  function apiServerGet<T>(path: string, options: GetOptions & { dates: "keep" }): Promise<ApiPlainRead<T>>;
+  function apiServerGet<T>(path: string, options?: GetOptions): Promise<ApiRead<T>>;
+  async function apiServerGet<T>(path: string, { auth: needsSession = true, dates = "revive" }: GetOptions & { dates?: "keep" | "revive" } = {}): Promise<ApiRead<T> | ApiPlainRead<T>> {
     if (!base) throw new Error("NEXT_PUBLIC_API_URL is not set: the pages read from kiki-api");
 
     const headers = new Headers({ accept: "application/json" });
@@ -47,8 +53,11 @@ export function createApiServerGet({ baseUrl, getToken, fetchImpl, timeoutMs = 1
     const response = await fetchImpl(`${base}${path}`, { headers, cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
     if (response.status >= 500) throw new Error(`kiki-api answered ${response.status} for GET ${path.split("?")[0]}`);
     if (!response.ok) return { ok: false, status: response.status };
-    return { ok: true, data: JSON.parse(await response.text(), reviveDates) as Revived<T> };
-  };
+    const text = await response.text();
+    return dates === "keep" ? { ok: true, data: JSON.parse(text) as T } : { ok: true, data: JSON.parse(text, reviveDates) as Revived<T> };
+  }
+
+  return apiServerGet;
 }
 
 export const apiServerGet = createApiServerGet({
