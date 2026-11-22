@@ -24,8 +24,8 @@ Defined in `middleware.ts`:
 
 MCP routes `/api/mcp(.*)` and the two OAuth well-known discovery endpoints are
 public to Clerk. MCP enforces bearer authentication itself. OAuth authorization
-redirects to `/dashboard/mcp-authorize`, which requires a Clerk session; its
-consent action checks current board/organization admin access. Token exchanges
+redirects to `/dashboard/mcp-authorize`, which requires a Clerk session; kiki-api
+checks current board/organization admin access when the consent is sent. Token exchanges
 require user-created or legacy predefined confidential client credentials and S256 PKCE for codes.
 See `mcp/README.md` for configuration and token lifetimes.
 

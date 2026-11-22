@@ -98,12 +98,11 @@ advertises a user-created or legacy predefined confidential client, PKCE S256, a
 `/api/mcp/oauth/authorize` validates the request and redirects to the protected
 `/dashboard/mcp-authorize` consent page. The user selects an organization or
 board they may administer. A connector opened at a scoped URL can approve only
-that organization or board. When `NEXT_PUBLIC_API_URL` is set, the consent page
+that organization or board. The consent page
 is a client component that asks kiki-api what the person may connect
 (`GET /v1/mcp/oauth/consent`) and sends the answer to `POST /v1/mcp/oauth/consent`,
 which issues the code and returns the address to send the person back to; the page
-has no database access in that case. Without it (local development) the page still
-does it itself. Consent creates a revocable external-access
+has no database access and needs `NEXT_PUBLIC_API_URL`. Consent creates a revocable external-access
 credential and a hashed, five-minute authorization code. `/api/mcp/oauth/token`
 exchanges it once for a resource-bound one-hour access token and a rotating
 refresh token. The access token works only on the resource URL it was issued

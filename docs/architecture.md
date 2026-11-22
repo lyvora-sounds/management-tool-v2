@@ -105,6 +105,15 @@ The backend is moving route by route to `kiki-api` (a separate Fastify service o
 - A **read** that the API cannot serve (unreachable, blocked by CORS, a 401, a 5xx) is answered by the route this app still has. A 404 is a real answer and is kept. A write is never repeated. Remove the fallback when the route is deleted from this app.
 - The API accepts the token only from the frontend origins listed in its `CORS_ORIGINS`.
 
+### Server-rendered pages read from the API too (KI-00057)
+
+The pages that render on the server no longer query the database. They call kiki-api with `apiServerGet` in `lib/apiServer.ts`, which sends the signed-in person's Clerk session token (`auth().getToken()`) to `NEXT_PUBLIC_API_URL` and turns the `…At` / `…Date` strings back into `Date` objects. The routes are described in kiki-api's `docs/page-reads.md`.
+
+- A 4xx is an answer the page decides on (`redirect` to sign-in, or to the access-denied screen). The API failing or being unreachable throws, so the page's error boundary shows it instead of an empty screen.
+- Unlike `apiFetch`, there is **no same-origin fallback**: a server page has no route of its own to fall back to. `NEXT_PUBLIC_API_URL` must be set wherever these pages run (production, staging, and any preview or local run that opens them).
+- Migrated: dashboard layout, boards list, my tickets, board, board observability, public ticket link (`GET /v1/shared/tasks/:token`, sent without a session). Still reading the database directly: dashboard home, MCP authorization.
+- A page that hands the data to components typed on the Prisma models asks with `{ dates: "keep" }` and maps it with the `…FromApi` helpers in `lib/api` (`boardFromApi`, `boardTaskFromApi`, `listsFromApi`), which also null the secrets the API never sends. Pages that only read values take the default, where the `…At` / `…Date` strings arrive as `Date`.
+
 Migrated so far (the old handler is still in `app/api` until the comparison on staging is done, then it is deleted):
 
 | Group | Old path (app) | kiki-api |

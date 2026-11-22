@@ -1,39 +1,28 @@
-import { auth } from "@clerk/nextjs/server";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./dashboard/components/Sidebar";
 import { Navbar } from "./dashboard/components/Navbar/Navbar";
 import { BoardsStoreInitializer } from "./dashboard/components/BoardsStoreInitializer/BoardsStoreInitializer";
 import { OnboardingGuide } from "@/components/Shared/GuidePointer";
 import { Suspense } from "react";
-import db from "@/lib/db";
-import { readableBoardWhere } from "@/lib/boardAccess";
 import { AppearanceProvider } from "@/components/Appearance/AppearanceProvider";
+import { apiServerGet } from "@/lib/apiServer";
+import { boardFromApi } from "@/lib/api/boards";
+import type { ApiWorkspace } from "@/lib/api/types";
 
 export default async function LayoutDashboard({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { userId } = await auth();
-
-  const { boards, dbUserId, appearance } = await (async () => {
-    if (!userId) return { boards: [], dbUserId: "", appearance: null };
-    const user = await db.user.findUnique({
-      where: { clerkId: userId },
-      include: { settings: { select: { appearance: true } } },
-    });
-    if (!user) return { boards: [], dbUserId: "", appearance: null };
-    const boards = await db.board.findMany({
-      where: readableBoardWhere(user.id),
-      orderBy: { createdAt: "desc" },
-      include: { organization: { select: { id: true, name: true } } },
-    });
-    return {
-      boards,
-      dbUserId: user.id,
-      appearance: user.settings?.appearance ?? null,
-    };
-  })();
+  // Nobody signed in (or no user row yet): the shell renders empty and the page decides what to do.
+  const read = await apiServerGet<ApiWorkspace>("/v1/me/workspace", { dates: "keep" });
+  const { boards, dbUserId, appearance } = read.ok
+    ? {
+        boards: read.data.boards.map((board) => ({ ...boardFromApi(board), organization: board.organization })),
+        dbUserId: read.data.userId,
+        appearance: read.data.appearance,
+      }
+    : { boards: [], dbUserId: "", appearance: null };
 
   return (
     <AppearanceProvider initial={appearance}>

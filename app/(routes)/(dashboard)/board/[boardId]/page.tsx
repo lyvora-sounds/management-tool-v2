@@ -1,14 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import db from "@/lib/db";
 import { Suspense } from "react";
 import { BoardContent } from "./components/BoardContent/BoardContent";
 import { BoardHeader } from "./components/BoardHeader/BoardHeader";
 import { BoardVisitTracker } from "./components/BoardVisitTracker/BoardVisitTracker";
 import { BoardTour } from "./components/BoardTour/BoardTour";
-import { getBoardRole, readableBoardWhere } from "@/lib/boardAccess";
-import { canEditBoard } from "@/lib/boardRoles";
 import { ACCESS_DENIED_HREF } from "@/lib/ticketShare";
+import { apiServerGet } from "@/lib/apiServer";
+import { listsFromApi } from "@/lib/api/boardView";
+import type { ApiBoardView } from "@/lib/api/types";
 
 interface BoardPageProps {
   params: Promise<{ boardId: string }>;
@@ -16,90 +15,25 @@ interface BoardPageProps {
 
 export default async function BoardPage({ params }: BoardPageProps) {
   const { boardId } = await params;
-  const { userId } = await auth();
 
-  if (!userId) redirect("/sign-in");
+  const read = await apiServerGet<ApiBoardView>(`/v1/boards/${encodeURIComponent(boardId)}/view`, { dates: "keep" });
+  if (!read.ok) redirect(read.status === 401 ? "/sign-in" : ACCESS_DENIED_HREF);
 
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  if (!user) redirect("/sign-in");
-
-  const board = await db.board.findFirst({
-    where: { id: boardId, ...readableBoardWhere(user.id) },
-    include: {
-      user: { select: { id: true, name: true, email: true } },
-      members: {
-        include: { user: { select: { id: true, name: true, email: true } } },
-      },
-      list: {
-        orderBy: { order: "asc" },
-        include: {
-          tasks: {
-            orderBy: { order: "asc" },
-            include: {
-              labels: { include: { label: true } },
-              assignee: { select: { id: true, name: true, email: true } },
-              qa: { select: { id: true, name: true, email: true } },
-              reporter: { select: { id: true, name: true, email: true } },
-              collaborators: {
-                include: {
-                  user: { select: { id: true, name: true, email: true } },
-                },
-              },
-              subtasks: { select: { completed: true } },
-              epic: { select: { id: true, title: true, color: true } },
-              customValues: { include: { customField: true } },
-              _count: { select: { comments: true, attachments: true } },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!board) redirect(ACCESS_DENIED_HREF);
-
-  const isOwner = board.userId === user.id;
-
-  // Direct membership is not the whole role: organization and team grants count too.
-  const role = await getBoardRole(user.id, boardId);
-  const canManage = role === "owner" || role === "admin";
-  const canEdit = canEditBoard(role);
-
-  // Owner + members as assignable users (deduped by id)
-  const ownerUser = { id: board.user.id, name: board.user.name, email: board.user.email };
-  const memberUsers = board.members.map((m) => ({
-    id: m.user.id,
-    name: m.user.name,
-    email: m.user.email,
-  }));
-  const seen = new Set([ownerUser.id]);
-  const boardUsers = [
-    ownerUser,
-    ...memberUsers.filter((m) => !seen.has(m.id) && seen.add(m.id)),
-  ];
-
-  const initialLinks = Array.isArray(board.links) ? (board.links as { id: string; label: string; url: string }[]) : [];
-
-  // El tour solo se plantea en un tablero que ya tiene algo que enseñar: en uno
-  // recién creado y vacío señalaría huecos.
-  const settings = await db.userSettings.findUnique({
-    where: { userId: user.id },
-    select: { tourSeenAt: true },
-  });
-  const tourSeen = Boolean(settings?.tourSeenAt) || board.list.length === 0;
+  const view = read.data;
+  const { board, canManage, canEdit, isOwner } = view;
 
   return (
     <div className="flex flex-col h-full p-3 sm:p-6 gap-4 sm:gap-6 min-w-0">
       <BoardVisitTracker boardId={board.id} />
-      <BoardTour tourSeen={tourSeen} />
-      <BoardHeader boardId={board.id} title={board.title} isOwner={isOwner} canManage={canManage} canEdit={canEdit} initialLinks={initialLinks} memberCanAssign={board.memberCanAssign} boardKey={board.key} keyLocked={board.nextTicketNumber > 1} />
+      <BoardTour tourSeen={view.tourSeen} />
+      <BoardHeader boardId={board.id} title={board.title} isOwner={isOwner} canManage={canManage} canEdit={canEdit} initialLinks={board.links ?? []} memberCanAssign={board.memberCanAssign} boardKey={board.key} keyLocked={board.nextTicketNumber > 1} />
       <Suspense fallback={null}>
         <BoardContent
-          lists={board.list}
+          lists={listsFromApi(view)}
           boardId={board.id}
           canManage={canManage}
           canEdit={canEdit}
-          boardUsers={boardUsers}
+          boardUsers={view.people}
           memberCanAssign={canEdit && board.memberCanAssign}
         />
       </Suspense>
