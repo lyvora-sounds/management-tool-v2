@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import db from "@/lib/db";
+import { apiServerGet } from "@/lib/apiServer";
+import type { ApiSharedTask } from "@/lib/api/types";
 import {
   CheckCircle2,
   Circle,
@@ -28,38 +29,10 @@ export default async function PublicTaskSharePage({ params }: Props) {
   const tPriority = await getTranslations("priority");
   const dateFmt = dateLocale(locale);
 
-  const task = await db.task.findUnique({
-    where: { shareToken: token },
-    include: {
-      list: {
-        include: {
-          board: {
-            select: { id: true, title: true, color: true },
-          },
-        },
-      },
-      labels: {
-        include: { label: true },
-      },
-      subtasks: {
-        orderBy: { order: "asc" },
-      },
-      epic: true,
-      attachments: {
-        orderBy: { createdAt: "desc" },
-      },
-      comments: {
-        orderBy: { createdAt: "asc" },
-        include: {
-          user: { select: { name: true } },
-        },
-      },
-    },
-  });
-
-  if (!task) {
-    notFound();
-  }
+  // The link is public: no session is sent, the token in the address is the whole key.
+  const read = await apiServerGet<ApiSharedTask>(`/v1/shared/tasks/${encodeURIComponent(token)}`, { auth: false });
+  if (!read.ok) notFound();
+  const task = read.data;
 
   const priorityMeta = PRIORITIES.find((p) => p.value === task.priority);
   const totalSubtasks = task.subtasks.length;
