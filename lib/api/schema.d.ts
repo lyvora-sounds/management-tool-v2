@@ -1804,6 +1804,289 @@ export interface paths {
         };
         trace?: never;
     };
+    "/v1/me/workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the app shell needs: the caller's id and appearance, and the boards they can read with their organization */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Workspace"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/boards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The boards the caller can read, with how many tickets and lists each has */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoardCard"][];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open tickets the caller is assigned to, collaborates on or reviews as QA, with the lists of each board */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MyTasks"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The home screen: totals, what is due soon, recent activity, the caller's tickets and their last week */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Dashboard"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/boards/{boardId}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A board as its screen draws it: lists with their tickets, who can be assigned, and the caller's role */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BoardView"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/shared/tasks/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The read-only view behind a ticket's public link */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SharedTask"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/boards/{boardId}/events": {
         parameters: {
             query?: never;
@@ -9151,6 +9434,420 @@ export interface components {
                 reverted: boolean;
             } | null;
         };
+        BoardCardInput: {
+            id: string;
+            title: string;
+            color: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+            isOwner: boolean;
+            totalTasks: number;
+            completedTasks: number;
+            totalLists: number;
+        };
+        WorkspaceInput: {
+            userId: string;
+            /** @description The caller's appearance preferences, normalised */
+            appearance: unknown;
+            boards: {
+                id: string;
+                title: string;
+                description: string | null;
+                color: string | null;
+                links: components["schemas"]["BoardLinkInput"][] | null;
+                memberCanAssign: boolean;
+                /** @description off, owner or member */
+                kikiMode: string;
+                kikiTriage: boolean;
+                /** @description organization or restricted */
+                accessMode: string;
+                /** @description viewer or member */
+                defaultRole: string;
+                notifyOnTaskCreated: boolean;
+                notifyOnTaskCompleted: boolean;
+                notifyOnTaskMoved: boolean;
+                /** @description The owner */
+                userId: string;
+                organizationId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                organization: {
+                    id: string;
+                    name: string;
+                } | null;
+            }[];
+        };
+        BoardViewTaskInput: {
+            id: string;
+            title: string;
+            description: string | null;
+            completed: boolean;
+            completedAt: string | null;
+            completedById: string | null;
+            /** @description urgent, high, medium or low */
+            priority: string | null;
+            startDate: string | null;
+            dueDate: string | null;
+            archived: boolean;
+            archivedAt: string | null;
+            /** @description e.g. 2026-Q4 */
+            quarter: string | null;
+            epicId: string | null;
+            order: number;
+            listId: string;
+            assigneeId: string | null;
+            qaId: string | null;
+            reporterId: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            number: number;
+            labels: {
+                taskId: string;
+                labelId: string;
+                label: components["schemas"]["LabelInput"];
+            }[];
+            assignee: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            qa: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            reporter: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            collaborators: {
+                taskId: string;
+                userId: string;
+                user: {
+                    id: string;
+                    name: string | null;
+                    email: string;
+                };
+            }[];
+            subtasks: {
+                completed: boolean;
+            }[];
+            epic: {
+                id: string;
+                title: string;
+                color: string;
+            } | null;
+            customValues: {
+                id: string;
+                taskId: string;
+                customFieldId: string;
+                value: string | null;
+                customField: {
+                    id: string;
+                    name: string;
+                    type: string;
+                    options: unknown | null;
+                    enabled: boolean;
+                    isDefault: boolean;
+                    defaultKey: string | null;
+                    order: number;
+                };
+            }[];
+            _count: {
+                comments: number;
+                attachments: number;
+            };
+        };
+        BoardViewInput: {
+            board: {
+                id: string;
+                title: string;
+                description: string | null;
+                color: string | null;
+                links: components["schemas"]["BoardLinkInput"][] | null;
+                memberCanAssign: boolean;
+                /** @description off, owner or member */
+                kikiMode: string;
+                kikiTriage: boolean;
+                /** @description organization or restricted */
+                accessMode: string;
+                /** @description viewer or member */
+                defaultRole: string;
+                notifyOnTaskCreated: boolean;
+                notifyOnTaskCompleted: boolean;
+                notifyOnTaskMoved: boolean;
+                /** @description The owner */
+                userId: string;
+                organizationId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                key: string;
+                nextTicketNumber: number;
+            };
+            /** @description The owner and the members, each once: who can be assigned */
+            people: {
+                id: string;
+                name: string | null;
+                email: string;
+            }[];
+            lists: {
+                id: string;
+                title: string;
+                order: number;
+                boardId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                tasks: components["schemas"]["BoardViewTaskInput"][];
+            }[];
+            /** @description owner, admin, member or viewer */
+            role: string;
+            isOwner: boolean;
+            canManage: boolean;
+            canEdit: boolean;
+            /** @description The tour was seen, or the board has no lists yet so there is nothing to show */
+            tourSeen: boolean;
+        };
+        MyTaskInput: {
+            id: string;
+            title: string;
+            description: string | null;
+            completed: boolean;
+            completedAt: string | null;
+            completedById: string | null;
+            /** @description urgent, high, medium or low */
+            priority: string | null;
+            startDate: string | null;
+            dueDate: string | null;
+            archived: boolean;
+            archivedAt: string | null;
+            /** @description e.g. 2026-Q4 */
+            quarter: string | null;
+            epicId: string | null;
+            order: number;
+            listId: string;
+            assigneeId: string | null;
+            qaId: string | null;
+            reporterId: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            number: number;
+            list: {
+                id: string;
+                title: string;
+                order: number;
+                boardId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                board: {
+                    id: string;
+                    title: string;
+                    color: string | null;
+                };
+            };
+            labels: {
+                taskId: string;
+                labelId: string;
+                label: components["schemas"]["LabelInput"];
+            }[];
+            subtasks: {
+                id: string;
+                title: string;
+                completed: boolean;
+            }[];
+            assignee: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            qa: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            collaborators: {
+                taskId: string;
+                userId: string;
+                user: {
+                    id: string;
+                    name: string | null;
+                    email: string;
+                };
+            }[];
+            epic: {
+                id: string;
+                title: string;
+                color: string;
+            } | null;
+            _count: {
+                comments: number;
+                attachments: number;
+            };
+        };
+        MyTasksInput: {
+            userId: string;
+            boards: {
+                id: string;
+                title: string;
+                color: string | null;
+                list: {
+                    id: string;
+                    title: string;
+                    order: number;
+                }[];
+            }[];
+            tasks: components["schemas"]["MyTaskInput"][];
+        };
+        DashboardInput: {
+            userId: string;
+            boards: components["schemas"]["BoardCardInput"][];
+            totalTasks: number;
+            totalPending: number;
+            overdue: number;
+            completedThisWeek: number;
+            upcomingTasks: {
+                id: string;
+                title: string;
+                completed: boolean;
+                dueDate: string | null;
+                priority: string | null;
+                list: {
+                    title: string;
+                    board: {
+                        id: string;
+                        title: string;
+                    };
+                };
+            }[];
+            recentActivity: {
+                id: string;
+                boardId: string;
+                userId: string;
+                type: string;
+                message: string;
+                /** Format: date-time */
+                createdAt: string;
+                board: {
+                    id: string;
+                    title: string;
+                };
+                user: {
+                    name: string | null;
+                };
+                references: {
+                    taskId: string;
+                    ticketKey: string | null;
+                    title: string;
+                    url: string;
+                }[];
+            }[];
+            assignedTasks: {
+                id: string;
+                title: string;
+                completed: boolean;
+                priority: string | null;
+                dueDate: string | null;
+                quarter: string | null;
+                assigneeId: string | null;
+                qaId: string | null;
+                collaborators: {
+                    userId: string;
+                }[];
+                epic: {
+                    id: string;
+                    title: string;
+                    color: string;
+                } | null;
+                _count: {
+                    comments: number;
+                    attachments: number;
+                };
+                subtasks: {
+                    id: string;
+                    completed: boolean;
+                }[];
+                list: {
+                    id: string;
+                    title: string;
+                    board: {
+                        id: string;
+                        title: string;
+                        list: {
+                            id: string;
+                            title: string;
+                            order: number;
+                        }[];
+                    };
+                };
+            }[];
+            /** @description When each ticket the caller completed in the last 7 days was completed */
+            completedLast7: string[];
+            priorityCounts: {
+                urgent: number;
+                high: number;
+                medium: number;
+                low: number;
+                none: number;
+            };
+        };
+        SharedTaskInput: {
+            title: string;
+            description: string | null;
+            completed: boolean;
+            priority: string | null;
+            startDate: string | null;
+            dueDate: string | null;
+            quarter: string | null;
+            list: {
+                title: string;
+                board: {
+                    title: string;
+                };
+            };
+            epic: {
+                title: string;
+                color: string;
+            } | null;
+            labels: {
+                label: {
+                    id: string;
+                    title: string;
+                    color: string;
+                };
+            }[];
+            subtasks: {
+                id: string;
+                title: string;
+                completed: boolean;
+            }[];
+            attachments: {
+                id: string;
+                filename: string;
+                url: string;
+                size: number;
+            }[];
+            comments: {
+                id: string;
+                content: string;
+                /** Format: date-time */
+                createdAt: string;
+                user: {
+                    name: string | null;
+                };
+            }[];
+        };
         BoardMemberInput: {
             id: string;
             /** @description admin, member or viewer */
@@ -9931,6 +10628,420 @@ export interface components {
                 id: string;
                 reverted: boolean;
             } | null;
+        };
+        BoardCard: {
+            id: string;
+            title: string;
+            color: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+            isOwner: boolean;
+            totalTasks: number;
+            completedTasks: number;
+            totalLists: number;
+        };
+        Workspace: {
+            userId: string;
+            /** @description The caller's appearance preferences, normalised */
+            appearance: unknown;
+            boards: {
+                id: string;
+                title: string;
+                description: string | null;
+                color: string | null;
+                links: components["schemas"]["BoardLink"][] | null;
+                memberCanAssign: boolean;
+                /** @description off, owner or member */
+                kikiMode: string;
+                kikiTriage: boolean;
+                /** @description organization or restricted */
+                accessMode: string;
+                /** @description viewer or member */
+                defaultRole: string;
+                notifyOnTaskCreated: boolean;
+                notifyOnTaskCompleted: boolean;
+                notifyOnTaskMoved: boolean;
+                /** @description The owner */
+                userId: string;
+                organizationId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                organization: {
+                    id: string;
+                    name: string;
+                } | null;
+            }[];
+        };
+        BoardViewTask: {
+            id: string;
+            title: string;
+            description: string | null;
+            completed: boolean;
+            completedAt: string | null;
+            completedById: string | null;
+            /** @description urgent, high, medium or low */
+            priority: string | null;
+            startDate: string | null;
+            dueDate: string | null;
+            archived: boolean;
+            archivedAt: string | null;
+            /** @description e.g. 2026-Q4 */
+            quarter: string | null;
+            epicId: string | null;
+            order: number;
+            listId: string;
+            assigneeId: string | null;
+            qaId: string | null;
+            reporterId: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            number: number;
+            labels: {
+                taskId: string;
+                labelId: string;
+                label: components["schemas"]["Label"];
+            }[];
+            assignee: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            qa: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            reporter: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            collaborators: {
+                taskId: string;
+                userId: string;
+                user: {
+                    id: string;
+                    name: string | null;
+                    email: string;
+                };
+            }[];
+            subtasks: {
+                completed: boolean;
+            }[];
+            epic: {
+                id: string;
+                title: string;
+                color: string;
+            } | null;
+            customValues: {
+                id: string;
+                taskId: string;
+                customFieldId: string;
+                value: string | null;
+                customField: {
+                    id: string;
+                    name: string;
+                    type: string;
+                    options: unknown | null;
+                    enabled: boolean;
+                    isDefault: boolean;
+                    defaultKey: string | null;
+                    order: number;
+                };
+            }[];
+            _count: {
+                comments: number;
+                attachments: number;
+            };
+        };
+        BoardView: {
+            board: {
+                id: string;
+                title: string;
+                description: string | null;
+                color: string | null;
+                links: components["schemas"]["BoardLink"][] | null;
+                memberCanAssign: boolean;
+                /** @description off, owner or member */
+                kikiMode: string;
+                kikiTriage: boolean;
+                /** @description organization or restricted */
+                accessMode: string;
+                /** @description viewer or member */
+                defaultRole: string;
+                notifyOnTaskCreated: boolean;
+                notifyOnTaskCompleted: boolean;
+                notifyOnTaskMoved: boolean;
+                /** @description The owner */
+                userId: string;
+                organizationId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                key: string;
+                nextTicketNumber: number;
+            };
+            /** @description The owner and the members, each once: who can be assigned */
+            people: {
+                id: string;
+                name: string | null;
+                email: string;
+            }[];
+            lists: {
+                id: string;
+                title: string;
+                order: number;
+                boardId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                tasks: components["schemas"]["BoardViewTask"][];
+            }[];
+            /** @description owner, admin, member or viewer */
+            role: string;
+            isOwner: boolean;
+            canManage: boolean;
+            canEdit: boolean;
+            /** @description The tour was seen, or the board has no lists yet so there is nothing to show */
+            tourSeen: boolean;
+        };
+        MyTask: {
+            id: string;
+            title: string;
+            description: string | null;
+            completed: boolean;
+            completedAt: string | null;
+            completedById: string | null;
+            /** @description urgent, high, medium or low */
+            priority: string | null;
+            startDate: string | null;
+            dueDate: string | null;
+            archived: boolean;
+            archivedAt: string | null;
+            /** @description e.g. 2026-Q4 */
+            quarter: string | null;
+            epicId: string | null;
+            order: number;
+            listId: string;
+            assigneeId: string | null;
+            qaId: string | null;
+            reporterId: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            number: number;
+            list: {
+                id: string;
+                title: string;
+                order: number;
+                boardId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                board: {
+                    id: string;
+                    title: string;
+                    color: string | null;
+                };
+            };
+            labels: {
+                taskId: string;
+                labelId: string;
+                label: components["schemas"]["Label"];
+            }[];
+            subtasks: {
+                id: string;
+                title: string;
+                completed: boolean;
+            }[];
+            assignee: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            qa: {
+                id: string;
+                name: string | null;
+                email: string;
+            } | null;
+            collaborators: {
+                taskId: string;
+                userId: string;
+                user: {
+                    id: string;
+                    name: string | null;
+                    email: string;
+                };
+            }[];
+            epic: {
+                id: string;
+                title: string;
+                color: string;
+            } | null;
+            _count: {
+                comments: number;
+                attachments: number;
+            };
+        };
+        MyTasks: {
+            userId: string;
+            boards: {
+                id: string;
+                title: string;
+                color: string | null;
+                list: {
+                    id: string;
+                    title: string;
+                    order: number;
+                }[];
+            }[];
+            tasks: components["schemas"]["MyTask"][];
+        };
+        Dashboard: {
+            userId: string;
+            boards: components["schemas"]["BoardCard"][];
+            totalTasks: number;
+            totalPending: number;
+            overdue: number;
+            completedThisWeek: number;
+            upcomingTasks: {
+                id: string;
+                title: string;
+                completed: boolean;
+                dueDate: string | null;
+                priority: string | null;
+                list: {
+                    title: string;
+                    board: {
+                        id: string;
+                        title: string;
+                    };
+                };
+            }[];
+            recentActivity: {
+                id: string;
+                boardId: string;
+                userId: string;
+                type: string;
+                message: string;
+                /** Format: date-time */
+                createdAt: string;
+                board: {
+                    id: string;
+                    title: string;
+                };
+                user: {
+                    name: string | null;
+                };
+                references: {
+                    taskId: string;
+                    ticketKey: string | null;
+                    title: string;
+                    url: string;
+                }[];
+            }[];
+            assignedTasks: {
+                id: string;
+                title: string;
+                completed: boolean;
+                priority: string | null;
+                dueDate: string | null;
+                quarter: string | null;
+                assigneeId: string | null;
+                qaId: string | null;
+                collaborators: {
+                    userId: string;
+                }[];
+                epic: {
+                    id: string;
+                    title: string;
+                    color: string;
+                } | null;
+                _count: {
+                    comments: number;
+                    attachments: number;
+                };
+                subtasks: {
+                    id: string;
+                    completed: boolean;
+                }[];
+                list: {
+                    id: string;
+                    title: string;
+                    board: {
+                        id: string;
+                        title: string;
+                        list: {
+                            id: string;
+                            title: string;
+                            order: number;
+                        }[];
+                    };
+                };
+            }[];
+            /** @description When each ticket the caller completed in the last 7 days was completed */
+            completedLast7: string[];
+            priorityCounts: {
+                urgent: number;
+                high: number;
+                medium: number;
+                low: number;
+                none: number;
+            };
+        };
+        SharedTask: {
+            title: string;
+            description: string | null;
+            completed: boolean;
+            priority: string | null;
+            startDate: string | null;
+            dueDate: string | null;
+            quarter: string | null;
+            list: {
+                title: string;
+                board: {
+                    title: string;
+                };
+            };
+            epic: {
+                title: string;
+                color: string;
+            } | null;
+            labels: {
+                label: {
+                    id: string;
+                    title: string;
+                    color: string;
+                };
+            }[];
+            subtasks: {
+                id: string;
+                title: string;
+                completed: boolean;
+            }[];
+            attachments: {
+                id: string;
+                filename: string;
+                url: string;
+                size: number;
+            }[];
+            comments: {
+                id: string;
+                content: string;
+                /** Format: date-time */
+                createdAt: string;
+                user: {
+                    name: string | null;
+                };
+            }[];
         };
         BoardMember: {
             id: string;
