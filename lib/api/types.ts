@@ -74,3 +74,4 @@ export type ApiWorkspace = ApiSchemas["Workspace"];
 export type ApiBoardView = ApiSchemas["BoardView"];
 export type ApiBoardViewTask = ApiSchemas["BoardViewTask"];
 export type ApiDashboard = ApiSchemas["Dashboard"];
+export type ApiSharedTask = ApiSchemas["SharedTask"];
