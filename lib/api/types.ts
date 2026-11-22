@@ -65,3 +65,8 @@ export type ApiResponse<
   Method extends HttpMethod & keyof paths[Path],
   Status extends keyof NonNullable<paths[Path][Method]>["responses"],
 > = JsonBody<NonNullable<paths[Path][Method]>["responses"][Status]>;
+
+/** What the server-rendered pages read (GET /v1/me/*, /v1/boards/:id/view). */
+export type ApiBoardCard = ApiSchemas["BoardCard"];
+export type ApiMyTasks = ApiSchemas["MyTasks"];
+export type ApiBoardPeople = ApiSchemas["BoardPeople"];

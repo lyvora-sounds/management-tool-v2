@@ -1,53 +1,14 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import db from "@/lib/db";
 import { CreateBoardModal } from "../components/boards/CreateBoardModal/CreateBoardModal";
 import { getTranslations } from "next-intl/server";
 import { BoardList } from "../components/boards/BoardList/BoardList";
-import { readableBoardWhere } from "@/lib/boardAccess";
+import { apiServerGet } from "@/lib/apiServer";
+import type { ApiBoardCard } from "@/lib/api/types";
 
 export default async function BoardsPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  if (!user) redirect("/sign-in");
-
-  const rawBoards = await db.board.findMany({
-    where: readableBoardWhere(user.id),
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      color: true,
-      updatedAt: true,
-      userId: true,
-      list: {
-        select: {
-          _count: { select: { tasks: true } },
-          tasks: { select: { completed: true } },
-        },
-      },
-    },
-  });
-
-  const boards = rawBoards.map((b) => {
-    const totalTasks = b.list.reduce((acc, l) => acc + l._count.tasks, 0);
-    const completedTasks = b.list.reduce(
-      (acc, l) => acc + l.tasks.filter((t) => t.completed).length,
-      0,
-    );
-    return {
-      id: b.id,
-      title: b.title,
-      color: b.color,
-      updatedAt: b.updatedAt,
-      isOwner: b.userId === user.id,
-      totalTasks,
-      completedTasks,
-      totalLists: b.list.length,
-    };
-  });
+  const read = await apiServerGet<ApiBoardCard[]>("/v1/me/boards");
+  if (!read.ok) redirect("/sign-in");
+  const boards = read.data;
 
   const t = await getTranslations("boards");
 
