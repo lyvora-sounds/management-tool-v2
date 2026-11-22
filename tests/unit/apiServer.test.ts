@@ -37,6 +37,12 @@ describe("apiServerGet", () => {
     expect(res.ok && res.data.list[0]!.createdAt).toEqual(new Date("2026-01-02T03:04:05Z"));
   });
 
+  it("leaves the dates as the API sent them when the page maps them itself", async () => {
+    const { get } = setup({ answer: json({ updatedAt: "2026-11-22T10:00:00.000Z" }) });
+    const res = await get<{ updatedAt: string }>("/v1/x", { dates: "keep" });
+    expect(res.ok && res.data.updatedAt).toBe("2026-11-22T10:00:00.000Z");
+  });
+
   it("hands a 4xx to the page as a status", async () => {
     expect(await setup({ answer: json({ error: "not_found" }, 404) }).get("/v1/x")).toEqual({ ok: false, status: 404 });
   });
