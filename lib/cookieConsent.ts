@@ -195,9 +195,18 @@ export function clearOptionalFunctionalStorage(
   }
 }
 
+export const CLERK_SIGN_UP_CALLBACK_SEGMENTS = [
+  "sso-callback",
+  "verify-email-address",
+  "verify-phone-number",
+  "continue",
+  "tasks",
+] as const;
+
 export function isSignUpSubRoute(pathname: string | null | undefined): boolean {
-  if (!pathname) return false;
-  return pathname.startsWith("/sign-up/") && pathname !== "/sign-up/";
+  if (!pathname || !pathname.startsWith("/sign-up/")) return false;
+  const subPath = pathname.slice("/sign-up/".length).split("/")[0];
+  return (CLERK_SIGN_UP_CALLBACK_SEGMENTS as readonly string[]).includes(subPath);
 }
 
 export interface SignUpConsentState {

@@ -232,7 +232,7 @@ export function CookieBanner() {
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t">
               <Link
                 href="/cookies"
-                onClick={() => setCustomizeOpen(false)}
+                onClick={handleCloseCustomize}
                 className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
               >
                 {t("cookiesLink", legalVars)}

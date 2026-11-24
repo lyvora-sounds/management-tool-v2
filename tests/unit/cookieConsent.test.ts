@@ -244,16 +244,20 @@ describe("cookieConsent helpers", () => {
     expect(isFunctionalStorageAllowed(storage)).toBe(true);
   });
 
-  it("identifies Clerk sign-up callback sub-routes so OAuth/verification flows are never blocked", () => {
+  it("identifies Clerk sign-up callback sub-routes via allowlist so OAuth/verification flows are never blocked while preventing bypasses", () => {
     expect(isSignUpSubRoute("/sign-up")).toBe(false);
     expect(isSignUpSubRoute("/sign-up/")).toBe(false);
     expect(isSignUpSubRoute("/sign-in")).toBe(false);
+    expect(isSignUpSubRoute("/sign-up/anything")).toBe(false);
+    expect(isSignUpSubRoute("/sign-up/bypass")).toBe(false);
     expect(isSignUpSubRoute(null)).toBe(false);
     expect(isSignUpSubRoute(undefined)).toBe(false);
 
     expect(isSignUpSubRoute("/sign-up/sso-callback")).toBe(true);
     expect(isSignUpSubRoute("/sign-up/verify-email-address")).toBe(true);
+    expect(isSignUpSubRoute("/sign-up/verify-phone-number")).toBe(true);
     expect(isSignUpSubRoute("/sign-up/continue")).toBe(true);
+    expect(isSignUpSubRoute("/sign-up/tasks")).toBe(true);
   });
 
   it("provides centralized legal identity and UAE jurisdiction defaults as a single source of truth", () => {
