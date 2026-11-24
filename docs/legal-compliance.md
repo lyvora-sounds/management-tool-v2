@@ -32,7 +32,7 @@ All legal pages (`/terms`, `/privacy`, `/cookies`), footer copyright notices (`H
 
 ### `[TO CONFIRM]` Items Required from Founder / Legal Counsel Before Production Publish
 1. `[TO CONFIRM: Legal entity form and registered UAE physical address]` (e.g., FZCO / LLC in Dubai / DIFC / ADGM — set once via `NEXT_PUBLIC_LEGAL_ENTITY_NAME`, `NEXT_PUBLIC_LEGAL_REGISTERED_ADDRESS`, and `NEXT_PUBLIC_LEGAL_GOVERNING_LAW` or `lib/legalConfig.ts` for UAE PDPL, GDPR Art. 13, Swiss nLPD, CAN-SPAM, and Terms).
-2. `[TO CONFIRM: DPO contact details, if appointed]` (currently `contact@kikiboard.xyz` is used as the single privacy contact; override via `NEXT_PUBLIC_LEGAL_DPO_CONTACT`).
+2. `[TO CONFIRM: DPO contact details, if appointed]` (currently `support@lyvorasounds.com` is used as the single privacy/support contact; override via `NEXT_PUBLIC_LEGAL_DPO_CONTACT`).
 3. `[TO CONFIRM: Production hosting provider(s) and data region(s)]` (Vercel vs. Google Cloud Run / GCP region).
 4. `[TO CONFIRM: US governing law state]` (if US law applies alongside UAE governing law, e.g., Delaware or California; override via `NEXT_PUBLIC_LEGAL_US_GOVERNING_STATE`).
 5. `[TO CONFIRM: Designated DMCA Agent Name, Postal Address, Email, Phone]` (must also be registered with the US Copyright Office to preserve DMCA safe harbor; override via `NEXT_PUBLIC_LEGAL_DMCA_AGENT`).
@@ -144,7 +144,7 @@ FOR EACH ROW EXECUTE FUNCTION prevent_legal_consent_log_mutation();
 > We've loved seeing how [Company Name] uses Kikiboard. Would you grant us written permission to feature [Company Name]'s name and official logo (and, if approved, a brief anonymized quote/case study) on kikiboard.xyz and in our marketing materials?
 >
 > - We will follow your brand guidelines and will not include any confidential project details or personal data of your team members in screenshots.
-> - You may revoke this permission at any time by emailing contact@kikiboard.xyz, and we will remove it within 10 business days.
+> - You may revoke this permission at any time by emailing support@lyvorasounds.com, and we will remove it within 10 business days.
 >
 > Please reply "Approved" if you are authorized to grant this permission on behalf of [Company Name].
 

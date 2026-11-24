@@ -263,6 +263,7 @@ describe("cookieConsent helpers", () => {
   it("provides centralized legal identity and UAE jurisdiction defaults as a single source of truth", () => {
     expect(LEGAL_CONFIG.platformName).toBe("KikiBoard");
     expect(LEGAL_CONFIG.jurisdiction).toContain("UAE");
+    expect(LEGAL_CONFIG.contactEmail).toBe("support@lyvorasounds.com");
     expect(LEGAL_DOC_VERSIONS.terms).toBe(LEGAL_CONFIG.documentVersion);
     expect(LEGAL_DOC_VERSIONS.privacy).toBe(LEGAL_CONFIG.documentVersion);
     expect(LEGAL_DOC_VERSIONS.cookies).toBe(LEGAL_CONFIG.documentVersion);

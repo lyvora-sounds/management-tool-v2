@@ -25,7 +25,7 @@ export const LEGAL_CONFIG = {
     process.env.NEXT_PUBLIC_LEGAL_WEBSITE_URL?.trim() || "kikiboard.xyz",
   contactEmail:
     process.env.NEXT_PUBLIC_LEGAL_CONTACT_EMAIL?.trim() ||
-    "contact@kikiboard.xyz",
+    "support@lyvorasounds.com",
   usGoverningState:
     process.env.NEXT_PUBLIC_LEGAL_US_GOVERNING_STATE?.trim() ||
     "[TO CONFIRM: US State, e.g., Delaware, or UAE governing law]",
