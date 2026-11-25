@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { getStatusTheme } from "@/lib/statusTheme";
 import { hierarchyRanks, type HierarchyNode } from "@/lib/hierarchyDiagram";
+import { isFunctionalStorageAllowed } from "@/lib/cookieConsent";
 
 const OPEN_KEY = "kiki.hierarchy.open";
 
@@ -91,6 +92,7 @@ export function TaskHierarchy({
   const toggle = () => {
     const next = !open;
     setOpen(next);
+    if (!isFunctionalStorageAllowed()) return;
     try {
       localStorage.setItem(OPEN_KEY, next ? "1" : "0");
     } catch {

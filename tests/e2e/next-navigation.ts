@@ -14,7 +14,7 @@ export function useRouter() {
 }
 
 export function usePathname() {
-  return "/dashboard";
+  return typeof window !== "undefined" ? window.location.pathname : "/dashboard";
 }
 
 export function useSearchParams() {

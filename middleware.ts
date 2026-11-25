@@ -8,6 +8,8 @@ const isPublicRoute = createRouteMatcher([
   "/how-it-works",
   "/stats",
   "/privacy",
+  "/terms",
+  "/cookies",
   "/share/task(.*)",
   "/api/webhooks(.*)",
   // MCP authenticates machine clients with board-scoped bearer credentials.

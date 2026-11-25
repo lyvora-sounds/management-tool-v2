@@ -1,4 +1,5 @@
 import { SignUp } from "@clerk/nextjs";
+import { SignUpConsentGate } from "./SignUpConsentGate";
 
 const appearance = {
   layout: {
@@ -43,5 +44,9 @@ const appearance = {
 };
 
 export default function SignUpPage() {
-  return <SignUp appearance={appearance} forceRedirectUrl="/dashboard" />;
+  return (
+    <SignUpConsentGate>
+      <SignUp appearance={appearance} forceRedirectUrl="/dashboard" />
+    </SignUpConsentGate>
+  );
 }
