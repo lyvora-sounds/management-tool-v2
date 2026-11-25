@@ -740,3 +740,23 @@ model CustomFieldValue {
   @@index([taskId])
   @@index([customFieldId])
 }
+
+/// Append-only legal consent & acceptance proof (UAE PDPL, EU GDPR Art. 7(1), Swiss nLPD, US CAN-SPAM/TCPA).
+/// No foreign keys on purpose so proof survives user deletion. UPDATE and DELETE are rejected by DB trigger.
+model LegalConsentLog {
+  id              String   @id @default(cuid())
+  userId          String?
+  email           String?
+  consentType     String   // "terms" | "privacy" | "marketing_email" | "cookies"
+  granted         Boolean
+  documentVersion String
+  checkboxText    String
+  source          String   // "sign_up" | "cookie_banner" | "settings" | "oauth_onboarding"
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([email, createdAt])
+  @@index([consentType, createdAt])
+}
