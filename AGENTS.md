@@ -39,6 +39,21 @@ Treat the implementation and schema as the source of truth when documentation di
 - **Never push commits straight to `main`.** Always use a feature branch and a pull request.
 - **Exception (temporary):** the Streamable HTTP MCP endpoint (`/api/mcp`, OAuth discovery/consent) is not migrated yet and still runs in this app. Token **mint/list/revoke** for scopes that already have API routes (board, organization, and full-access) belong in `kiki-api`, not as new Next.js API surfaces. When unsure, put the handler in `kiki-api`.
 
+## Preflight: sibling repositories (hard gate)
+
+Kikiboard spans three repositories:
+
+- `kiki-api` — backend HTTP routes (`/v1/...`), auth checks, Prisma migrations, and DB writes.
+- `management-tool-v2` — frontend UI, `apiFetch` wiring, locales, and client state.
+- `kiki-infra` — Terraform, Ansible, Cloud Run, DNS, and secret wiring.
+
+Before creating tickets or writing code:
+
+1. Identify every sibling repository the request touches (DB/API -> `kiki-api`, UI -> `management-tool-v2`, infra -> `kiki-infra`).
+2. Check whether every required sibling repository is attached to the active workspace.
+3. If a required sibling repository is missing (for example, `kiki-api` is missing for a task needing DB tables or HTTP endpoints), **STOP and alert the user immediately**, naming the missing repository and asking them to attach it before writing code, unless the user explicitly approves a single-repo scope.
+4. Create separate, repo-prefixed tickets (`[kiki-api]`, `[management-tool-v2]`, `[kiki-infra]`) with explicit dependency order (`kiki-api` merge/deploy -> `management-tool-v2`) instead of bundling backend DB/API work inside a frontend ticket.
+
 ## Working rules
 
 - Preserve the existing authorization model. Board ownership is `Board.userId`; it is not a `BoardMember` row. Use the helpers in `lib/boardAccess.ts` and `lib/boardRoles.ts` instead of recreating role logic.
