@@ -1,3 +1,4 @@
+import { GITHUB_RESULT_COOKIE } from "@/lib/integrations/githubResultCookie";
 import { randomBytes } from "node:crypto";
 import { Prisma } from "@/lib/generated/prisma/client";
 import db from "@/lib/db";
@@ -17,7 +18,7 @@ import {
 } from "@/lib/integrations/githubApp";
 
 const RESULT_TTL_MS = 10 * 60 * 1000;
-export const GITHUB_RESULT_COOKIE = "github_setup_result";
+export { GITHUB_RESULT_COOKIE };
 const OPEN_ATTEMPT_TTL_MS = 10 * 60 * 1000;
 const REQUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const RESULT_TOKEN_PATTERN = /^[A-Za-z0-9_-]{20,128}$/;

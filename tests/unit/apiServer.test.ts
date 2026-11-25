@@ -26,6 +26,14 @@ describe("apiServerGet", () => {
     expect(init.cache).toBe("no-store");
   });
 
+  it("sends the extra headers it is given, next to the session token", async () => {
+    const { get, fetchImpl } = setup();
+    await get("/v1/x", { headers: { "x-github-result-token": "abc" } });
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(new Headers(init.headers).get("x-github-result-token")).toBe("abc");
+    expect(new Headers(init.headers).get("authorization")).toBe("Bearer tok");
+  });
+
   it("turns the moments in the answer into Dates and leaves text that merely looks like one", async () => {
     const { get } = setup({
       answer: json({ updatedAt: "2026-11-22T10:00:00.000Z", dueDate: null, title: "2026-11-22T10:00:00.000Z", list: [{ createdAt: "2026-01-02T03:04:05Z" }] }),
