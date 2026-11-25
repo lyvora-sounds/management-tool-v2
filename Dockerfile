@@ -1,5 +1,5 @@
-# Production image for Cloud Run. Migrations are NOT run here: they are a release step against the direct
-# (unpooled) Neon URL, so the image never needs a database at build time.
+# Production image for Cloud Run. It never needs a database at build time, and it migrates nothing: kiki-api owns
+# the schema and applies it in its own release step.
 ARG NODE_VERSION=24.22.1
 
 FROM node:${NODE_VERSION}-bookworm-slim AS base
