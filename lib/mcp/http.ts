@@ -2,6 +2,26 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { authenticateExternalAccess, recordExternalAccessUse, TICKETS_READ_SCOPE } from "@/lib/externalAccess";
 import { createScopedMcpServer } from "@/lib/mcp/scopedServer";
 import { mcpResourceMetadataUrl, OAUTH_SCOPE, type McpAudience } from "@/lib/mcp/oauthConfig";
+import {
+  createRateLimiter,
+  extractClientIp,
+  rateLimitHeaders,
+  type RateLimitResult,
+} from "@/lib/rateLimit";
+
+const mcpIpLimiter = createRateLimiter({ limit: 120, windowMs: 60_000 });
+const mcpTokenLimiter = createRateLimiter({ limit: 240, windowMs: 60_000 });
+
+function tooManyRequests(result: RateLimitResult) {
+  return new Response(JSON.stringify({ error: "Too many requests" }), {
+    status: 429,
+    headers: {
+      "content-type": "application/json",
+      "cache-control": "no-store",
+      ...rateLimitHeaders(result),
+    },
+  });
+}
 
 export function mcpNotFound() {
   return new Response(JSON.stringify({ error: "Not found" }), {
@@ -35,8 +55,14 @@ function unauthorized(audience: McpAudience) {
 }
 
 export async function handleMcpPost(request: Request, audience: McpAudience = { kind: "canonical" }) {
+  const ipLimit = mcpIpLimiter.check(extractClientIp(request.headers));
+  if (!ipLimit.allowed) return tooManyRequests(ipLimit);
+
   const context = await authenticateExternalAccess(request, TICKETS_READ_SCOPE, audience);
   if (!context) return unauthorized(audience);
+
+  const tokenLimit = mcpTokenLimiter.check(context.tokenId);
+  if (!tokenLimit.allowed) return tooManyRequests(tokenLimit);
 
   const server = createScopedMcpServer(context);
   const transport = new WebStandardStreamableHTTPServerTransport({
