@@ -50,6 +50,7 @@ jobs:
           build-args: |
             NEXT_PUBLIC_APP_URL=https://staging-gcp.kikiboard.xyz
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+            NEXT_PUBLIC_API_URL=https://api-staging.kikiboard.xyz
 
       - name: Start it without any secret and call the health check
         run: |
@@ -117,6 +118,8 @@ jobs:
           build-args: |
             NEXT_PUBLIC_APP_URL=${{ vars.STAGING_APP_URL }}
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ vars.STAGING_CLERK_PUBLISHABLE_KEY }}
+            # The pages read from kiki-api with no same-origin fallback, so the image needs it. Not a secret.
+            NEXT_PUBLIC_API_URL=https://api-staging.kikiboard.xyz
 
   # Applies pending database migrations before the new image is rolled out. If it fails, nothing is deployed.
   # Idempotent, so it coexists with the migration Vercel still runs during its own build.
