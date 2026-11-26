@@ -73,7 +73,7 @@ Deletes cascade. Six links use `SetNull`: `Organization.createdById`, `ExternalA
 
 - **Dashboard** — greeting, weekly activity, assigned work, upcoming due dates, recent boards.
 - **Board** — Kanban or list; opt-in IndexedDB cache + mutation outbox (`NEXT_PUBLIC_LOCAL_FIRST=1`, `use-board-local-first`); SSE from kiki-api when `NEXT_PUBLIC_API_URL` is set; 25s polling safety net (`use-board-polling`); activity drawer. See [Local-First architecture](./local-first-architecture.md).
-- **Calendar** — tasks with due dates, read from `GET /v1/calendar` (kiki-api) through `apiFetch`; `/api/calendar` remains as the fallback.
+- **Calendar** — tasks with due dates, read from `GET /v1/calendar` (kiki-api) through `apiFetch`.
 - **My tasks** — `/dashboard/tasks`.
 - **Settings** — per-user AI credentials and custom fields.
 - **Cmd+K search** — `/api/search` over boards and tasks the user can see.
@@ -91,82 +91,33 @@ Besides Vercel, the app builds as a container for Cloud Run (`Dockerfile`, infra
 - **Deploy.** After the push, a second job rolls the image out to the staging Cloud Run service (`kikiboard`, europe-west1) with `gcloud run services update --image`, by commit SHA, then calls `/api/health` on the service URL. Only the image changes: secrets, the runtime identity and scaling stay as Terraform set them.
 - **Migrations.** None here. The `migrate` job of `kiki-api`'s `image.yml` applies them before its deploy (see its `docs/deploy.md`). This pipeline only builds, pushes and rolls out the image.
 
-## Routes served by kiki-api
+## Everything is served by kiki-api
 
-The backend is moving route by route to `kiki-api` (a separate Fastify service on Google Cloud). While it moves, the browser calls the API through one helper, `apiFetch` in `lib/apiClient.ts`:
+This app has no backend of its own. `kiki-api` (a separate Fastify service on Google Cloud) serves every route, applies the database migrations and holds the credentials; this repository is the UI, the client state and a few redirects. What is left under `app/api` is `health` (the container's liveness probe) and the two GitHub redirects (`integrations/github/setup` and `result`), which need the Clerk cookie that only lives here and only relay to the API.
 
-**New API work:** implement the handler in `kiki-api` first (`/v1/...`), open a PR there, merge and deploy, then wire this app. Do not grow `app/api` for a new feature that can live on the API. Schema changes and their migrations are made in `kiki-api` only; this repository's copy is no longer applied or kept in sync. Never push straight to `main`.
+The browser calls the API through one helper, `apiFetch` in `lib/apiClient.ts`:
 
-- `lib/apiRoutes.ts` lists the routes already served by `kiki-api`, by method and path. Everything else still goes to this app's own `/api` routes. Moving a route is one line there, plus the route in `kiki-api`.
-- A migrated route is sent to `NEXT_PUBLIC_API_URL` with the Clerk session token as `Authorization: Bearer`, and `/api/...` becomes `/v1/...`.
-- **`NEXT_PUBLIC_API_URL` unset means nothing changes**: every call is the plain same-origin fetch. Local development and Vercel previews do not need it. It is a build-time value (inlined into the browser bundle) and not a secret.
-- Clerk's SDK loads a moment after the page, so the first migrated call waits (up to 3 seconds, once per page) for it to finish loading before it asks for a token. Without that wait, the first call of a page (the notification bell asks as soon as it mounts) found no session and went to this app's own route.
-- If there is still no session token (a signed-out visitor, or Clerk never loaded), the call falls back to the same-origin route, which still exists here.
-- A **read** that the API cannot serve (unreachable, blocked by CORS, a 401, a 5xx) is answered by the route this app still has. A 404 is a real answer and is kept. A write is never repeated. Remove the fallback when the route is deleted from this app.
+**New API work:** implement the handler in `kiki-api` first (`/v1/...`), open a PR there, merge and deploy, then wire this app. Do not add handlers to `app/api`. Schema changes and their migrations are made in `kiki-api` only. Never push straight to `main`.
+
+- Components still name their calls by the older `/api/...` paths; `lib/apiRoutes.ts` maps each, by method and path, to its `/v1/...` route. A call with no route throws, so a missing line fails in development and not silently in production.
+- The call goes to `NEXT_PUBLIC_API_URL` with the Clerk session token as `Authorization: Bearer`. The variable is a build-time value (inlined into the browser bundle) and not a secret. If it is unset, `apiFetch` throws.
+- Clerk's SDK loads a moment after the page, so the first call waits (up to 3 seconds, once per page) for it to finish loading before it asks for a token. With no session (a signed-out visitor behind an invitation link, or Clerk never loaded) the call goes without a token and the API answers 401 for whatever needs one.
+- There is no retry and no fallback: a failed read or write is answered as the API answered it, and a write is never repeated.
 - The API accepts the token only from the frontend origins listed in its `CORS_ORIGINS`.
+- The MCP endpoint and its OAuth server are kiki-api's too, forwarded under this app's public address by `next.config.ts` (`lib/mcpApiRewrites.ts`).
 
 ### Server-rendered pages read from the API too (KI-00057)
 
 The pages that render on the server no longer query the database. They call kiki-api with `apiServerGet` in `lib/apiServer.ts`, which sends the signed-in person's Clerk session token (`auth().getToken()`) to `NEXT_PUBLIC_API_URL` and turns the `…At` / `…Date` strings back into `Date` objects. The routes are described in kiki-api's `docs/page-reads.md`.
 
 - A 4xx is an answer the page decides on (`redirect` to sign-in, or to the access-denied screen). The API failing or being unreachable throws, so the page's error boundary shows it instead of an empty screen.
-- Unlike `apiFetch`, there is **no same-origin fallback**: a server page has no route of its own to fall back to. `NEXT_PUBLIC_API_URL` must be set wherever these pages run (production, staging, and any preview or local run that opens them).
+- `NEXT_PUBLIC_API_URL` must be set wherever these pages run (production, staging, and any preview or local run that opens them): there is no other backend to fall back to.
 - Every server page reads from the API: dashboard layout and home, boards list, my tickets, board, board observability, organizations (the GitHub setup result, `GET /v1/integrations/github/result` with the token in the `x-github-result-token` header, which does not consume it), MCP authorization, and the public ticket link (`GET /v1/shared/tasks/:token`, sent without a session). None of them imports the database.
 - A page that hands the data to components typed on the Prisma models asks with `{ dates: "keep" }` and maps it with the `…FromApi` helpers in `lib/api` (`boardFromApi`, `boardTaskFromApi`, `listsFromApi`), which also null the secrets the API never sends. Pages that only read values take the default, where the `…At` / `…Date` strings arrive as `Date`.
 
-Migrated so far (the old handler is still in `app/api` until the comparison on staging is done, then it is deleted):
+The API answers errors as `{ error: code, message }`. A screen that shows the error to the user reads `message` first and falls back to `error` (`CreateBoardStepper`, `OrganizationsClient`).
 
-| Group | Old path (app) | kiki-api |
-|---|---|---|
-| Labels | `GET`/`POST /api/labels/[boardId]` | `GET`/`POST /v1/labels/:boardId` |
-| | `PATCH`/`DELETE /api/labels/label/[labelId]` | `PATCH`/`DELETE /v1/labels/:labelId` |
-| Lists | `POST /api/lists/createList` | `POST /v1/lists` |
-| | `PATCH /api/lists/updateOrder` | `PATCH /v1/lists/order` |
-| | `PATCH /api/lists/updateList/[listId]` | `PATCH /v1/lists/:listId` |
-| | `DELETE /api/lists/deleteList/[listId]` | `DELETE /v1/lists/:listId` |
-| Notifications | `GET`/`PATCH /api/notifications`, `PATCH /api/notifications/[id]` | same names under `/v1` |
-| Search | `GET /api/search` | `GET /v1/search` |
-| Boards | `GET /api/boards/getBoards`, `POST /api/boards/createBoard` | `GET`, `POST /v1/boards` |
-| | `PATCH /api/boards/updateBoard/[boardId]`, `DELETE /api/boards/deleteBoard/[boardId]` | `PATCH`, `DELETE /v1/boards/:boardId` |
-| | `GET /api/boards/[boardId]/activity` | `GET /v1/boards/:boardId/activity` |
-| | `GET`, `PUT /api/boards/[boardId]/links` | same under `/v1` |
-| | `PATCH /api/boards/[boardId]/permissions`, `PATCH /api/boards/[boardId]/organization` | same under `/v1` |
-| | `GET`, `PATCH /api/boards/[boardId]/access`, `GET`, `POST`, `PATCH /api/boards/[boardId]/archive` | same under `/v1` |
-| | `GET`, `POST`, `PATCH`, `DELETE /api/boards/[boardId]/epics`, `GET`, `PATCH /api/boards/[boardId]/integrations` | same under `/v1` |
-| | `GET /api/boards/[boardId]/invitations` (people and pending invitations), `PATCH`, `DELETE /api/boards/[boardId]/members/[memberId]` | `GET /v1/boards/:boardId/members`, `PATCH`, `DELETE /v1/boards/:boardId/members/:memberId` |
-| | `POST /api/boards/[boardId]/invitations`, `DELETE /api/boards/[boardId]/invitations/[invitationId]` | same under `/v1` |
-| | `GET /api/invite/[token]` (public), `POST /api/invite/[token]` | `GET /v1/invitations/:token`, `POST /v1/invitations/:token/accept` |
-| | `GET`, `POST`, `DELETE` `.../external-access` of a board and of an organization | same under `/v1` |
-| | `GET`, `POST`, `DELETE /api/settings/mcp/tokens` (list/create full-access / revoke own) | same under `/v1` |
-| | `GET`, `POST /api/settings/mcp/history` (changes of an organization or board, one change, undo), `GET`, `POST`, `DELETE /api/settings/mcp/oauth-clients` (Claude and ChatGPT clients) | same under `/v1` |
-| Organizations | `GET`, `POST /api/organizations`, `GET`, `POST`, `PATCH`, `DELETE /api/organizations/[organizationId]/members`, `GET .../available-members` | same under `/v1` |
-| | `GET`, `POST .../teams`, `POST`, `DELETE .../teams/[teamId]/members` and `.../teams/[teamId]/boards` | same under `/v1` |
-| Tickets | `PATCH /api/tasks/updateTask/[taskId]`, `DELETE /api/tasks/deleteTask/[taskId]` | `PATCH`, `DELETE /v1/tasks/:taskId` |
-| | `PATCH /api/tasks/updateOrder`, `GET /api/boards/[boardId]/tasks` | `PATCH /v1/tasks/order`, `GET /v1/boards/:boardId/tasks` |
-| | `POST /api/tasks/[taskId]/labels`, `.../assignee`, `.../qa`, `.../collaborators` | same under `/v1` |
-| | `GET`, `POST .../subtasks`, `PATCH`, `DELETE .../subtasks/[subtaskId]` | same under `/v1` |
-| | `GET`, `PATCH .../custom-values`, `GET`, `POST`, `DELETE .../share` | same under `/v1` |
-| | `GET .../comments`, `DELETE .../comments/[commentId]` | same under `/v1` |
-| | `POST /api/tasks/createTask`, `POST /api/boards/[boardId]/batchTasks` | `POST /v1/tasks`, `POST /v1/boards/:boardId/tasks/batch` |
-| | `POST .../comments`, `POST .../agent-apply`, `POST .../agent-undo` | same under `/v1` |
-| | `GET`, `POST .../attachments`, `GET .../attachments/[attachmentId]/download`, `DELETE .../attachments/[attachmentId]` | same under `/v1` |
-| Onboarding | `PATCH /api/onboarding` | `PATCH /v1/onboarding` |
-
-Batch 3 (tickets) is entirely served by `kiki-api` now.
-
-An attachment is read through the API, so it cannot be a plain link: another origin has no session cookie. `TaskAttachments` asks for the file with the session token, then opens it in a tab or saves it (`lib/openAttachment.ts`). Only plain images, PDFs and text open; anything else is saved, whatever type the server claims, so an uploaded page can never run on this origin. Uploads are limited to 25 MB (413).
-
-The GitHub routes under an organization (`/api/organizations/[organizationId]/github/...`) are not migrated yet: they move together with the GitHub setup callbacks, since they share the same libraries and secrets.
-
-A route marked `public` in `lib/apiRoutes.ts` (today only the page behind an invitation link) goes to the API even when nobody is signed in, without a token. That is what lets the old handler be deleted without breaking a signed-out visitor.
-
-A write is never repeated: if the API fails, the action fails and the user sees the screen's own error.
-
-The API answers errors as `{ error: code, message }`; the app's own routes sent `{ error: text }`. A screen that shows the error to the user reads `message` first and falls back to `error` (`CreateBoardStepper`, `OrganizationsClient`).
-
-The API does not send the Slack and Discord webhook URLs in a board, so `boardFromApi` (`lib/api/boards.ts`) sets them to null. Types such as `ApiBoardLink` come from the contract, not from an old route file, so deleting the old handlers later does not break the build.
-
-**Do not delete the old handlers in `app/api` yet.** Production (`main`) serves these routes from this app, and the Vercel variable `NEXT_PUBLIC_API_URL` exists only for the `dev` branch. The next promotion of `dev` to `main` would bring `apiFetch` to production without it, and production would call its own routes. Until the production API exists (ticket "production environment"), the old handlers stay, and so does the fallback. Previews of other branches and local development also rely on them when the variable is unset.
+The API does not send the Slack and Discord webhook URLs in a board, so `boardFromApi` (`lib/api/boards.ts`) sets them to null.
 
 ### The API contract
 

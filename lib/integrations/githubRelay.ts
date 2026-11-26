@@ -1,6 +1,6 @@
-import { GITHUB_SETUP_OUTCOMES, type GithubSetupOutcome } from "@/lib/integrations/githubConnection";
+import { GITHUB_SETUP_OUTCOMES, type GithubSetupOutcome } from "@/lib/integrations/githubResultCookie";
 
-/** Where kiki-api lives, or null while this app still does GitHub's setup itself (local development, old previews). */
+/** Where kiki-api lives, or null when `NEXT_PUBLIC_API_URL` is not set. */
 export function githubApiBase(env: { [key: string]: string | undefined } = process.env): string | null {
   const raw = env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, "") ?? "";
   return raw || null;
