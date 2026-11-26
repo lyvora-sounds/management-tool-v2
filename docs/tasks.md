@@ -8,7 +8,7 @@ A task lives on a list. Members with board access can create, edit, move, commen
 
 `POST /api/tasks/createTask` `{ title, listId }`
 
-1. List must exist and the caller must `hasBoardAccess` on its board.
+1. List must exist and the caller must have access to its board (`hasBoardAccess`, kiki-api `src/lib/boardAccess.ts`).
 2. `order = lastTask.order + 1` (or 0).
 3. Activity `task_created`.
 
@@ -20,11 +20,11 @@ Bulk (AI brain dump, MCP): `POST /api/boards/[boardId]/batchTasks` creates many 
 
 Writable fields: title, description, completed, startDate, dueDate, priority, epicId, quarter, archived, assigneeId, qaId, listId.
 
-This handler does **not** re-check `memberCanAssign` when `assigneeId` / `qaId` are sent here. The dedicated assign/QA routes do.
+This route (`PATCH /v1/tasks/:taskId`) does **not** re-check `memberCanAssign` when `assigneeId` / `qaId` are sent here. The dedicated assign/QA routes do.
 
 **Done-list shortcut:** if the card is moved to a list whose title matches `isDoneList` (`done` / `hecho` / `completad` / `finaliz`) and `completed` was not sent, the API sets `completed`, `completedAt`, and `completedById`. Moving out of a done list reopens it.
 
-Activity types from this handler: `task_moved`, `task_completed` / `task_reopened`, `task_renamed`. Completing also calls `sendBoardWebhookNotification({ eventType: "task_completed" })`.
+Activity types from this route: `task_moved`, `task_completed` / `task_reopened`, `task_renamed`. Completing also calls `sendBoardWebhookNotification({ eventType: "task_completed" })`.
 
 ## Reorder (Kanban)
 

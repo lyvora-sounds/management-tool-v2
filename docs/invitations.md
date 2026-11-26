@@ -26,7 +26,7 @@ Batch-add of people who already have accounts: `POST /api/organizations/[organiz
 2. Reject if that user is already a member, is the caller, or already has a **pending** invite on this board.
 3. Insert `Invitation { email, token (cuid), status: "pending", expiresAt: now+7d }`.
 4. Resend sends HTML mail from `no-reply@kikiboard.xyz` with `{APP_URL}/invite/{token}`.
-5. If Resend fails, the handler returns 500 (“invitation created but email could not be sent”). The row may already exist — treat as a retry case.
+5. If Resend fails, the API route (`src/routes/invitations.ts`) returns 500 (“invitation created but email could not be sent”). The row may already exist — treat as a retry case.
 
 `GET` on the same route lists owner, members, and (for managers) pending invitations.
 

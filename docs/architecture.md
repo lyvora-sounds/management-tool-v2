@@ -1,6 +1,6 @@
 # Architecture
 
-Kikiboard is a Next.js 16 App Router app. The browser talks to Route Handlers under `app/api`. Those handlers resolve the Clerk user to a Neon `User`, check board access, then mutate Prisma models. Outbound calls (email, chat webhooks, calendar, LLM providers) happen after the write.
+Kikiboard is two repositories. This one is the Next.js 16 App Router frontend (UI, client state, Clerk sign-in). `kiki-api` is the backend, a Fastify service on Cloud Run: the browser calls it directly with the Clerk session token, it resolves the Clerk user to a Neon `User`, checks board access, mutates Prisma models and then makes the outbound calls (email, chat webhooks, LLM providers). This app has no database and no backend routes of its own.
 
 ![Kikiboard system](./diagrams/architecture.svg)
 
@@ -10,10 +10,10 @@ Kikiboard is a Next.js 16 App Router app. The browser talks to Route Handlers un
 |---|---|
 | UI | Next.js 16 App Router, Tailwind v4, shadcn/ui, Zustand, dnd-kit, Tiptap |
 | Auth | Clerk (`clerkMiddleware` + `auth.protect`) |
-| Data | Prisma 7 → PostgreSQL on Neon |
-| Files | Cloudflare R2 (private bucket via `lib/blobStore.ts`) |
-| Email | Resend |
-| Deploy | Vercel |
+| Backend | `kiki-api` (Fastify, Prisma 7 → PostgreSQL on Neon), Cloud Run |
+| Files | Cloudflare R2 (private bucket, behind kiki-api) |
+| Email | Resend (from kiki-api) |
+| Deploy | Vercel (production) and a Cloud Run container (staging, Terraform in `kiki-infra`) |
 | Runtime | Node.js 24.22.1 (see below) |
 
 ## Node.js runtime
@@ -22,7 +22,7 @@ Production and CI must run a binary that includes the 21 Oct 2026 Node.js securi
 
 How this repo pins it:
 
-- `.node-version` is `24.22.1`. GitHub Actions reads that file in `ci.yml`, `docker.yml`, and `image.yml`.
+- `.node-version` is `24.22.1`. GitHub Actions reads that file in `ci.yml` and `image.yml`.
 - `package.json` `engines.node` is `24.x` so Vercel matches the project setting (`24.x`) and cannot stay on Node 20. Vercel rolls 24.x patches itself; do not pin a patch version there.
 - `scripts/check-node-patch.mjs` fails the workflow if the installed binary is below those floors.
 - Rebase feature branches onto `main` before merge so they do not replace `node-version-file` with a floating `node-version`.
@@ -31,13 +31,13 @@ A Vercel project still on Node 20 is exposed even with these files. Set the proj
 
 ## Request path
 
-Almost every mutating API follows the same sequence.
+Almost every mutating API follows the same sequence, in `kiki-api`.
 
 ![Typical authenticated API request](./diagrams/request-path.svg)
 
-1. **Clerk session.** `middleware.ts` protects everything except the public matcher (`/`, `/sign-in`, `/sign-up`, `/functions`, `/stats`, `/privacy`, `/terms`, `/cookies`, `/share/task`, the MCP paths, GitHub App setup callback).
-2. **App user.** Handlers call `auth()`, then `db.user.findUnique({ clerkId })` or `getOrCreateUser`.
-3. **Board ACL.** `hasBoardAccess` (owner **or** `BoardMember`) or `getBoardRole` for finer checks. Failed access is usually **404**, not 403, so callers cannot probe board ids.
+1. **Clerk session.** In this app, `middleware.ts` protects every page except the public matcher (`/`, `/sign-in`, `/sign-up`, `/functions`, `/stats`, `/privacy`, `/terms`, `/cookies`, `/share/task`, the MCP paths, GitHub App setup callback).
+2. **App user.** The API verifies the Clerk token, then looks up the `User` by `clerkId` or creates it (`src/lib/getOrCreateUser.ts`).
+3. **Board ACL.** `readableBoardWhere` / `hasBoardAccess` (owner **or** `BoardMember`) or `getBoardRole` for finer checks (`src/lib/boardAccess.ts`). Failed access is usually **404**, not 403, so callers cannot probe board ids.
 4. **Write + side effects.** Prisma mutation, then `createActivity`, `notification.create`, and (on complete) Slack/Discord.
 
 ## Data model
@@ -55,7 +55,7 @@ A task belongs to exactly one `List` on one `Board`. People on a task:
 
 ### Tables
 
-`prisma/schema.prisma` is the source of truth. The map names every model. The three diagrams under it draw the foreign keys: the arrowhead sits on the referenced row.
+`prisma/schema.prisma` in `kiki-api` is the source of truth. The map names every model. The three diagrams under it draw the foreign keys: the arrowhead sits on the referenced row.
 
 ![Postgres tables by domain](./diagrams/db-schema-map.svg)
 
@@ -75,17 +75,17 @@ Deletes cascade. Six links use `SetNull`: `Organization.createdById`, `ExternalA
 - **Board** — Kanban or list; opt-in IndexedDB cache + mutation outbox (`NEXT_PUBLIC_LOCAL_FIRST=1`, `use-board-local-first`); SSE from kiki-api when `NEXT_PUBLIC_API_URL` is set; 25s polling safety net (`use-board-polling`); activity drawer. See [Local-First architecture](./local-first-architecture.md).
 - **Calendar** — tasks with due dates, read from `GET /v1/calendar` (kiki-api) through `apiFetch`.
 - **My tasks** — `/dashboard/tasks`.
-- **Settings** — per-user AI credentials and custom fields.
-- **Cmd+K search** — `/api/search` over boards and tasks the user can see.
+- **Settings** — per-user AI credentials, security (MFA) and custom fields.
+- **Cmd+K search** — `GET /v1/search` over boards and tasks the user can see.
 
 ## Container image
 
 Besides Vercel, the app builds as a container for Cloud Run (`Dockerfile`, infrastructure in the `kiki-infra` repo).
 
 - **Standalone output.** The image build sets `BUILD_STANDALONE=1`, which turns on `output: "standalone"` in `next.config.ts`. Vercel builds do not set it and are unchanged.
-- **No secrets at build.** `next build` must succeed with none of the runtime secrets. Anything that needs a key at import time breaks that (the Resend client used to; it is now created on first use in `lib/resend.ts`). Only the two `NEXT_PUBLIC_*` values are build arguments, because Next inlines them into the browser bundle: `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`. Neither is secret.
+- **No secrets at all.** The app holds no credential besides Clerk's own keys. Only the `NEXT_PUBLIC_*` values are build arguments, because Next inlines them into the browser bundle: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `NEXT_PUBLIC_API_URL` (without the last one the server pages and `apiFetch` fail). None is secret. `containerConfig.test.ts` fails if the Dockerfile or `image.yml` stop passing them.
 - **Migrations are not in the image, nor in this repository's pipeline.** `kiki-api` owns the schema and applies it in its own release step; this app never migrates.
-- **Health check.** `GET /api/health` returns `{"status":"ok"}` without a session and without touching the database. It is excluded from the Clerk middleware matcher in `middleware.ts` so a Clerk outage or a development-instance handshake redirect cannot make the platform restart a healthy container.
+- **Health check.** `GET /api/health` returns `{"status":"ok"}` without a session and without calling the API. It is excluded from the Clerk middleware matcher in `middleware.ts` so a Clerk outage or a development-instance handshake redirect cannot make the platform restart a healthy container.
 - **CI.** `.github/workflows/image.yml` builds the image on pull requests that touch it and starts it with no secrets, calling the health check.
 - **Registry.** On a push to `dev` the same workflow pushes the image to Artifact Registry as `<sha>` and `dev`, authenticating with GitHub OIDC as the `kikiboard-image-push` identity from `kiki-infra` (no stored keys; only `dev` can use it). It needs the repository variables `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_IMAGE_PUSH_SERVICE_ACCOUNT`, `STAGING_APP_URL` and `STAGING_CLERK_PUBLISHABLE_KEY`, and is skipped until they exist.
 - **Deploy.** After the push, a second job rolls the image out to the staging Cloud Run service (`kikiboard`, europe-west1) with `gcloud run services update --image`, by commit SHA, then calls `/api/health` on the service URL. Only the image changes: secrets, the runtime identity and scaling stay as Terraform set them.

@@ -12,7 +12,7 @@ Investigation of whether Kikiboard should adopt a Local-First (offline-capable, 
 
 | Concern | Today |
 |---|---|
-| Board first paint | Next.js RSC loads the full board graph from Prisma on the server (`board/[boardId]/page.tsx`) |
+| Board first paint | Next.js RSC loads the full board graph from kiki-api on the server (`GET /v1/boards/:boardId/view`, `board/[boardId]/page.tsx`) |
 | Client state | Zustand (`useBoardStore`) holds lists/tasks **in memory only** after hydrate |
 | Cross-user freshness | `useBoardPolling` every **25s** + on tab focus (`hooks/use-board-polling.ts`) |
 | Mutations | `apiFetch` → `kiki-api` `/v1/...` (or app `/api` fallback); some DnD paths update Zustand before the network returns |
@@ -161,7 +161,7 @@ At least two bidirectional / realtime strategies were evaluated. Writes that tou
 | **Partial sync / torn board** | Wrong order, missing tasks | Transactional apply of delta batches; snapshot epoch per board; full resync if checksum fails |
 | **Storage quota / eviction** | Silent data loss of outbox | Persist outbox with retry budget; warn when IndexedDB fails; do not treat local DB as backup of record |
 | **Security of client replica** | Device theft, shared computer | Same as today for SSR HTML in memory, but durable: clear DB on sign-out; no secrets in IndexedDB; attachments stay token-gated downloads |
-| **Migration complexity during `app/api` → `kiki-api`** | Dual paths break sync | Gate POC on routes already on `apiFetch` + EventBus; do not invent a third write path |
+| **Two write paths** (historical, now closed: `app/api` was removed) | Dual paths break sync | Gate POC on routes already on `apiFetch` + EventBus; do not invent a third write path |
 | **SSR vs SPA hydrate mismatch** | Flicker / wrong first paint | POC can keep RSC for first paint, then hydrate local DB; or mark board client-shell only after cache warm |
 | **ISO / audit expectations** | Undocumented client behavior | Document that local DB is a cache; server logs remain authoritative; outbox never skips `createActivity` |
 | **Vendor lock-in** | Rewrite later | Prefer Strategy A with our EventBus for POC; evaluate PowerSync only if offline writes become a hard product requirement |
@@ -172,7 +172,7 @@ At least two bidirectional / realtime strategies were evaluated. Writes that tou
 
 | Dimension | Estimate |
 |---|---|
-| **UX** | Board switch and DnD already feel fast for the actor; biggest win is **collaborator freshness** (sub-second vs 25s) and **revisit latency** (warm IndexedDB vs full RSC + Prisma). Offline edit is a secondary win for mobile/flaky networks. |
+| **UX** | Board switch and DnD already feel fast for the actor; biggest win is **collaborator freshness** (sub-second vs 25s) and **revisit latency** (warm IndexedDB vs full RSC + API read). Offline edit is a secondary win for mobile/flaky networks. |
 | **Performance** | Local reads: ~0–5 ms for in-memory Zustand today; IndexedDB ~1–20 ms. Network eliminated on warm navigations. Bundle + WASM cost only if SQLite path chosen. |
 | **Dev effort** | Strategy A POC: **~1–2 engineer-weeks**. Strategy B productization: **multi-sprint** (ACL sync rules, conflict UX, migration of board store, test matrix). |
 | **Ops** | Strategy A: WebSocket fan-out + Redis/PubSub for multi-instance Cloud Run. Strategy B: sync service + monitoring of lag/conflicts. |

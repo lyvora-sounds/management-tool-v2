@@ -1,5 +1,7 @@
 # ISO/IEC 27001 Compliance & Certification Project Plan
 
+> **Code pointers (KI-00059).** Since the final release this repository is only the frontend: the handlers under `app/api/**` and the libraries `lib/db`, `lib/crypto`, `lib/boardAccess`, `lib/boardRoles`, `lib/externalAccess`, `lib/blobStore`, `lib/mfa`, `lib/createActivity`, `lib/ai/*` and `lib/mcp/*` named below were moved to **`kiki-api`** (`src/routes/*`, `src/lib/*`, `prisma/schema.prisma`) and no longer exist here. The claims and findings are kept as written and were **not re-verified** against the new location; check them there before relying on them.
+
 > **Scope**: Technical Gap Analysis, Feature-by-Feature Audit, Control Implementation Roadmap, and Project Plan for Kikiboard (`management-tool-v2`) to achieve ISO/IEC 27001:2022 (ISMS) and ISO/IEC 27018 / 27701 (Cloud Data Privacy) certification readiness.
 
 ---
@@ -32,7 +34,7 @@ This document outlines:
 | **Multi-Tenant Isolation** | Database rows are strictly partitioned by `userId` and `boardId` in PostgreSQL schema. | A.8.22, A.8.26 | ✅ Adequate |
 | **Public Link Revocation** | Public task links use high-entropy UUIDs (`shareToken`) and can be explicitly revoked via `DELETE /api/tasks/[taskId]/share`. | A.8.20 | ✅ Adequate |
 | **File Storage Isolation** | File attachments utilize Vercel Blob configured with private access. | A.8.23 | ✅ Adequate |
-| **Prisma Migration Safety** | GitHub Actions verifies that `schema.prisma` matches applied migrations before deployment. | A.8.31, A.8.32 | ✅ Strong |
+| **Prisma Migration Safety** | kiki-api's `Migrations` workflow verifies that `schema.prisma` matches the migrations on an empty database, and its `migrate` job applies them before each deploy. | A.8.31, A.8.32 | ✅ Strong |
 
 ---
 

@@ -14,16 +14,16 @@
   <rect x="56" y="131" width="34" height="34" rx="4" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
   <text x="73" y="153" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#D3A05B">01</text>
   <text x="56" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" fill="#13233C">Browser</text>
-  <text x="56" y="226" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">fetch() from a client</text>
-  <text x="56" y="246" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">component or a</text>
-  <text x="56" y="266" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Server Component.</text>
+  <text x="56" y="226" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">apiFetch() with the</text>
+  <text x="56" y="246" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Clerk token, or a</text>
+  <text x="56" y="266" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">server page read.</text>
 
   <rect x="316" y="131" width="34" height="34" rx="4" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
   <text x="333" y="153" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#D3A05B">02</text>
   <text x="316" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" fill="#13233C">Clerk session</text>
-  <text x="316" y="226" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">auth.protect() unless</text>
-  <text x="316" y="246" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">the path is in the</text>
-  <text x="316" y="266" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">public matcher.</text>
+  <text x="316" y="226" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">kiki-api verifies the</text>
+  <text x="316" y="246" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">token; pages use</text>
+  <text x="316" y="266" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">auth.protect().</text>
 
   <rect x="576" y="131" width="34" height="34" rx="4" fill="#FFFFFF" stroke="#DCDCDC" stroke-width="1"/>
   <text x="593" y="153" text-anchor="middle" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" fill="#D3A05B">03</text>

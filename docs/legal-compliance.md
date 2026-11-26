@@ -1,5 +1,7 @@
 # Legal Compliance, Privacy & Audit Guide (UAE / USA / EU / Switzerland)
 
+> **Code pointers (KI-00059).** Since the final release this repository is only the frontend: the handlers under `app/api/**` and the libraries `lib/db`, `lib/crypto`, `lib/boardAccess`, `lib/boardRoles`, `lib/externalAccess`, `lib/blobStore`, `lib/mfa`, `lib/createActivity`, `lib/ai/*` and `lib/mcp/*` named below were moved to **`kiki-api`** (`src/routes/*`, `src/lib/*`, `prisma/schema.prisma`) and no longer exist here. The claims and findings are kept as written and were **not re-verified** against the new location; check them there before relying on them.
+
 This document is the repo-grounded legal compliance reference for KikiBoard (`kikiboard.xyz`, operated in the **United Arab Emirates (UAE)**). Every inventory row below was verified directly against `package.json`, `.env.example`, `prisma/schema.prisma`, `middleware.ts`, `app/`, `components/`, and `lib/`.
 
 Jurisdictions covered:
@@ -60,7 +62,7 @@ All legal pages (`/terms`, `/privacy`, `/cookies`), footer copyright notices (`H
 
 ## 5. Consent & Acceptance Log Design (Backend Spec for `kiki-api`)
 
-Per `AGENTS.md`, **new HTTP API endpoints must be implemented in `kiki-api` first (`/v1/...`)**, and the Prisma schema + migration must be applied in both `kiki-api` and `management-tool-v2`.
+Per `AGENTS.md`, **new HTTP API endpoints must be implemented in `kiki-api` first (`/v1/...`)**, and the Prisma schema and its migrations live only in `kiki-api`, which applies them before each deploy.
 
 ### Prisma Model (`prisma/schema.prisma`)
 ```prisma

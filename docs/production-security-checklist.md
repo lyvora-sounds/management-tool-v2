@@ -1,5 +1,7 @@
 # Production security review checklist
 
+> **Code pointers (KI-00059).** Since the final release this repository is only the frontend: the handlers under `app/api/**` and the libraries `lib/db`, `lib/crypto`, `lib/boardAccess`, `lib/boardRoles`, `lib/externalAccess`, `lib/blobStore`, `lib/mfa`, `lib/createActivity`, `lib/ai/*` and `lib/mcp/*` named below were moved to **`kiki-api`** (`src/routes/*`, `src/lib/*`, `prisma/schema.prisma`) and no longer exist here. The claims and findings are kept as written and were **not re-verified** against the new location; check them there before relying on them.
+
 Source: [Mark Ajzenstadt (@mardehaym), 15 Oct 2026](https://x.com/mardehaym/status/2110705357492203564).
 
 The post is a production checklist for an app before it takes a paying customer. This document extracts the **security, privacy, and access-control measures** so they can be reviewed against Kikiboard, and it starts with **observability**: what is running, where it lives, what it costs, and what it is doing right now. That comes before the security rows. A control you cannot find, a bill you cannot attribute, and a failure you only notice tomorrow are the same gap.

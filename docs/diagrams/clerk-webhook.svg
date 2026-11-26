@@ -21,7 +21,7 @@
   <text x="52" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Clerk event</text>
   <text x="52" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">user.updated or</text>
   <text x="52" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">user.deleted posted</text>
-  <text x="52" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">to /api/webhooks/clerk</text>
+  <text x="52" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">to /v1/webhooks/clerk</text>
 
   <line x1="232" y1="220" x2="296" y2="220" stroke="#D3A05B" stroke-width="1.5" stroke-opacity="0.75" marker-end="url(#whTipGold)"/>
   <text x="264" y="210" text-anchor="middle" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.12em" fill="#D3A05B">VERIFY</text>
