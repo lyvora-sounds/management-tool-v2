@@ -8,11 +8,11 @@ AI is **bring your own key**. Credentials live on `UserSettings` (provider, encr
 
 `/dashboard/settings` → `/api/settings/ai`.
 
-The key is stored AES-256-GCM (`lib/crypto.ts`). `getUserAiCredentials` decrypts it for the three AI routes. Missing key → 400 telling the user to open Settings.
+The key is stored AES-256-GCM (kiki-api `src/lib/secretCipher.ts`) and decrypted for the three AI routes (`src/routes/ai.ts`). Missing key → 400 telling the user to open Settings.
 
 Providers in `UserSettings.aiProvider`: `openai`, `claude`, `gemini`, `grok`, `deepseek`, `kimi`, `custom`.
 
-`lib/ai/engine.ts` routes:
+kiki-api's AI engine routes:
 
 - Claude → Anthropic messages API
 - Gemini → `generateContent` with JSON mime type
@@ -32,7 +32,7 @@ The UI `VoiceInput` component records in the browser and posts here.
 
 `POST /api/ai/parse` `{ text }`
 
-`parseBrainDump` asks the model (see `lib/ai/prompts.ts`) for a JSON list of tasks: title, description, priority, dates, subtasks, target list.
+`parseBrainDump` asks the model (see kiki-api's `src/routes/ai.ts`) for a JSON list of tasks: title, description, priority, dates, subtasks, target list.
 
 Before insert, the review step can create a board epic and choose which detected tickets join it. All of them start selected. Saving the epic refreshes the board epic list. The client then sends that list to `POST /api/boards/[boardId]/batchTasks`, which inserts cards and logs `activity.brainDump`.
 
@@ -85,12 +85,12 @@ See `mcp/README.md` for provisioning and connection examples.
 
 **Where the endpoint runs.** kiki-api serves the MCP endpoint and the OAuth server (`/v1/mcp…`,
 `/.well-known/oauth-…`; see its `docs/mcp.md`). The public address stays this app's, so connectors
-already authorised keep working. With `MCP_API_REWRITES=1` and `NEXT_PUBLIC_API_URL` set **at build
-time**, `next.config.ts` forwards `/api/mcp`, `/api/mcp/org/:id`, `/api/mcp/board/:id`,
-`/api/mcp/oauth/authorize`, `/api/mcp/oauth/token` and the `/.well-known/oauth-*` documents to the API
-(`lib/mcpApiRewrites.ts`, `beforeFiles`). The consent routes are not forwarded. Switching it on or off
-needs a new deployment; with it off the handlers in `app/api/mcp` answer, which is the way back until
-they are deleted in the final release. A response carrying `x-request-id` came from the API.
+already authorised keep working. With `NEXT_PUBLIC_API_URL` set **at build time**, `next.config.ts`
+forwards `/api/mcp`, `/api/mcp/org/:id`, `/api/mcp/board/:id`, `/api/mcp/oauth/authorize`,
+`/api/mcp/oauth/token` and the `/.well-known/oauth-*` documents to the API (`lib/mcpApiRewrites.ts`). The
+consent routes are not forwarded: the browser calls the API for them. There is no handler of these paths in
+this app any more: without the variable at build time they answer 404. A response carrying `x-request-id`
+came from the API.
 
 ChatGPT uses OAuth rather than pasted bearer-header JSON. Public discovery at
 `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server`

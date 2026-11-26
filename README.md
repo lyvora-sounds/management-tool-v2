@@ -1,8 +1,10 @@
 # Kikiboard
 
-Aplicación web full-stack de gestión de proyectos colaborativa, inspirada en Trello. Permite organizar trabajo en boards Kanban, colaborar con equipos, gestionar tareas con subtareas, prioridades, fechas de vencimiento y mucho más.
+Aplicación web de gestión de proyectos colaborativa, inspirada en Trello. Permite organizar trabajo en boards Kanban, colaborar con equipos, gestionar tareas con subtareas, prioridades, fechas de vencimiento y mucho más.
 
 🌐 **[kikiboard.xyz](https://kikiboard.xyz)**
+
+Este repositorio es el **frontend**. No tiene base de datos ni backend propios: todo lo sirve [`kiki-api`](https://github.com/lyvora-sounds/kiki-api) (Fastify en Cloud Run), que aplica el esquema y las migraciones. Ver `docs/architecture.md`.
 
 ---
 
@@ -15,9 +17,7 @@ Aplicación web full-stack de gestión de proyectos colaborativa, inspirada en T
 | Estilos | Tailwind CSS v4 |
 | Componentes | shadcn/ui + Base UI |
 | Autenticación | Clerk |
-| ORM | Prisma 7 |
-| Base de datos | PostgreSQL (Neon) |
-| Storage de archivos | Vercel Blob |
+| Backend | `kiki-api` (Fastify, Prisma 7, PostgreSQL en Neon, archivos en Cloudflare R2) |
 | Estado global | Zustand |
 | Drag & Drop | @dnd-kit |
 | Editor de texto | Tiptap |
@@ -52,7 +52,7 @@ Aplicación web full-stack de gestión de proyectos colaborativa, inspirada en T
 
 ### Comentarios y adjuntos
 - Comentarios por tarea con editor de texto enriquecido
-- Adjuntos de archivos almacenados en Vercel Blob
+- Adjuntos de archivos almacenados en un bucket privado de Cloudflare R2
 - Contadores visibles en la tarjeta (comentarios y adjuntos)
 
 ### Indicadores visuales en tarjetas
@@ -94,46 +94,25 @@ Aplicación web full-stack de gestión de proyectos colaborativa, inspirada en T
 ### Autenticación y usuarios
 - Registro con email/password y OAuth con Google
 - Vinculación automática de cuentas si el mismo email se registra por dos métodos distintos
-- Sincronización de nombre y email desde Clerk a Neon mediante webhooks (`user.updated`)
-- Eliminación del usuario en base de datos al borrar la cuenta en Clerk (`user.deleted`)
+- Sincronización de nombre y email desde Clerk a la base de datos mediante el webhook de `kiki-api` (`user.updated`)
+- Eliminación del usuario al borrar la cuenta en Clerk (`user.deleted`)
 
 ---
 
 ## Variables de entorno
 
-```env
-# Base de datos
-DATABASE_URL=
+Este repositorio solo necesita las claves de Clerk y las direcciones de la aplicación y de la API. Los secretos del backend (base de datos, R2, Resend, GitHub App, webhooks) viven en `kiki-api`.
 
+```env
 # Clerk
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-CLERK_WEBHOOK_SECRET=
 
-# Cloudflare R2
-R2_ACCOUNT_ID=
-R2_ACCESS_KEY_ID=
-R2_SECRET_ACCESS_KEY=
-R2_BUCKET_NAME=
-
-# Resend
-RESEND_API_KEY=
-
-# App
+# App y API (se leen al compilar: NEXT_PUBLIC_*)
 NEXT_PUBLIC_APP_URL=https://kikiboard.xyz
-
-# GitHub App (one app for all organizations; not a Marketplace listing).
-# Webhook secret, OAuth state secret, and OAuth client secret must each be at least 16 characters.
-# The state secret must be different from the webhook secret.
-GITHUB_APP_ID=
-GITHUB_APP_SLUG=
-GITHUB_APP_PRIVATE_KEY=
-GITHUB_APP_WEBHOOK_SECRET=
-GITHUB_APP_STATE_SECRET=
-GITHUB_APP_CLIENT_ID=
-GITHUB_APP_CLIENT_SECRET=
+NEXT_PUBLIC_API_URL=https://api.kikiboard.xyz
 ```
 
 ---
@@ -148,12 +127,9 @@ cd kikiboard
 # Instalar dependencias
 pnpm install
 
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus valores
-
-# Sincronizar base de datos
-pnpm prisma db push
+# Configurar variables de entorno: crea un .env con las de arriba.
+# Para desarrollo apunta NEXT_PUBLIC_API_URL a la API de staging
+# (https://api-staging.kikiboard.xyz) o a un kiki-api local.
 
 # Iniciar servidor de desarrollo
 pnpm dev
@@ -167,46 +143,30 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ```
 app/
-├── api/                    # API Routes (serverless)
-│   ├── boards/             # CRUD boards, actividad
-│   ├── tasks/              # CRUD tareas, subtareas, asignados, comentarios, adjuntos
-│   ├── lists/              # CRUD listas, reordenamiento
-│   ├── notifications/      # Notificaciones del usuario
-│   ├── search/             # Búsqueda global
-│   ├── calendar/           # Tareas por mes
-│   ├── invite/             # Invitación por token
-│   └── webhooks/clerk/     # Sincronización de usuarios con Clerk
+├── api/                    # Solo health y los dos relés de GitHub (setup, result)
 ├── (routes)/
 │   ├── (dashboard)/
 │   │   ├── dashboard/      # Página principal y componentes del dashboard
 │   │   └── board/[boardId] # Board individual con Kanban, lista y modal de tarea
 │   └── (landing)/          # Página de inicio pública
 lib/
-├── db.ts                   # Cliente Prisma
-├── boardAccess.ts          # Helper de permisos de board
-├── createActivity.ts       # Helper de log de actividad
-└── getOrCreateUser.ts      # Creación/vinculación de usuario en primer login
-prisma/
-└── schema.prisma           # Modelos: User, Board, List, Task, Subtask,
-                            # Comment, Attachment, Label, Notification, ActivityLog
+├── apiClient.ts            # apiFetch: llamadas del navegador a kiki-api
+├── apiRoutes.ts            # Mapea cada llamada /api/... a su ruta /v1/... de la API
+├── apiServer.ts            # Lecturas desde las páginas del servidor
+├── api/                    # Tipos y adaptadores del contrato (schema.d.ts se genera)
+└── modelTypes.ts           # Forma de las filas que envía la API
 ```
 
 ---
 
 ## Despliegue
 
-El proyecto está configurado para despliegue en Vercel. El script de build ejecuta `prisma generate` automáticamente antes de compilar.
+Producción corre en Vercel (`main`) y staging en Vercel (`dev`) y en un contenedor de Cloud Run (`Dockerfile`, infraestructura en `kiki-infra`). El build es `next build`; necesita `NEXT_PUBLIC_API_URL`.
 
 ```bash
 pnpm build
 ```
 
-### Webhooks de Clerk (producción)
+### Webhooks y migraciones
 
-Configura un endpoint en el [Clerk Dashboard](https://dashboard.clerk.com) apuntando a:
-
-```
-https://tu-dominio.com/api/webhooks/clerk
-```
-
-Eventos a suscribir: `user.updated`, `user.deleted`
+Los webhooks de Clerk y de GitHub apuntan a `kiki-api` (`/v1/webhooks/clerk` y `/v1/webhooks/github`), y las migraciones las aplica su pipeline de despliegue. Este repositorio no tiene ni una cosa ni la otra.

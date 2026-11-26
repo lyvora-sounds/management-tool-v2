@@ -12,6 +12,7 @@ import {
 import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/apiClient";
 import { toast } from "sonner";
+import { isFunctionalStorageAllowed } from "@/lib/cookieConsent";
 import {
   APPEARANCE_COOKIE,
   DEFAULT_APPEARANCE,
@@ -81,6 +82,7 @@ function clearClerkTheme(root: HTMLElement) {
 }
 
 function writeCookie(appearance: Appearance) {
+  if (!isFunctionalStorageAllowed()) return;
   try {
     document.cookie = `${APPEARANCE_COOKIE}=${encodeURIComponent(
       JSON.stringify(appearance),

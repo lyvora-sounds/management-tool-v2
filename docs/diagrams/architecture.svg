@@ -8,7 +8,7 @@
 
   <rect x="32" y="28" width="1" height="16" fill="#D3A05B"/>
   <text x="42" y="41" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.22em" fill="#D3A05B">ARCHITECTURE</text>
-  <text x="1048" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">Next.js 16 · Clerk · Prisma 7 · Neon</text>
+  <text x="1048" y="41" text-anchor="end" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5E7695">Next.js 16 · Clerk · kiki-api · Neon</text>
   <text x="32" y="76" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="600" letter-spacing="-0.025em">
     <tspan fill="#13233C">Kikiboard </tspan><tspan fill="#D3A05B">system</tspan>
   </text>
@@ -37,8 +37,8 @@
     <line x1="16" y1="3" x2="16" y2="29"/>
     <line x1="3" y1="16" x2="29" y2="16"/>
   </g>
-  <text x="324" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Route handlers</text>
-  <text x="324" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Clerk middleware,</text>
+  <text x="324" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">kiki-api</text>
+  <text x="324" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Fastify on Cloud Run,</text>
   <text x="324" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">board roles, activity</text>
   <text x="324" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">logs, notifications</text>
 
@@ -51,8 +51,8 @@
     <path d="M5 9 v14 c0 2.4 22 2.4 22 0 V9"/>
     <path d="M5 16 c0 2.2 22 2.2 22 0"/>
   </g>
-  <text x="596" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Neon + Blob</text>
-  <text x="596" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">PostgreSQL via Prisma,</text>
+  <text x="596" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Neon + R2</text>
+  <text x="596" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">PostgreSQL via Prisma</text>
   <text x="596" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">private file uploads,</text>
   <text x="596" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">encrypted AI keys</text>
 
@@ -65,6 +65,6 @@
   </g>
   <text x="868" y="196" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600" fill="#13233C">Integrations</text>
   <text x="868" y="222" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Resend · Slack</text>
-  <text x="868" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Discord · GCal</text>
+  <text x="868" y="242" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">Discord · GitHub</text>
   <text x="868" y="262" font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5E7695">User AI providers</text>
 </svg>

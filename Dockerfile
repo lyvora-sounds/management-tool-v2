@@ -1,5 +1,5 @@
-# Production image for Cloud Run. Migrations are NOT run here: they are a release step against the direct
-# (unpooled) Neon URL, so the image never needs a database at build time.
+# Production image for Cloud Run. It never needs a database at build time, and it migrates nothing: kiki-api owns
+# the schema and applies it in its own release step.
 ARG NODE_VERSION=24.22.1
 
 FROM node:${NODE_VERSION}-bookworm-slim AS base
@@ -9,12 +9,9 @@ ENV PNPM_HOME=/pnpm \
 RUN corepack enable
 WORKDIR /app
 
-# Dependencies first, so a code-only change reuses this layer. The Prisma schema is needed because the
-# postinstall script runs `prisma generate`.
+# Dependencies first, so a code-only change reuses this layer.
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-COPY prisma ./prisma
-COPY prisma.config.ts ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM base AS build
@@ -25,12 +22,14 @@ COPY . .
 # runtime variables. Neither is a secret. Everything secret is injected by Cloud Run when the container starts.
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
+    NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY \
     BUILD_STANDALONE=1
 
 RUN node scripts/check-node-patch.mjs
-RUN pnpm exec prisma generate && pnpm exec next build
+RUN pnpm exec next build
 
 # Runtime image: only the traced server, static assets and public files. No pnpm, no sources, no dev deps.
 FROM node:${NODE_VERSION}-bookworm-slim AS runner

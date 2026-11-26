@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { KikiLogo } from "@/components/Shared/KikiLogo/KikiLogo";
+import { openCookiePreferences } from "@/lib/cookieConsent";
+import { LEGAL_CONFIG } from "@/lib/legalConfig";
 
 export function HomeFooter() {
   const tNav = useTranslations("nav");
@@ -15,18 +17,37 @@ export function HomeFooter() {
         className="flex items-center gap-2 font-semibold text-foreground"
       >
         <KikiLogo size={16} />
-        Kiki
+        {LEGAL_CONFIG.platformName}
       </Link>
-      <p className="sm:absolute sm:left-1/2 sm:-translate-x-1/2">
-        © {new Date().getFullYear()} Kiki. {tHome("footerRights")}
+      <p className="lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+        © {new Date().getFullYear()} {LEGAL_CONFIG.platformName}. {tHome("footerRights")}
       </p>
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <Link
+          href="/terms"
+          className="hover:text-foreground transition-colors"
+        >
+          {tHome("footerTerms")}
+        </Link>
         <Link
           href="/privacy"
           className="hover:text-foreground transition-colors"
         >
           {tHome("footerPrivacy")}
         </Link>
+        <Link
+          href="/cookies"
+          className="hover:text-foreground transition-colors"
+        >
+          {tHome("footerCookies")}
+        </Link>
+        <button
+          type="button"
+          onClick={openCookiePreferences}
+          className="hover:text-foreground transition-colors cursor-pointer"
+        >
+          {tHome("footerCookieSettings")}
+        </button>
         <Link
           href="/sign-in"
           className="hover:text-foreground transition-colors"

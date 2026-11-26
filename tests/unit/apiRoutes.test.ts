@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { apiPathFor, isPublicRoute } from "@/lib/apiRoutes";
+import { apiPathFor } from "@/lib/apiRoutes";
 
-describe("apiPathFor: routes already served by kiki-api", () => {
+describe("apiPathFor: the kiki-api route behind each call", () => {
   // [method, the path the app calls, the path kiki-api serves]
   const migrated: [string, string, string][] = [
     ["GET", "/api/labels/b1", "/v1/labels/b1"],
@@ -133,7 +133,7 @@ describe("apiPathFor: routes already served by kiki-api", () => {
     expect(apiPathFor("patch", "/api/notifications")).toBe("/v1/notifications");
   });
 
-  it("leaves every route that has not moved on this app", () => {
+  it("knows no route for what the app does not call", () => {
     const stays: [string, string][] = [
       ["PUT", "/api/boards/getBoards"],
       ["GET", "/api/boards/b1/hierarchy"], // drawn in the browser; nothing calls the route
@@ -190,15 +190,5 @@ describe("apiPathFor: routes already served by kiki-api", () => {
     expect(apiPathFor("GET", "/api/labels/label/l1")).toBeNull();
     expect(apiPathFor("GET", "/api/search/extra")).toBeNull();
     expect(apiPathFor("GET", "/api/calendar/extra")).toBeNull();
-  });
-});
-
-describe("isPublicRoute", () => {
-  it("is only the page behind an invitation link, and only for reading it", () => {
-    expect(isPublicRoute("GET", "/api/invite/tok_1")).toBe(true);
-    expect(isPublicRoute("get", "/api/invite/tok_1")).toBe(true);
-    expect(isPublicRoute("POST", "/api/invite/tok_1")).toBe(false);
-    expect(isPublicRoute("GET", "/api/boards/b1/members")).toBe(false);
-    expect(isPublicRoute("GET", "/api/labels/b1")).toBe(false);
   });
 });

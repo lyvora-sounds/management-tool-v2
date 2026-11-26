@@ -1,8 +1,7 @@
 /**
  * Modelo del onboarding, sin dependencias: lo importan tanto el servidor como
- * los componentes cliente. La consulta a la base vive aparte, en
- * `lib/onboardingState.ts`, porque importar `db` desde aquí arrastraría `pg`
- * al bundle del navegador.
+ * los componentes cliente. El estado lo calcula kiki-api
+ * (`GET /v1/me/dashboard`).
  */
 
 /**

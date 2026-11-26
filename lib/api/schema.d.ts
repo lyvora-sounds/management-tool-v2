@@ -6705,7 +6705,53 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** What the one-time result of a setup says, without consuming it, for the organizations page to render */
+        get: {
+            parameters: {
+                query?: never;
+                header: {
+                    "x-github-result-token": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            result: {
+                                /** @enum {string} */
+                                outcome: "connected" | "error" | "requested" | "updated" | "waiting" | "choose";
+                                organizationId: string | null;
+                            } | null;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         put?: never;
         /** Consume the one-time result of a setup, so the organizations page shows it once */
         post: {
@@ -9059,6 +9105,148 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/legal/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recorded legal consent history and latest status per consent type for the caller */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListLegalConsentsResponse"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Record append-only proof of legal consent acceptance for the authenticated caller */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        consents: {
+                            /** @enum {string} */
+                            consentType: "terms" | "privacy" | "marketing_email" | "cookies";
+                            granted: boolean;
+                            documentVersion: string;
+                            checkboxText: string;
+                            /** @enum {string} */
+                            source: "sign_up" | "cookie_banner" | "settings" | "oauth_onboarding";
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RecordLegalConsentsResponse"];
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/legal/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Self-serve DSAR export of the authenticated caller's personal data (excludes secrets and credentials) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DsarExportResponse"];
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9997,6 +10185,112 @@ export interface components {
             notifyOnTaskCreated: boolean;
             notifyOnTaskCompleted: boolean;
             notifyOnTaskMoved: boolean;
+        };
+        LegalConsentEntryInput: {
+            id: string;
+            consentType: string;
+            granted: boolean;
+            documentVersion: string;
+            checkboxText: string;
+            source: string;
+            ipAddress: string | null;
+            userAgent: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RecordLegalConsentsResponseInput: {
+            recorded: number;
+            consents: components["schemas"]["LegalConsentEntryInput"][];
+        };
+        ListLegalConsentsResponseInput: {
+            consents: components["schemas"]["LegalConsentEntryInput"][];
+            latestByType: {
+                [key: string]: {
+                    granted: boolean;
+                    documentVersion: string;
+                    /** Format: date-time */
+                    createdAt: string;
+                };
+            };
+        };
+        DsarExportResponseInput: {
+            /** Format: date-time */
+            exportedAt: string;
+            user: {
+                id: string;
+                email: string;
+                name: string | null;
+                createdAt: string | null;
+                updatedAt: string | null;
+            };
+            settings: {
+                aiProvider: string;
+                aiModel: string | null;
+                aiBaseUrl: string | null;
+                voiceLanguage: string;
+                onboardingDismissedAt: string | null;
+                tourSeenAt: string | null;
+                appearance: unknown | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            } | null;
+            mfa: {
+                emailEnabled: boolean;
+                phoneEnabled: boolean;
+                totpEnabled: boolean;
+                phone: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            } | null;
+            ownedBoards: {
+                id: string;
+                title: string;
+                description: string | null;
+                key: string;
+                accessMode: string;
+                defaultRole: string;
+                organizationId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            boardMemberships: {
+                boardId: string;
+                role: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            organizationMemberships: {
+                organizationId: string;
+                role: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            comments: {
+                id: string;
+                taskId: string;
+                content: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            notifications: {
+                id: string;
+                type: string;
+                message: string;
+                read: boolean;
+                boardId: string | null;
+                taskId: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            legalConsentLogs: components["schemas"]["LegalConsentEntryInput"][];
         };
         NotificationInput: {
             id: string;
@@ -11209,6 +11503,112 @@ export interface components {
             notifyOnTaskCreated: boolean;
             notifyOnTaskCompleted: boolean;
             notifyOnTaskMoved: boolean;
+        };
+        LegalConsentEntry: {
+            id: string;
+            consentType: string;
+            granted: boolean;
+            documentVersion: string;
+            checkboxText: string;
+            source: string;
+            ipAddress: string | null;
+            userAgent: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RecordLegalConsentsResponse: {
+            recorded: number;
+            consents: components["schemas"]["LegalConsentEntry"][];
+        };
+        ListLegalConsentsResponse: {
+            consents: components["schemas"]["LegalConsentEntry"][];
+            latestByType: {
+                [key: string]: {
+                    granted: boolean;
+                    documentVersion: string;
+                    /** Format: date-time */
+                    createdAt: string;
+                };
+            };
+        };
+        DsarExportResponse: {
+            /** Format: date-time */
+            exportedAt: string;
+            user: {
+                id: string;
+                email: string;
+                name: string | null;
+                createdAt: string | null;
+                updatedAt: string | null;
+            };
+            settings: {
+                aiProvider: string;
+                aiModel: string | null;
+                aiBaseUrl: string | null;
+                voiceLanguage: string;
+                onboardingDismissedAt: string | null;
+                tourSeenAt: string | null;
+                appearance: unknown | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            } | null;
+            mfa: {
+                emailEnabled: boolean;
+                phoneEnabled: boolean;
+                totpEnabled: boolean;
+                phone: string | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            } | null;
+            ownedBoards: {
+                id: string;
+                title: string;
+                description: string | null;
+                key: string;
+                accessMode: string;
+                defaultRole: string;
+                organizationId: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            boardMemberships: {
+                boardId: string;
+                role: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            organizationMemberships: {
+                organizationId: string;
+                role: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            comments: {
+                id: string;
+                taskId: string;
+                content: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            notifications: {
+                id: string;
+                type: string;
+                message: string;
+                read: boolean;
+                boardId: string | null;
+                taskId: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            legalConsentLogs: components["schemas"]["LegalConsentEntry"][];
         };
         Notification: {
             id: string;

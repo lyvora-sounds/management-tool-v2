@@ -24,7 +24,7 @@ import {
   horizontalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import type { TaskModel } from "@/lib/generated/prisma/models/Task";
+import type { TaskModel } from "@/lib/modelTypes";
 import type { ListWithTasks, TaskWithLabels } from "../TaskCard/TaskCard.types";
 import { useBoardStore } from "../../store/useBoardStore";
 import { ListItem } from "../ListItem/ListItem";

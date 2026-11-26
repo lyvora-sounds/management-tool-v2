@@ -1,4 +1,4 @@
-import type { LabelModel } from "@/lib/generated/prisma/models/Label";
+import type { LabelModel } from "@/lib/modelTypes";
 
 export type TaskLabelsProps = {
   taskId: string;

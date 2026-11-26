@@ -8,9 +8,9 @@ A board is the workspace: lists (columns), tasks, labels, epics, custom fields, 
 
 `POST /api/boards/createBoard`
 
-1. Clerk session → `getOrCreateUser`.
+1. Clerk session token → kiki-api → `getOrCreateUser`.
 2. Title is required. Description, color, and an optional `lists: string[]` are stored.
-3. Prisma creates the board with `userId = current user` (this is the owner).
+3. The API creates the board with `userId = current user` (this is the owner).
 4. Starter lists, if any, get `order` 0..n.
 5. Default custom fields are always seeded: story points, environment, parent, child, customer (`lib/customFieldsDefaults.ts`).
 
@@ -63,7 +63,7 @@ Board admins set this from the board permissions dialog: everyone in the organiz
 
 Accepting a board invitation also adds the person to that board's organization. Removing a direct board member does not remove organization or team access. `DELETE /api/boards/[boardId]/members/[memberId]` returns `remainingRole` when one of those grants still applies. Removing someone from the organization is `DELETE /api/organizations/[organizationId]/members`.
 
-`getBoardRole` in `lib/boardAccess.ts` is the source of truth. `canReadBoard` and `canEditBoard` are the checks routes use. Manage endpoints that fail ACL return **404** so members cannot enumerate invitations or members they should not see.
+`getBoardRole` in kiki-api's `src/lib/boardAccess.ts` is the source of truth. `canReadBoard` and `canEditBoard` are the checks routes use. Manage endpoints that fail ACL return **404** so members cannot enumerate invitations or members they should not see.
 
 `PATCH /api/boards/[boardId]/permissions` (admin/owner) sets `memberCanAssign`.
 

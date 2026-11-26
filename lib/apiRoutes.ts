@@ -1,13 +1,9 @@
 /**
- * Routes already served by kiki-api. Everything not listed here keeps going to this app's own /api routes,
- * so a route moves over by adding one line here and nothing else. A route is matched by method and path
- * because the same path can still be served here for the other methods.
- *
- * `to` gives the kiki-api path (the query string is added by apiFetch). The API uses REST names under /v1, so
- * the app's older action-style paths are mapped one by one.
+ * The kiki-api route behind each call the components make. They name their calls by the app's old `/api/...`
+ * paths; `to` gives the `/v1/...` path (the query string is added by apiFetch). A route is matched by method and
+ * path. The API uses REST names, so the older action-style paths are mapped one by one.
  */
-/** `public` routes need no session: a signed-out visitor (the page behind an invitation link) still reaches kiki-api. */
-type Route = { method: string; pattern: RegExp; to: (path: string) => string; public?: true };
+type Route = { method: string; pattern: RegExp; to: (path: string) => string };
 
 const sameUnderV1 = (path: string) => path.replace(/^\/api\//, "/v1/");
 const id = (path: string) => path.slice(path.lastIndexOf("/") + 1);
@@ -75,10 +71,10 @@ const MIGRATED: Route[] = [
   { method: "GET", pattern: /^\/api\/organizations\/[^/]+\/external-access$/, to: sameUnderV1 },
   { method: "POST", pattern: /^\/api\/organizations\/[^/]+\/external-access$/, to: sameUnderV1 },
   { method: "DELETE", pattern: /^\/api\/organizations\/[^/]+\/external-access\/[^/]+$/, to: sameUnderV1 },
-  { method: "GET", pattern: /^\/api\/invite\/[^/]+$/, to: (p) => `/v1/invitations/${id(p)}`, public: true },
+  { method: "GET", pattern: /^\/api\/invite\/[^/]+$/, to: (p) => `/v1/invitations/${id(p)}` },
   { method: "POST", pattern: /^\/api\/invite\/[^/]+$/, to: (p) => `/v1/invitations/${id(p)}/accept` },
 
-  // Organizations, their members and teams (the GitHub routes under an organization are still served here)
+  // Organizations, their members and teams
   { method: "GET", pattern: /^\/api\/organizations$/, to: sameUnderV1 },
   { method: "POST", pattern: /^\/api\/organizations$/, to: sameUnderV1 },
   ...["GET", "POST", "PATCH", "DELETE"].map((method) => ({ method, pattern: /^\/api\/organizations\/[^/]+\/members$/, to: sameUnderV1 })),
@@ -127,7 +123,7 @@ const MIGRATED: Route[] = [
   { method: "PATCH", pattern: /^\/api\/onboarding$/, to: sameUnderV1 },
 
   // GitHub: the organization's link and the install flow. The setup page GitHub redirects the browser to is not
-  // here: it stays in this app (the Clerk cookie lives here) and relays to the API itself.
+  // here: it is a route of this app (the Clerk cookie lives here) that relays to the API itself.
   ...["GET", "PATCH", "DELETE"].map((method) => ({ method, pattern: /^\/api\/organizations\/[^/]+\/github$/, to: sameUnderV1 })),
   ...["repositories", "branches"].map((part) => ({ method: "GET", pattern: new RegExp(`^/api/organizations/[^/]+/github/${part}$`), to: sameUnderV1 })),
   ...["install", "finish", "choose"].map((part) => ({ method: "POST", pattern: new RegExp(`^/api/organizations/[^/]+/github/${part}$`), to: sameUnderV1 })),
@@ -147,13 +143,8 @@ const MIGRATED: Route[] = [
   ...["GET", "POST"].map((method) => ({ method, pattern: /^\/api\/mcp\/oauth\/consent$/, to: sameUnderV1 })),
 ];
 
-/** The kiki-api path for a request, or null when this app still serves it. */
+/** The kiki-api path for a request, or null when there is no such route. */
 export function apiPathFor(method: string, path: string): string | null {
   const route = MIGRATED.find((r) => r.method === method.toUpperCase() && r.pattern.test(path));
   return route ? route.to(path) : null;
-}
-
-/** Whether kiki-api serves this route to someone who is not signed in. */
-export function isPublicRoute(method: string, path: string): boolean {
-  return MIGRATED.some((r) => r.public && r.method === method.toUpperCase() && r.pattern.test(path));
 }

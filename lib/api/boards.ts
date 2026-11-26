@@ -1,4 +1,4 @@
-import type { BoardModel } from "@/lib/generated/prisma/models/Board";
+import type { BoardModel } from "@/lib/modelTypes";
 import type { ApiBoard } from "./types";
 
 /**

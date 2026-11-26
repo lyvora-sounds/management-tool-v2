@@ -4,16 +4,14 @@ import { mcpApiRewrites } from "@/lib/mcpApiRewrites";
 const API = "https://api.example.com";
 
 describe("mcpApiRewrites", () => {
-  it("forwards nothing unless the flag and the API address are both set", () => {
+  it("forwards nothing without the API address, and needs no flag with it", () => {
     expect(mcpApiRewrites({})).toEqual([]);
-    expect(mcpApiRewrites({ NEXT_PUBLIC_API_URL: API })).toEqual([]);
-    expect(mcpApiRewrites({ MCP_API_REWRITES: "1" })).toEqual([]);
-    expect(mcpApiRewrites({ MCP_API_REWRITES: "true", NEXT_PUBLIC_API_URL: API })).toEqual([]);
-    expect(mcpApiRewrites({ MCP_API_REWRITES: "1", NEXT_PUBLIC_API_URL: "  " })).toEqual([]);
+    expect(mcpApiRewrites({ NEXT_PUBLIC_API_URL: "  " })).toEqual([]);
+    expect(mcpApiRewrites({ NEXT_PUBLIC_API_URL: API })).toHaveLength(8);
   });
 
   it("maps the MCP endpoint, the OAuth server and the discovery documents to the API", () => {
-    const rewrites = mcpApiRewrites({ MCP_API_REWRITES: "1", NEXT_PUBLIC_API_URL: `${API}/` });
+    const rewrites = mcpApiRewrites({ NEXT_PUBLIC_API_URL: `${API}/` });
     expect(rewrites).toEqual([
       { source: "/api/mcp", destination: `${API}/v1/mcp` },
       { source: "/api/mcp/org/:organizationId", destination: `${API}/v1/mcp/org/:organizationId` },
@@ -26,8 +24,8 @@ describe("mcpApiRewrites", () => {
     ]);
   });
 
-  it("leaves the consent routes to the app", () => {
-    const sources = mcpApiRewrites({ MCP_API_REWRITES: "1", NEXT_PUBLIC_API_URL: API }).map((rewrite) => rewrite.source);
+  it("does not forward the consent routes: the browser calls the API for them", () => {
+    const sources = mcpApiRewrites({ NEXT_PUBLIC_API_URL: API }).map((rewrite) => rewrite.source);
     expect(sources).not.toContain("/api/mcp/oauth/consent");
   });
 });

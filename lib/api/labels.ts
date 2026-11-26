@@ -1,8 +1,8 @@
-import type { LabelModel } from "@/lib/generated/prisma/models/Label";
+import type { LabelModel } from "@/lib/modelTypes";
 import type { ApiLabel } from "./types";
 
 /**
- * What the API sends for a label, as the Prisma-shaped model the board screens use. Dates cross the wire as
+ * What the API sends for a label, as the model the board screens use (`lib/modelTypes.ts`). Dates cross the wire as
  * ISO strings. Reading every field by name here is what makes a change in the API's label fail the build.
  */
 export function labelFromApi(label: ApiLabel): LabelModel {

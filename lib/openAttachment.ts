@@ -1,6 +1,6 @@
 // What the browser may show in a tab. The server decides the same way (kiki-api, src/lib/attachmentHeaders.ts),
-// but this app also still talks to its own older route, so the browser does not trust the type it is given:
-// anything else is saved to disk, never opened, because an opened page would run on this origin.
+// but the browser does not trust the type it is given: anything else is saved to disk, never opened, because an
+// opened page would run on this origin.
 const INLINE_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp", "application/pdf", "text/plain"]);
 
 export function isInlineType(contentType: string | null | undefined): boolean {

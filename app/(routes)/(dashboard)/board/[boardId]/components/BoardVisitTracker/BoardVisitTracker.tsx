@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import { isFunctionalStorageAllowed } from "@/lib/cookieConsent";
 
 const STORAGE_KEY = "recent_boards";
 const MAX = 4;
 
 export function BoardVisitTracker({ boardId }: { boardId: string }) {
   useEffect(() => {
+    if (!isFunctionalStorageAllowed()) return;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const ids: string[] = raw ? JSON.parse(raw) : [];

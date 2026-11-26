@@ -28,7 +28,7 @@ export type ApiRead<T> = { ok: true; data: Revived<T> } | { ok: false; status: n
 /** The answer as the API sent it, dates still ISO strings: for the code that maps it with the `…FromApi` helpers. */
 export type ApiPlainRead<T> = { ok: true; data: T } | { ok: false; status: number };
 
-type GetOptions = { auth?: boolean };
+type GetOptions = { auth?: boolean; headers?: Record<string, string> };
 
 /**
  * GET from kiki-api on behalf of the signed-in person, from a server-rendered page. The page used to query the
@@ -40,10 +40,10 @@ export function createApiServerGet({ baseUrl, getToken, fetchImpl, timeoutMs = 1
 
   function apiServerGet<T>(path: string, options: GetOptions & { dates: "keep" }): Promise<ApiPlainRead<T>>;
   function apiServerGet<T>(path: string, options?: GetOptions): Promise<ApiRead<T>>;
-  async function apiServerGet<T>(path: string, { auth: needsSession = true, dates = "revive" }: GetOptions & { dates?: "keep" | "revive" } = {}): Promise<ApiRead<T> | ApiPlainRead<T>> {
+  async function apiServerGet<T>(path: string, { auth: needsSession = true, dates = "revive", headers: extra }: GetOptions & { dates?: "keep" | "revive" } = {}): Promise<ApiRead<T> | ApiPlainRead<T>> {
     if (!base) throw new Error("NEXT_PUBLIC_API_URL is not set: the pages read from kiki-api");
 
-    const headers = new Headers({ accept: "application/json" });
+    const headers = new Headers({ accept: "application/json", ...extra });
     if (needsSession) {
       const token = await getToken();
       if (!token) return { ok: false, status: 401 };

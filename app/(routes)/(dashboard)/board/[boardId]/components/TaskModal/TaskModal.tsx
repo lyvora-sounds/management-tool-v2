@@ -63,7 +63,7 @@ import { TaskHierarchy } from "../TaskHierarchy/TaskHierarchy";
 import { FieldGroupInfoHint } from "../FieldGroupInfoHint/FieldGroupInfoHint";
 import { hierarchyNodesFromLists } from "../TaskHierarchy/hierarchyNodes";
 import type { Priority } from "../TaskPriority/TaskPriority.constants";
-import type { LabelModel } from "@/lib/generated/prisma/models/Label";
+import type { LabelModel } from "@/lib/modelTypes";
 import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { TaskModalProps } from "./TaskModal.types";
 import { toast } from "sonner";

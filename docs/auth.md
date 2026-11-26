@@ -10,7 +10,7 @@ Identity has two stores: **Clerk** (session, OAuth, password) and **Neon `User`*
 2. Any other route — including `/dashboard` and `/api/*` — requires a Clerk session. Unauthenticated users are sent to `/sign-in`.
 3. Supported methods: email/password and Google OAuth (Clerk).
 4. Two-factor sign-in is optional and handled by Clerk. Authenticator app (TOTP) and backup codes are enabled on the development instance. A user turns them on from Settings → Account → Security; sign-in asks for a code only after that enrollment. SMS stays off until phone numbers are enabled in Clerk. The extra card above the Clerk profile stores its own email, phone, and QR codes and does not change sign-in.
-5. The first dashboard load calls `getOrCreateUser(clerkId)`:
+5. The first request to kiki-api for a signed-in person calls `getOrCreateUser(clerkId)` (`src/lib/getOrCreateUser.ts`):
 
    - User already has this `clerkId` → reuse.
    - Same **email** exists (password account later used Google, or the reverse) → attach `clerkId` to that row instead of duplicating.
@@ -33,9 +33,8 @@ See `mcp/README.md` for configuration and token lifetimes.
 |---|---|
 | `/`, `/functions`, `/stats`, `/privacy` | `/dashboard/*`, `/board/*` |
 | `/sign-in`, `/sign-up` | `/invite/[token]` (not public — Clerk forces sign-in first) |
-| `/share/task/*` | All `/api/*` except webhooks, the Google Calendar callback, and the GitHub setup callback |
-| `/api/webhooks/*` | |
-| `/api/integrations/google-calendar/callback` | |
+| `/share/task/*` | All `/api/*` except the MCP paths (forwarded to kiki-api) and the GitHub setup callback |
+| `/api/mcp/*`, `/.well-known/oauth-*` | |
 | `/api/integrations/github/setup` | |
 
 `/api/integrations/github/setup` is public because GitHub sends the browser there. A missing Clerk session is sent to sign-in. A signed-in manager can complete the redirect only with the single-use `state` minted for them, and only after their GitHub user token lists that installation. The callback checks the manager role again before saving. `installation_id` alone is not accepted. The organizations page shows a result only from the httpOnly `github_setup_result` cookie stored for that user. `POST /api/webhooks/github` is covered by `/api/webhooks/*`. A missing app configuration and an invalid `X-Hub-Signature-256` both return 401. Payloads over 1 MB are rejected.
@@ -46,20 +45,19 @@ See `mcp/README.md` for configuration and token lifetimes.
 
 `POST /v1/webhooks/clerk` on kiki-api is public but **Svix-signed** (see its `docs/clerk-webhook.md`). Clerk's endpoint URL, one per Clerk instance, is `https://api-staging.kikiboard.xyz/v1/webhooks/clerk` for development and `https://api.kikiboard.xyz/v1/webhooks/clerk` for production; it is changed by hand in the Clerk dashboard, and changing only the URL keeps the signing secret. Missing headers or a bad signature → 400.
 
-`POST /api/webhooks/clerk` in this app does the same and stays as the way back until the final release (KI-00059), together with `CLERK_WEBHOOK_SECRET` in Vercel. Nothing calls it while the endpoint points at the API.
+This app has no webhook handler any more (removed in KI-00059): `CLERK_WEBHOOK_SECRET` is only needed by kiki-api.
 
 | Event | Effect |
 |---|---|
 | `user.updated` | `updateMany` name + email on the row with that `clerkId` |
-| `user.deleted` | `deleteMany` by `clerkId`. Prisma `onDelete: Cascade` removes owned boards |
+| `user.deleted` | `deleteMany` by `clerkId`. The database's `onDelete: Cascade` removes owned boards |
 
 This is how a Clerk account deletion wipes the corresponding Kikiboard user.
 
 ## Code
 
 - `middleware.ts` — route matcher
-- `lib/getOrCreateUser.ts` — first-touch sync + email linking
-- `app/api/webhooks/clerk/route.ts` — Svix verify + update/delete (old handler, replaced by kiki-api's `POST /v1/webhooks/clerk`)
+- kiki-api `src/lib/getOrCreateUser.ts` — first-touch sync + email linking; `src/routes/clerkWebhook.ts` — the signed webhook
 
 Users generate account-owned ChatGPT client credentials in Settings → MCP.
 The callback is allowlisted exactly, the secret is shown once and stored only
