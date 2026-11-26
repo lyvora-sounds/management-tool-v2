@@ -138,6 +138,8 @@ jobs:
       # The publishable key decodes to "clerk.example.com$". Do not put live credentials here.
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
       CLERK_SECRET_KEY: sk_test_ci_dummy_value_for_build_only
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
       ENCRYPTION_SECRET: ci-dummy-encryption-secret-not-a-real-key
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_API_URL: https://api-staging.kikiboard.xyz
