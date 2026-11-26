@@ -10,7 +10,7 @@ Identity has two stores: **Clerk** (session, OAuth, password) and **Neon `User`*
 2. Any other route — including `/dashboard` and `/api/*` — requires a Clerk session. Unauthenticated users are sent to `/sign-in`.
 3. Supported methods: email/password and Google OAuth (Clerk).
 4. Two-factor sign-in is optional and handled by Clerk. Authenticator app (TOTP) and backup codes are enabled on the development instance. A user turns them on from Settings → Account → Security; sign-in asks for a code only after that enrollment. SMS stays off until phone numbers are enabled in Clerk. The extra card above the Clerk profile stores its own email, phone, and QR codes and does not change sign-in.
-5. The first dashboard load calls `getOrCreateUser(clerkId)`:
+5. The first request to kiki-api for a signed-in person calls `getOrCreateUser(clerkId)` (`src/lib/getOrCreateUser.ts`):
 
    - User already has this `clerkId` → reuse.
    - Same **email** exists (password account later used Google, or the reverse) → attach `clerkId` to that row instead of duplicating.
@@ -50,14 +50,14 @@ This app has no webhook handler any more (removed in KI-00059): `CLERK_WEBHOOK_S
 | Event | Effect |
 |---|---|
 | `user.updated` | `updateMany` name + email on the row with that `clerkId` |
-| `user.deleted` | `deleteMany` by `clerkId`. Prisma `onDelete: Cascade` removes owned boards |
+| `user.deleted` | `deleteMany` by `clerkId`. The database's `onDelete: Cascade` removes owned boards |
 
 This is how a Clerk account deletion wipes the corresponding Kikiboard user.
 
 ## Code
 
 - `middleware.ts` — route matcher
-- `lib/getOrCreateUser.ts` — first-touch sync + email linking
+- kiki-api `src/lib/getOrCreateUser.ts` — first-touch sync + email linking; `src/routes/clerkWebhook.ts` — the signed webhook
 
 Users generate account-owned ChatGPT client credentials in Settings → MCP.
 The callback is allowlisted exactly, the secret is shown once and stored only

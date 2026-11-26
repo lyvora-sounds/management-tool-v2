@@ -8,11 +8,11 @@ AI is **bring your own key**. Credentials live on `UserSettings` (provider, encr
 
 `/dashboard/settings` → `/api/settings/ai`.
 
-The key is stored AES-256-GCM (`lib/crypto.ts`). `getUserAiCredentials` decrypts it for the three AI routes. Missing key → 400 telling the user to open Settings.
+The key is stored AES-256-GCM (kiki-api `src/lib/secretCipher.ts`) and decrypted for the three AI routes (`src/routes/ai.ts`). Missing key → 400 telling the user to open Settings.
 
 Providers in `UserSettings.aiProvider`: `openai`, `claude`, `gemini`, `grok`, `deepseek`, `kimi`, `custom`.
 
-`lib/ai/engine.ts` routes:
+kiki-api's AI engine routes:
 
 - Claude → Anthropic messages API
 - Gemini → `generateContent` with JSON mime type
@@ -32,7 +32,7 @@ The UI `VoiceInput` component records in the browser and posts here.
 
 `POST /api/ai/parse` `{ text }`
 
-`parseBrainDump` asks the model (see `lib/ai/prompts.ts`) for a JSON list of tasks: title, description, priority, dates, subtasks, target list.
+`parseBrainDump` asks the model (see kiki-api's `src/routes/ai.ts`) for a JSON list of tasks: title, description, priority, dates, subtasks, target list.
 
 Before insert, the review step can create a board epic and choose which detected tickets join it. All of them start selected. Saving the epic refreshes the board epic list. The client then sends that list to `POST /api/boards/[boardId]/batchTasks`, which inserts cards and logs `activity.brainDump`.
 
