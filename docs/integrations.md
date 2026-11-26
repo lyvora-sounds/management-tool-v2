@@ -1,6 +1,6 @@
 # Integrations
 
-Boards can fan out to chat. Users can sync due dates to Google Calendar. An organization can link a GitHub account, repository, and branch. Anyone with a share token can read a task without signing in. Agents can drive the HTTP API through MCP.
+Boards can fan out to chat. An organization can link a GitHub account, repository, and branch. Anyone with a share token can read a task without signing in. Agents can drive the HTTP API through MCP.
 
 ![Outbound integrations](./diagrams/integrations.svg)
 
@@ -24,12 +24,7 @@ Admins configure URLs at `/api/boards/[boardId]/integrations`.
 
 ## Google Calendar
 
-Per-user `UserCalendarSync` (encrypted access + refresh tokens).
-
-1. `GET /api/integrations/google-calendar/auth` (signed in) redirects to Google OAuth (`calendar.events`, `access_type=offline`, `prompt=consent`). `state` is the Kikiboard user id.
-2. Callback `/api/integrations/google-calendar/callback` is **public** in the Clerk matcher (Google redirects here). It exchanges the code and upserts tokens.
-3. `syncTaskToGoogleCalendar` can create an all-day `[Kikiboard] {title}` event on the primary calendar and store `Task.googleEventId`. Expired access tokens are refreshed first.
-4. **Dormant:** nothing in task create/update calls the sync helper, and Settings has no calendar tab that starts the OAuth flow. The in-app `/dashboard/calendar` is Neon due dates, not Google: it reads `GET /v1/calendar` from kiki-api through `apiFetch` (the old `GET /api/calendar` handler stays as the fallback until the release). The Google OAuth routes above are not served by the API; they go with the other old handlers, and a real sync would need a signed `state`, a Settings entry and a call to the sync helper.
+The Google OAuth routes and the sync helper that were dormant in this app (nothing called them) were removed in KI-00059; the `UserCalendarSync` table and `Task.googleEventId` remain in the database. The in-app `/dashboard/calendar` is Neon due dates, not Google: it reads `GET /v1/calendar` from kiki-api. A real sync would need a signed `state`, a Settings entry and a handler in kiki-api.
 
 ## GitHub
 
@@ -44,7 +39,7 @@ Register the app under the Kikiboard GitHub account (Settings → Developer sett
 - Homepage URL: `NEXT_PUBLIC_APP_URL`.
 - Callback URL: `{APP_URL}/api/integrations/github/setup`. Leave **Request user authorization (OAuth) during installation** off. That option removes the Setup URL. Kikiboard starts the user-authorization flow itself after the install redirect.
 - Setup URL: `{APP_URL}/api/integrations/github/setup`. Enable redirect on update.
-- Webhook URL: `{APP_URL}/api/webhooks/github`. Secret: `GITHUB_APP_WEBHOOK_SECRET`.
+- Webhook URL: kiki-api's `POST /v1/webhooks/github` (`https://api-staging.kikiboard.xyz/v1/webhooks/github` for the dev app, `https://api.kikiboard.xyz/v1/webhooks/github` for the production one). Secret: `GITHUB_APP_WEBHOOK_SECRET`, held by kiki-api.
 - Repository permission: Contents, Read-only. Metadata is granted automatically.
 - Subscribe to Installation and Installation repositories.
 - Installation visibility: Any account. `GITHUB_APP_SLUG` is the slug in `https://github.com/apps/{slug}`.
@@ -58,7 +53,7 @@ Register the app under the Kikiboard GitHub account (Settings → Developer sett
 5. The organizations page lists repositories and branches for that installation, following GitHub's `Link` header until it ends, with a safety cap of 100 pages. `PATCH` then checks the chosen repository with `GET /repositories/{id}` and the branch with `GET /repos/{owner}/{repo}/branches/{branch}`, so a repository past the page cap can still be saved.
 6. `DELETE` uninstalls the GitHub App installation, retires that installation id, and deletes the row. If the server secrets are missing, it leaves the row in place.
 7. Successful and failed setup redirects set an httpOnly `github_setup_result` cookie bound to the signed-in user. The organizations page reads that cookie and the browser consumes it with `POST /api/integrations/github/result`, which clears the cookie. The token is not placed in the query string. The callback also checks again that the session user is still an owner or admin before it stores an installation.
-8. `POST /api/webhooks/github` checks `X-Hub-Signature-256`. A missing configuration and a bad signature both return 401, and a body over 1 MB is rejected. `installation` `deleted` removes the row. `installation_repositories` `removed` clears the repository and branch when the saved repository was removed. Deletes and repository clears are safe to retry.
+8. `POST /v1/webhooks/github` (kiki-api) checks `X-Hub-Signature-256`. A missing configuration and a bad signature both return 401, and a body over 1 MB is rejected. `installation` `deleted` removes the row. `installation_repositories` `removed` clears the repository and branch when the saved repository was removed. Deletes and repository clears are safe to retry.
 
 Each board has a two-letter key, unique in its organization, taken from the board title (`Lyvora sounds` becomes `LS`). The board owner can change that key until the first ticket on the board is numbered. After that, the key stays so existing ticket keys do not change. Each ticket receives the next number on its board, in creation order, and keeps it. The visible key is `{key}-{number}` with the number padded to five digits, for example `LY-00042`.
 
