@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Tag, Pencil, Trash2, Check } from "lucide-react";
-import type { LabelModel } from "@/lib/generated/prisma/models/Label";
+import type { LabelModel } from "@/lib/modelTypes";
 import { TaskLabelsProps } from "./TaskLabels.types";
 import {
   Popover,

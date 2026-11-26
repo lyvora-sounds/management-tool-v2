@@ -3,8 +3,7 @@
 # AGENTS.md tells the agent to honor this file. .grok/config.toml denies
 # reads and edits of the secret and backup paths. Permission rules apply
 # on the next Grok session.
-# Product source stays visible: app/, components/, lib/ (except generated),
-# prisma/schema.prisma, prisma/migrations/, messages/, docs/, and tests/.
+# Product source stays visible: app/, components/, lib/, messages/, docs/, and tests/.
 
 # Secrets and local credentials. .env.example is the safe template.
 .env
@@ -48,9 +47,6 @@ blob-report/
 storybook-static/
 *.tsbuildinfo
 next-env.d.ts
-
-# Generated Prisma client. Edit prisma/schema.prisma, then regenerate.
-lib/generated/
 
 # Local data dumps, investigation logs, and scratch space
 .backups/

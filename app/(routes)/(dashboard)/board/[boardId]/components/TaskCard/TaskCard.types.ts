@@ -1,7 +1,7 @@
-import type { ListModel } from "@/lib/generated/prisma/models/List";
-import type { TaskModel } from "@/lib/generated/prisma/models/Task";
-import type { LabelModel } from "@/lib/generated/prisma/models/Label";
-import type { UserModel } from "@/lib/generated/prisma/models/User";
+import type { ListModel } from "@/lib/modelTypes";
+import type { TaskModel } from "@/lib/modelTypes";
+import type { LabelModel } from "@/lib/modelTypes";
+import type { UserModel } from "@/lib/modelTypes";
 
 export type BoardUser = Pick<UserModel, "id" | "name" | "email">;
 export type TaskCollaborator = { user: BoardUser };

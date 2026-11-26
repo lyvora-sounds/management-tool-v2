@@ -15,7 +15,6 @@ on:
       - pnpm-lock.yaml
       - next.config.ts
       - middleware.ts
-      - prisma/**
       - .github/workflows/image.yml
   workflow_dispatch:
 

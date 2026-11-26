@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { BoardModel } from "@/lib/generated/prisma/models/Board";
+import type { BoardModel } from "@/lib/modelTypes";
 
 export type BoardWithOrganization = BoardModel & {
   organization?: { id: string; name: string } | null;
