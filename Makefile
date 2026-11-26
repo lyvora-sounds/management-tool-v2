@@ -1,4 +1,4 @@
-.PHONY: help setup dev run build lint test db-push db-migrate db-migration db-target db-generate db-studio mcp clean
+.PHONY: help setup dev run build lint test test-e2e test-e2e-headed test-e2e-app test-e2e-app-headed test-e2e-app-ui db-push db-migrate db-migration db-target db-generate db-studio mcp clean
 
 DB_ENV_FILE ?= .env.development
 
@@ -18,6 +18,12 @@ help:
 	@echo "  make db-studio    Open Prisma Studio database GUI"
 	@echo "  make build        Build for production"
 	@echo "  make lint         Run linter check"
+	@echo "  make test         Run unit tests"
+	@echo "  make test-e2e     Run Playwright component E2E tests"
+	@echo "  make test-e2e-headed      Run Playwright component E2E tests in Chromium"
+	@echo "  make test-e2e-app         Run full-app Playwright E2E tests (http://localhost:3000)"
+	@echo "  make test-e2e-app-headed  Watch full-app Playwright E2E walkthrough in Chromium"
+	@echo "  make test-e2e-app-ui      Open Playwright interactive UI mode for full-app E2E tests"
 	@echo "  make mcp          Start MCP server for Claude/Cursor"
 	@echo "  make clean        Clean build artifacts (.next)"
 	@echo ""
@@ -84,6 +90,21 @@ lint:
 
 test:
 	pnpm test
+
+test-e2e:
+	pnpm test:e2e
+
+test-e2e-headed:
+	pnpm test:e2e:headed
+
+test-e2e-app:
+	pnpm test:e2e:app
+
+test-e2e-app-headed:
+	pnpm test:e2e:app:headed
+
+test-e2e-app-ui:
+	pnpm test:e2e:app:ui
 
 # MCP Server
 mcp:

@@ -11,24 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
-    name: Verify
+  typecheck:
+    name: typecheck
     runs-on: ubuntu-latest
-
-    # No Docker here. Postgres runs in docker.yml, on demand or on push to
-    # main, so pull requests do not burn the registry pull quota. The app
-    # still deploys on Vercel.
-    env:
-      # Dummy values so the build can compile. They never reach a real
-      # service. Do not put live credentials here.
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2ktZHVtbXktY2xlcmsta2V5LWZvci1idWlsZCQ
-      CLERK_SECRET_KEY: sk_test_ci_dummy_value_for_build_only
-      ENCRYPTION_SECRET: ci-dummy-encryption-secret-not-a-real-key
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
-      # Resend constructs its client at module load in the invitation
-      # route, so the build fails if this variable is missing.
-      RESEND_API_KEY: re_ci_dummy_value_for_build_only
-
     steps:
       - uses: actions/checkout@v4
 
@@ -56,11 +41,139 @@ jobs:
       - name: Typecheck
         run: pnpm exec tsc --noEmit
 
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Reject unpatched Node.js
+        run: node scripts/check-node-patch.mjs
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test
+
+  i18n:
+    name: i18n
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Reject unpatched Node.js
+        run: node scripts/check-node-patch.mjs
+
+      - name: Check translation key and glossary parity
+        run: node scripts/translate.mjs --check
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Reject unpatched Node.js
+        run: node scripts/check-node-patch.mjs
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Lint
-        # Not blocking yet: inherited lint errors. Remove continue-on-error
+        # Not blocking yet: inherited lint errors on dev. Remove continue-on-error
         # once those are clean so lint becomes required.
         continue-on-error: true
         run: pnpm lint
 
+  e2e-components:
+    name: e2e (components)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Reject unpatched Node.js
+        run: node scripts/check-node-patch.mjs
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium for Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Playwright component tests
+        run: pnpm test:e2e
+
+  build:
+    name: build & app smoke
+    runs-on: ubuntu-latest
+
+    env:
+      # Dummy values so the build and unauthenticated SSR smoke check can run.
+      # The publishable key decodes to "clerk.example.com$". Do not put live credentials here.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: sk_test_ci_dummy_value_for_build_only
+      ENCRYPTION_SECRET: ci-dummy-encryption-secret-not-a-real-key
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: https://api-staging.kikiboard.xyz
+      # Resend constructs its client at module load in the invitation route.
+      RESEND_API_KEY: re_ci_dummy_value_for_build_only
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Reject unpatched Node.js
+        run: node scripts/check-node-patch.mjs
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium for Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Build
         run: pnpm exec next build
+
+      - name: Smoke test built app with Playwright
+        run: |
+          pnpm exec next start -p 3000 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health; then echo; break; fi
+            sleep 2
+          done
+          curl -fsS http://localhost:3000/api/health > /dev/null
+          PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_CLERK_DUMMY=1 pnpm test:e2e:app

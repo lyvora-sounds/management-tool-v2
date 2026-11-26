@@ -15,6 +15,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test -c playwright-ct.config.mts",
     "test:e2e:headed": "SLOWMO=600 playwright test -c playwright-ct.config.mts --headed",
+    "test:e2e:app": "playwright test -c playwright.config.ts",
+    "test:e2e:app:headed": "SLOWMO=600 playwright test -c playwright.config.ts --headed",
+    "test:e2e:app:ui": "playwright test -c playwright.config.ts --ui",
     "postinstall": "prisma generate",
     "i18n:check": "node scripts/translate.mjs --check",
     "api:types": "node scripts/api-types.mjs"
