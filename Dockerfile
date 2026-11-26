@@ -9,12 +9,9 @@ ENV PNPM_HOME=/pnpm \
 RUN corepack enable
 WORKDIR /app
 
-# Dependencies first, so a code-only change reuses this layer. The Prisma schema is needed because the
-# postinstall script runs `prisma generate`.
+# Dependencies first, so a code-only change reuses this layer.
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-COPY prisma ./prisma
-COPY prisma.config.ts ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM base AS build
@@ -32,7 +29,7 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     BUILD_STANDALONE=1
 
 RUN node scripts/check-node-patch.mjs
-RUN pnpm exec prisma generate && pnpm exec next build
+RUN pnpm exec next build
 
 # Runtime image: only the traced server, static assets and public files. No pnpm, no sources, no dev deps.
 FROM node:${NODE_VERSION}-bookworm-slim AS runner
