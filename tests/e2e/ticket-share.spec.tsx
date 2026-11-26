@@ -11,11 +11,11 @@ test.describe.configure({ mode: "serial" });
 
 test("the private link is always ready to copy, and the public link is created separately", async ({ mount, page }) => {
   let publicLink: string | null = null;
-  await page.route("**/api/tasks/task-1/share", async (route) => {
+  await page.route("https://api.test/v1/tasks/task-1/share", async (route) => {
     const method = route.request().method();
     if (method === "POST") publicLink = publicUrl;
     if (method === "DELETE") publicLink = null;
-    await route.fulfill({ json: { shareUrl: publicLink } });
+    await route.fulfill({ json: { shareUrl: publicLink }, headers: { "access-control-allow-origin": "*" } });
   });
 
   await mount(<ShareStory />);
@@ -32,7 +32,7 @@ test("the private link is always ready to copy, and the public link is created s
   await expect(dialog.getByRole("button", { name: "Generate public link" })).toBeVisible();
   await hold(page);
 
-  const generated = page.waitForResponse((response) => response.url().includes("/api/tasks/task-1/share") && response.request().method() === "POST");
+  const generated = page.waitForResponse((response) => response.url().includes("/v1/tasks/task-1/share") && response.request().method() === "POST");
   await dialog.getByRole("button", { name: "Generate public link" }).evaluate((button: HTMLButtonElement) => button.click());
   await generated;
   await expect(dialog.getByRole("textbox").nth(1)).toHaveValue(publicUrl);
@@ -40,7 +40,7 @@ test("the private link is always ready to copy, and the public link is created s
   await expect(dialog.getByRole("textbox").first()).toHaveValue(/\/board\/board-1\?taskId=task-1$/);
   await hold(page);
 
-  const revoked = page.waitForResponse((response) => response.url().includes("/api/tasks/task-1/share") && response.request().method() === "DELETE");
+  const revoked = page.waitForResponse((response) => response.url().includes("/v1/tasks/task-1/share") && response.request().method() === "DELETE");
   await dialog.getByRole("button", { name: "Revoke link" }).evaluate((button: HTMLButtonElement) => button.click());
   await revoked;
   await expect(dialog.getByRole("button", { name: "Generate public link" })).toBeVisible();

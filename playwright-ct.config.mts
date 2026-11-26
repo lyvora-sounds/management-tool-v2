@@ -16,6 +16,8 @@ export default defineConfig({
     ctPort: 3100,
     launchOptions: { slowMo: Number(process.env.SLOWMO || 0) },
     ctViteConfig: {
+      // The components call kiki-api through apiFetch, which needs its address; the specs answer it with page.route.
+      define: { "process.env.NEXT_PUBLIC_API_URL": JSON.stringify("https://api.test") },
       resolve: {
         mainFields: ["module", "jsnext:main", "jsnext", "browser", "main"],
         conditions: ["import", "development", "browser", "module", "default"],

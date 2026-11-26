@@ -1,9 +1,9 @@
-import { apiPathFor, isPublicRoute } from "@/lib/apiRoutes";
+import { apiPathFor } from "@/lib/apiRoutes";
 
 type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
 type Options = {
-  /** Where kiki-api lives. Unset means every call stays on this app's own /api routes. */
+  /** Where kiki-api lives. */
   baseUrl: string | undefined;
   /** The signed-in user's Clerk session token, or null when there is none yet. */
   getToken: () => Promise<string | null>;
@@ -11,41 +11,29 @@ type Options = {
 };
 
 /**
- * fetch for this app's API. A route that kiki-api serves (lib/apiRoutes.ts) is sent there with the Clerk
- * session token as a bearer; anything else, or any call while NEXT_PUBLIC_API_URL is unset, is exactly the
- * plain same-origin fetch it was before. That keeps local development and Vercel previews unchanged.
+ * fetch for kiki-api. The app's components still name their calls by the old `/api/...` paths; lib/apiRoutes.ts
+ * turns each into its `/v1/...` route, and the call goes to `NEXT_PUBLIC_API_URL` with the Clerk session token as
+ * a bearer. There is no other backend: an unset address or a path with no route is a bug and throws, and a
+ * failed call is answered as the API answered it. Nothing is retried, so a write is never repeated.
  */
 export function createApiFetch({ baseUrl, getToken, fetchImpl }: Options) {
   const base = baseUrl?.replace(/\/+$/, "");
 
   return async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
-    if (!base) return fetchImpl(path, init);
+    if (!base) throw new Error("NEXT_PUBLIC_API_URL is not set: every call goes to kiki-api");
 
     const route = path.split("?")[0] ?? path;
-    const apiPath = apiPathFor(init.method ?? "GET", route);
-    if (!apiPath) return fetchImpl(path, init);
+    const method = init.method ?? "GET";
+    const apiPath = apiPathFor(method, route);
+    if (!apiPath) throw new Error(`There is no kiki-api route for ${method.toUpperCase()} ${route}`);
 
+    // Nobody is signed in (a visitor behind an invitation link): the call goes without a token, and the API
+    // answers 401 for whatever needs a session.
     const token = await getToken();
-    // Clerk has not loaded or nobody is signed in: the route still exists here, with cookie auth. A public
-    // route (the page behind an invitation link) goes to the API anyway, without a token.
-    if (!token && !isPublicRoute(init.method ?? "GET", route)) return fetchImpl(path, init);
-
     const query = path.includes("?") ? path.slice(path.indexOf("?")) : "";
     const headers = new Headers(init.headers);
     if (token) headers.set("Authorization", `Bearer ${token}`);
-    const toApi = () => fetchImpl(`${base}${apiPath}${query}`, { ...init, headers });
-
-    // A write is never repeated: if the API answered badly we cannot know whether it applied. A read can be,
-    // so while routes are moving over, a read that the API cannot serve (unreachable, blocked by CORS, a token
-    // it rejects, a server error) is answered by the route this app still has. A 404 is a real answer and stays.
-    if ((init.method ?? "GET").toUpperCase() !== "GET") return toApi();
-    try {
-      const response = await toApi();
-      if (response.status !== 401 && response.status < 500) return response;
-    } catch {
-      // Network or CORS failure: fall through to the same-origin route.
-    }
-    return fetchImpl(path, init);
+    return fetchImpl(`${base}${apiPath}${query}`, { ...init, headers });
   };
 }
 
@@ -61,7 +49,7 @@ type WaitOptions = { timeoutMs?: number; pollMs?: number };
 
 /**
  * Clerk's browser SDK is loaded by ClerkProvider, a moment after the page. A call made in that gap (the
- * notification bell asks as soon as it mounts) would find no session and go to this app's own route. So the
+ * notification bell asks as soon as it mounts) would find no session and go without a token. So the
  * first call waits, briefly, for Clerk to finish loading. Later calls do not wait again: a page that never
  * loads Clerk pays the delay once, not on every request.
  */

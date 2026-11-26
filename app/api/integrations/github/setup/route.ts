@@ -1,13 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { githubActor, githubResultCookie } from "@/lib/integrations/githubConnection";
-import { handleGithubSetup } from "@/lib/integrations/githubSetup";
-import { readGithubAppConfig } from "@/lib/integrations/githubApp";
-import { callGithubApi, githubApiBase, parseRelayedSetup, type RelayedSetup } from "@/lib/integrations/githubRelay";
+import { githubResultCookie } from "@/lib/integrations/githubResultCookie";
+import { callGithubApi, githubApiBase, parseRelayedSetup } from "@/lib/integrations/githubRelay";
 
 // GitHub redirects the browser here (this address is registered in each GitHub App), so the page stays in this
-// app, where the Clerk cookie and the result cookie live. With kiki-api configured it only relays the query to
-// the API with the person's token; without it, it does the setup itself.
+// app, where the Clerk cookie and the result cookie live. It only relays the query to kiki-api with the person's
+// token, which does the setup, and sets the cookie that carries the result.
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = {
@@ -19,26 +17,14 @@ export async function GET(request: Request) {
   };
 
   const base = githubApiBase();
-  let result: RelayedSetup;
-  if (base) {
-    const { userId, getToken } = await auth();
-    const token = userId ? await getToken() : null;
-    if (!token) return NextResponse.redirect(appUrl(request, "/sign-in"));
-    const relayed = parseRelayedSetup(await callGithubApi(base, token, "/v1/integrations/github/setup", query));
-    // The API did not answer: the person lands back on the organizations page with no result to show.
-    if (!relayed) return organizationsRedirect(request, null);
-    result = relayed;
-  } else {
-    const sessionUserId = await githubActor((await auth()).userId);
-    result = await handleGithubSetup({
-      state: query.state,
-      installationId: query.installationId,
-      setupAction: query.setupAction,
-      code: query.code,
-      oauthError: query.error,
-      sessionUserId: sessionUserId?.id ?? null,
-    }, readGithubAppConfig());
-  }
+  // Without the API address there is nothing to relay to: the person lands back with no result to show.
+  if (!base) return organizationsRedirect(request, null);
+  const { userId, getToken } = await auth();
+  const token = userId ? await getToken() : null;
+  if (!token) return NextResponse.redirect(appUrl(request, "/sign-in"));
+  const result = parseRelayedSetup(await callGithubApi(base, token, "/v1/integrations/github/setup", query));
+  // The API did not answer: the person lands back on the organizations page with no result to show.
+  if (!result) return organizationsRedirect(request, null);
 
   if (result.kind === "sign-in") return NextResponse.redirect(appUrl(request, "/sign-in"));
   if (result.kind === "external") {
