@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // `beforeFiles` so that the forwarded paths win over the handlers in `app/api/mcp`, which stay as the way back.
+  // MCP and its OAuth server live in kiki-api; these paths are forwarded to it.
   async rewrites() {
     return { beforeFiles: mcpApiRewrites(process.env), afterFiles: [], fallback: [] };
   },

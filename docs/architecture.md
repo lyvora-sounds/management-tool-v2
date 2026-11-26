@@ -35,7 +35,7 @@ Almost every mutating API follows the same sequence.
 
 ![Typical authenticated API request](./diagrams/request-path.svg)
 
-1. **Clerk session.** `middleware.ts` protects everything except the public matcher (`/`, `/sign-in`, `/sign-up`, `/functions`, `/stats`, `/privacy`, `/share/task`, `/api/webhooks`, Google Calendar callback, GitHub App setup callback).
+1. **Clerk session.** `middleware.ts` protects everything except the public matcher (`/`, `/sign-in`, `/sign-up`, `/functions`, `/stats`, `/privacy`, `/terms`, `/cookies`, `/share/task`, the MCP paths, GitHub App setup callback).
 2. **App user.** Handlers call `auth()`, then `db.user.findUnique({ clerkId })` or `getOrCreateUser`.
 3. **Board ACL.** `hasBoardAccess` (owner **or** `BoardMember`) or `getBoardRole` for finer checks. Failed access is usually **404**, not 403, so callers cannot probe board ids.
 4. **Write + side effects.** Prisma mutation, then `createActivity`, `notification.create`, and (on complete) Slack/Discord.
@@ -75,7 +75,7 @@ Deletes cascade. Six links use `SetNull`: `Organization.createdById`, `ExternalA
 - **Board** — Kanban or list; opt-in IndexedDB cache + mutation outbox (`NEXT_PUBLIC_LOCAL_FIRST=1`, `use-board-local-first`); SSE from kiki-api when `NEXT_PUBLIC_API_URL` is set; 25s polling safety net (`use-board-polling`); activity drawer. See [Local-First architecture](./local-first-architecture.md).
 - **Calendar** — tasks with due dates, read from `GET /v1/calendar` (kiki-api) through `apiFetch`; `/api/calendar` remains as the fallback.
 - **My tasks** — `/dashboard/tasks`.
-- **Settings** — per-user AI credentials, custom fields, Google Calendar OAuth.
+- **Settings** — per-user AI credentials and custom fields.
 - **Cmd+K search** — `/api/search` over boards and tasks the user can see.
 
 ## Container image

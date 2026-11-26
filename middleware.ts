@@ -17,12 +17,10 @@ const isPublicRoute = createRouteMatcher([
   "/terms",
   "/cookies",
   "/share/task(.*)",
-  "/api/webhooks(.*)",
   // MCP authenticates machine clients with board-scoped bearer credentials.
   "/api/mcp(.*)",
   "/.well-known/oauth-protected-resource(.*)",
   "/.well-known/oauth-authorization-server",
-  "/api/integrations/google-calendar/callback(.*)",
   // GitHub redirects the browser here after install and after user authorization.
   // The route still requires the Clerk session before it links an installation.
   "/api/integrations/github/setup(.*)",
