@@ -55,12 +55,47 @@ jobs:
       - name: Start it without any secret and call the health check
         run: |
           docker run -d --name kikiboard -p 8080:8080 kikiboard:ci
+          trap 'docker rm -f kikiboard >/dev/null 2>&1 || true' EXIT
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:8080/api/health; then echo; exit 0; fi
+            if curl -fsS http://localhost:8080/api/health; then echo; break; fi
             sleep 2
           done
-          docker logs kikiboard
-          exit 1
+          curl -fsS http://localhost:8080/api/health > /dev/null || { docker logs kikiboard; exit 1; }
+          docker rm -f kikiboard
+
+          docker run -d --name kikiboard-routes -p 8081:8080 \
+            -e CLERK_SECRET_KEY=sk_test_ci_dummy_value_for_build_only \
+            kikiboard:ci
+          trap 'docker rm -f kikiboard kikiboard-routes >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8081/api/health > /dev/null; then break; fi
+            sleep 2
+          done
+          for route in /terms /privacy /cookies /sign-in /sign-up; do
+            headers="$(curl -sS -D - -o /dev/null "http://localhost:8081${route}")"
+            status="$(printf '%s' "$headers" | awk 'NR==1{print $2}')"
+            if [ "$status" != "200" ]; then
+              echo "::error::Route ${route} returned HTTP ${status} instead of 200"
+              docker logs kikiboard-routes
+              exit 1
+            fi
+            if ! printf '%s' "$headers" | grep -qi "x-content-type-options: nosniff"; then
+              echo "::error::Route ${route} missing X-Content-Type-Options: nosniff"
+              exit 1
+            fi
+          done
+          dashboard_headers="$(curl -sS -D - -o /dev/null -H "Accept: text/html" -b "__clerk_db_jwt=ci-dummy-dev-browser" http://localhost:8081/dashboard)"
+          dashboard_status="$(printf '%s' "$dashboard_headers" | awk 'NR==1{print $2}')"
+          if [ "$dashboard_status" != "307" ]; then
+            echo "::error::/dashboard returned HTTP ${dashboard_status} instead of 307 redirect"
+            docker logs kikiboard-routes
+            exit 1
+          fi
+          if ! printf '%s' "$dashboard_headers" | grep -qi "^location: .*/sign-in"; then
+            echo "::error::/dashboard did not redirect to /sign-in"
+            docker logs kikiboard-routes
+            exit 1
+          fi
 
   push:
     name: Push to Artifact Registry

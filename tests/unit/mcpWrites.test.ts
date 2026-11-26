@@ -230,7 +230,11 @@ describe("personal MCP membership rights", () => {
   });
 
   it("records a TaskStateTransition with dwell time and story points when moving a ticket between lists", async () => {
-    list.mockResolvedValue({ id: "list-2", boardId: "board-1", title: "Done", board: { organizationId: "org-1" } });
+    list.mockImplementation(async (args?: { where?: { id?: string } }) =>
+      args?.where?.id === "list-1"
+        ? { id: "list-1", boardId: "board-1", title: "Todo", board: { organizationId: "org-1" } }
+        : { id: "list-2", boardId: "board-1", title: "Done", board: { organizationId: "org-1" } },
+    );
     await updateMcpTickets(personalContext, { updates: [{ ticketId: task.id, changes: { listId: "list-2" } }] });
     expect(transitionCreate).toHaveBeenCalledTimes(1);
     expect(transitionCreate.mock.calls[0][0].data).toMatchObject({

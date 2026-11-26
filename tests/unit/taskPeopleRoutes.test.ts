@@ -4,7 +4,20 @@ const auth = vi.fn();
 const canEditBoard = vi.fn();
 const canReadBoard = vi.fn();
 const isBoardAdmin = vi.fn();
-const db = {
+type MockDb = {
+  user: { findUnique: ReturnType<typeof vi.fn> };
+  task: { findUnique: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
+  taskCollaborator: { findUnique: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn>; delete: ReturnType<typeof vi.fn> };
+  taskLabel: { findUnique: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn>; delete: ReturnType<typeof vi.fn> };
+  label: { findUnique: ReturnType<typeof vi.fn> };
+  epic: { findFirst: ReturnType<typeof vi.fn> };
+  list: { findFirst: ReturnType<typeof vi.fn> };
+  notification: { create: ReturnType<typeof vi.fn> };
+  taskStateTransition: { create: ReturnType<typeof vi.fn>; findFirst: ReturnType<typeof vi.fn> };
+  $transaction: ReturnType<typeof vi.fn>;
+};
+
+const db: MockDb = {
   user: { findUnique: vi.fn() },
   task: { findUnique: vi.fn(), update: vi.fn() },
   taskCollaborator: { findUnique: vi.fn(), create: vi.fn(), delete: vi.fn() },
@@ -13,7 +26,10 @@ const db = {
   epic: { findFirst: vi.fn() },
   list: { findFirst: vi.fn() },
   notification: { create: vi.fn() },
+  taskStateTransition: { create: vi.fn(), findFirst: vi.fn() },
+  $transaction: vi.fn(),
 };
+db.$transaction.mockImplementation(async (callback: (tx: MockDb) => unknown) => callback(db));
 
 vi.mock("@clerk/nextjs/server", () => ({ auth: (...args: unknown[]) => auth(...args) }));
 vi.mock("@/lib/boardAccess", () => ({
@@ -45,6 +61,7 @@ const task = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  db.$transaction.mockImplementation(async (callback: (tx: MockDb) => unknown) => callback(db));
   auth.mockResolvedValue({ userId: "clerk-1" });
   db.user.findUnique.mockResolvedValue({ id: "me", name: "Me", email: "me@x.test" });
   db.task.findUnique.mockResolvedValue(task);

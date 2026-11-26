@@ -111,7 +111,7 @@ describe("scoped MCP server", () => {
     expect(instructions).toContain("next list by column order");
   });
 
-  it("completes the MCP handshake and keeps board id optional on list_tickets only", async () => {
+  it("completes the MCP handshake and keeps boardId optional only on multi-board read tools", async () => {
     const result = await client.listTools();
     expect(result.tools.map((tool) => tool.name)).toEqual([
       "get_project",
@@ -119,11 +119,18 @@ describe("scoped MCP server", () => {
       "get_ticket",
       "get_attachment",
       "get_change_history",
+      "get_board_metrics",
+      "get_state_history",
+    ]);
+    const optionalBoardIdTools = new Set([
+      "list_tickets",
+      "get_board_metrics",
+      "get_state_history",
     ]);
     for (const tool of result.tools) {
       expect(tool.annotations?.readOnlyHint).toBe(true);
       expect(JSON.stringify(tool.inputSchema)).not.toContain("environment");
-      if (tool.name === "list_tickets") {
+      if (optionalBoardIdTools.has(tool.name)) {
         expect(tool.inputSchema.properties).toHaveProperty("boardId");
         expect(tool.inputSchema.required ?? []).not.toContain("boardId");
       } else {
