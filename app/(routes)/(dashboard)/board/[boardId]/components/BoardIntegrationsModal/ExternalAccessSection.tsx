@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { copyToClipboard } from "@/lib/copyText";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 type AccessTokenSummary = {
   id: string;
@@ -96,12 +97,12 @@ export function ExternalAccessSection({
         void createAccessToken();
       }}
     >
-      <div>
+      <div className="flex items-center gap-1.5">
         <Label className="flex items-center gap-1.5 text-xs font-semibold">
           <KeyRound size={14} />
           {t("mcpTitle")}
         </Label>
-        <p className="mt-1 text-[11px] text-muted-foreground">{t("mcpHint")}</p>
+        <InfoBubble text={t("mcpHint")} align="start" />
       </div>
 
       {createdToken && (

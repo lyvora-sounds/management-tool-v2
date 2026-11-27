@@ -1,11 +1,9 @@
 import type { BoardUser } from "../TaskCard/TaskCard.types";
 
-export type FilterStatus = "all" | "pending" | "completed";
 export type FilterDueDate = "all" | "overdue" | "today" | "week" | "none";
 export type FilterArchive = "active" | "archived" | "all";
 
 export type BoardFiltersState = {
-  status: FilterStatus;
   dueDate: FilterDueDate;
   labelIds: string[];
   archiveStatus: FilterArchive;
@@ -22,5 +20,3 @@ export type BoardFiltersProps = {
   availableQuarters?: string[];
   availableMembers?: BoardUser[];
 };
-
-

@@ -15,6 +15,7 @@ import { CreateBoardModal } from "../components/boards/CreateBoardModal/CreateBo
 import { useBoardPolling } from "@/hooks/use-board-polling";
 import { apiFetch } from "@/lib/apiClient";
 import { GithubConnection } from "./GithubConnection";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 type Board = { id: string; title: string; color: string | null; canMove: boolean };
 type Organization = {
@@ -489,9 +490,9 @@ export function OrganizationsClient({
   return (
     <div className="p-3 sm:p-6 space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="flex items-center gap-1.5">
           <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+          <InfoBubble text={t("subtitle")} align="start" />
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger render={<Button />}><Plus className="mr-2" size={16} />{t("create")}</DialogTrigger>

@@ -16,12 +16,6 @@ describe("taskMatchesFilters", () => {
     expect(taskMatchesFilters(task({ epicId: "e2" }), filters({ epicId: "e1" }))).toBe(false);
     expect(taskMatchesFilters(task({ epicId: null }), filters({ epicId: "e1" }))).toBe(false);
   });
-  it("filters by completion status", () => {
-    expect(taskMatchesFilters(task({ completed: true }), filters({ status: "pending" }))).toBe(false);
-    expect(taskMatchesFilters(task({ completed: false }), filters({ status: "pending" }))).toBe(true);
-    expect(taskMatchesFilters(task({ completed: false }), filters({ status: "completed" }))).toBe(false);
-    expect(taskMatchesFilters(task({ completed: true }), filters({ status: "completed" }))).toBe(true);
-  });
   it("filters by quarter", () => {
     expect(taskMatchesFilters(task({ quarter: "2026-Q4" }), filters({ quarter: "2026-Q4" }))).toBe(true);
     expect(taskMatchesFilters(task({ quarter: "2026-Q3" }), filters({ quarter: "2026-Q4" }))).toBe(false);
@@ -35,7 +29,7 @@ describe("taskMatchesFilters", () => {
     expect(taskMatchesFilters(task({ assigneeId: "u1" }), filters({ memberId: "unassigned" }))).toBe(false);
   });
   it("combines filters and hides archived tickets by default", () => {
-    expect(taskMatchesFilters(task({ epicId: "e1", completed: true }), filters({ epicId: "e1", status: "pending" }))).toBe(false);
+    expect(taskMatchesFilters(task({ epicId: "e1", completed: true }), filters({ epicId: "e1" }))).toBe(true);
     expect(taskMatchesFilters(task({ archived: true }), filters())).toBe(false);
     expect(taskMatchesFilters(task({ archived: true }), filters({ archiveStatus: "archived" }))).toBe(true);
   });

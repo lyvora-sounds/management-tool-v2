@@ -68,6 +68,7 @@ import type { BoardUser, TaskCollaborator } from "../TaskCard/TaskCard.types";
 import { TaskModalProps } from "./TaskModal.types";
 import { toast } from "sonner";
 import { TaskDevelopment } from "./TaskDevelopment";
+import { formatTicketDescriptionHtml } from "@/lib/ticketDescriptionHtml";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { getStatusTheme, isDoneList, targetListForCompletion } from "@/lib/statusTheme";
@@ -981,7 +982,7 @@ export function TaskModal({
 
                 {editingDescription ? (
                   <TaskDescriptionEditor
-                    content={savedDescription}
+                    content={formatTicketDescriptionHtml(savedDescription)}
                     loading={loading}
                     onSave={(html) => saveDescription(html)}
                     onCancel={() => setEditingDescription(false)}
@@ -997,8 +998,10 @@ export function TaskModal({
                   >
                     {savedDescription ? (
                       <div
-                        className="prose prose-sm dark:prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{ __html: savedDescription }}
+                        className="prose prose-sm dark:prose-invert max-w-none prose-headings:mt-3 prose-headings:mb-1.5 prose-headings:font-semibold prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-blockquote:border-l-primary/40 prose-pre:rounded-lg prose-pre:bg-muted prose-pre:text-foreground prose-code:before:content-none prose-code:after:content-none"
+                        dangerouslySetInnerHTML={{
+                          __html: formatTicketDescriptionHtml(savedDescription),
+                        }}
                       />
                     ) : (
                       <span className="text-muted-foreground">

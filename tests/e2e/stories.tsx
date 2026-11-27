@@ -4,6 +4,8 @@ import { TaskShareModal } from "@/app/(routes)/(dashboard)/board/[boardId]/compo
 import { SignUpConsentGate } from "@/app/(auth)/sign-up/[[...sign-up]]/SignUpConsentGate";
 import { CookieBanner } from "@/components/CookieBanner";
 import { HomeFooter } from "@/components/Shared/HomeFooter/HomeFooter";
+import { AppearanceSettings } from "@/app/(routes)/(dashboard)/dashboard/settings/components/AppearanceSettings";
+import { TwoFactorSettings } from "@/app/(routes)/(dashboard)/dashboard/settings/components/TwoFactorSettings";
 import en from "@/messages/en.json";
 
 export function ShareStory() {
@@ -42,6 +44,26 @@ export function SignUpConsentStory() {
         <SignUpConsentGate>
           <div data-testid="clerk-signup-widget">Clerk SignUp Widget</div>
         </SignUpConsentGate>
+      </div>
+    </NextIntlClientProvider>
+  );
+}
+
+export function TwoFactorSettingsStory() {
+  return (
+    <NextIntlClientProvider locale="en" messages={en}>
+      <div style={{ padding: 24, maxWidth: 720 }}>
+        <TwoFactorSettings />
+      </div>
+    </NextIntlClientProvider>
+  );
+}
+
+export function AppearanceSettingsStory() {
+  return (
+    <NextIntlClientProvider locale="en" messages={en}>
+      <div style={{ padding: 24, maxWidth: 720 }}>
+        <AppearanceSettings />
       </div>
     </NextIntlClientProvider>
   );
