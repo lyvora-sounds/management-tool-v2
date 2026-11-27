@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { copyToClipboard } from "@/lib/copyText";
 import { mcpConnectionSnippet } from "@/lib/mcp/connectionName";
 import { apiFetch } from "@/lib/apiClient";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 type Provider = "chatgpt" | "claude" | "grok" | "gemini";
 type OAuthClient = { id: string; redirectUris: string[]; allowWrite: boolean };
@@ -106,16 +107,20 @@ export function McpConnectionGuide({ endpoint, connectionName }: { endpoint: str
       </div>
       <div className="min-w-0 space-y-5 bg-muted/20 p-5 sm:p-6">
         <div className="space-y-2">
-          <Label htmlFor="mcp-endpoint">{t("endpoint")}</Label>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="mcp-endpoint">{t("endpoint")}</Label>
+            <InfoBubble text={t("multipleHint")} align="start" />
+          </div>
           <div className="flex gap-2"><Input id="mcp-endpoint" readOnly value={endpoint} className="min-w-0 bg-background font-mono text-xs" /><Button type="button" size="sm" variant="outline" onClick={() => copy(endpoint)}>{t("copy")}</Button></div>
-          <p className="text-xs leading-relaxed text-muted-foreground">{t("multipleHint")}</p>
         </div>
     {oauth ? <div className="space-y-4">
       <form onSubmit={createClient} className="space-y-3">
         {provider === "chatgpt" && <>
-          <Label htmlFor="mcp-oauth-callback">{t("callback")}</Label>
-          <Input id="mcp-oauth-callback" aria-describedby="mcp-callback-hint" type="url" value={callback} onChange={(event) => setCallback(event.target.value)} placeholder="https://chatgpt.com/connector_platform_oauth_redirect" required />
-          <p id="mcp-callback-hint" className="text-xs leading-relaxed text-muted-foreground">{t("callbackHint")}</p>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="mcp-oauth-callback">{t("callback")}</Label>
+            <InfoBubble text={t("callbackHint")} align="start" />
+          </div>
+          <Input id="mcp-oauth-callback" type="url" value={callback} onChange={(event) => setCallback(event.target.value)} placeholder="https://chatgpt.com/connector_platform_oauth_redirect" required />
         </>}
         <label className="flex gap-2 text-sm"><input type="checkbox" checked={allowWrite} onChange={(event) => setAllowWrite(event.target.checked)} />{t("allowWrite")}</label>
         <Button type="submit" disabled={busy || (provider === "chatgpt" && !callback.trim())}>{t("generate")}</Button>
@@ -134,8 +139,10 @@ export function McpConnectionGuide({ endpoint, connectionName }: { endpoint: str
       </details>}
     </div> : <div className="space-y-2">
       <pre className="overflow-x-auto rounded-lg border bg-muted p-3 text-xs">{snippet}</pre>
-      <Button type="button" size="sm" variant="outline" onClick={() => copy(snippet)}>{t("copy")}</Button>
-      <p className="text-xs text-muted-foreground">{t("tokenHint")}</p>
+      <div className="flex items-center gap-2">
+        <Button type="button" size="sm" variant="outline" onClick={() => copy(snippet)}>{t("copy")}</Button>
+        <InfoBubble text={t("tokenHint")} align="start" />
+      </div>
     </div>}
       </div>
     </div>

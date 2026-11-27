@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Copy, GitBranch, Info } from "lucide-react";
+import { Copy, GitBranch } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 import { apiFetch } from "@/lib/apiClient";
 import { copyToClipboard } from "@/lib/copyText";
 
@@ -15,30 +16,6 @@ type Development = {
   command: string | null;
   branches: { name: string; url: string }[];
 };
-
-function InfoHint({ label, children }: { label: string; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <span className="relative inline-flex">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-label={label}
-        onClick={() => setOpen((current) => !current)}
-        className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-      >
-        <Info size={13} aria-hidden />
-      </button>
-      <span
-        role="tooltip"
-        hidden={!open}
-        className="absolute top-full right-0 z-20 mt-1 w-72 rounded-md bg-foreground px-2.5 py-1.5 text-left text-xs leading-relaxed font-normal text-background shadow-md"
-      >
-        {children}
-      </span>
-    </span>
-  );
-}
 
 export function TaskDevelopment({ taskId }: { taskId: string }) {
   return <TaskDevelopmentBody key={taskId} taskId={taskId} />;
@@ -91,24 +68,28 @@ function TaskDevelopmentBody({ taskId }: { taskId: string }) {
             <Copy size={13} />
           </Button>
         )}
-        <InfoHint
+        <InfoBubble
+          align="end"
+          contentClassName="w-72"
           label={
             data.connected
               ? t("developmentHint")
               : `${t("developmentHint")} ${t("developmentConnect")}`
           }
         >
-          {t("developmentHint")}
-          {!data.connected && (
-            <>
-              {" "}
-              {t("developmentConnect")}{" "}
-              <Link href="/dashboard/organizations" className="underline underline-offset-2">
-                {t("developmentOpenOrganizations")}
-              </Link>
-            </>
-          )}
-        </InfoHint>
+          <p>
+            {t("developmentHint")}
+            {!data.connected && (
+              <>
+                {" "}
+                {t("developmentConnect")}{" "}
+                <Link href="/dashboard/organizations" className="text-primary underline underline-offset-2">
+                  {t("developmentOpenOrganizations")}
+                </Link>
+              </>
+            )}
+          </p>
+        </InfoBubble>
       </div>
       {data.branches.length > 0 && (
         <ul className="flex flex-col gap-0.5">

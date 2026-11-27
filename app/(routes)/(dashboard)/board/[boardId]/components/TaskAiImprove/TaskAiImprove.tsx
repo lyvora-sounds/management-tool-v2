@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
 import { ImproveTaskResult } from "@/lib/ai/types";
+import { formatTicketDescriptionHtml } from "@/lib/ticketDescriptionHtml";
 import Link from "next/link";
 
 type DescriptionLanguage = "en" | "es" | "tl";
@@ -108,7 +109,7 @@ export function TaskAiImprove({
       .filter((_, idx) => selectedSubtasks[idx])
       .map((s) => s.title);
 
-    await onApply(improvedTitle, result.description, accepted);
+    await onApply(improvedTitle, formatTicketDescriptionHtml(result.description), accepted);
     setOpen(false);
     setResult(null);
     toast.success(t("aiApplied"));
@@ -225,8 +226,10 @@ export function TaskAiImprove({
                 {t("suggestedDescription")}
               </label>
               <div
-                className="p-3 rounded-lg border bg-background text-xs prose prose-xs dark:prose-invert max-w-none max-h-48 overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: result.description }}
+                className="p-3 rounded-lg border bg-background text-xs prose prose-xs dark:prose-invert max-w-none max-h-48 overflow-y-auto prose-headings:mt-2 prose-headings:mb-1 prose-headings:font-semibold prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:rounded-lg prose-pre:bg-muted prose-pre:text-foreground prose-code:before:content-none prose-code:after:content-none"
+                dangerouslySetInnerHTML={{
+                  __html: formatTicketDescriptionHtml(result.description),
+                }}
               />
             </div>
           )}

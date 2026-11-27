@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 interface BoardOption {
   id: string;
@@ -317,11 +318,9 @@ export function CustomFieldsSettings() {
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
               <SlidersHorizontal size={20} />
             </div>
-            <div>
+            <div className="flex items-center gap-1.5">
               <h2 className="text-lg font-semibold">{t("customFields")}</h2>
-              <p className="text-xs text-muted-foreground">
-                {t("customFieldsDescription")}
-              </p>
+              <InfoBubble text={t("customFieldsDescription")} align="start" />
             </div>
           </div>
 
@@ -397,15 +396,11 @@ export function CustomFieldsSettings() {
           {/* Default Custom Fields Section */}
           <div className="rounded-xl border bg-card p-6 space-y-4 shadow-sm">
             <div className="flex items-center justify-between pb-3 border-b">
-              <div>
-                <h3 className="text-base font-semibold flex items-center gap-2">
-                  <Sparkles size={16} className="text-primary" />
-                  <span>{t("defaultSystemFields")}</span>
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t("defaultSystemFieldsHint")}
-                </p>
-              </div>
+              <h3 className="text-base font-semibold flex items-center gap-2">
+                <Sparkles size={16} className="text-primary" />
+                <span>{t("defaultSystemFields")}</span>
+                <InfoBubble text={t("defaultSystemFieldsHint")} align="start" />
+              </h3>
             </div>
 
             <div className="grid gap-3 lg:grid-cols-2">
@@ -464,15 +459,11 @@ export function CustomFieldsSettings() {
           {/* User Custom Fields Section */}
           <div className="rounded-xl border bg-card p-6 space-y-4 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b">
-              <div>
-                <h3 className="text-base font-semibold flex items-center gap-2">
-                  <ListFilter size={16} className="text-primary" />
-                  <span>{t("additionalCustomFields")}</span>
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t("additionalCustomFieldsHint")}
-                </p>
-              </div>
+              <h3 className="text-base font-semibold flex items-center gap-2">
+                <ListFilter size={16} className="text-primary" />
+                <span>{t("additionalCustomFields")}</span>
+                <InfoBubble text={t("additionalCustomFieldsHint")} align="start" />
+              </h3>
 
               {isAdmin && (
                 <Button onClick={openCreateDialog} size="sm" className="gap-1.5 text-xs">
@@ -593,15 +584,15 @@ export function CustomFieldsSettings() {
 
             {fieldType === "SELECT" && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium">{t("optionsCommaSeparated")}</Label>
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-sm font-medium">{t("optionsCommaSeparated")}</Label>
+                  <InfoBubble text={t("optionsHint")} align="start" />
+                </div>
                 <Input
                   value={fieldOptionsStr}
                   onChange={(e) => setFieldOptionsStr(e.target.value)}
                   placeholder={t("optionsPlaceholder")}
                 />
-                <p className="text-xs text-muted-foreground">
-                  {t("optionsHint")}
-                </p>
               </div>
             )}
 

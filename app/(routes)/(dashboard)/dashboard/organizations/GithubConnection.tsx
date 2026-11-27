@@ -6,6 +6,7 @@ import { Github, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 type GithubConnectionView = {
   accountLogin: string;
@@ -261,8 +262,11 @@ export function GithubConnection({
 
   return (
     <div className="space-y-3 border-t p-4">
-      <div className="flex items-center gap-2 text-sm font-semibold"><Github size={16} />{t("githubTitle")}</div>
-      <p className="text-xs text-muted-foreground">{t("githubHint")}</p>
+      <div className="flex items-center gap-2 text-sm font-semibold">
+        <Github size={16} />
+        <span>{t("githubTitle")}</span>
+        <InfoBubble text={t("githubHint")} align="start" />
+      </div>
       {loading ? <Loader2 className="animate-spin text-muted-foreground" size={16} /> : null}
       {!loading && !configured ? <p className="text-xs text-muted-foreground">{t("githubNotConfigured")}</p> : null}
       {!loading && configured && !connection && canManage && choices.length === 0 && !pendingApproval ? (

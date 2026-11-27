@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/apiClient";
 import Link from "next/link";
-import { Bot, Check, Copy, Loader2, ShieldCheck, Trash2 } from "lucide-react";
+import { Bot, Check, Copy, Loader2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { copyToClipboard } from "@/lib/copyText";
 import { mcpConnectionName, mcpScopeEndpoint } from "@/lib/mcp/connectionName";
 import { McpConnectionGuide } from "./McpConnectionGuide";
 import { McpChangeHistory } from "./McpChangeHistory";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 type McpScope = "organization" | "board" | "full";
 
@@ -228,10 +229,10 @@ export function McpSettings() {
     }
   };
 
-  const scopeHint = () => {
-    if (scope === "full") return t("mcpScopeFullHint");
+  const itemHint = (itemScope: McpScope) => {
+    if (itemScope === "full") return t("mcpScopeFullHint");
     if (!organization) return "";
-    if (scope === "board") {
+    if (itemScope === "board") {
       return board
         ? t("mcpScopeBoardHint", { board: board.title, name: organization.name })
         : t("mcpNoBoards");
@@ -249,18 +250,19 @@ export function McpSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border bg-card p-5 sm:p-6 shadow-sm space-y-4">
-        <div className="flex items-start gap-3">
+      <div className="rounded-xl border bg-card p-5 sm:p-6 shadow-sm">
+        <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10 text-primary">
             <Bot size={20} />
           </div>
-          <div className="space-y-1">
+          <div className="flex items-center gap-1.5">
             <h2 className="text-lg font-semibold">{t("mcpTitle")}</h2>
+            <InfoBubble
+              text={`${t("mcpIntro")} ${scope === "full" ? t("mcpFullAccessRule") : t("mcpOneOrgRule")}`}
+              align="start"
+              contentClassName="w-76"
+            />
           </div>
-        </div>
-        <div className="flex items-start gap-2 text-xs text-muted-foreground">
-          <ShieldCheck size={16} className="mt-0.5 shrink-0 text-primary" />
-          <p>{scope === "full" ? t("mcpFullAccessRule") : t("mcpOneOrgRule")}</p>
         </div>
       </div>
 
@@ -281,29 +283,27 @@ export function McpSettings() {
               if (needsOrg && !organization) return null;
               return (
                 <div key={item.id} className={selected ? "bg-primary/5" : undefined}>
-                  <button
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => selectScope(item.id)}
-                    className="flex w-full items-start gap-3 px-5 py-4 text-left sm:px-6"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                        selected ? "border-primary" : "border-muted-foreground/50"
-                      }`}
+                  <div className="flex items-center justify-between gap-3 px-5 py-4 sm:px-6">
+                    <button
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => selectScope(item.id)}
+                      className="flex flex-1 items-center gap-3 text-left"
                     >
-                      {selected && <span className="size-2 rounded-full bg-primary" />}
-                    </span>
-                    <span className="min-w-0">
-                      <span className={`block text-sm font-semibold ${selected ? "text-primary" : "text-foreground"}`}>
+                      <span
+                        aria-hidden="true"
+                        className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
+                          selected ? "border-primary" : "border-muted-foreground/50"
+                        }`}
+                      >
+                        {selected && <span className="size-2 rounded-full bg-primary" />}
+                      </span>
+                      <span className={`text-sm font-semibold ${selected ? "text-primary" : "text-foreground"}`}>
                         {t(item.labelKey)}
                       </span>
-                      {selected && (
-                        <span className="mt-1 block text-sm font-normal text-muted-foreground">{scopeHint()}</span>
-                      )}
-                    </span>
-                  </button>
+                    </button>
+                    <InfoBubble text={itemHint(item.id)} align="end" />
+                  </div>
                   {selected && item.id !== "full" && organization && (
                     <div className="grid gap-4 px-5 pb-5 sm:grid-cols-2 sm:px-6">
                       <div className="space-y-2">
@@ -410,12 +410,15 @@ export function McpSettings() {
                 placeholder={t("mcpTokenNamePlaceholder")}
                 maxLength={80}
               />
-              <div className="order-4 space-y-2">
+              <div className="order-4 flex items-center gap-2">
                 <Button type="submit" disabled={!canCreate || creating}>
                   {creating && <Loader2 size={14} className="animate-spin" />}
                   {t("mcpCreateToken")}
                 </Button>
-                <p className="text-xs text-muted-foreground">{t(scope === "full" ? "mcpPersonalHint" : "mcpAdminHint")}</p>
+                <InfoBubble
+                  text={t(scope === "full" ? "mcpPersonalHint" : "mcpAdminHint")}
+                  align="start"
+                />
               </div>
             </form>
 
@@ -424,9 +427,9 @@ export function McpSettings() {
       )}
 
       <div className="rounded-xl border bg-card p-5 sm:p-6 shadow-sm space-y-3">
-        <div>
+        <div className="flex items-center gap-1.5">
           <h3 className="text-sm font-semibold">{t("mcpYourTokens")}</h3>
-          <p className="mt-1 text-xs text-muted-foreground">{t("mcpYourTokensHint")}</p>
+          <InfoBubble text={t("mcpYourTokensHint")} align="start" />
         </div>
         {tokensLoading ? (
           <div className="flex justify-center py-6">

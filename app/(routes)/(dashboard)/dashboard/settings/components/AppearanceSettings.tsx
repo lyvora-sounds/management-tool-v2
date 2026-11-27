@@ -4,6 +4,7 @@ import { Check, Monitor, Moon, RotateCcw, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 import { cn } from "@/lib/utils";
 import { useAppearance } from "@/components/Appearance/AppearanceProvider";
 import {
@@ -34,11 +35,9 @@ function Section({
 }) {
   return (
     <section className="space-y-3">
-      <div>
+      <div className="flex items-center gap-1.5">
         <h2 className="text-sm font-semibold">{title}</h2>
-        {description && (
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-        )}
+        {description && <InfoBubble text={description} align="start" />}
       </div>
       {children}
     </section>
@@ -279,8 +278,8 @@ export function AppearanceSettings() {
         </div>
       </Section>
 
-      <div className="flex items-center justify-between border-t pt-4">
-        <p className="text-xs text-muted-foreground">{t("appearanceAutoSaved")}</p>
+      <div className="flex items-center justify-end gap-2 border-t pt-4">
+        <InfoBubble text={t("appearanceAutoSaved")} align="end" side="top" />
         <Button type="button" variant="outline" size="sm" onClick={reset}>
           <RotateCcw size={14} />
           {t("appearanceReset")}

@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 interface BoardIntegrationsModalProps {
   boardId: string;
@@ -119,36 +120,36 @@ export function BoardIntegrationsModal({
           <form onSubmit={handleSave} className="space-y-6 pt-2">
             {/* Slack Webhook */}
             <div className="space-y-2">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                <MessageSquare size={14} className="text-emerald-600" />
-                <span>{t("slackUrl")}</span>
-              </Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <MessageSquare size={14} className="text-emerald-600" />
+                  <span>{t("slackUrl")}</span>
+                </Label>
+                <InfoBubble text={t("slackHint")} align="start" />
+              </div>
               <Input
                 placeholder="https://hooks.slack.com/services/..."
                 value={slackWebhookUrl}
                 onChange={(e) => setSlackWebhookUrl(e.target.value)}
                 className="text-xs font-mono"
               />
-              <p className="text-[11px] text-muted-foreground">
-                {t("slackHint")}
-              </p>
             </div>
 
             {/* Discord Webhook */}
             <div className="space-y-2">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                <MessageSquare size={14} className="text-indigo-500" />
-                <span>{t("discordUrl")}</span>
-              </Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <MessageSquare size={14} className="text-indigo-500" />
+                  <span>{t("discordUrl")}</span>
+                </Label>
+                <InfoBubble text={t("discordHint")} align="start" />
+              </div>
               <Input
                 placeholder="https://discord.com/api/webhooks/..."
                 value={discordWebhookUrl}
                 onChange={(e) => setDiscordWebhookUrl(e.target.value)}
                 className="text-xs font-mono"
               />
-              <p className="text-[11px] text-muted-foreground">
-                {t("discordHint")}
-              </p>
             </div>
 
             {/* Event Triggers */}

@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 import { apiFetch } from "@/lib/apiClient";
 import type {
   BoardMetricsSummary,
@@ -184,9 +185,9 @@ export function BoardObservability({ boardId, boardUsers }: BoardObservabilityPr
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <BarChart3 size={18} />
           </div>
-          <div>
+          <div className="flex items-center gap-1.5">
             <h2 className="text-sm font-semibold">{t("title")}</h2>
-            <p className="text-xs text-muted-foreground">{t("subtitle")}</p>
+            <InfoBubble text={t("subtitle")} align="start" />
           </div>
         </div>
 
