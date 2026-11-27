@@ -671,6 +671,7 @@
     "kanbanView": "Kanban view",
     "listView": "List view",
     "filter": "Filter",
+    "boardMenu": "Board",
     "members": "Members",
     "integrations": "Integrations",
     "epics": "Epics",
@@ -736,6 +737,10 @@
     "observabilityView": "Observability & ISO 27001 Audit"
   },
   "filters": {
+    "title": "Filters",
+    "archiveScope": "Archive",
+    "dueDate": "Due date",
+    "labels": "Labels",
     "all": "All",
     "pending": "Pending",
     "completed": "Completed",

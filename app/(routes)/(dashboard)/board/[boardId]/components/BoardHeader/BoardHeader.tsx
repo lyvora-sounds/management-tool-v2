@@ -12,6 +12,7 @@ import {
   Layers,
   Archive,
   Webhook,
+  Link2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -41,6 +42,7 @@ import { apiFetch } from "@/lib/apiClient";
 export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initialLinks, memberCanAssign, boardKey, keyLocked }: BoardHeaderProps) {
   const t = useTranslations("board");
   const tCommon = useTranslations("common");
+  const tLinks = useTranslations("links");
   const router = useRouter();
   const renameBoard = useBoardsStore((s) => s.renameBoard);
   const removeBoard = useBoardsStore((s) => s.removeBoard);
@@ -59,6 +61,8 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [integrationsOpen, setIntegrationsOpen] = useState(false);
   const [brainDumpOpen, setBrainDumpOpen] = useState(false);
+  const [linksOpen, setLinksOpen] = useState(false);
+  const [linksCount, setLinksCount] = useState(initialLinks.length);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -182,6 +186,15 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
         onClose={() => setBrainDumpOpen(false)}
         onSuccess={() => router.refresh()}
       />
+      <BoardLinks
+        boardId={boardId}
+        isOwner={isOwner}
+        initialLinks={initialLinks}
+        open={linksOpen}
+        onOpenChange={setLinksOpen}
+        showTrigger={false}
+        onLinksChange={setLinksCount}
+      />
       {/* Los permisos del tablero los toca quien lo gestiona, no solo el
           propietario: es lo que ya aceptaba PATCH /permissions. */}
       {canManage && (
@@ -241,74 +254,67 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
         )}
       </div>
 
-        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-wrap">
-          {/* AI Brain Dump Button */}
-          {canEdit && <Button
-            data-tour="board-ai"
-            size="sm"
-            onClick={() => setBrainDumpOpen(true)}
-            className="workspace-ai-button gap-1.5 h-8 text-xs bg-gradient-to-r from-primary to-primary/75 hover:from-primary/90 hover:to-primary/65 text-primary-foreground shadow-sm cursor-pointer"
-          >
-            <Sparkles size={13} />
-            <span className="hidden sm:inline">{t("aiBrainDump")}</span>
-          </Button>}
-
-          {/* Epics Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEpicsOpen(true)}
-            className="gap-1.5 h-8 text-xs cursor-pointer"
-          >
-            <Layers size={13} />
-            <span className="hidden sm:inline">{t("epics")}</span>
-          </Button>
-
-          {/* Archive Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setArchiveOpen(true)}
-            className="gap-1.5 h-8 text-xs cursor-pointer"
-          >
-            <Archive size={13} />
-            <span className="hidden sm:inline">{t("archive")}</span>
-          </Button>
-
-          <BoardLinks boardId={boardId} isOwner={isOwner} initialLinks={initialLinks} />
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setActivityOpen(true)}
-            disabled={loading}
-            className="h-8 text-xs cursor-pointer"
-          >
-            <Activity size={14} />
-            <span className="hidden md:inline">{t("activity")}</span>
-          </Button>
-
-          <Button
-            data-tour="board-members"
-            data-guide="board-members"
-            variant="outline"
-            size="sm"
-            onClick={() => setMembersOpen(true)}
-            disabled={loading}
-            className="h-8 text-xs cursor-pointer"
-          >
-            <Users size={14} />
-            <span className="hidden md:inline">{t("members")}</span>
-          </Button>
-
-          {(isOwner || canManage) && <DropdownMenu>
-            <DropdownMenuTrigger
-              className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition cursor-pointer"
-              disabled={loading}
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          {canEdit && (
+            <Button
+              data-tour="board-ai"
+              size="sm"
+              onClick={() => setBrainDumpOpen(true)}
+              className="workspace-ai-button gap-1.5 h-8 text-xs bg-gradient-to-r from-primary to-primary/75 hover:from-primary/90 hover:to-primary/65 text-primary-foreground shadow-sm cursor-pointer"
             >
-              <MoreHorizontal size={18} />
+              <Sparkles size={13} />
+              <span className="hidden sm:inline">{t("aiBrainDump")}</span>
+            </Button>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              disabled={loading}
+              data-tour="board-menu"
+              className="inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <MoreHorizontal size={14} />
+              <span className="hidden sm:inline">{t("boardMenu")}</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="min-w-44">
+              <DropdownMenuItem onClick={() => setEpicsOpen(true)} className="cursor-pointer">
+                <Layers size={14} />
+                {t("epics")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  // Close the menu first so the links popover is not trapped under it.
+                  setTimeout(() => setLinksOpen(true), 0);
+                }}
+                className="cursor-pointer"
+              >
+                <Link2 size={14} />
+                <span className="flex-1">{tLinks("title")}</span>
+                {linksCount > 0 && (
+                  <span className="ml-2 size-5 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
+                    {linksCount}
+                  </span>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActivityOpen(true)} className="cursor-pointer">
+                <Activity size={14} />
+                {t("activity")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                data-tour="board-members"
+                data-guide="board-members"
+                onClick={() => setMembersOpen(true)}
+                className="cursor-pointer"
+              >
+                <Users size={14} />
+                {t("members")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setArchiveOpen(true)} className="cursor-pointer">
+                <Archive size={14} />
+                {t("archive")}
+              </DropdownMenuItem>
+
+              {(isOwner || canManage) && <DropdownMenuSeparator />}
               {isOwner && (
                 <DropdownMenuItem onClick={startEditing} className="cursor-pointer">
                   <Pencil size={14} />
@@ -318,7 +324,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
               {canManage && (
                 <DropdownMenuItem onClick={() => setIntegrationsOpen(true)} className="cursor-pointer">
                   <Webhook size={14} />
-                {t("integrations")}
+                  {t("integrations")}
                 </DropdownMenuItem>
               )}
               {canManage && (
@@ -339,7 +345,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
-          </DropdownMenu>}
+          </DropdownMenu>
         </div>
       </div>
     </>

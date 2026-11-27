@@ -19,11 +19,17 @@ export function BoardLinks({
   boardId,
   isOwner,
   initialLinks,
+  open: openProp,
+  onOpenChange,
+  showTrigger = true,
+  onLinksChange,
 }: BoardLinksProps) {
   const t = useTranslations("links");
   const tCommon = useTranslations("common");
   const [links, setLinks] = useState<BoardLink[]>(initialLinks);
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = openProp ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [label, setLabel] = useState("");
@@ -43,6 +49,7 @@ export function BoardLinks({
     });
     if (res.ok) {
       setLinks(next);
+      onLinksChange?.(next.length);
     } else {
       toast.error(t("saveError"));
     }
@@ -106,19 +113,25 @@ export function BoardLinks({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button variant="outline" size="sm" className="relative">
-            <Link2 size={15} />
-            <span className="hidden sm:inline">{t("title")}</span>
-            {links.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
-                {links.length}
-              </span>
-            )}
-          </Button>
-        }
-      ></PopoverTrigger>
+      {showTrigger ? (
+        <PopoverTrigger
+          render={
+            <Button variant="outline" size="sm" className="relative">
+              <Link2 size={15} />
+              <span className="hidden sm:inline">{t("title")}</span>
+              {links.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
+                  {links.length}
+                </span>
+              )}
+            </Button>
+          }
+        ></PopoverTrigger>
+      ) : (
+        <PopoverTrigger
+          render={<span className="sr-only" aria-hidden />}
+        ></PopoverTrigger>
+      )}
 
       <PopoverContent align="end" className="w-80 p-3 flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -153,8 +166,10 @@ export function BoardLinks({
               onChange={(e) => setUrl(e.target.value)}
               className="h-8 text-sm"
               onKeyDown={(e) => {
-                if (e.key === "Enter")
-                  editingId ? handleEdit(editingId) : handleAdd();
+                if (e.key === "Enter") {
+                  if (editingId) void handleEdit(editingId);
+                  else void handleAdd();
+                }
                 if (e.key === "Escape") cancel();
               }}
             />
