@@ -23,6 +23,7 @@ import {
   FilterArchive,
   FilterDueDate,
 } from "./BoardFilters.types";
+import { filterChipAppearance } from "./filterChipAppearance";
 
 function getInitials(name: string | null | undefined, email: string) {
   if (name)
@@ -345,64 +346,81 @@ export function BoardFilters({
         </PopoverContent>
       </Popover>
 
-      {filters.archiveStatus !== "active" && (
-        <Badge
-          variant="secondary"
-          className="h-7 gap-1 text-xs cursor-pointer"
-          onClick={() => onChange({ ...filters, archiveStatus: "active" })}
-        >
-          {archiveChipLabel()}
-          <X size={11} />
-        </Badge>
-      )}
-      {filters.memberId !== "all" && (
-        <Badge
-          variant="secondary"
-          className="h-7 gap-1 text-xs cursor-pointer"
-          onClick={() => onChange({ ...filters, memberId: "all" })}
-        >
-          {memberChipLabel()}
-          <X size={11} />
-        </Badge>
-      )}
-      {filters.dueDate !== "all" && (
-        <Badge
-          variant="secondary"
-          className="h-7 gap-1 text-xs cursor-pointer"
-          onClick={() => onChange({ ...filters, dueDate: "all" })}
-        >
-          {dueChipLabel()}
-          <X size={11} />
-        </Badge>
-      )}
-      {filters.quarter !== "all" && (
-        <Badge
-          variant="secondary"
-          className="h-7 gap-1 text-xs cursor-pointer"
-          onClick={() => onChange({ ...filters, quarter: "all" })}
-        >
-          {filters.quarter}
-          <X size={11} />
-        </Badge>
-      )}
-      {filters.epicId !== "all" && (
-        <Badge
-          variant="secondary"
-          className="h-7 gap-1 text-xs cursor-pointer"
-          onClick={() => onChange({ ...filters, epicId: "all" })}
-        >
-          {epicChipLabel()}
-          <X size={11} />
-        </Badge>
-      )}
+      {filters.archiveStatus !== "active" && (() => {
+        const chip = filterChipAppearance("archive");
+        return (
+          <Badge
+            className={chip.className}
+            style={chip.style}
+            onClick={() => onChange({ ...filters, archiveStatus: "active" })}
+          >
+            {archiveChipLabel()}
+            <X size={11} />
+          </Badge>
+        );
+      })()}
+      {filters.memberId !== "all" && (() => {
+        const chip = filterChipAppearance("member");
+        return (
+          <Badge
+            className={chip.className}
+            style={chip.style}
+            onClick={() => onChange({ ...filters, memberId: "all" })}
+          >
+            {memberChipLabel()}
+            <X size={11} />
+          </Badge>
+        );
+      })()}
+      {filters.dueDate !== "all" && (() => {
+        const chip = filterChipAppearance("due");
+        return (
+          <Badge
+            className={chip.className}
+            style={chip.style}
+            onClick={() => onChange({ ...filters, dueDate: "all" })}
+          >
+            {dueChipLabel()}
+            <X size={11} />
+          </Badge>
+        );
+      })()}
+      {filters.quarter !== "all" && (() => {
+        const chip = filterChipAppearance("quarter");
+        return (
+          <Badge
+            className={chip.className}
+            style={chip.style}
+            onClick={() => onChange({ ...filters, quarter: "all" })}
+          >
+            {filters.quarter}
+            <X size={11} />
+          </Badge>
+        );
+      })()}
+      {filters.epicId !== "all" && (() => {
+        const epic = availableEpics.find((ep) => ep.id === filters.epicId);
+        const chip = filterChipAppearance("epic", epic?.color);
+        return (
+          <Badge
+            className={chip.className}
+            style={chip.style}
+            onClick={() => onChange({ ...filters, epicId: "all" })}
+          >
+            {epicChipLabel()}
+            <X size={11} />
+          </Badge>
+        );
+      })()}
       {filters.labelIds.map((id) => {
         const label = availableLabels.find((l) => l.id === id);
         if (!label) return null;
+        const chip = filterChipAppearance("label", label.color);
         return (
           <Badge
             key={id}
-            className="h-7 gap-1 text-xs cursor-pointer text-white"
-            style={{ backgroundColor: label.color }}
+            className={chip.className}
+            style={chip.style}
             onClick={() => toggleLabel(id)}
           >
             {label.title || tCommon("unnamed")}

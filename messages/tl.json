@@ -674,6 +674,7 @@
     "boardMenu": "Board",
     "members": "Mga member",
     "integrations": "Mga integration",
+    "quarters": "Mga quarter",
     "epics": "Epics",
     "archive": "Archive",
     "activity": "Aktibidad",
@@ -875,6 +876,7 @@
     "fieldGroupPeopleHint": "Reporter ang nag-uulat. Assignee ang gumagawa. Collaborators tumutulong. QA ang nagrereview.",
     "attach": "Mag-attach",
     "noEpic": "Walang epic",
+    "noQuarter": "Walang quarter",
     "quarterLabel": "Quarter",
     "quarterPlaceholder": "Q (hal. 2026-Q1)",
     "statusColumn": "Status / Column",
@@ -1037,6 +1039,21 @@
     "empty": "Walang epics sa board na ito",
     "emptyHint": "Pinapangkat ng epics ang tickets ayon sa strategic initiatives o quarters (Q1, Q2, atbp.) at sinusubaybayan ang kabuuang progreso.",
     "progress": "{completed} sa {total} tickets ang natapos"
+  },
+  "quarters": {
+    "title": "Mga quarter ng board",
+    "hint": "Ang calendar-year dates ang default na rekomendasyon. I-edit para sa fiscal calendar — maaaring tumawid ng taon ang ranges (hal. Q4 na nagtatapos sa umpisa ng susunod na taon).",
+    "year": "Taon",
+    "start": "Simula",
+    "end": "Wakas",
+    "ensureYear": "Idagdag ang kulang na keys",
+    "resetCalendar": "I-reset sa calendar",
+    "loadError": "Hindi ma-load ang mga quarter",
+    "saveError": "Hindi ma-save ang mga quarter",
+    "saved": "Na-save ang mga quarter",
+    "endBeforeStart": "{key}: ang wakas ay dapat kasabay o pagkatapos ng simula",
+    "unknownQuarter": "Wala ang quarter na iyon sa calendar ng board",
+    "dateMismatch": "Dapat nasa loob ng napiling quarter ang mga petsa ng ticket"
   },
   "integrations": {
     "loadError": "Hindi ma-load ang integrations",
