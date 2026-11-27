@@ -10,11 +10,6 @@ export function taskMatchesFilters(
   if (filters.archiveStatus === "active" && isArchived) return false;
   if (filters.archiveStatus === "archived" && !isArchived) return false;
 
-
-  // Status
-  if (filters.status === "completed" && !task.completed) return false;
-  if (filters.status === "pending" && task.completed) return false;
-
   // Quarter
   if (filters.quarter !== "all" && task.quarter !== filters.quarter) return false;
 

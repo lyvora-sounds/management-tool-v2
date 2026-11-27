@@ -671,6 +671,7 @@
     "kanbanView": "Kanban view",
     "listView": "List view",
     "filter": "I-filter",
+    "boardMenu": "Board",
     "members": "Mga member",
     "integrations": "Mga integration",
     "epics": "Epics",
@@ -736,6 +737,10 @@
     "observabilityView": "Observability at ISO 27001 Audit"
   },
   "filters": {
+    "title": "Mga filter",
+    "archiveScope": "Archive",
+    "dueDate": "Due date",
+    "labels": "Labels",
     "all": "Lahat",
     "pending": "Pending",
     "completed": "Natapos",
