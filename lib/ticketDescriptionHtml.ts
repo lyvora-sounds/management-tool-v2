@@ -242,9 +242,6 @@ export function sanitizeTicketHtml(html: string): string {
   return result;
 }
 
-const EMOJI_PREFIX =
-  /^(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}\u{20E3}]+\s*)+/u;
-
 const SECTION_EMOJIS: { test: RegExp; emoji: string }[] = [
   { test: /^summary\b/i, emoji: "✨" },
   { test: /^(context|problem)\b/i, emoji: "🧭" },
@@ -256,8 +253,15 @@ const SECTION_EMOJIS: { test: RegExp; emoji: string }[] = [
   { test: /^security\b/i, emoji: "🔒" },
 ];
 
+/** Literal house-style emojis only — avoids eslint no-misleading-character-class. */
+const HOUSE_EMOJI_PREFIX = /^(?:✨|🧭|🛠️|✅|🚫|🔗|🧪|🔒|📌)\s*/u;
+
 function stripLeadingEmoji(text: string): string {
-  return text.replace(EMOJI_PREFIX, "").trim();
+  let out = text.trim();
+  while (HOUSE_EMOJI_PREFIX.test(out)) {
+    out = out.replace(HOUSE_EMOJI_PREFIX, "").trim();
+  }
+  return out;
 }
 
 function emojiForSectionTitle(title: string): string {
@@ -274,7 +278,7 @@ function styleHeadingInner(innerHtml: string): string {
   );
   if (!plain) return innerHtml;
   const emoji = emojiForSectionTitle(plain);
-  const withoutEmojiHtml = innerHtml.replace(EMOJI_PREFIX, "").trim();
+  const withoutEmojiHtml = stripLeadingEmoji(innerHtml.replace(/^(?:\s)+/, ""));
   if (innerHtml.trimStart().startsWith(emoji)) {
     return innerHtml.trim();
   }
