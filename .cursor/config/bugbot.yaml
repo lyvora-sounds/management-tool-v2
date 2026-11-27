@@ -4,7 +4,7 @@ version: 1
 
 triggers:
   drafts: false
-  frequency: everyPush # everyPush | oncePerPr
+  frequency: oncePerPr # everyPush | oncePerPr — once per PR to control cost; re-run with `bugbot run`
 
 review:
   effort: default # low | default | high | smart
