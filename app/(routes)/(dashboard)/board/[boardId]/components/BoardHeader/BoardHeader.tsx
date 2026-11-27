@@ -13,6 +13,7 @@ import {
   Archive,
   Webhook,
   Link2,
+  CalendarRange,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -35,9 +36,11 @@ import { BoardPermissions } from "../BoardPermissions/BoardPermissions";
 import { BoardEpicsModal } from "../BoardEpicsModal/BoardEpicsModal";
 import { ArchiveTasksModal } from "../ArchiveTasksModal/ArchiveTasksModal";
 import { BoardIntegrationsModal } from "../BoardIntegrationsModal/BoardIntegrationsModal";
+import { BoardQuartersModal } from "../BoardQuartersModal/BoardQuartersModal";
 import { AiBrainDumpModal } from "../AiBrainDumpModal/AiBrainDumpModal";
 import { ConfirmModal } from "@/components/Shared/ModalDeleteConfirmation/ModalDeleteConfirmation";
 import { apiFetch } from "@/lib/apiClient";
+import { useBoardStore } from "../../store/useBoardStore";
 
 export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initialLinks, memberCanAssign, boardKey, keyLocked }: BoardHeaderProps) {
   const t = useTranslations("board");
@@ -46,6 +49,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
   const router = useRouter();
   const renameBoard = useBoardsStore((s) => s.renameBoard);
   const removeBoard = useBoardsStore((s) => s.removeBoard);
+  const notifyQuartersChanged = useBoardStore((s) => s.notifyQuartersChanged);
 
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(title);
@@ -60,6 +64,7 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
   const [epicsOpen, setEpicsOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [integrationsOpen, setIntegrationsOpen] = useState(false);
+  const [quartersOpen, setQuartersOpen] = useState(false);
   const [brainDumpOpen, setBrainDumpOpen] = useState(false);
   const [linksOpen, setLinksOpen] = useState(false);
   const [linksCount, setLinksCount] = useState(initialLinks.length);
@@ -179,6 +184,16 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
         canManage={canManage}
         open={integrationsOpen}
         onClose={() => setIntegrationsOpen(false)}
+      />
+      <BoardQuartersModal
+        boardId={boardId}
+        canManage={canManage}
+        open={quartersOpen}
+        onClose={() => setQuartersOpen(false)}
+        onSaved={() => {
+          notifyQuartersChanged();
+          router.refresh();
+        }}
       />
       <AiBrainDumpModal
         boardId={boardId}
@@ -325,6 +340,12 @@ export function BoardHeader({ boardId, title, isOwner, canManage, canEdit, initi
                 <DropdownMenuItem onClick={() => setIntegrationsOpen(true)} className="cursor-pointer">
                   <Webhook size={14} />
                   {t("integrations")}
+                </DropdownMenuItem>
+              )}
+              {canManage && (
+                <DropdownMenuItem onClick={() => setQuartersOpen(true)} className="cursor-pointer">
+                  <CalendarRange size={14} />
+                  {t("quarters")}
                 </DropdownMenuItem>
               )}
               {canManage && (

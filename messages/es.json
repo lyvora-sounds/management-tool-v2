@@ -674,6 +674,7 @@
     "boardMenu": "Tablero",
     "members": "Miembros",
     "integrations": "Integraciones",
+    "quarters": "Trimestres",
     "epics": "Épicas",
     "archive": "Archivo",
     "activity": "Actividad",
@@ -875,6 +876,7 @@
     "fieldGroupPeopleHint": "Reporter reporta el issue. Assignee hace el trabajo. Colaboradores ayudan. QA revisa el resultado.",
     "attach": "Adjuntar",
     "noEpic": "Sin épica",
+    "noQuarter": "Sin trimestre",
     "quarterLabel": "Trimestre",
     "quarterPlaceholder": "Q (ej. 2026-Q1)",
     "statusColumn": "Estado / Columna",
@@ -1037,6 +1039,21 @@
     "empty": "No hay épicas creadas en este tablero",
     "emptyHint": "Las épicas te permiten agrupar tickets por iniciativas estratégicas o trimestres (Q1, Q2, etc.) y seguir su progreso global.",
     "progress": "{completed} de {total} tickets completados"
+  },
+  "quarters": {
+    "title": "Trimestres del tablero",
+    "hint": "Las fechas de año natural son la recomendación por defecto. Edítalas para calendarios fiscales: los rangos pueden cruzar años (por ejemplo Q4 que termina a principios del año siguiente).",
+    "year": "Año",
+    "start": "Inicio",
+    "end": "Fin",
+    "ensureYear": "Añadir claves que falten",
+    "resetCalendar": "Restablecer al calendario",
+    "loadError": "No se pudieron cargar los trimestres",
+    "saveError": "No se pudieron guardar los trimestres",
+    "saved": "Trimestres guardados",
+    "endBeforeStart": "{key}: el fin debe ser igual o posterior al inicio",
+    "unknownQuarter": "Ese trimestre no está en el calendario del tablero",
+    "dateMismatch": "Las fechas del ticket deben caer dentro del trimestre seleccionado"
   },
   "integrations": {
     "loadError": "Error al cargar integraciones",

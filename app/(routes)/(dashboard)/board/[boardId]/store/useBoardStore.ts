@@ -5,10 +5,12 @@ import type { TaskWithLabels, ListWithTasks } from "../components/TaskCard/TaskC
 interface BoardState {
   lists: ListWithTasks[];
   epicsRevision: number;
+  quartersRevision: number;
 
   // Inicializar con datos del servidor
   setLists: (lists: ListWithTasks[]) => void;
   notifyEpicsChanged: () => void;
+  notifyQuartersChanged: () => void;
 
   // Crear
   addList: (list: ListWithTasks) => void;
@@ -36,10 +38,13 @@ interface BoardState {
 export const useBoardStore = create<BoardState>((set) => ({
   lists: [],
   epicsRevision: 0,
+  quartersRevision: 0,
 
   setLists: (lists) => set({ lists }),
   notifyEpicsChanged: () =>
     set((state) => ({ epicsRevision: state.epicsRevision + 1 })),
+  notifyQuartersChanged: () =>
+    set((state) => ({ quartersRevision: state.quartersRevision + 1 })),
 
   addList: (list) =>
     set((state) => ({ lists: [...state.lists, list] })),

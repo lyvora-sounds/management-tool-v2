@@ -674,6 +674,7 @@
     "boardMenu": "Board",
     "members": "Members",
     "integrations": "Integrations",
+    "quarters": "Quarters",
     "epics": "Epics",
     "archive": "Archive",
     "activity": "Activity",
@@ -875,6 +876,7 @@
     "fieldGroupPeopleHint": "Reporter owns the report. Assignee does the work. Collaborators help. QA reviews the result.",
     "attach": "Attach",
     "noEpic": "No epic",
+    "noQuarter": "No quarter",
     "quarterLabel": "Quarter",
     "quarterPlaceholder": "Q (e.g. 2026-Q1)",
     "statusColumn": "Status / Column",
@@ -1037,6 +1039,21 @@
     "empty": "No epics on this board",
     "emptyHint": "Epics let you group tickets by strategic initiatives or quarters (Q1, Q2, etc.) and track overall progress.",
     "progress": "{completed} of {total} tickets completed"
+  },
+  "quarters": {
+    "title": "Board quarters",
+    "hint": "Calendar-year dates are the default recommendation. Edit them for fiscal calendars — ranges may cross calendar years (for example Q4 ending in early next year).",
+    "year": "Year",
+    "start": "Start",
+    "end": "End",
+    "ensureYear": "Add missing keys",
+    "resetCalendar": "Reset to calendar",
+    "loadError": "Could not load quarters",
+    "saveError": "Could not save quarters",
+    "saved": "Quarters saved",
+    "endBeforeStart": "{key}: end must be on or after start",
+    "unknownQuarter": "That quarter is not on this board calendar",
+    "dateMismatch": "Ticket dates must fall inside the selected quarter"
   },
   "integrations": {
     "loadError": "Could not load integrations",

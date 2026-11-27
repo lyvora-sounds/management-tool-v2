@@ -1,4 +1,5 @@
 import type { LabelModel } from "@/lib/modelTypes";
+import type { BoardQuarterDto } from "@/lib/boardQuarters";
 import type { BoardUser, TaskWithLabels } from "../TaskCard/TaskCard.types";
 
 export type TaskModalProps = {
@@ -11,6 +12,7 @@ export type TaskModalProps = {
   canManage: boolean;
   boardUsers: BoardUser[];
   memberCanAssign: boolean;
+  boardQuarters?: BoardQuarterDto[];
 };
 
 export type LabelWithActive = LabelModel & { active: boolean };

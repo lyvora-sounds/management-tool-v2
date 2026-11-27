@@ -44,6 +44,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/apiClient";
 import { boardTaskHref } from "@/lib/boardTaskUrl";
+import type { BoardQuarterDto } from "@/lib/boardQuarters";
 
 export function BoardContent({
   lists: initialLists,
@@ -64,6 +65,7 @@ export function BoardContent({
 
   const lists = useBoardStore((s) => s.lists);
   const epicsRevision = useBoardStore((s) => s.epicsRevision);
+  const quartersRevision = useBoardStore((s) => s.quartersRevision);
   const setLists = useBoardStore((s) => s.setLists);
   const reorderLists = useBoardStore((s) => s.reorderLists);
   const moveTask = useBoardStore((s) => s.moveTask);
@@ -74,6 +76,7 @@ export function BoardContent({
   const [filters, setFilters] = useState<BoardFiltersState>(DEFAULT_FILTERS);
   const [view, setView] = useState<"kanban" | "list" | "observability">("kanban");
   const [epics, setEpics] = useState<{ id: string; title: string; color: string }[]>([]);
+  const [boardQuarters, setBoardQuarters] = useState<BoardQuarterDto[]>([]);
 
   const effectiveLists = lists && lists.length > 0 ? lists : initialLists;
 
@@ -108,6 +111,24 @@ export function BoardContent({
     };
   }, [boardId, initialLists, epicsRevision]);
 
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch(`/api/boards/${boardId}/quarters`)
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then((data) => {
+        if (!cancelled && Array.isArray(data?.quarters)) {
+          setBoardQuarters(data.quarters as BoardQuarterDto[]);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [boardId, quartersRevision]);
+
   const availableLabels = useMemo(() => {
     const map = new Map<string, { id: string; title: string; color: string }>();
     for (const list of lists) {
@@ -120,15 +141,10 @@ export function BoardContent({
     return Array.from(map.values());
   }, [lists]);
 
-  const availableQuarters = useMemo(() => {
-    const set = new Set<string>();
-    for (const list of lists) {
-      for (const task of list.tasks) {
-        if (task.quarter) set.add(task.quarter);
-      }
-    }
-    return Array.from(set).sort();
-  }, [lists]);
+  const availableQuarters = useMemo(
+    () => [...boardQuarters.map((q) => q.key)].sort(),
+    [boardQuarters],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -439,6 +455,7 @@ export function BoardContent({
           canManage={canManage}
           boardUsers={boardUsers}
           memberCanAssign={memberCanAssign}
+          boardQuarters={boardQuarters}
         />
       )}
     </div>

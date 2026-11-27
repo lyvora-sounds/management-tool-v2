@@ -51,6 +51,8 @@ const MIGRATED: Route[] = [
   { method: "POST", pattern: /^\/api\/boards\/[^/]+\/epics$/, to: sameUnderV1 },
   { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/epics$/, to: sameUnderV1 },
   { method: "DELETE", pattern: /^\/api\/boards\/[^/]+\/epics$/, to: sameUnderV1 },
+  { method: "GET", pattern: /^\/api\/boards\/[^/]+\/quarters$/, to: sameUnderV1 },
+  { method: "PUT", pattern: /^\/api\/boards\/[^/]+\/quarters$/, to: sameUnderV1 },
   { method: "GET", pattern: /^\/api\/boards\/[^/]+\/integrations$/, to: sameUnderV1 },
   { method: "PATCH", pattern: /^\/api\/boards\/[^/]+\/integrations$/, to: sameUnderV1 },
 
