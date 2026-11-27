@@ -12,11 +12,13 @@ describe("formatTicketDescriptionHtml", () => {
     expect(formatTicketDescriptionHtml("   \n\t  ")).toBe("");
   });
 
-  it("preserves existing semantic HTML descriptions", () => {
+  it("preserves existing semantic HTML descriptions and applies emoji house style", () => {
     const html =
       "<h3>Summary</h3><p>Use <strong>InfoBubble</strong> in <code>Settings</code>.</p><ul><li>One</li><li>Two</li></ul>";
     expect(looksLikeHtmlDescription(html)).toBe(true);
-    expect(formatTicketDescriptionHtml(html)).toBe(html);
+    expect(formatTicketDescriptionHtml(html)).toBe(
+      "<h3>✨ Summary</h3><p>Use <strong>InfoBubble</strong> in <code>Settings</code>.</p><ul><li>One</li><li>Two</li></ul>",
+    );
   });
 
   it("sanitizes dangerous tags and attributes when input is HTML", () => {
@@ -53,7 +55,7 @@ describe("formatTicketDescriptionHtml", () => {
     ].join("\n");
 
     const html = formatTicketDescriptionHtml(markdown);
-    expect(html).toContain("<h3>Summary</h3>");
+    expect(html).toContain("<h3>✨ Summary</h3>");
     expect(html).toContain(
       "<p>Move <strong>helper copy</strong> into <code>InfoBubble</code> in <em>Settings</em>.</p>",
     );
@@ -132,7 +134,7 @@ describe("formatTicketDescriptionHtml", () => {
     );
     expect(normalizeAiTicketDescription("plain text")).toBe("plain text");
     expect(normalizeAiTicketDescription("### Summary\n\n- **One**")).toBe(
-      "<h3>Summary</h3><ul><li><strong>One</strong></li></ul>",
+      "<h3>✨ Summary</h3><ul><li><strong>One</strong></li></ul>",
     );
   });
 
@@ -140,11 +142,22 @@ describe("formatTicketDescriptionHtml", () => {
     const flattened =
       "## Summary Simplify the board. ## Context Too many buttons. ## Acceptance Criteria - [ ] Filters popover - [x] Board menu 1. Ship 2. Verify";
     const html = formatTicketDescriptionHtml(flattened);
-    expect(html).toContain("<h2>Summary Simplify the board.</h2>");
-    expect(html).toContain("<h2>Context Too many buttons.</h2>");
-    expect(html).toContain("<h2>Acceptance Criteria</h2>");
+    expect(html).toContain("<h2>✨ Summary Simplify the board.</h2>");
+    expect(html).toContain("<h2>🧭 Context Too many buttons.</h2>");
+    expect(html).toContain("<h2>✅ Acceptance Criteria</h2>");
     expect(html).toContain("<ul><li>☐ Filters popover</li><li>☑ Board menu</li></ul>");
     expect(html).toContain("<ol><li>Ship</li><li>Verify</li></ol>");
     expect(html).not.toContain("## Summary");
+  });
+
+  it("enforces emoji house style on plain section headings and keeps kiki-tag chips", () => {
+    const html = formatTicketDescriptionHtml(
+      "<h3>Summary</h3><p>Ship it.</p><h3>Acceptance Criteria</h3><ul><li>Done</li></ul><p><span class=\"kiki-tag kiki-tag-cyan\">API</span></p><blockquote class=\"kiki-callout\">Note</blockquote>",
+    );
+    expect(html).toContain("<h3>✨ Summary</h3>");
+    expect(html).toContain("<h3>✅ Acceptance Criteria</h3>");
+    expect(html).toContain('<span class="kiki-tag kiki-tag-cyan">API</span>');
+    expect(html).toContain('<blockquote class="kiki-callout">Note</blockquote>');
+    expect(formatTicketDescriptionHtml("<h3>✨ Summary</h3><p>x</p>")).toContain("<h3>✨ Summary</h3>");
   });
 });
