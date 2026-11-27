@@ -23,6 +23,7 @@ export function TaskDatePicker({
   startDate,
   dueDate,
   hideTrigger = false,
+  beforeSave,
   onSaved,
 }: TaskDatePickerProps) {
   const t = useTranslations("task");
@@ -59,6 +60,12 @@ export function TaskDatePicker({
     if (!canEdit) return;
     const finalStart = startEnabled ? start : undefined;
     const finalDue = dueEnabled ? buildDueWithTime(due) : undefined;
+    if (
+      beforeSave &&
+      !beforeSave(finalStart ?? null, finalDue ?? null)
+    ) {
+      return;
+    }
 
     await apiFetch(`/api/tasks/updateTask/${taskId}`, {
       method: "PATCH",

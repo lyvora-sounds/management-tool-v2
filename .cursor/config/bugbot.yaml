@@ -1,0 +1,18 @@
+# Bugbot repository settings (read from the PR base branch).
+# Docs: https://cursor.com/docs/bugbot
+version: 1
+
+triggers:
+  drafts: false
+  frequency: oncePerPr # everyPush | oncePerPr — once per PR to control cost; re-run with `bugbot run`
+
+review:
+  effort: default # low | default | high | smart
+  incremental: true
+
+prSummary:
+  mode: comment # disabled | description | comment
+  riskScore: true
+
+autofix:
+  mode: disabled # disabled | newBranch | existingBranch

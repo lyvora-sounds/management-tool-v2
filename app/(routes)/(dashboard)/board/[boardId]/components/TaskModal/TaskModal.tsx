@@ -73,6 +73,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { getStatusTheme, isDoneList, targetListForCompletion } from "@/lib/statusTheme";
 import { useBoardAccess } from "../BoardAccess";
+import {
+  assignmentMismatch,
+  formatQuarterOptionLabel,
+  toQuarterRanges,
+  type BoardQuarterDto,
+} from "@/lib/boardQuarters";
 
 type DescriptionLanguage = "en" | "es" | "tl";
 
@@ -86,11 +92,13 @@ export function TaskModal({
   canManage,
   boardUsers,
   memberCanAssign,
+  boardQuarters = [],
 }: TaskModalProps) {
   const { canEdit } = useBoardAccess();
   const locale = useLocale();
   const t = useTranslations("task");
   const tBoard = useTranslations("board");
+  const tQuarters = useTranslations("quarters");
   const lists = useBoardStore((s) => s.lists);
   const updateTask = useBoardStore((s) => s.updateTask);
   const addSubtask = useBoardStore((s) => s.addSubtask);
@@ -385,15 +393,63 @@ export function TaskModal({
     updateTask(currentListId, currentTask.id, { epicId });
   };
 
+  const quarterCalendar = useMemo(() => toQuarterRanges(boardQuarters), [boardQuarters]);
+
+  const quarterSelectOptions = useMemo(() => {
+    const byKey = new Map<string, BoardQuarterDto>(
+      boardQuarters.map((quarter) => [quarter.key, quarter]),
+    );
+    if (currentQuarter && !byKey.has(currentQuarter)) {
+      byKey.set(currentQuarter, {
+        key: currentQuarter,
+        startDate: "",
+        endDate: "",
+      });
+    }
+    return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
+  }, [boardQuarters, currentQuarter]);
+
+  const assertQuarterDates = (
+    quarterKey: string | null | undefined,
+    dates: { startDate?: Date | null; dueDate?: Date | null },
+  ) => {
+    const result = assignmentMismatch(quarterKey, dates, quarterCalendar);
+    if (result === "unknown") {
+      toast.error(tQuarters("unknownQuarter"));
+      return false;
+    }
+    if (result === "mismatch") {
+      toast.error(tQuarters("dateMismatch"));
+      return false;
+    }
+    return true;
+  };
+
   const saveQuarter = async (quarterVal: string) => {
     if (!canEdit) return;
-    setCurrentQuarter(quarterVal);
-    await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
+    const next = quarterVal === "none" ? "" : quarterVal.trim();
+    if (
+      !assertQuarterDates(next || null, {
+        startDate: currentStartDate,
+        dueDate: currentDueDate,
+      })
+    ) {
+      return;
+    }
+    const previous = currentQuarter;
+    setCurrentQuarter(next);
+    const res = await apiFetch(`/api/tasks/updateTask/${currentTask.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quarter: quarterVal.trim() || null }),
+      body: JSON.stringify({ quarter: next || null }),
     });
-    updateTask(currentListId, currentTask.id, { quarter: quarterVal.trim() || null });
+    if (!res.ok) {
+      setCurrentQuarter(previous);
+      const body = (await res.json().catch(() => null)) as { message?: string } | null;
+      toast.error(body?.message || tQuarters("unknownQuarter"));
+      return;
+    }
+    updateTask(currentListId, currentTask.id, { quarter: next || null });
   };
 
   const handleAiApply = async (
@@ -749,25 +805,47 @@ export function TaskModal({
                       </Select>
                     )}
 
-                    {/* Quarter Input */}
-                    <div className="flex items-center gap-1 border rounded-md px-2 py-1 h-8 bg-background">
-                      <Calendar size={13} className="text-muted-foreground" aria-hidden />
-                      <input
-                        aria-label={t("quarterLabel")}
-                        placeholder={t("quarterPlaceholder")}
-                        value={currentQuarter}
-                        readOnly={!canEdit}
-                        onChange={(e) => setCurrentQuarter(e.target.value)}
-                        onBlur={() => saveQuarter(currentQuarter)}
-                        className="text-sm font-sans font-bold placeholder:font-bold bg-transparent border-0 outline-none w-20"
-                      />
-                    </div>
+                    {canEdit ? (
+                      <Select
+                        value={currentQuarter || "none"}
+                        onValueChange={(value) => void saveQuarter(value ?? "none")}
+                      >
+                        <SelectTrigger
+                          className="h-8 text-sm font-sans font-bold w-auto min-w-36 gap-1"
+                          aria-label={t("quarterLabel")}
+                        >
+                          <Calendar size={13} className="text-muted-foreground" />
+                          <SelectValue placeholder={t("quarterLabel")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">{t("noQuarter")}</SelectItem>
+                          {quarterSelectOptions.map((quarter) => (
+                            <SelectItem key={quarter.key} value={quarter.key}>
+                              {quarter.startDate
+                                ? formatQuarterOptionLabel(quarter, locale)
+                                : quarter.key}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : currentQuarter ? (
+                      <Badge variant="secondary" className="h-8 gap-1 text-xs font-bold">
+                        <Calendar size={13} />
+                        {currentQuarter}
+                      </Badge>
+                    ) : null}
                     {!currentStartDate && !currentDueDate && (
                       <TaskDatePicker
                         taskId={currentTask.id}
                         listId={currentListId}
                         startDate={currentStartDate}
                         dueDate={currentDueDate}
+                        beforeSave={(s, d) =>
+                          assertQuarterDates(currentQuarter || null, {
+                            startDate: s,
+                            dueDate: d,
+                          })
+                        }
                         onSaved={(s, d) => {
                           setCurrentStartDate(s);
                           setCurrentDueDate(d);
@@ -782,6 +860,12 @@ export function TaskModal({
                       startDate={currentStartDate}
                       dueDate={currentDueDate}
                       hideTrigger
+                      beforeSave={(s, d) =>
+                        assertQuarterDates(currentQuarter || null, {
+                          startDate: s,
+                          dueDate: d,
+                        })
+                      }
                       onSaved={(s, d) => {
                         setCurrentStartDate(s);
                         setCurrentDueDate(d);
