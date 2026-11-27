@@ -6,6 +6,7 @@ import { Loader2, Mail, QrCode, ShieldCheck, Smartphone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 type Status = {
   email: string;
@@ -99,9 +100,9 @@ export function TwoFactorSettings() {
           <div className="p-2 rounded-lg bg-primary/10 text-primary">
             <ShieldCheck size={18} />
           </div>
-          <div>
+          <div className="flex items-center gap-1.5">
             <h2 className="text-lg font-semibold">{t("mfaTitle")}</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("mfaDesc")}</p>
+            <InfoBubble text={t("mfaDesc")} align="start" />
           </div>
         </div>
       </div>
@@ -109,7 +110,8 @@ export function TwoFactorSettings() {
       <FactorRow
         icon={<Mail size={16} />}
         title={t("mfaEmail")}
-        detail={status.emailEnabled ? t("mfaEmailOn") : t("mfaEmailDesc", { email: status.email })}
+        info={t("mfaEmailDesc", { email: status.email })}
+        statusText={status.emailEnabled ? t("mfaEmailOn") : undefined}
         enabled={status.emailEnabled}
         actionLabel={status.emailEnabled ? t("mfaDisable") : t("mfaSetUp")}
         disabled={busy}
@@ -146,10 +148,11 @@ export function TwoFactorSettings() {
       <FactorRow
         icon={<Smartphone size={16} />}
         title={t("mfaPhone")}
-        detail={
+        info={t("mfaPhoneDesc")}
+        statusText={
           status.phoneEnabled && status.phone
             ? t("mfaPhoneOn", { phone: status.phone })
-            : t("mfaPhoneDesc")
+            : undefined
         }
         enabled={status.phoneEnabled}
         actionLabel={status.phoneEnabled ? t("mfaDisable") : t("mfaSetUp")}
@@ -214,7 +217,8 @@ export function TwoFactorSettings() {
       <FactorRow
         icon={<QrCode size={16} />}
         title={t("mfaTotp")}
-        detail={status.totpEnabled ? t("mfaTotpOn") : t("mfaTotpDesc")}
+        info={t("mfaTotpDesc")}
+        statusText={status.totpEnabled ? t("mfaTotpOn") : undefined}
         enabled={status.totpEnabled}
         actionLabel={status.totpEnabled ? t("mfaDisable") : t("mfaSetUp")}
         disabled={busy}
@@ -277,7 +281,8 @@ export function TwoFactorSettings() {
 function FactorRow({
   icon,
   title,
-  detail,
+  info,
+  statusText,
   enabled,
   actionLabel,
   disabled,
@@ -286,7 +291,8 @@ function FactorRow({
 }: {
   icon: React.ReactNode;
   title: string;
-  detail: string;
+  info: string;
+  statusText?: string;
   enabled: boolean;
   actionLabel: string;
   disabled: boolean;
@@ -295,12 +301,17 @@ function FactorRow({
 }) {
   return (
     <div className="px-6 py-4 border-b last:border-b-0">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="mt-0.5 text-muted-foreground">{icon}</div>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="text-muted-foreground">{icon}</div>
           <div className="min-w-0">
-            <p className="text-sm font-medium">{title}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{detail}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium">{title}</p>
+              <InfoBubble text={info} align="start" />
+            </div>
+            {statusText && (
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">{statusText}</p>
+            )}
           </div>
         </div>
         <Button

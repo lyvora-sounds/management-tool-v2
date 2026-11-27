@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { changedHistoryFields, formatHistoryValue, historyRelationImpact, type HistoryNames, type HistorySnapshot } from "@/lib/mcp/historyPreview";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/apiClient";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 type Change = { id: string; kind: string; summary: string; createdAt: string; revertedAt: string | null };
 type Detail = HistoryNames & { id: string; kind: string; summary: string; before: HistorySnapshot[]; after: HistorySnapshot[] };
@@ -65,8 +66,7 @@ export function McpChangeHistory({ organizationId, boardId }: { organizationId: 
   }
 
   return <section className="rounded-xl border bg-card p-5 space-y-4">
-    <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{t("title")}</h3><Button type="button" size="sm" variant="outline" disabled={loading || busy} onClick={() => load()}>{t("refresh")}</Button></div>
-    <p className="text-sm text-muted-foreground">{t("description")}</p>
+    <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-1.5"><h3 className="font-semibold">{t("title")}</h3><InfoBubble text={t("description")} align="start" /></div><Button type="button" size="sm" variant="outline" disabled={loading || busy} onClick={() => load()}>{t("refresh")}</Button></div>
     {loading ? <p className="text-sm">{t("loading")}</p> : error ? <p className="text-sm">{t("loadError")}</p> : changes.length === 0 ? <p className="text-sm text-muted-foreground">{t("empty")}</p> : <ul className="space-y-2">
       {changes.map((change) => <li key={change.id} className="flex items-start justify-between gap-3 rounded-lg border p-3"><div className="min-w-0"><p className="break-words text-sm font-medium">{change.summary}</p><p className="text-xs text-muted-foreground">{new Date(change.createdAt).toLocaleString()}{change.revertedAt ? ` · ${t("revertedLabel")}` : ""}</p></div><Button type="button" size="sm" variant="outline" disabled={busy || !!change.revertedAt} onClick={() => preview(change.id)}>{t("preview")}</Button></li>)}
     </ul>}

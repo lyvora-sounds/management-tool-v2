@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { PRIORITIES } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskPriority/TaskPriority.constants";
 import { KikiLogo } from "@/components/Shared/KikiLogo/KikiLogo";
 import { dateLocale } from "@/i18n/routing";
+import { formatTicketDescriptionHtml } from "@/lib/ticketDescriptionHtml";
 import Link from "next/link";
 
 interface Props {
@@ -158,8 +159,10 @@ export default async function PublicTaskSharePage({ params }: Props) {
                 {tTask("description")}
               </h3>
               <div
-                className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: task.description }}
+                className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed prose-headings:mt-3 prose-headings:mb-1.5 prose-headings:font-semibold prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-blockquote:border-l-primary/40 prose-pre:rounded-lg prose-pre:bg-muted prose-pre:text-foreground prose-code:before:content-none prose-code:after:content-none"
+                dangerouslySetInnerHTML={{
+                  __html: formatTicketDescriptionHtml(task.description),
+                }}
               />
             </div>
           )}
@@ -263,10 +266,9 @@ export default async function PublicTaskSharePage({ params }: Props) {
                         {new Date(c.createdAt).toLocaleString(dateFmt)}
                       </span>
                     </div>
-                    <div
-                      className="prose prose-xs dark:prose-invert max-w-none text-foreground"
-                      dangerouslySetInnerHTML={{ __html: c.content }}
-                    />
+                    <p className="whitespace-pre-wrap wrap-break-word text-foreground leading-relaxed">
+                      {c.content}
+                    </p>
                   </div>
                 ))}
               </div>

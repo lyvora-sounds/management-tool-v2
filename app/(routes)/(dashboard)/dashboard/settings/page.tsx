@@ -40,6 +40,7 @@ import { CustomFieldsSettings } from "./components/CustomFieldsSettings";
 import { McpSettings } from "./components/McpSettings";
 import { AppearanceSettings } from "./components/AppearanceSettings";
 import { TwoFactorSettings } from "./components/TwoFactorSettings";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 const PROVIDERS: {
   id: AiProvider;
@@ -254,11 +255,9 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-7xl p-4 sm:p-8 space-y-6">
-      <div>
+      <div className="flex items-center gap-2">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {t("subtitle")}
-        </p>
+        <InfoBubble text={t("subtitle")} align="start" />
       </div>
 
       <div className="flex border-b overflow-x-auto">
@@ -319,11 +318,9 @@ export default function SettingsPage() {
               <div className="p-2 rounded-lg bg-primary/10 text-primary">
                 <Sparkles size={20} />
               </div>
-              <div>
+              <div className="flex items-center gap-1.5">
                 <h2 className="text-lg font-semibold">{t("aiProviderTitle")}</h2>
-                <p className="text-xs text-muted-foreground">
-                  {t("aiProviderDesc")}
-                </p>
+                <InfoBubble text={t("aiProviderDesc")} align="start" />
               </div>
             </div>
             <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
@@ -335,7 +332,12 @@ export default function SettingsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Provider Selector */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">{t("aiProvider")}</Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-sm font-medium">{t("aiProvider")}</Label>
+                {selectedProviderMeta && (
+                  <InfoBubble text={t(selectedProviderMeta.descriptionKey)} align="start" />
+                )}
+              </div>
               <Select
                 value={provider}
                 onValueChange={(v) => handleProviderChange(v as AiProvider)}
@@ -358,37 +360,47 @@ export default function SettingsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              {selectedProviderMeta && (
-                <p className="text-xs text-muted-foreground">
-                  {t(selectedProviderMeta.descriptionKey)}
-                </p>
-              )}
             </div>
 
             {/* Model Name */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">{t("model")}</Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-sm font-medium">{t("model")}</Label>
+                <InfoBubble
+                  text={`${t("modelDefault")} ${PROVIDER_DEFAULT_MODELS[provider]}`}
+                  align="start"
+                />
+              </div>
               <Input
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 placeholder={PROVIDER_DEFAULT_MODELS[provider]}
               />
-              <p className="text-xs text-muted-foreground">
-                {t("modelDefault")}{" "}
-                <code className="text-[11px] bg-muted px-1 py-0.5 rounded">
-                  {PROVIDER_DEFAULT_MODELS[provider]}
-                </code>
-              </p>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             {/* API Key Input */}
             <div className={`space-y-2 ${provider === "custom" || baseUrl ? "" : "sm:col-span-2"}`}>
-              <Label className="text-sm font-medium flex items-center gap-1.5">
-                <Key size={14} />
-                <span>{t("apiKey", { name: providerName ?? "" })}</span>
-              </Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-sm font-medium flex items-center gap-1.5">
+                  <Key size={14} />
+                  <span>{t("apiKey", { name: providerName ?? "" })}</span>
+                </Label>
+                {hasApiKey ? (
+                  <CheckCircle2 size={14} className="text-emerald-600 shrink-0" aria-hidden />
+                ) : (
+                  <AlertCircle size={14} className="text-amber-600 dark:text-amber-400 shrink-0" aria-hidden />
+                )}
+                <InfoBubble
+                  text={
+                    hasApiKey
+                      ? t("keyActive", { masked: maskedApiKey })
+                      : t("keyNeeded")
+                  }
+                  align="start"
+                />
+              </div>
               <Input
                 data-guide="ai-key"
                 type="password"
@@ -400,34 +412,23 @@ export default function SettingsPage() {
                     : selectedProviderMeta?.keyPlaceholder || t("keyPlaceholder")
                 }
               />
-              {hasApiKey ? (
-                <p className="text-xs text-emerald-600 flex items-center gap-1">
-                  <CheckCircle2 size={13} />
-                  <span>{t("keyActive", { masked: maskedApiKey })}</span>
-                </p>
-              ) : (
-                <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                  <AlertCircle size={13} />
-                  <span>{t("keyNeeded")}</span>
-                </p>
-              )}
             </div>
 
             {/* Custom Base URL (if custom or needed) */}
             {(provider === "custom" || baseUrl) && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center gap-1.5">
-                  <Server size={14} />
-                  <span>{t("customEndpoint")}</span>
-                </Label>
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-sm font-medium flex items-center gap-1.5">
+                    <Server size={14} />
+                    <span>{t("customEndpoint")}</span>
+                  </Label>
+                  <InfoBubble text={t("customEndpointHint")} align="start" />
+                </div>
                 <Input
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
                   placeholder={t("customEndpointPlaceholder")}
                 />
-                <p className="text-xs text-muted-foreground">
-                  {t("customEndpointHint")}
-                </p>
               </div>
             )}
           </div>
@@ -435,16 +436,14 @@ export default function SettingsPage() {
 
         {/* Voice & Speech Preferences */}
         <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="grid items-start gap-4 sm:grid-cols-2">
+          <div className="grid items-center gap-4 sm:grid-cols-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="p-2 rounded-lg bg-primary/10 text-primary">
                 <Globe size={20} />
               </div>
-              <div className="min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
                 <h2 className="text-lg font-semibold">{t("voiceTitle")}</h2>
-                <p className="text-xs text-muted-foreground">
-                  {t("voiceDesc")}
-                </p>
+                <InfoBubble text={t("voiceDesc")} align="start" />
               </div>
             </div>
 

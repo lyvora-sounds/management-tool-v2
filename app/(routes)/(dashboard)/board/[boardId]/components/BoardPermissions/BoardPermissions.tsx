@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/apiClient";
+import { InfoBubble } from "@/components/Shared/InfoBubble/InfoBubble";
 
 interface BoardPermissionsProps {
   boardId: string;
@@ -175,13 +176,14 @@ export function BoardPermissions({
 
         <div className="p-5 flex flex-col gap-3">
           <div className="rounded-lg border p-4 space-y-4">
-            <div className="flex items-start gap-3">
-              <Users size={17} className="text-muted-foreground mt-0.5 shrink-0" />
-              <div>
+            <div className="flex items-center gap-3">
+              <Users size={17} className="text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-1.5">
                 <div className="text-sm font-medium">{t("organizationAccess")}</div>
-                <div className="text-xs text-muted-foreground">
-                  {organizationName ? t("organizationHint", { organization: organizationName }) : t("loading")}
-                </div>
+                <InfoBubble
+                  text={organizationName ? t("organizationHint", { organization: organizationName }) : t("loading")}
+                  align="start"
+                />
               </div>
             </div>
 
@@ -255,14 +257,12 @@ export function BoardPermissions({
             </Button>
           </div>
 
-          <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
-            <div className="flex items-start gap-3">
-              <UserCheck size={17} className="text-muted-foreground mt-0.5 shrink-0" />
-              <div className="flex flex-col gap-0.5">
+          <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+            <div className="flex items-center gap-3">
+              <UserCheck size={17} className="text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-1.5">
                 <span className="text-sm font-medium">{t("assignTickets")}</span>
-                <span className="text-xs text-muted-foreground">
-                  {t("assignHint")}
-                </span>
+                <InfoBubble text={t("assignHint")} align="start" />
               </div>
             </div>
             <button
@@ -281,11 +281,11 @@ export function BoardPermissions({
           </div>
 
           <div className="rounded-lg border p-4 space-y-3">
-            <div className="flex items-start gap-3">
-              <Sparkles size={17} className="text-violet-600 dark:text-violet-300 mt-0.5 shrink-0" />
-              <div>
+            <div className="flex items-center gap-3">
+              <Sparkles size={17} className="text-violet-600 dark:text-violet-300 shrink-0" />
+              <div className="flex items-center gap-1.5">
                 <div className="text-sm font-medium">{t("kikiTitle")}</div>
-                <div className="text-xs text-muted-foreground">{t("kikiHint")}</div>
+                <InfoBubble text={t("kikiHint")} align="start" />
               </div>
             </div>
             <select
@@ -299,10 +299,10 @@ export function BoardPermissions({
               <option value="off">{t("kikiOff")}</option>
             </select>
             {kikiMode !== "off" && (
-              <div className="flex items-start justify-between gap-4 pt-1">
-                <div className="flex flex-col gap-0.5">
+              <div className="flex items-center justify-between gap-4 pt-1">
+                <div className="flex items-center gap-1.5">
                   <span className="text-sm font-medium">{t("kikiTriage")}</span>
-                  <span className="text-xs text-muted-foreground">{t("kikiTriageHint")}</span>
+                  <InfoBubble text={t("kikiTriageHint")} align="start" />
                 </div>
                 <button
                   disabled={saving}
