@@ -1,11 +1,12 @@
 export const TICKET_DESCRIPTION_HTML_INSTRUCTION = [
-  "When creating or updating a ticket with create_ticket or update_tickets, format description as clean, scannable, human-readable HTML — NEVER raw Markdown (no ###, **, ``` or - bullets, which collapse into an unformatted paragraph in the ticket modal).",
-  "Use semantic HTML tags supported by Kikiboard's editor: <h3> (or <h2>) for section headings, <p> for concise paragraphs, <ul>/<ol> and <li> for lists, <strong> for emphasis, <code> for inline identifiers or paths, <pre><code> for code blocks, and <blockquote> for callouts.",
-  "Structure non-trivial ticket descriptions into clear sections (such as <h3>Summary</h3>, <h3>Context</h3>, and <h3>Acceptance Criteria</h3>) so every ticket is immediately readable and appealing to a human reader.",
+  "When creating or updating a ticket with create_ticket or update_tickets, format description as colorful, scannable HTML — NEVER raw Markdown (no ###, **, ``` or - bullets).",
+  "House style (the server also enforces emoji section titles): use emoji headings such as <h3>✨ Summary</h3>, <h3>🧭 Context / Problem</h3>, <h3>🛠️ Proposed Change</h3>, <h3>✅ Acceptance Criteria</h3>, <h3>🚫 Out of Scope</h3>, <h3>🔗 Dependency</h3>, <h3>🧪 Test Plan</h3>, <h3>🔒 Security</h3>.",
+  "Add color with Kikiboard chips: <span class=\"kiki-tag kiki-tag-cyan\">API</span> (also kiki-tag-amber, kiki-tag-rose, kiki-tag-violet, kiki-tag-emerald). Use <blockquote class=\"kiki-callout\"> for short callouts.",
+  "Supported tags: <h2>/<h3>, <p>, <ul>/<ol>/<li>, <strong>, <em>, <code>, <pre><code>, <blockquote>, <hr>, <a>, <span class=\"kiki-tag …\">. Keep sections short and easy to scan.",
 ].join(" ");
 
 export const TICKET_DESCRIPTION_HTML_SCHEMA_DOC =
-  "Human-readable HTML ticket description (e.g. <h3>Summary</h3><p>...</p><h3>Acceptance Criteria</h3><ul><li>...</li></ul>). Use semantic HTML tags (<p>, <h2>, <h3>, <ul>, <ol>, <li>, <strong>, <em>, <code>, <pre><code>, <blockquote>, <hr>); do NOT pass raw Markdown.";
+  "Colorful HTML ticket description with emoji section headings (e.g. <h3>✨ Summary</h3><p>…</p><h3>✅ Acceptance Criteria</h3><ul><li>…</li></ul>). Optional chips: <span class=\"kiki-tag kiki-tag-cyan\">label</span>. Never pass raw Markdown.";
 
 const BLOCK_HTML_START = /^\s*<(?:p|h[1-6]|ul|ol|blockquote|pre|div|table|section|article)\b[^>]*>/i;
 const BLOCK_HTML_END = /<\/(?:p|h[1-6]|ul|ol|li|blockquote|pre|div|table|section|article)>|<hr\s*\/?>/i;
@@ -215,6 +216,14 @@ export function sanitizeTicketHtml(html: string): string {
       continue;
     }
 
+    if (tag === "span" || tag === "blockquote") {
+      const safeClasses = (attrs.class ?? "")
+        .split(/\s+/)
+        .filter((token) => /^kiki-[a-z0-9-]+$/i.test(token));
+      result += safeClasses.length ? `<${tag} class="${escapeHtml(safeClasses.join(" "))}">` : `<${tag}>`;
+      continue;
+    }
+
     if (tag === "th" || tag === "td") {
       const parts: string[] = [];
       for (const spanAttr of ["colspan", "rowspan"] as const) {
@@ -231,6 +240,57 @@ export function sanitizeTicketHtml(html: string): string {
   }
 
   return result;
+}
+
+const SECTION_EMOJIS: { test: RegExp; emoji: string }[] = [
+  { test: /^summary\b/i, emoji: "✨" },
+  { test: /^(context|problem)\b/i, emoji: "🧭" },
+  { test: /^proposed\b/i, emoji: "🛠️" },
+  { test: /^acceptance\b/i, emoji: "✅" },
+  { test: /^out of scope\b/i, emoji: "🚫" },
+  { test: /^dependenc/i, emoji: "🔗" },
+  { test: /^test\b/i, emoji: "🧪" },
+  { test: /^security\b/i, emoji: "🔒" },
+];
+
+/** Literal house-style emojis only — avoids eslint no-misleading-character-class. */
+const HOUSE_EMOJI_PREFIX = /^(?:✨|🧭|🛠️|✅|🚫|🔗|🧪|🔒|📌)\s*/u;
+
+function stripLeadingEmoji(text: string): string {
+  let out = text.trim();
+  while (HOUSE_EMOJI_PREFIX.test(out)) {
+    out = out.replace(HOUSE_EMOJI_PREFIX, "").trim();
+  }
+  return out;
+}
+
+function emojiForSectionTitle(title: string): string {
+  const normalized = stripLeadingEmoji(title);
+  for (const entry of SECTION_EMOJIS) {
+    if (entry.test.test(normalized)) return entry.emoji;
+  }
+  return "📌";
+}
+
+function styleHeadingInner(innerHtml: string): string {
+  const plain = stripLeadingEmoji(
+    decodeHtmlEntities(innerHtml.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim(),
+  );
+  if (!plain) return innerHtml;
+  const emoji = emojiForSectionTitle(plain);
+  const withoutEmojiHtml = stripLeadingEmoji(innerHtml.replace(/^(?:\s)+/, ""));
+  if (innerHtml.trimStart().startsWith(emoji)) {
+    return innerHtml.trim();
+  }
+  return `${emoji} ${withoutEmojiHtml || escapeHtml(plain)}`;
+}
+
+/** Ensures Kikiboard house style: emoji section titles on every h2/h3. */
+export function applyTicketDescriptionHouseStyle(html: string): string {
+  return html.replace(/<(h[23])(\s[^>]*)?>([\s\S]*?)<\/\1>/gi, (_full, tag: string, attrs: string | undefined, inner: string) => {
+    const attr = attrs ?? "";
+    return `<${tag}${attr}>${styleHeadingInner(inner)}</${tag}>`;
+  });
 }
 
 function formatEscapedEmphasis(escaped: string): string {
@@ -350,14 +410,30 @@ function isBlockStarter(line: string, nextLine?: string): boolean {
   );
 }
 
+/**
+ * Agents and MCP transports sometimes collapse newlines into spaces, turning
+ * "## Summary Foo ## Context Bar - [ ] Item" into one unreadable line. Restore
+ * section/list breaks so the Markdown→HTML converter can structure the ticket.
+ */
+export function expandFlattenedMarkdown(value: string): string {
+  let out = value;
+  // Require a non-whitespace character before the gap so indented nested lists
+  // ("  1. child") are not rewritten. Only horizontal spaces/tabs count as the gap.
+  out = out.replace(/(\S)[ \t]+(#{1,6}[ \t]+)/g, "$1\n\n$2");
+  out = out.replace(/(\S)[ \t]+(-[ \t]+\[[ xX]\][ \t]+)/g, "$1\n$2");
+  out = out.replace(/(\S)[ \t]+(-[ \t]+\*\*)/g, "$1\n$2");
+  out = out.replace(/(\S)[ \t]+(\d+[.)][ \t]+)/g, "$1\n$2");
+  return out;
+}
+
 export function formatTicketDescriptionHtml(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "";
   if (looksLikeHtmlDescription(trimmed)) {
-    return sanitizeTicketHtml(trimmed);
+    return applyTicketDescriptionHouseStyle(sanitizeTicketHtml(trimmed));
   }
 
-  const lines = trimmed.replace(/\r\n?/g, "\n").split("\n");
+  const lines = expandFlattenedMarkdown(trimmed.replace(/\r\n?/g, "\n")).split("\n");
   const blocks: string[] = [];
   let i = 0;
 
@@ -482,7 +558,7 @@ export function formatTicketDescriptionHtml(raw: string): string {
     }
   }
 
-  return blocks.join("");
+  return applyTicketDescriptionHouseStyle(blocks.join(""));
 }
 
 /**
@@ -494,7 +570,7 @@ export function normalizeAiTicketDescription(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "";
   if (looksLikeHtmlDescription(trimmed)) {
-    return sanitizeTicketHtml(trimmed);
+    return applyTicketDescriptionHouseStyle(sanitizeTicketHtml(trimmed));
   }
   if (MARKDOWN_INDICATOR.test(trimmed) || /[<>]/.test(trimmed)) {
     return formatTicketDescriptionHtml(trimmed);
