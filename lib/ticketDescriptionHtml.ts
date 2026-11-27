@@ -350,6 +350,22 @@ function isBlockStarter(line: string, nextLine?: string): boolean {
   );
 }
 
+/**
+ * Agents and MCP transports sometimes collapse newlines into spaces, turning
+ * "## Summary Foo ## Context Bar - [ ] Item" into one unreadable line. Restore
+ * section/list breaks so the Markdown→HTML converter can structure the ticket.
+ */
+export function expandFlattenedMarkdown(value: string): string {
+  let out = value;
+  // Require a non-whitespace character before the gap so indented nested lists
+  // ("  1. child") are not rewritten. Only horizontal spaces/tabs count as the gap.
+  out = out.replace(/(\S)[ \t]+(#{1,6}[ \t]+)/g, "$1\n\n$2");
+  out = out.replace(/(\S)[ \t]+(-[ \t]+\[[ xX]\][ \t]+)/g, "$1\n$2");
+  out = out.replace(/(\S)[ \t]+(-[ \t]+\*\*)/g, "$1\n$2");
+  out = out.replace(/(\S)[ \t]+(\d+[.)][ \t]+)/g, "$1\n$2");
+  return out;
+}
+
 export function formatTicketDescriptionHtml(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "";
@@ -357,7 +373,7 @@ export function formatTicketDescriptionHtml(raw: string): string {
     return sanitizeTicketHtml(trimmed);
   }
 
-  const lines = trimmed.replace(/\r\n?/g, "\n").split("\n");
+  const lines = expandFlattenedMarkdown(trimmed.replace(/\r\n?/g, "\n")).split("\n");
   const blocks: string[] = [];
   let i = 0;
 

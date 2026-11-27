@@ -135,4 +135,16 @@ describe("formatTicketDescriptionHtml", () => {
       "<h3>Summary</h3><ul><li><strong>One</strong></li></ul>",
     );
   });
+
+  it("recovers structure when Markdown newlines were stripped into one line", () => {
+    const flattened =
+      "## Summary Simplify the board. ## Context Too many buttons. ## Acceptance Criteria - [ ] Filters popover - [x] Board menu 1. Ship 2. Verify";
+    const html = formatTicketDescriptionHtml(flattened);
+    expect(html).toContain("<h2>Summary Simplify the board.</h2>");
+    expect(html).toContain("<h2>Context Too many buttons.</h2>");
+    expect(html).toContain("<h2>Acceptance Criteria</h2>");
+    expect(html).toContain("<ul><li>☐ Filters popover</li><li>☑ Board menu</li></ul>");
+    expect(html).toContain("<ol><li>Ship</li><li>Verify</li></ol>");
+    expect(html).not.toContain("## Summary");
+  });
 });
