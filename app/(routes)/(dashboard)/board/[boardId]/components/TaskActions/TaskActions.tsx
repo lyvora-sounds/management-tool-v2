@@ -106,7 +106,7 @@ export function TaskActions({ taskId, listId }: TaskActionsProps) {
     />
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="p-1 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-muted transition"
+        className="p-1 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:flex pointer-coarse:size-11 pointer-coarse:items-center pointer-coarse:justify-center pointer-coarse:opacity-100 hover:bg-muted transition"
         disabled={loading}
       >
         <MoreHorizontal size={14} />

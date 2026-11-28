@@ -6,6 +6,8 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { HomeFooter } from "@/components/Shared/HomeFooter/HomeFooter";
 import { AppearanceSettings } from "@/app/(routes)/(dashboard)/dashboard/settings/components/AppearanceSettings";
 import { TwoFactorSettings } from "@/app/(routes)/(dashboard)/dashboard/settings/components/TwoFactorSettings";
+import { PriorityMark } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskPriority/PriorityMark";
+import { PRIORITIES } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskPriority/TaskPriority.constants";
 import en from "@/messages/en.json";
 
 export function ShareStory() {
@@ -66,5 +68,15 @@ export function AppearanceSettingsStory() {
         <AppearanceSettings />
       </div>
     </NextIntlClientProvider>
+  );
+}
+
+export function PriorityMarksStory() {
+  return (
+    <div style={{ padding: 24, display: "flex", gap: 16 }}>
+      {PRIORITIES.map((priority) => (
+        <PriorityMark key={priority.value} priority={priority} label={priority.label} />
+      ))}
+    </div>
   );
 }

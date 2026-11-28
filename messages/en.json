@@ -942,7 +942,9 @@
     "editorOrdered": "Ordered list",
     "editorQuote": "Quote",
     "editorCodeBlock": "Code block",
-    "editorDivider": "Divider"
+    "editorDivider": "Divider",
+    "markCompleted": "Mark as completed",
+    "markReopen": "Reopen ticket"
   },
   "members": {
     "title": "Board members",

@@ -13,10 +13,12 @@ import {
   Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TaskCardProps } from "./TaskCard.types";
 import { TaskActions } from "../TaskActions/TaskActions";
 import { useBoardStore } from "../../store/useBoardStore";
 import { getPriority } from "../TaskPriority/TaskPriority.constants";
+import { PriorityMark } from "../TaskPriority/PriorityMark";
 import { targetListForCompletion } from "@/lib/statusTheme";
 import { useBoardAccess } from "../BoardAccess";
 import { displayCustomFieldValue } from "@/lib/customValueUtils";
@@ -159,24 +161,12 @@ export function TaskCard({
       {...(canEdit ? attributes : {})}
       {...(canEdit ? listeners : {})}
       className={cn(
-        "group glass-tile bg-background rounded-lg px-(--card-px) py-(--card-py) shadow-sm border text-(length:--card-text) hover:border-primary/50 transition-colors flex flex-col gap-(--card-gap)",
+        "group relative glass-tile bg-background rounded-lg px-(--card-px) py-(--card-py) shadow-sm border text-(length:--card-text) hover:border-primary/50 transition-colors flex flex-col gap-(--card-gap)",
         canEdit && "cursor-grab active:cursor-grabbing",
       )}
     >
-      {/* Top row: checkbox + title + priority + actions */}
-      <div className="flex items-center gap-2">
-        {canEdit && <div
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={toggleCompleted}
-          className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-primary transition-all cursor-pointer"
-        >
-          {completed ? (
-            <CheckCircle2 size={15} className="text-primary opacity-100" />
-          ) : (
-            <Circle size={15} />
-          )}
-        </div>}
-
+      {/* Top row: title, priority and, on hover or focus, the quick actions. Nothing is reserved on the left. */}
+      <div className="flex items-start gap-2">
         {hierarchyStep && (
           <span
             title={t("hierarchyStepTitle", { step: hierarchyStep.step, total: hierarchyStep.total, root: titleById.get(hierarchyStep.rootId) ?? "" })}
@@ -188,32 +178,56 @@ export function TaskCard({
 
         <span
           className={cn(
-            "flex-1 cursor-pointer leading-snug",
+            "min-w-0 flex-1 cursor-pointer break-words line-clamp-2 leading-snug",
             completed && "line-through text-muted-foreground",
           )}
+          title={task.title.length > 48 ? task.title : undefined}
           onClick={openTicket}
         >
           {task.title}
         </span>
 
         {show.priority && priority && (
-          <span
-            className={cn(
-              "text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0",
-              priority.bg,
-            )}
-          >
-            {tPriority(priority.value)}
-          </span>
+          <PriorityMark priority={priority} label={tPriority(priority.value)} className="mt-[3px]" />
         )}
 
-        <div onPointerDown={(e) => e.stopPropagation()}>
-          <TaskActions taskId={task.id} listId={listId} />
-        </div>
+        {canEdit && (
+          // With a mouse the controls float over the end of the first line when the card is hovered or focused, so
+          // they take no room. On a touch screen there is no hover: only the menu is shown, in the row, with a
+          // 44 px target that is pulled into the card's padding so the card does not grow.
+          <div
+            onPointerDown={(e) => e.stopPropagation()}
+            className="absolute right-1.5 top-1.5 z-10 flex items-center gap-0.5 rounded-md bg-background/95 opacity-0 shadow-sm ring-1 ring-border transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:static pointer-coarse:-my-3 pointer-coarse:-mr-2 pointer-coarse:bg-transparent pointer-coarse:opacity-100 pointer-coarse:shadow-none pointer-coarse:ring-0"
+          >
+            <Tooltip>
+              <TooltipTrigger
+                delay={200}
+                render={
+                  <button
+                    type="button"
+                    onClick={toggleCompleted}
+                    aria-label={completed ? t("markReopen") : t("markCompleted")}
+                    className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-primary pointer-coarse:hidden"
+                  />
+                }
+              >
+                {completed ? (
+                  <CheckCircle2 size={15} className="text-primary" />
+                ) : (
+                  <Circle size={15} />
+                )}
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {completed ? t("markReopen") : t("markCompleted")}
+              </TooltipContent>
+            </Tooltip>
+            <TaskActions taskId={task.id} listId={listId} />
+          </div>
+        )}
       </div>
 
       {hasTags && (
-        <div className="flex items-center gap-1.5 pl-6 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {task.epic && (
             <span
               className="text-[10px] font-semibold px-1.5 py-0.2 rounded text-white"
@@ -253,7 +267,7 @@ export function TaskCard({
 
       {/* Footer row: indicators & assignee */}
       {hasFooter && (
-        <div className="flex items-center justify-between gap-2 pl-6 text-muted-foreground pt-0.5">
+        <div className="flex items-center justify-between gap-2 text-muted-foreground pt-0.5">
           <div className="flex items-center gap-2.5 flex-wrap">
             {showDue && due && (
               <span

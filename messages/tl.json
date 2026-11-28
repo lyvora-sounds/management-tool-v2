@@ -942,7 +942,9 @@
     "editorOrdered": "Ordered list",
     "editorQuote": "Quote",
     "editorCodeBlock": "Code block",
-    "editorDivider": "Divider"
+    "editorDivider": "Divider",
+    "markCompleted": "Markahan bilang tapos",
+    "markReopen": "Buksan muli ang ticket"
   },
   "members": {
     "title": "Mga member ng board",
