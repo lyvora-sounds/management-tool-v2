@@ -942,7 +942,9 @@
     "editorOrdered": "Lista numerada",
     "editorQuote": "Cita",
     "editorCodeBlock": "Bloque de código",
-    "editorDivider": "Separador"
+    "editorDivider": "Separador",
+    "markCompleted": "Marcar como completado",
+    "markReopen": "Reabrir ticket"
   },
   "members": {
     "title": "Miembros del tablero",

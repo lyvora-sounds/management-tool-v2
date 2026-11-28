@@ -1,5 +1,6 @@
 "use client";
 
+import { PriorityMark } from "../../../board/[boardId]/components/TaskPriority/PriorityMark";
 import { Check, Monitor, Moon, RotateCcw, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -80,12 +81,14 @@ function PreviewCard() {
   return (
     <div className="rounded-xl bg-muted p-3">
       <div className="flex flex-col gap-(--card-gap) glass-tile rounded-lg border bg-background px-(--card-px) py-(--card-py) text-(length:--card-text) shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="flex-1 leading-snug">{t("appearancePreviewTitle")}</span>
+        <div className="flex items-start gap-2">
+          <span className="min-w-0 flex-1 leading-snug">{t("appearancePreviewTitle")}</span>
           {show.priority && (
-            <span className="shrink-0 rounded bg-orange-500/15 px-1.5 py-0.5 text-[10px] font-medium text-orange-700 dark:text-orange-300">
-              {t("appearancePreviewPriority")}
-            </span>
+            <PriorityMark
+              priority={{ value: "high", color: "#f97316" }}
+              label={t("appearancePreviewPriority")}
+              className="mt-[3px]"
+            />
           )}
         </div>
         {show.tags && (
