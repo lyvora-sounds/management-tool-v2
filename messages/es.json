@@ -948,7 +948,8 @@
     "commentsNew": "Comentarios nuevos",
     "kikiMenu": "Pedir a Kiki",
     "markCompleted": "Marcar como completado",
-    "markReopen": "Reabrir ticket"
+    "markReopen": "Reabrir ticket",
+    "addProperty": "Añadir propiedad"
   },
   "members": {
     "title": "Miembros del tablero",
