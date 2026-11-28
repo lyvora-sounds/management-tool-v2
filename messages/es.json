@@ -946,7 +946,9 @@
     "commentsHide": "Ocultar comentarios",
     "commentsShow": "Mostrar comentarios",
     "commentsNew": "Comentarios nuevos",
-    "kikiMenu": "Pedir a Kiki"
+    "kikiMenu": "Pedir a Kiki",
+    "markCompleted": "Marcar como completado",
+    "markReopen": "Reabrir ticket"
   },
   "members": {
     "title": "Miembros del tablero",

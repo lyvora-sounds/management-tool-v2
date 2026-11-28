@@ -946,7 +946,9 @@
     "commentsHide": "Hide comments",
     "commentsShow": "Show comments",
     "commentsNew": "New comments",
-    "kikiMenu": "Ask Kiki"
+    "kikiMenu": "Ask Kiki",
+    "markCompleted": "Mark as completed",
+    "markReopen": "Reopen ticket"
   },
   "members": {
     "title": "Board members",

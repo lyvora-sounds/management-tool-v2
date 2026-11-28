@@ -23,7 +23,8 @@ test("the AI shortcuts are one menu next to Send, not three chips above the text
 
   await page.getByRole("menuitem", { name: "Summarize" }).click();
   await expect(page.getByRole("combobox")).toHaveValue(/^@Kiki .*2 sentences/);
-  expect(await page.getByRole("combobox").evaluate((el) => document.activeElement === el)).toBe(true);
+  // the focus goes back to the text box on the next frame, so wait for it instead of reading it at once
+  await expect(page.getByRole("combobox")).toBeFocused();
 });
 
 test("tells its owner how many comments there are once they are loaded", async ({ mount, page }) => {

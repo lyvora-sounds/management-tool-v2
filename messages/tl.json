@@ -946,7 +946,9 @@
     "commentsHide": "Itago ang mga komento",
     "commentsShow": "Ipakita ang mga komento",
     "commentsNew": "Mga bagong komento",
-    "kikiMenu": "Magtanong kay Kiki"
+    "kikiMenu": "Magtanong kay Kiki",
+    "markCompleted": "Markahan bilang tapos",
+    "markReopen": "Buksan muli ang ticket"
   },
   "members": {
     "title": "Mga member ng board",

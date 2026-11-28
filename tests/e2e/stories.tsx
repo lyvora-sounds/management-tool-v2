@@ -8,6 +8,8 @@ import { AppearanceSettings } from "@/app/(routes)/(dashboard)/dashboard/setting
 import { TwoFactorSettings } from "@/app/(routes)/(dashboard)/dashboard/settings/components/TwoFactorSettings";
 import { TaskComments } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskComments/TaskComments";
 import { BoardAccessProvider } from "@/app/(routes)/(dashboard)/board/[boardId]/components/BoardAccess";
+import { PriorityMark } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskPriority/PriorityMark";
+import { PRIORITIES } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskPriority/TaskPriority.constants";
 import en from "@/messages/en.json";
 
 export function ShareStory() {
@@ -80,5 +82,15 @@ export function TaskCommentsStory({ onCount }: { onCount?: (count: number) => vo
         </div>
       </BoardAccessProvider>
     </NextIntlClientProvider>
+  );
+}
+
+export function PriorityMarksStory() {
+  return (
+    <div style={{ padding: 24, display: "flex", gap: 16 }}>
+      {PRIORITIES.map((priority) => (
+        <PriorityMark key={priority.value} priority={priority} label={priority.label} />
+      ))}
+    </div>
   );
 }
