@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/lib/apiClient";
 import { useRouter } from "next/navigation";
 import {
@@ -16,9 +16,12 @@ import {
   Layers,
   Calendar,
   Globe,
+  MessageSquare,
+  X,
 } from "lucide-react";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -32,6 +35,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { readCommentsPanel, resolveCommentsOpen, writeCommentsPanel } from "@/lib/commentsPanel";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -82,6 +87,13 @@ import {
 
 type DescriptionLanguage = "en" | "es" | "tl";
 
+/** True when a key press is going into a text field, so a one-letter shortcut must leave it alone. */
+function isTypingTarget(target: EventTarget | null) {
+  const el = target as HTMLElement | null;
+  if (!el) return false;
+  return el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName);
+}
+
 export function TaskModal({
   task,
   listId,
@@ -98,6 +110,7 @@ export function TaskModal({
   const locale = useLocale();
   const t = useTranslations("task");
   const tBoard = useTranslations("board");
+  const tCommon = useTranslations("common");
   const tQuarters = useTranslations("quarters");
   const lists = useBoardStore((s) => s.lists);
   const updateTask = useBoardStore((s) => s.updateTask);
@@ -181,6 +194,32 @@ export function TaskModal({
   const [loading, setLoading] = useState(false);
   const [mobileTab, setMobileTab] = useState<"details" | "comments">("details");
 
+  // Comments panel on wide screens. The person's explicit choice wins for every ticket; without one it is open
+  // only when the ticket has comments. On phones and tablets comments are the "Comentarios" tab instead.
+  const [panelChoice, setPanelChoice] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : readCommentsPanel(),
+  );
+  const [liveCounts, setLiveCounts] = useState<Record<string, number>>({});
+  const storeCommentCount = currentTask._count?.comments ?? 0;
+  const commentCount = liveCounts[currentTask.id] ?? storeCommentCount;
+  const commentsOpen = resolveCommentsOpen(panelChoice, commentCount);
+  // How many comments the person had seen when they opened this ticket or last toggled the panel: a dot shows on the
+  // header button when the count grows while the panel is collapsed. Reset when the ticket changes (state adjusted
+  // while rendering, which React allows, rather than in an effect).
+  const [seen, setSeen] = useState({ id: currentTask.id, count: storeCommentCount });
+  if (seen.id !== currentTask.id) setSeen({ id: currentTask.id, count: storeCommentCount });
+  const toggleComments = useCallback(() => {
+    const next = !commentsOpen;
+    setPanelChoice(next ? "1" : "0");
+    setSeen({ id: currentTask.id, count: commentCount });
+    writeCommentsPanel(next);
+  }, [commentsOpen, currentTask.id, commentCount]);
+  const handleCountChange = useCallback(
+    (count: number) => setLiveCounts((prev) => (prev[currentTask.id] === count ? prev : { ...prev, [currentTask.id]: count })),
+    [currentTask.id],
+  );
+  const hasNewComments = !commentsOpen && seen.id === currentTask.id && storeCommentCount > seen.count;
+
   // Load board Epics
   useEffect(() => {
     if (open) {
@@ -227,6 +266,18 @@ export function TaskModal({
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (editingTitle || editingDescription) return;
+      if (
+        (e.key === "c" || e.key === "C") &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !isTypingTarget(e.target) &&
+        window.matchMedia("(min-width: 640px)").matches
+      ) {
+        e.preventDefault();
+        toggleComments();
+        return;
+      }
       if (e.key === "ArrowLeft" && hasPrev) {
         const entry = allTasks[currentIndex - 1];
         if (entry) {
@@ -254,6 +305,7 @@ export function TaskModal({
     hasNext,
     currentIndex,
     allTasks,
+    toggleComments,
   ]);
 
   const handleMoveToList = async (targetListId: string) => {
@@ -538,11 +590,14 @@ export function TaskModal({
           onClose();
         }}
       >
-        <DialogContent className="sm:max-w-7xl xl:max-w-[88rem] p-0 overflow-hidden">
+        <DialogContent
+          showCloseButton={false}
+          className="grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden p-0 sm:max-w-[min(80rem,calc(100%-2rem))] xl:max-w-[min(88rem,calc(100%-2rem))] max-sm:pointer-coarse:top-0 max-sm:pointer-coarse:left-0 max-sm:pointer-coarse:h-dvh max-sm:pointer-coarse:w-screen max-sm:pointer-coarse:max-w-none max-sm:pointer-coarse:translate-x-0 max-sm:pointer-coarse:translate-y-0 max-sm:pointer-coarse:rounded-none max-sm:pointer-coarse:grid-rows-[auto_auto_minmax(0,1fr)] max-sm:pointer-coarse:pb-[env(safe-area-inset-bottom)]"
+        >
           <DialogHeader className="flex flex-row items-center gap-2 px-4 py-3 border-b bg-muted/50">
             <DialogTitle className="text-sm font-medium text-muted-foreground flex-1 truncate flex items-center gap-2">
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-background hover:bg-muted border transition-all cursor-pointer select-none">
+                <DropdownMenuTrigger className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 pointer-coarse:py-2.5 rounded-md bg-background hover:bg-muted border transition-all cursor-pointer select-none">
                   <span>{currentListTitle}</span>
                   <ChevronDown size={11} className="opacity-60" />
                 </DropdownMenuTrigger>
@@ -578,12 +633,43 @@ export function TaskModal({
             </DialogTitle>
 
             {/* Actions: Share + Task navigation */}
-            <div className="flex items-center gap-2 shrink-0 mr-10">
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Collapse or expand the comments panel (wide screens; on phones comments are a tab) */}
+              <Tooltip>
+                <TooltipTrigger
+                  delay={200}
+                  render={
+                    <button
+                      type="button"
+                      onClick={toggleComments}
+                      aria-expanded={commentsOpen}
+                      aria-controls="ticket-comments-panel"
+                      aria-label={`${commentsOpen ? t("commentsHide") : t("commentsShow")} (${commentCount})`}
+                      className="relative hidden h-7 items-center gap-1 rounded-md border px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground sm:inline-flex"
+                    />
+                  }
+                >
+                  <MessageSquare size={13} />
+                  {commentCount > 0 && <span className="tabular-nums">{commentCount}</span>}
+                  {hasNewComments && (
+                    <span
+                      role="img"
+                      aria-label={t("commentsNew")}
+                      className="absolute -right-1 -top-1 size-2.5 rounded-full bg-violet-500 ring-2 ring-background"
+                    />
+                  )}
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {commentsOpen ? t("commentsHide") : t("commentsShow")}
+                  <kbd data-slot="kbd" className="rounded bg-background/20 px-1 font-mono text-[10px]">C</kbd>
+                </TooltipContent>
+              </Tooltip>
+
               {canEdit && <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShareModalOpen(true)}
-                className="h-7 text-xs gap-1 px-2 text-muted-foreground hover:text-foreground"
+                className="h-7 pointer-coarse:h-10 pointer-coarse:px-3 text-xs gap-1 px-2 text-muted-foreground hover:text-foreground"
                 title={t("shareTitle")}
               >
                 <Share2 size={13} />
@@ -594,7 +680,7 @@ export function TaskModal({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className="h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10"
                   disabled={!hasPrev}
                   onClick={() => goTo(currentIndex - 1)}
                   title={t("previous")}
@@ -607,7 +693,7 @@ export function TaskModal({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className="h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10"
                   disabled={!hasNext}
                   onClick={() => goTo(currentIndex + 1)}
                   title={t("next")}
@@ -615,13 +701,27 @@ export function TaskModal({
                   <ChevronRight size={15} />
                 </Button>
               </div>
+
+              <DialogClose
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 pointer-coarse:h-10 pointer-coarse:w-10"
+                    aria-label={tCommon("close")}
+                    title={tCommon("close")}
+                  />
+                }
+              >
+                <X size={16} />
+              </DialogClose>
             </div>
           </DialogHeader>
 
           {/* Mobile tab switcher */}
           <div className="flex sm:hidden border-b">
             <button
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 pointer-coarse:py-3 text-sm font-medium transition-colors ${
                 mobileTab === "details"
                   ? "border-b-2 border-primary text-primary"
                   : "text-muted-foreground"
@@ -631,7 +731,7 @@ export function TaskModal({
               {t("details")}
             </button>
             <button
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 pointer-coarse:py-3 text-sm font-medium transition-colors ${
                 mobileTab === "comments"
                   ? "border-b-2 border-primary text-primary"
                   : "text-muted-foreground"
@@ -644,8 +744,7 @@ export function TaskModal({
 
           <div
             key={currentTask.id}
-            className="flex overflow-hidden sm:h-[min(82vh,50rem)]"
-            style={{ maxHeight: "78vh" }}
+            className="flex min-h-0 max-h-[78vh] overflow-hidden sm:h-[min(82vh,50rem)] max-sm:pointer-coarse:h-full max-sm:pointer-coarse:max-h-none"
           >
             {/* Left — task details */}
             <div
@@ -1101,11 +1200,16 @@ export function TaskModal({
 
             {/* Right — comments */}
             <div
-              className={`sm:w-96 lg:w-[28rem] sm:shrink-0 sm:border-l bg-muted/30 flex flex-col min-h-0 ${
-                mobileTab !== "comments" ? "hidden sm:flex" : "flex-1"
-              }`}
+              id="ticket-comments-panel"
+              className={`sm:w-96 lg:w-[28rem] sm:shrink-0 sm:border-l bg-muted/30 flex-col min-h-0 ${
+                mobileTab === "comments" ? "flex flex-1" : "hidden"
+              } ${commentsOpen ? "sm:flex" : "sm:hidden"}`}
             >
-              <TaskComments taskId={currentTask.id} members={boardUsers} />
+              <TaskComments
+                taskId={currentTask.id}
+                members={boardUsers}
+                onCountChange={handleCountChange}
+              />
             </div>
           </div>
         </DialogContent>

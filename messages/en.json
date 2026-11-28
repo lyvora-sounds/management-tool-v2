@@ -942,7 +942,11 @@
     "editorOrdered": "Ordered list",
     "editorQuote": "Quote",
     "editorCodeBlock": "Code block",
-    "editorDivider": "Divider"
+    "editorDivider": "Divider",
+    "commentsHide": "Hide comments",
+    "commentsShow": "Show comments",
+    "commentsNew": "New comments",
+    "kikiMenu": "Ask Kiki"
   },
   "members": {
     "title": "Board members",
@@ -1921,7 +1925,7 @@
     "purpSidebar": "Remembers whether the dashboard sidebar is expanded or collapsed.",
     "purpConsent": "Records your cookie consent choices, policy version, and timestamp.",
     "purpPendingConsent": "Temporarily holds your sign-up legal consent selections across registration redirects.",
-    "purpUiState": "Remembers recently visited boards and hierarchy panel state.",
+    "purpUiState": "Remembers recently visited boards and the hierarchy and comments panels.",
     "purpIndexedDb": "Local-first board snapshot cache and offline mutation outbox (Dexie).",
     "s3Title": "3. Analytics & Marketing Cookies",
     "s3Body": "None. Our codebase contains zero third-party analytics SDKs, advertising pixels (such as Meta Pixel or Google Ads), or cross-site tracking cookies.",

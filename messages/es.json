@@ -942,7 +942,11 @@
     "editorOrdered": "Lista numerada",
     "editorQuote": "Cita",
     "editorCodeBlock": "Bloque de código",
-    "editorDivider": "Separador"
+    "editorDivider": "Separador",
+    "commentsHide": "Ocultar comentarios",
+    "commentsShow": "Mostrar comentarios",
+    "commentsNew": "Comentarios nuevos",
+    "kikiMenu": "Pedir a Kiki"
   },
   "members": {
     "title": "Miembros del tablero",
@@ -1921,7 +1925,7 @@
     "purpSidebar": "Recuerda si la barra lateral está abierta o contraída.",
     "purpConsent": "Guarda tu elección de cookies, versión de la política y marca temporal.",
     "purpPendingConsent": "Guarda temporalmente tus aceptaciones legales de registro durante redirecciones de alta.",
-    "purpUiState": "Recuerda los tableros recientes y el estado del panel de jerarquía.",
+    "purpUiState": "Recuerda los tableros recientes y el estado de los paneles de jerarquía y de comentarios.",
     "purpIndexedDb": "Caché local de tableros y cola de mutaciones offline (Dexie).",
     "s3Title": "3. Cookies de analítica y marketing",
     "s3Body": "Ninguna. Nuestro código no contiene SDKs de analítica de terceros, píxeles publicitarios (como Meta Pixel o Google Ads) ni cookies de seguimiento entre sitios.",

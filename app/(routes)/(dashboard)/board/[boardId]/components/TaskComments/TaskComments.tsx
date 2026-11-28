@@ -13,6 +13,13 @@ import { CommentsSkeleton } from "@/components/skeletons";
 import { useBoardAccess } from "../BoardAccess";
 import { FieldGroupInfoHint } from "../FieldGroupInfoHint/FieldGroupInfoHint";
 import { apiFetch } from "@/lib/apiClient";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Candidate = { key: string; handle: string; agent?: boolean };
 
@@ -77,7 +84,7 @@ function CommentText({ content, handles }: { content: string; handles: string[] 
   return <>{parts}</>;
 }
 
-export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
+export function TaskComments({ taskId, members = [], onCountChange }: TaskCommentsProps) {
   const { canEdit } = useBoardAccess();
   const t = useTranslations("task");
   const locale = useLocale();
@@ -133,6 +140,12 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
     const list = listRef.current;
     if (list) list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
   }, [comments, waitingFrom]);
+
+  // Tells the ticket how many comments there are once the first fetch is done, so its header can show the count
+  // even while this panel is collapsed.
+  useEffect(() => {
+    if (!fetching) onCountChange?.(comments.length);
+  }, [fetching, comments.length, onCountChange]);
 
   const kikiCount = comments.filter((c) => c.user.isAgent).length;
   const waiting = waitingFrom !== null && kikiCount <= waitingFrom;
@@ -278,14 +291,6 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center gap-2 border-b px-4 py-3">
-        <MessageSquare size={15} className="text-muted-foreground" />
-        <h3 className="text-sm font-semibold">{t("comments")}</h3>
-        {comments.length > 0 && (
-          <span className="rounded-full bg-muted px-1.5 text-[11px] font-medium tabular-nums text-muted-foreground">{comments.length}</span>
-        )}
-      </div>
-
       <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-4 py-4">
         {fetching && <CommentsSkeleton count={3} />}
 
@@ -371,7 +376,7 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
       </div>
 
       {canEdit && (
-        <div className="relative border-t bg-background/60 p-3">
+        <div className="relative border-t bg-background/60 p-2">
           {pickerOpen && (
             <ul
               id={`mention-list-${taskId}`}
@@ -403,23 +408,8 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
             </ul>
           )}
 
-          {!value && (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {quickPrompts.map((chip) => (
-                <button
-                  key={chip.label}
-                  type="button"
-                  onClick={() => setText(`${chip.prompt} `)}
-                  className="flex items-center gap-1 rounded-full border border-violet-500/25 bg-violet-500/5 px-2.5 py-1 text-xs text-violet-700 transition-colors hover:bg-violet-500/15 dark:text-violet-300"
-                >
-                  <Sparkles size={11} />
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="rounded-xl border bg-background transition-shadow focus-within:ring-2 focus-within:ring-ring/40">
+          {/* One line until it is focused or has text; the AI shortcuts live in one menu next to Send. */}
+          <div className="group/composer flex items-end gap-1 rounded-xl border bg-background pr-1 transition-shadow focus-within:ring-2 focus-within:ring-ring/40">
             <textarea
               ref={textareaRef}
               value={value}
@@ -433,18 +423,20 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
               onSelect={(event) => setCaret(event.currentTarget.selectionStart)}
               onKeyDown={onKeyDown}
               placeholder={t("kikiHintPlaceholder")}
-              rows={2}
+              rows={1}
               disabled={loading}
               role="combobox"
               aria-expanded={pickerOpen}
               aria-controls={`mention-list-${taskId}`}
               aria-autocomplete="list"
               aria-haspopup="listbox"
-              className="block max-h-48 min-h-16 w-full resize-none bg-transparent px-3 pt-2.5 text-sm outline-none placeholder:text-muted-foreground"
+              className="block max-h-48 min-h-9 w-full min-w-0 resize-none bg-transparent px-3 py-2 text-sm outline-none transition-[min-height] placeholder:text-muted-foreground focus:min-h-16 not-placeholder-shown:min-h-16"
             />
-            <div className="flex items-center gap-1 px-2 pb-2">
+            {/* mousedown is prevented on the plain buttons so the text box keeps focus and does not collapse under the click */}
+            <div className="flex shrink-0 items-center gap-0.5 pb-1">
               <button
                 type="button"
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={openMentionPicker}
                 title={t("mentionSomeone")}
                 aria-label={t("mentionSomeone")}
@@ -452,24 +444,40 @@ export function TaskComments({ taskId, members = [] }: TaskCommentsProps) {
               >
                 <AtSign size={15} />
               </button>
-              <button
-                type="button"
-                onClick={() => setText(value && !/\s$/.test(value) ? `${value} @Kiki ` : `${value}@Kiki `)}
-                title={t("kikiInsert")}
-                aria-label={t("kikiInsert")}
-                className="rounded-md p-1.5 text-violet-600 transition-colors hover:bg-violet-500/15 dark:text-violet-300"
-              >
-                <Sparkles size={15} />
-              </button>
-              <span className="ml-auto inline-flex items-center pr-1">
-                <FieldGroupInfoHint
-                  text={t("commentHint")}
-                  side="top"
-                  align="end"
-                />
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  title={t("kikiMenu")}
+                  aria-label={t("kikiMenu")}
+                  className="rounded-md p-1.5 text-violet-600 transition-colors hover:bg-violet-500/15 dark:text-violet-300"
+                >
+                  <Sparkles size={15} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="top" className="w-56">
+                  <DropdownMenuItem
+                    onClick={() => setText(value && !/\s$/.test(value) ? `${value} @Kiki ` : `${value}@Kiki `)}
+                    className="cursor-pointer text-xs"
+                  >
+                    <Sparkles size={13} className="text-violet-600 dark:text-violet-300" />
+                    {t("kikiInsert")}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {quickPrompts.map((chip) => (
+                    <DropdownMenuItem
+                      key={chip.label}
+                      onClick={() => setText(`${chip.prompt} `)}
+                      className="cursor-pointer text-xs"
+                    >
+                      {chip.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <span className="hidden items-center group-focus-within/composer:inline-flex">
+                <FieldGroupInfoHint text={t("commentHint")} side="top" align="end" />
               </span>
               <button
                 type="button"
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={submit}
                 disabled={loading || !value.trim()}
                 aria-label={t("send")}

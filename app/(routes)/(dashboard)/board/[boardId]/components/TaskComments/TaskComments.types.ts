@@ -13,4 +13,6 @@ export type TaskCommentsProps = {
   taskId: string;
   // Personas del tablero que se pueden mencionar con «@».
   members?: { id: string; name: string | null; email: string }[];
+  // Avisa del número de comentarios cuando termina la primera carga y cada vez que cambia.
+  onCountChange?: (count: number) => void;
 };

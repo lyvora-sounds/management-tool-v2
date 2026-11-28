@@ -6,6 +6,8 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { HomeFooter } from "@/components/Shared/HomeFooter/HomeFooter";
 import { AppearanceSettings } from "@/app/(routes)/(dashboard)/dashboard/settings/components/AppearanceSettings";
 import { TwoFactorSettings } from "@/app/(routes)/(dashboard)/dashboard/settings/components/TwoFactorSettings";
+import { TaskComments } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskComments/TaskComments";
+import { BoardAccessProvider } from "@/app/(routes)/(dashboard)/board/[boardId]/components/BoardAccess";
 import en from "@/messages/en.json";
 
 export function ShareStory() {
@@ -65,6 +67,18 @@ export function AppearanceSettingsStory() {
       <div style={{ padding: 24, maxWidth: 720 }}>
         <AppearanceSettings />
       </div>
+    </NextIntlClientProvider>
+  );
+}
+
+export function TaskCommentsStory({ onCount }: { onCount?: (count: number) => void }) {
+  return (
+    <NextIntlClientProvider locale="en" messages={en}>
+      <BoardAccessProvider canEdit>
+        <div style={{ height: 520, width: 420, display: "flex", flexDirection: "column" }}>
+          <TaskComments taskId="task-1" members={[]} onCountChange={onCount} />
+        </div>
+      </BoardAccessProvider>
     </NextIntlClientProvider>
   );
 }

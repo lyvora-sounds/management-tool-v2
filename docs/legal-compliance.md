@@ -30,7 +30,7 @@ All legal pages (`/terms`, `/privacy`, `/cookies`), footer copyright notices (`H
 | Payments / Billing | **None** — no Stripe, Paddle, or PayPal SDK or webhook in repo (`Free forever on basic plan`) | `package.json`, `messages/en.json` |
 | Analytics / Ad Trackers | **None** — zero Google Analytics, Meta Pixel, PostHog, Sentry, or ad scripts in repo | `package.json`, `app/layout.tsx` |
 | Optional Integrations | Google Calendar OAuth (`UserCalendarSync`), GitHub App (`OrganizationGithubConnection`), Slack/Discord board webhooks, MCP OAuth/bearer tokens, BYOK AI (`UserSettings.aiProvider` + AES-256-GCM `aiApiKey`) | `prisma/schema.prisma`, `lib/crypto.ts`, `lib/externalAccess.ts` |
-| Client Storage | Cookies: Clerk session, `github_setup_result`, `NEXT_LOCALE`, `kiki_appearance`, `sidebar_state`. `localStorage`: `cookie_consent_v2`, `recent_boards`, `kiki.hierarchy.open`. `sessionStorage`: `kiki_pending_signup_consent`. `IndexedDB`: `kikiboard-local-first` (Dexie). | `actions/locale.ts`, `components/Appearance/AppearanceProvider.tsx`, `components/ui/sidebar.tsx`, `components/CookieBanner.tsx`, `lib/cookieConsent.ts`, `lib/local-first/db.ts` |
+| Client Storage | Cookies: Clerk session, `github_setup_result`, `NEXT_LOCALE`, `kiki_appearance`, `sidebar_state`. `localStorage`: `cookie_consent_v2`, `recent_boards`, `kiki.hierarchy.open`, `kiki.comments.open`. `sessionStorage`: `kiki_pending_signup_consent`. `IndexedDB`: `kikiboard-local-first` (Dexie). | `actions/locale.ts`, `components/Appearance/AppearanceProvider.tsx`, `components/ui/sidebar.tsx`, `components/CookieBanner.tsx`, `lib/cookieConsent.ts`, `lib/local-first/db.ts` |
 
 ### `[TO CONFIRM]` Items Required from Founder / Legal Counsel Before Production Publish
 1. `[TO CONFIRM: Legal entity form and registered UAE physical address]` (e.g., FZCO / LLC in Dubai / DIFC / ADGM — set once via `NEXT_PUBLIC_LEGAL_ENTITY_NAME`, `NEXT_PUBLIC_LEGAL_REGISTERED_ADDRESS`, and `NEXT_PUBLIC_LEGAL_GOVERNING_LAW` or `lib/legalConfig.ts` for UAE PDPL, GDPR Art. 13, Swiss nLPD, CAN-SPAM, and Terms).
@@ -160,7 +160,7 @@ FOR EACH ROW EXECUTE FUNCTION prevent_legal_consent_log_mutation();
 - [x] Fixed `contact@kikiboard.xyz` vs `contacto@kikiboard.xyz` inconsistency in `/privacy`.
 - [x] Fixed stale `Vercel Blob` claim in `/privacy` (now discloses Cloudflare R2).
 - [x] Disclosed `SecurityAuditLog` and `TaskStateTransition` immutability in `/privacy` Section 6.
-- [x] Cookie banner (`CookieBanner.tsx`) offers Accept all / Reject non-essential / Customize, zero pre-ticked boxes, honors Global Privacy Control (GPC), and clears/suppresses optional functional storage (`kiki_appearance`, `sidebar_state`, `recent_boards`, `kiki.hierarchy.open`) when `functional === false`.
+- [x] Cookie banner (`CookieBanner.tsx`) offers Accept all / Reject non-essential / Customize, zero pre-ticked boxes, honors Global Privacy Control (GPC), and clears/suppresses optional functional storage (`kiki_appearance`, `sidebar_state`, `recent_boards`, `kiki.hierarchy.open`, `kiki.comments.open`) when `functional === false`.
 - [x] Sign-up (`SignUpConsentGate.tsx`) enforces separate, unbundled, unchecked-by-default Terms, Privacy, and optional Marketing Email checkboxes while passing Clerk OAuth/verification sub-routes (`/sign-up/sso-callback`, `/sign-up/verify-email-address`, etc.) straight through.
 - [x] Security controls verified in code: AES-256-GCM encryption (`lib/crypto.ts`), SHA-256 MCP token hashing (`lib/externalAccess.ts`), Svix webhook verification (`app/api/webhooks/clerk/route.ts`), RBAC (`lib/boardAccess.ts`), private R2 storage (`lib/blobStore.ts`).
 
@@ -172,7 +172,7 @@ FOR EACH ROW EXECUTE FUNCTION prevent_legal_consent_log_mutation();
 - [ ] **Security headers & app-level rate limiting:** `next.config.ts` / `middleware.ts` do not yet set CSP/HSTS/X-Frame-Options headers or app-level rate limits on `/share/task/[token]` and `/api/mcp` (tracked in `docs/production-security-checklist.md` SEC-20 / SEC-23).
 
 ### In Code but Previously NOT in Docs (Now Disclosed)
-- [x] Cloudflare R2 (`lib/blobStore.ts`), Resend (`lib/resend.ts`), `SecurityAuditLog` IP/UA/email immutability, `UserMfa.phone`, `NEXT_LOCALE`, `kiki_appearance`, `sidebar_state`, `github_setup_result`, `recent_boards`, `kiki.hierarchy.open`, and `IndexedDB` (`kikiboard-local-first`).
+- [x] Cloudflare R2 (`lib/blobStore.ts`), Resend (`lib/resend.ts`), `SecurityAuditLog` IP/UA/email immutability, `UserMfa.phone`, `NEXT_LOCALE`, `kiki_appearance`, `sidebar_state`, `github_setup_result`, `recent_boards`, `kiki.hierarchy.open`, `kiki.comments.open`, and `IndexedDB` (`kikiboard-local-first`).
 
 ### Urgent Fixes Before Public Launch
 1. Fill all 8 `[TO CONFIRM]` placeholders in `messages/{en,es,tl}.json` and register the DMCA Designated Agent.

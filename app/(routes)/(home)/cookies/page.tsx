@@ -69,7 +69,7 @@ export default async function CookiesPolicyPage() {
       purpose: t("purpPendingConsent", legalVars),
     },
     {
-      name: "recent_boards / kiki.hierarchy.open (localStorage)",
+      name: "recent_boards / kiki.hierarchy.open / kiki.comments.open (localStorage)",
       category: t("catFunctional", legalVars),
       provider: LEGAL_CONFIG.platformName,
       duration: t("durPersistent", legalVars),

@@ -14,6 +14,7 @@ export const COOKIE_PREFERENCES_EVENT = "kiki:open-cookie-preferences";
 export const OPTIONAL_LOCAL_STORAGE_KEYS = [
   "recent_boards",
   "kiki.hierarchy.open",
+  "kiki.comments.open",
 ] as const;
 
 export const OPTIONAL_COOKIE_NAMES = [

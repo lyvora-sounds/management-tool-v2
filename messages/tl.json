@@ -942,7 +942,11 @@
     "editorOrdered": "Ordered list",
     "editorQuote": "Quote",
     "editorCodeBlock": "Code block",
-    "editorDivider": "Divider"
+    "editorDivider": "Divider",
+    "commentsHide": "Itago ang mga komento",
+    "commentsShow": "Ipakita ang mga komento",
+    "commentsNew": "Mga bagong komento",
+    "kikiMenu": "Magtanong kay Kiki"
   },
   "members": {
     "title": "Mga member ng board",
@@ -1921,7 +1925,7 @@
     "purpSidebar": "Tinatandaan kung nakabukas o nakasara ang sidebar.",
     "purpConsent": "Nagtatala ng iyong mga pinili sa cookie, bersyon ng patakaran, at oras.",
     "purpPendingConsent": "Pansamantalang iniimbak ang iyong mga napiling legal na pahintulot habang nagre-register.",
-    "purpUiState": "Tinatandaan ang mga kamakailang boards at estado ng hierarchy panel.",
+    "purpUiState": "Tinatandaan ang mga kamakailang boards at ang estado ng hierarchy at comments panels.",
     "purpIndexedDb": "Lokal na cache ng board at offline mutation outbox (Dexie).",
     "s3Title": "3. Mga Analytics at Marketing Cookie",
     "s3Body": "Wala. Walang third-party analytics SDK, advertising pixel (tulad ng Meta Pixel o Google Ads), o cross-site tracking cookie sa aming codebase.",
