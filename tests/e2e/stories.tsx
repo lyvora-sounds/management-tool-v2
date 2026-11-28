@@ -10,6 +10,7 @@ import { TaskComments } from "@/app/(routes)/(dashboard)/board/[boardId]/compone
 import { BoardAccessProvider } from "@/app/(routes)/(dashboard)/board/[boardId]/components/BoardAccess";
 import { PriorityMark } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskPriority/PriorityMark";
 import { PRIORITIES } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskPriority/TaskPriority.constants";
+import { AddPropertyMenu } from "@/app/(routes)/(dashboard)/board/[boardId]/components/TaskModal/AddPropertyMenu";
 import en from "@/messages/en.json";
 
 export function ShareStory() {
@@ -92,5 +93,25 @@ export function PriorityMarksStory() {
         <PriorityMark key={priority.value} priority={priority} label={priority.label} />
       ))}
     </div>
+  );
+}
+
+export function AddPropertyStory({ items = true, onSelect }: { items?: boolean; onSelect?: (key: string) => void }) {
+  return (
+    <NextIntlClientProvider locale="en" messages={en}>
+      <div style={{ padding: 24 }} data-testid="host">
+        <AddPropertyMenu
+          items={
+            items
+              ? [
+                  { key: "labels", label: "Labels", icon: null, group: "ticket" },
+                  { key: "cf:1", label: "Story points", icon: null, group: "custom" },
+                ]
+              : []
+          }
+          onSelect={(key) => onSelect?.(key)}
+        />
+      </div>
+    </NextIntlClientProvider>
   );
 }

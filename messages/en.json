@@ -948,7 +948,8 @@
     "commentsNew": "New comments",
     "kikiMenu": "Ask Kiki",
     "markCompleted": "Mark as completed",
-    "markReopen": "Reopen ticket"
+    "markReopen": "Reopen ticket",
+    "addProperty": "Add property"
   },
   "members": {
     "title": "Board members",

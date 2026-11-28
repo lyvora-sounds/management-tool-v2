@@ -17,6 +17,11 @@ import {
   Calendar,
   Globe,
   MessageSquare,
+  ShieldCheck,
+  SlidersHorizontal,
+  Tag,
+  Users,
+  Flag,
   X,
 } from "lucide-react";
 import {
@@ -37,6 +42,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { readCommentsPanel, resolveCommentsOpen, writeCommentsPanel } from "@/lib/commentsPanel";
+import { AddPropertyMenu, type AddPropertyItem } from "./AddPropertyMenu";
+import type { EmptyCustomField } from "../TaskCustomFields/TaskCustomFields";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -87,6 +94,15 @@ import {
 
 type DescriptionLanguage = "en" | "es" | "tl";
 
+/** Marks a control so the "Add property" menu can focus it once it is on screen; it adds no box of its own. */
+function Prop({ k, children }: { k: string; children: React.ReactNode }) {
+  return (
+    <div data-prop={k} className="contents">
+      {children}
+    </div>
+  );
+}
+
 /** True when a key press is going into a text field, so a one-letter shortcut must leave it alone. */
 function isTypingTarget(target: EventTarget | null) {
   const el = target as HTMLElement | null;
@@ -111,6 +127,7 @@ export function TaskModal({
   const t = useTranslations("task");
   const tBoard = useTranslations("board");
   const tCommon = useTranslations("common");
+  const tLabels = useTranslations("labels");
   const tQuarters = useTranslations("quarters");
   const lists = useBoardStore((s) => s.lists);
   const updateTask = useBoardStore((s) => s.updateTask);
@@ -219,6 +236,70 @@ export function TaskModal({
     [currentTask.id],
   );
   const hasNewComments = !commentsOpen && seen.id === currentTask.id && storeCommentCount > seen.count;
+
+  // Properties the person added from the menu in this ticket, and the custom fields still empty (reported by the
+  // custom fields themselves). A property is drawn when it has a value or was added; the menu offers the rest.
+  const [added, setAdded] = useState<{ id: string; keys: string[] }>({ id: currentTask.id, keys: [] });
+  const addedKeys = added.id === currentTask.id ? added.keys : [];
+  const isShown = (key: string) => addedKeys.includes(key);
+  const [emptyCustom, setEmptyCustom] = useState<EmptyCustomField[]>([]);
+  // Same list, same state: the custom fields report on every change and must not cause a render when nothing changed.
+  const handleEmptyCustom = useCallback(
+    (fields: EmptyCustomField[]) =>
+      setEmptyCustom((prev) =>
+        prev.length === fields.length && prev.every((field, index) => field.id === fields[index]?.id) ? prev : fields,
+      ),
+    [],
+  );
+  const canAssignPeople = canManage || memberCanAssign;
+  const addItems: AddPropertyItem[] = !canEdit
+    ? []
+    : [
+        ...(epics.length > 0 && !currentEpicId && !isShown("epic")
+          ? [{ key: "epic", label: tBoard("epicFilter"), icon: <Layers size={14} />, group: "ticket" as const }]
+          : []),
+        ...(!currentQuarter && !isShown("quarter")
+          ? [{ key: "quarter", label: t("quarterLabel"), icon: <Calendar size={14} />, group: "ticket" as const }]
+          : []),
+        ...(!currentStartDate && !currentDueDate && !isShown("dates")
+          ? [{ key: "dates", label: t("dates"), icon: <Calendar size={14} />, group: "ticket" as const }]
+          : []),
+        ...(activeLabels.length === 0 && !isShown("labels")
+          ? [{ key: "labels", label: tLabels("title"), icon: <Tag size={14} />, group: "ticket" as const }]
+          : []),
+        ...(canAssignPeople && !reporter && !isShown("reporter")
+          ? [{ key: "reporter", label: t("reporterLabel"), icon: <Flag size={14} />, group: "ticket" as const }]
+          : []),
+        ...(canAssignPeople && collaborators.length === 0 && !isShown("collaborators")
+          ? [{ key: "collaborators", label: t("collaborators"), icon: <Users size={14} />, group: "ticket" as const }]
+          : []),
+        ...(canAssignPeople && !qa && !isShown("qa")
+          ? [{ key: "qa", label: t("qaLabel"), icon: <ShieldCheck size={14} />, group: "ticket" as const }]
+          : []),
+        { key: "attach", label: t("attach"), icon: <Paperclip size={14} />, group: "ticket" as const },
+        ...emptyCustom
+          .filter((field) => !isShown(`cf:${field.id}`))
+          .map((field) => ({ key: `cf:${field.id}`, label: field.name, icon: <SlidersHorizontal size={14} />, group: "custom" as const })),
+      ];
+  const addProperty = (key: string) => {
+    if (key === "attach") {
+      attachmentsRef.current?.openFilePicker();
+      return;
+    }
+    setAdded((prev) => {
+      const keys = prev.id === currentTask.id ? prev.keys : [];
+      return { id: currentTask.id, keys: keys.includes(key) ? keys : [...keys, key] };
+    });
+    // The control appears on the next render: focus it, and open the picker of the ones that are a button or a select.
+    window.setTimeout(() => {
+      const root = key.startsWith("cf:")
+        ? document.querySelector(`[data-custom-field="${key.slice(3)}"]`)
+        : document.querySelector(`[data-prop="${key}"]`);
+      const target = root?.querySelector<HTMLElement>("button, [role=combobox], input, select");
+      target?.focus();
+      if (target && (target.tagName === "BUTTON" || target.getAttribute("role") === "combobox")) target.click();
+    }, 150);
+  };
 
   // Load board Epics
   useEffect(() => {
@@ -817,11 +898,42 @@ export function TaskModal({
                     onApply={handleAiApply}
                   />
                 )}
+                {canEdit && (
+                  <span className="relative inline-flex h-8 shrink-0 items-center rounded-md border bg-background pl-2.5 pr-2 shadow-2xs">
+                    <Globe size={13} className="shrink-0 text-muted-foreground" aria-hidden />
+                    <select
+                      aria-label={t("descriptionLanguage")}
+                      title={t("descriptionLanguage")}
+                      value={descriptionLanguage}
+                      onChange={(event) => {
+                        const language = event.target.value;
+                        if (
+                          language === "en" ||
+                          language === "es" ||
+                          language === "tl"
+                        ) {
+                          setDescriptionLanguage(language);
+                        }
+                      }}
+                      className="h-8 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-1.5 pr-5 text-sm font-sans leading-8 font-bold text-foreground focus-visible:outline-none"
+                    >
+                      <option value="en">English</option>
+                      <option value="es">Español</option>
+                      <option value="tl">Tagalog</option>
+                    </select>
+                    <ChevronDown
+                      size={14}
+                      className="pointer-events-none absolute right-2 text-muted-foreground"
+                      aria-hidden
+                    />
+                  </span>
+                )}
                 <TaskDevelopment taskId={currentTask.id} />
               </div>
 
               {/* Metadata grouped by subject: Placement, Details, People */}
-              <div className="flex flex-col gap-3 [&_button]:font-bold [&_button]:font-sans [&_button]:text-sm [&_input]:font-bold [&_input]:font-sans [&_input]:text-sm">
+              <div className="@container flex flex-col gap-2">
+              <div className="grid grid-cols-1 gap-3 @min-[40rem]:grid-cols-3 [&_button]:font-bold [&_button]:font-sans [&_button]:text-sm [&_input]:font-bold [&_input]:font-sans [&_input]:text-sm">
                 <section
                   aria-labelledby="task-meta-placement"
                   className="flex flex-col gap-1.5"
@@ -875,7 +987,8 @@ export function TaskModal({
                     </Select>
 
                     {/* Epic Selector */}
-                    {epics.length > 0 && (
+                    {epics.length > 0 && (Boolean(currentEpicId) || isShown("epic")) && (
+                      <Prop k="epic">
                       <Select
                         // sin `items`, base-ui muestra el id de la épica en el botón en lugar de su nombre
                         items={epicItems}
@@ -902,9 +1015,11 @@ export function TaskModal({
                           ))}
                         </SelectContent>
                       </Select>
+                      </Prop>
                     )}
 
-                    {canEdit ? (
+                    {canEdit ? (currentQuarter || isShown("quarter")) ? (
+                      <Prop k="quarter">
                       <Select
                         value={currentQuarter || "none"}
                         onValueChange={(value) => void saveQuarter(value ?? "none")}
@@ -927,13 +1042,15 @@ export function TaskModal({
                           ))}
                         </SelectContent>
                       </Select>
-                    ) : currentQuarter ? (
+                      </Prop>
+                    ) : null : currentQuarter ? (
                       <Badge variant="secondary" className="h-8 gap-1 text-xs font-bold">
                         <Calendar size={13} />
                         {currentQuarter}
                       </Badge>
                     ) : null}
-                    {!currentStartDate && !currentDueDate && (
+                    {!currentStartDate && !currentDueDate && isShown("dates") && (
+                      <Prop k="dates">
                       <TaskDatePicker
                         taskId={currentTask.id}
                         listId={currentListId}
@@ -950,6 +1067,7 @@ export function TaskModal({
                           setCurrentDueDate(d);
                         }}
                       />
+                      </Prop>
                     )}
                   </div>
                   {(currentStartDate || currentDueDate) && (
@@ -987,6 +1105,8 @@ export function TaskModal({
                     <FieldGroupInfoHint text={t("fieldGroupDetailsHint")} />
                   </div>
                   <div className="flex gap-2 flex-wrap items-center">
+                    {(activeLabels.length > 0 || isShown("labels")) && (
+                    <Prop k="labels">
                     <TaskLabels
                       taskId={currentTask.id}
                       boardId={boardId}
@@ -996,6 +1116,8 @@ export function TaskModal({
                         updateTask(currentListId, currentTask.id, { labels });
                       }}
                     />
+                    </Prop>
+                    )}
                     <TaskPriority
                       taskId={currentTask.id}
                       priority={priority}
@@ -1004,45 +1126,6 @@ export function TaskModal({
                         updateTask(currentListId, currentTask.id, { priority: p });
                       }}
                     />
-                    {canEdit && (
-                      <span className="relative inline-flex h-8 shrink-0 items-center rounded-md border bg-background pl-2.5 pr-2 shadow-2xs">
-                        <Globe size={13} className="shrink-0 text-muted-foreground" aria-hidden />
-                        <select
-                          aria-label={t("descriptionLanguage")}
-                          title={t("descriptionLanguage")}
-                          value={descriptionLanguage}
-                          onChange={(event) => {
-                            const language = event.target.value;
-                            if (
-                              language === "en" ||
-                              language === "es" ||
-                              language === "tl"
-                            ) {
-                              setDescriptionLanguage(language);
-                            }
-                          }}
-                          className="h-8 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-1.5 pr-5 text-sm font-sans leading-8 font-bold text-foreground focus-visible:outline-none"
-                        >
-                          <option value="en">English</option>
-                          <option value="es">Español</option>
-                          <option value="tl">Tagalog</option>
-                        </select>
-                        <ChevronDown
-                          size={14}
-                          className="pointer-events-none absolute right-2 text-muted-foreground"
-                          aria-hidden
-                        />
-                      </span>
-                    )}
-                    {canEdit && (
-                      <Button
-                        variant="outline"
-                        onClick={() => attachmentsRef.current?.openFilePicker()}
-                      >
-                        <Paperclip size={15} />
-                        <span>{t("attach")}</span>
-                      </Button>
-                    )}
                   </div>
                   {activeLabels.length > 0 && (
                     <div className="flex flex-wrap gap-1">
@@ -1080,6 +1163,8 @@ export function TaskModal({
                       <FieldGroupInfoHint text={t("fieldGroupPeopleHint")} />
                     </div>
                     <div className="flex gap-2 flex-wrap items-center">
+                      {(reporter || isShown("reporter")) && (
+                      <Prop k="reporter">
                       <TaskReporter
                         taskId={currentTask.id}
                         boardUsers={boardUsers}
@@ -1094,6 +1179,8 @@ export function TaskModal({
                           });
                         }}
                       />
+                      </Prop>
+                      )}
                       <TaskAssignee
                         taskId={currentTask.id}
                         boardUsers={boardUsers}
@@ -1108,6 +1195,8 @@ export function TaskModal({
                           });
                         }}
                       />
+                      {(collaborators.length > 0 || isShown("collaborators")) && (
+                      <Prop k="collaborators">
                       <TaskCollaborators
                         taskId={currentTask.id}
                         boardUsers={boardUsers}
@@ -1121,6 +1210,10 @@ export function TaskModal({
                           });
                         }}
                       />
+                      </Prop>
+                      )}
+                      {(qa || isShown("qa")) && (
+                      <Prop k="qa">
                       <TaskQa
                         taskId={currentTask.id}
                         boardUsers={boardUsers}
@@ -1135,9 +1228,13 @@ export function TaskModal({
                           });
                         }}
                       />
+                      </Prop>
+                      )}
                     </div>
                   </section>
                 )}
+              </div>
+              <AddPropertyMenu items={addItems} onSelect={addProperty} />
               </div>
 
               <TaskHierarchy
@@ -1155,6 +1252,8 @@ export function TaskModal({
                 boardId={boardId}
                 // Los campos padre/hijo se guardan por API: se refresca el tablero para que el recorrido y las tarjetas se actualicen ya.
                 onTicketLinkChange={() => router.refresh()}
+                revealedFieldIds={addedKeys.filter((key) => key.startsWith("cf:")).map((key) => key.slice(3))}
+                onEmptyFieldsChange={handleEmptyCustom}
               />
 
               <div className="flex flex-col gap-3 rounded-xl border bg-background p-3.5">

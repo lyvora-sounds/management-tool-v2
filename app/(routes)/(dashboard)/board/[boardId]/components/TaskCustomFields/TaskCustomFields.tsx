@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SlidersHorizontal, Loader2, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,10 +32,16 @@ interface CustomFieldValue {
   value: string | null;
 }
 
+export type EmptyCustomField = { id: string; name: string; defaultKey: string | null };
+
 interface TaskCustomFieldsProps {
   taskId: string;
   boardId: string;
   onTicketLinkChange?: () => void;
+  /** Fields the person chose to add from the "Add property" menu: drawn even while they are still empty. */
+  revealedFieldIds?: string[];
+  /** The fields with no value, which are not drawn: the ticket offers them in its "Add property" menu. */
+  onEmptyFieldsChange?: (fields: EmptyCustomField[]) => void;
 }
 
 const FIELD_ORDER = ["story_points", "environment", "parent", "child", "customer"];
@@ -45,7 +51,19 @@ function fieldOrder(field: CustomField) {
   return index === -1 ? FIELD_ORDER.length : index;
 }
 
-export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCustomFieldsProps) {
+/** A ticket-link field stores "" for none, a ticket id, or a JSON list. */
+function hasValue(value: string | undefined) {
+  const text = (value ?? "").trim();
+  return text !== "" && text !== "[]";
+}
+
+export function TaskCustomFields({
+  taskId,
+  boardId,
+  onTicketLinkChange,
+  revealedFieldIds,
+  onEmptyFieldsChange,
+}: TaskCustomFieldsProps) {
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
   const { canEdit } = useBoardAccess();
@@ -58,6 +76,42 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
   const [loading, setLoading] = useState(true);
   const [savingFieldId, setSavingFieldId] = useState<string | null>(null);
   const [savedSuccessId, setSavedSuccessId] = useState<string | null>(null);
+  // Fields the person has touched in this ticket stay on screen even if they end up empty, so a field does not
+  // vanish under their hands when they clear it.
+  const [touched, setTouched] = useState<string[]>([]);
+
+  // The parent builds this list on every render: compare it by content so it does not retrigger the memo below.
+  const revealedKey = (revealedFieldIds ?? []).join("|");
+  const revealed = useMemo(() => new Set(revealedKey ? revealedKey.split("|") : []), [revealedKey]);
+
+  const visibleIds = useMemo(
+    () =>
+      new Set(
+        fields
+          .filter(
+            (field) =>
+              hasValue(savedValues[field.id]) ||
+              hasValue(values[field.id]) ||
+              touched.includes(field.id) ||
+              revealed.has(field.id),
+          )
+          .map((field) => field.id),
+      ),
+    [fields, savedValues, values, touched, revealed],
+  );
+  const emptyFields = useMemo(
+    () =>
+      canEdit
+        ? [...fields]
+            .filter((field) => !visibleIds.has(field.id))
+            .sort((a, b) => fieldOrder(a) - fieldOrder(b))
+            .map((field) => ({ id: field.id, name: field.name, defaultKey: field.defaultKey }))
+        : [],
+    [canEdit, fields, visibleIds],
+  );
+  useEffect(() => {
+    if (!loading) onEmptyFieldsChange?.(emptyFields);
+  }, [loading, emptyFields, onEmptyFieldsChange]);
 
   useEffect(() => {
     const fetchTaskCustomValues = async () => {
@@ -92,6 +146,7 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
     if (newValue === previous) return;
 
     setSavingFieldId(customFieldId);
+    setTouched((prev) => (prev.includes(customFieldId) ? prev : [...prev, customFieldId]));
     setValues((prev) => ({ ...prev, [customFieldId]: newValue }));
 
     try {
@@ -129,7 +184,9 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
     );
   }
 
-  if (fields.length === 0) {
+  // Nothing to draw: no fields, or every field is empty and none was added. The ticket's "Add property" menu lists
+  // the empty ones.
+  if (fields.length === 0 || visibleIds.size === 0) {
     return null;
   }
 
@@ -141,14 +198,14 @@ export function TaskCustomFields({ taskId, boardId, onTicketLinkChange }: TaskCu
       </div>
 
       <div className="grid grid-cols-1 gap-3 @min-[28rem]:grid-cols-2 @min-[44rem]:grid-cols-[6.25rem_10rem_minmax(8.75rem,1fr)_minmax(8.75rem,1fr)_minmax(8.75rem,1fr)]">
-        {[...fields].sort((a, b) => fieldOrder(a) - fieldOrder(b)).map((field) => {
+        {[...fields].filter((field) => visibleIds.has(field.id)).sort((a, b) => fieldOrder(a) - fieldOrder(b)).map((field) => {
           const val = values[field.id] ?? "";
           const isSaving = savingFieldId === field.id;
           const isSuccess = savedSuccessId === field.id;
           const isTicketRef = isTicketRefKey(field.defaultKey);
 
           return (
-            <div key={field.id} className="min-w-0 space-y-1.5">
+            <div key={field.id} data-custom-field={field.id} className="min-w-0 space-y-1.5">
               <div className="flex items-center justify-between gap-1">
                 <Label className="truncate text-xs font-medium text-muted-foreground">
                   {field.name}

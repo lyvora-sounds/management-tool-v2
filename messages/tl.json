@@ -948,7 +948,8 @@
     "commentsNew": "Mga bagong komento",
     "kikiMenu": "Magtanong kay Kiki",
     "markCompleted": "Markahan bilang tapos",
-    "markReopen": "Buksan muli ang ticket"
+    "markReopen": "Buksan muli ang ticket",
+    "addProperty": "Magdagdag ng katangian"
   },
   "members": {
     "title": "Mga member ng board",
